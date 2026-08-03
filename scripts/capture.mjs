@@ -15,7 +15,7 @@ const scenes = requested.length ? requested : [
 ];
 const cameraByScene = {
   'calm-sailing': 'chase', 'storm-sailing': 'chase', 'sunny-broadside': 'broadside',
-  'moby-scale': 'cinematic', 'fleet-battle': 'overhead', 'damaged-ship': 'cinematic',
+  'moby-scale': 'cinematic', 'fleet-battle': 'cinematic', 'damaged-ship': 'cinematic',
   'island-discovery': 'chase', 'race-start': 'cinematic', 'race-rough': 'cinematic',
   'crew-closeup': 'deck', 'night-encounter': 'broadside', 'perf-fleet': 'overhead',
 };
@@ -28,6 +28,8 @@ for (const { scene, camera } of jobs) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1728, height: 1117 }, deviceScaleFactor: 2 });
   const page = await context.newPage();
+  page.setDefaultTimeout(60_000);
+  page.setDefaultNavigationTimeout(60_000);
   const browserErrors = [];
   page.on('console', (message) => {
     if (message.type() === 'error') browserErrors.push(message.text());
@@ -42,7 +44,7 @@ for (const { scene, camera } of jobs) {
     window.__CRUISE_DEBUG__?.step(3);
   }, { nextScene: scene, cameraPreset: camera });
   const basename = allAngles ? `${scene}-${camera}` : scene;
-  await page.screenshot({ path: resolve(output, `${basename}.png`), type: 'png' });
+  await page.screenshot({ path: resolve(output, `${basename}.png`), type: 'png', timeout: 60_000 });
   const evidence = await page.evaluate(() => ({
     version: window.__CRUISE_DEBUG__?.version,
     scene: window.__CRUISE_DEBUG__?.getScene(),

@@ -6,6 +6,8 @@ import type {
   ShipState,
   WorldState,
 } from '../core/contracts';
+import { getShipCaptain } from '../content';
+import { areFactionsHostile } from '../simulation/factions';
 import type { PresentationEvent } from './presentation';
 
 export type { PresentationEvent } from './presentation';
@@ -46,6 +48,10 @@ interface HudSnapshot {
   repairing: boolean;
   countdown: number;
   raceActive: boolean;
+  targetHull: number;
+  targetSurrendered: boolean;
+  targetOpening: boolean;
+  targetWeakPoint: string;
 }
 
 interface Callout {
@@ -58,6 +64,13 @@ interface VoyageChapter {
   scene: DebugScene;
   label: string;
   note: string;
+}
+
+interface TargetReadout {
+  intent: string;
+  opening: boolean;
+  weakPoint: string;
+  status: 'strong' | 'damaged' | 'critical' | 'surrendered';
 }
 
 const VOYAGE_CHAPTERS: readonly VoyageChapter[] = [
@@ -122,6 +135,17 @@ export class Hud {
   private calloutQueue: Callout[] = [];
   private calloutTimer?: number;
   private countdownTimer?: number;
+  private hitTimer?: number;
+  private volleyTimer?: number;
+  private currentPlayerId?: string;
+  private currentTarget?: ShipState;
+  private currentTargetReadout?: TargetReadout;
+  private hitCombo = 0;
+  private lastHitAt = 0;
+  private lastImpactAt = 0;
+  private lastImpactTarget?: string;
+  private lastImpactSection?: ShipSide;
+  private lastDamageAt = 0;
   private readonly els: Record<string, HTMLElement>;
   private readonly onKeyDown = (event: KeyboardEvent): void => this.handleKeyDown(event);
   private readonly onPointerDown = (): void => { void this.options.onUserGesture?.(); };
@@ -166,11 +190,14 @@ export class Hud {
 
   update(state: WorldState, _deltaSeconds = 0): void {
     this.updateWeather(state);
+    this.currentPlayerId = state.playerId;
     const player = state.ships.find((ship) => ship.id === state.playerId);
     if (!player) {
       this.els.shipName.textContent = 'Awaiting crew…';
       this.els.hud.setAttribute('data-active', 'false');
       this.updateRace(state);
+      this.els.target.hidden = true;
+      this.els.threatCompass.hidden = true;
       return;
     }
 
@@ -179,6 +206,7 @@ export class Hud {
     this.updateShipStatus(state, player);
     this.updateWeapons(player);
     this.updateTarget(state, player);
+    this.updateThreats(state, player);
     this.updateRace(state);
     this.updateRadar(state, player);
     this.observeState(state, player);
@@ -186,16 +214,48 @@ export class Hud {
 
   push(event: PresentationEvent): void {
     switch (event.type) {
-      case 'damage':
-      case 'impact':
-        this.flashDamage(event.severity ?? 0.5, event.section);
+      case 'impact': {
+        if (event.material === 'water') break;
+        const incoming = event.incoming ?? (!event.targetId || event.targetId === this.currentPlayerId);
+        if (incoming) this.flashDamage(event.severity ?? 0.5, event.section);
+        else if (event.targetId) {
+          this.registerHit(event.targetId, event.severity ?? 0.5, event.section, {
+            critical: event.critical,
+            disabled: event.disabled,
+            weakPoint: event.weakPoint,
+            combo: event.combo,
+          });
+        }
+        this.lastImpactAt = performance.now();
+        this.lastImpactTarget = event.targetId;
+        this.lastImpactSection = event.section;
         break;
+      }
+      case 'damage': {
+        const pairedImpact = performance.now() - this.lastImpactAt < 80
+          && event.targetId === this.lastImpactTarget
+          && event.section === this.lastImpactSection;
+        if (pairedImpact) break;
+        const incoming = event.incoming ?? (!event.targetId || event.targetId === this.currentPlayerId);
+        if (incoming) this.flashDamage(event.severity ?? 0.5, event.section);
+        else if (event.targetId) {
+          this.registerHit(event.targetId, event.severity ?? 0.5, event.section, {
+            critical: event.critical,
+            disabled: event.disabled,
+            weakPoint: event.weakPoint,
+            combo: event.combo,
+          });
+        }
+        break;
+      }
       case 'victory':
         this.flashBanner(event.title ?? 'VICTORY!', event.subtitle ?? 'The sea remembers your name', 'victory');
-        this.callout('CREW', 'We did it! Raise the colors!', 'success');
+        if (event.title?.includes('DISABLED')) this.callout('LOOKOUT', 'Target disabled! Their colors are coming down!', 'success');
+        else this.callout('CREW', 'We did it! Raise the colors!', 'success');
         break;
       case 'defeat':
         this.flashBanner(event.title ?? 'SHIP DISABLED', event.subtitle ?? 'The voyage is not over', 'defeat');
+        if (event.title?.includes('DISABLED')) this.callout('SHIPWRIGHT', 'We are disabled! All hands, save the ship!', 'danger');
         break;
       case 'discovery':
         this.flashBanner('LAND HO!', event.title, 'discovery');
@@ -216,6 +276,28 @@ export class Hud {
         break;
       case 'target-acquired':
         this.callout('LOOKOUT', `${event.name ?? 'Hostile ship'} sighted!`, 'danger');
+        if (event.opening) this.showTargetOpening(event.weakPoint ?? 'EXPOSED HULL');
+        break;
+      case 'target-status':
+        if (event.intent) this.els.targetIntent.textContent = event.intent.toUpperCase();
+        if (event.opening) this.showTargetOpening(event.weakPoint ?? 'EXPOSED HULL');
+        if (event.status === 'critical') this.callout('GUNNER', `${event.name ?? 'Target'} is listing—finish it!`, 'success');
+        if (event.status === 'disabled') this.callout('LOOKOUT', `${event.name ?? 'Target'} disabled!`, 'success');
+        if (event.status === 'surrendered') this.callout('LOOKOUT', 'Their colors are down—they surrender!', 'success');
+        break;
+      case 'reload':
+        this.pulseWeapon(event.side, event.phase === 'ready');
+        if (event.phase === 'ready') this.showVolleyStatus(event.side, 'RELOADED', 'ready');
+        break;
+      case 'combo':
+        this.registerHit('event-target', event.critical ? 1 : 0.55, undefined, {
+          critical: event.critical,
+          weakPoint: event.weakPoint,
+          combo: event.count,
+        });
+        break;
+      case 'threat':
+        if (event.level === 'incoming') this.pulseThreats();
         break;
       case 'repair':
         if (event.phase === 'start') this.callout('SHIPWRIGHT', 'Damage crew, move!', 'info');
@@ -226,6 +308,11 @@ export class Hud {
         if (event.phase === 'charge') this.flashBanner('SPECIAL', event.name ?? 'Charging!', 'special');
         break;
       case 'cannon-fired':
+        if (event.shipId === this.currentPlayerId) {
+          this.showVolleyStatus(event.side, 'FIRE!', 'fire');
+          if (event.side) this.pulseWeapon(event.side, false);
+        }
+        break;
       case 'thunder':
         break;
     }
@@ -263,6 +350,8 @@ export class Hud {
     this.element.removeEventListener('pointerdown', this.onPointerDown);
     if (this.calloutTimer) window.clearTimeout(this.calloutTimer);
     if (this.countdownTimer) window.clearTimeout(this.countdownTimer);
+    if (this.hitTimer) window.clearTimeout(this.hitTimer);
+    if (this.volleyTimer) window.clearTimeout(this.volleyTimer);
     this.element.remove();
   }
 
@@ -340,10 +429,18 @@ export class Hud {
 
         <section class="target-tag" data-ui="target" aria-label="Enemy target" hidden>
           <span class="target-eye" aria-hidden="true"></span>
-          <div><small>TARGET · <b data-ui="target-distance">0 m</b></small><strong data-ui="target-name">Enemy ship</strong></div>
+          <div><small>TARGET · <b data-ui="target-distance">0 m</b></small><strong data-ui="target-name">Enemy ship</strong><span class="target-captain">CAPT. <b data-ui="target-captain">UNKNOWN</b></span></div>
           <div class="target-hull"><i data-ui="target-hull"></i></div>
           <em data-ui="target-intent">MANEUVERING</em>
+          <div class="target-opening" data-ui="target-opening" hidden><span>FIRE WINDOW</span><b data-ui="target-weak">PORT HULL</b></div>
         </section>
+
+        <div class="threat-compass" data-ui="threat-compass" aria-hidden="true" hidden>
+          <i class="threat-pip" data-ui="threat-0"><b>!</b></i>
+          <i class="threat-pip" data-ui="threat-1"><b>!</b></i>
+          <i class="threat-pip" data-ui="threat-2"><b>!</b></i>
+          <i class="threat-pip" data-ui="threat-3"><b>!</b></i>
+        </div>
 
         <section class="ship-vitals ink-panel" aria-label="Ship condition">
           <div class="ship-identity">
@@ -391,6 +488,12 @@ export class Hud {
         <div class="wrong-way" data-ui="wrong-way" hidden><small>TURN AROUND</small><strong>WRONG WAY!</strong></div>
         <div class="countdown-burst" data-ui="countdown" hidden>3</div>
         <div class="pause-stamp" data-ui="pause-stamp" hidden>VOYAGE PAUSED</div>
+        <div class="hit-confirm" data-ui="hit-confirm" data-tone="hit" hidden>
+          <small data-ui="hit-label">HULL HIT</small><strong data-ui="combo-count">2 HIT CHAIN</strong><span data-ui="hit-section">PORT SECTION</span>
+        </div>
+        <div class="volley-stamp" data-ui="volley-stamp" data-tone="fire" hidden>
+          <small data-ui="volley-side">PORT BATTERY</small><strong data-ui="volley-label">FIRE!</strong>
+        </div>
 
         <aside class="crew-callout" data-ui="callout" data-tone="info" aria-live="assertive" hidden>
           <div class="crew-portrait" aria-hidden="true"><i></i></div>
@@ -719,18 +822,127 @@ export class Hud {
   private updateTarget(state: WorldState, player: ShipState): void {
     const explicit = player.targetId ? state.ships.find((ship) => ship.id === player.targetId) : undefined;
     const target = explicit ?? (state.mode === 'combat' ? this.nearestOpponent(state, player) : undefined);
+    this.currentTarget = target;
+    this.currentTargetReadout = target ? this.targetReadout(state, player, target) : undefined;
     this.els.target.hidden = !target;
-    if (!target) return;
+    if (!target || !this.currentTargetReadout) {
+      this.els.targetOpening.hidden = true;
+      return;
+    }
 
     const dx = target.position.x - player.position.x;
     const dz = target.position.z - player.position.z;
     const distance = Math.hypot(dx, dz);
     const hull = this.integrity(target.damage.hull);
+    const readout = this.currentTargetReadout;
     this.els.targetName.textContent = target.name;
+    this.els.targetCaptain.textContent = getShipCaptain(target.kind).name;
     this.els.targetDistance.textContent = distance >= 1000 ? `${(distance / 1000).toFixed(1)} km` : `${Math.round(distance)} m`;
     this.els.targetHull.style.width = `${hull}%`;
-    this.els.targetIntent.textContent = target.surrendered ? 'SURRENDERING' : target.ai ? target.ai.toUpperCase() : 'MANEUVERING';
-    this.els.target.dataset.condition = hull < 30 ? 'critical' : hull < 60 ? 'damaged' : 'strong';
+    this.els.targetIntent.textContent = readout.intent;
+    this.els.target.dataset.condition = readout.status;
+    this.els.target.dataset.intent = target.surrendered ? 'surrendered' : readout.opening ? 'opening' : 'tracking';
+    this.els.targetOpening.hidden = !readout.opening;
+    this.els.targetWeak.textContent = readout.weakPoint;
+  }
+
+  private targetReadout(state: WorldState, player: ShipState, target: ShipState): TargetReadout {
+    const hull = this.integrity(target.damage.hull);
+    const sectionWeaknesses = (['bow', 'stern', 'port', 'starboard'] as const).map((side) => ({
+      label: `${side.toUpperCase()} HULL`,
+      score: target.damage.sections[side],
+    }));
+    const weaknesses = [
+      ...sectionWeaknesses,
+      { label: 'GUN DECK', score: target.damage.weapons * 1.04 },
+      { label: 'RIGGING', score: target.damage.sails },
+      { label: 'CREW DECK', score: target.damage.crew * 0.94 },
+      { label: 'WATERLINE', score: target.damage.hull * 0.9 },
+    ].sort((first, second) => second.score - first.score);
+    const weakness = weaknesses[0];
+    const allReloading = target.weapons.portCooldown > 0.85
+      && target.weapons.starboardCooldown > 0.85;
+    const openingTimer = state.combat?.weakPointTargetId === target.id ? state.combat.weakPointTimer : 0;
+    const openingSide = openingTimer > 0 ? state.combat?.weakPointSide : undefined;
+    const opening = !target.surrendered && openingTimer > 0 && openingSide !== undefined;
+    const weakPoint = opening
+      ? `${openingSide.toUpperCase()} GUN DECK · ${openingTimer.toFixed(1)}s`
+      : weakness.score >= 0.25
+        ? weakness.label
+        : target.repairing ? 'REPAIR CREW' : allReloading ? 'GUNS RELOADING' : 'HULL PLATING';
+
+    const toPlayerX = player.position.x - target.position.x;
+    const toPlayerZ = player.position.z - target.position.z;
+    const distance = Math.hypot(toPlayerX, toPlayerZ);
+    const localForward = toPlayerX * -Math.sin(target.heading) + toPlayerZ * -Math.cos(target.heading);
+    const localStarboard = toPlayerX * Math.cos(target.heading) + toPlayerZ * -Math.sin(target.heading);
+    const broadsideWindow = Math.abs(localForward) < Math.abs(localStarboard) * 0.72;
+    const armedSideCooldown = localStarboard > 0 ? target.weapons.starboardCooldown : target.weapons.portCooldown;
+    const ramming = distance < 70
+      && localForward > Math.abs(localStarboard) * 0.82
+      && target.speed > target.maxSpeed * 0.48;
+
+    let intent = target.ai ? target.ai.toUpperCase() : 'MANEUVERING';
+    if (target.ai === 'aggressive') intent = 'CLOSING FAST';
+    if (target.ai === 'tactical') intent = 'SEEKING BROADSIDE';
+    if (target.ai === 'reckless') intent = 'ERRATIC COURSE';
+    if (target.ai === 'racer') intent = 'BREAKING AWAY';
+    if (hull < 22) intent = 'LISTING • CRITICAL';
+    if (broadsideWindow && armedSideCooldown <= 0.18) intent = 'BROADSIDE READY';
+    if (target.brace > 0.55) intent = 'BRACING';
+    if (target.repairing) intent = 'REPAIRING';
+    if (opening) intent = 'RELOADING • OPENING';
+    if (ramming) intent = 'RAMMING COURSE';
+    if (target.surrendered) intent = 'COLORS DOWN';
+
+    const status = target.surrendered ? 'surrendered' : hull < 30 ? 'critical' : hull < 60 ? 'damaged' : 'strong';
+    return { intent, opening, weakPoint, status };
+  }
+
+  private updateThreats(state: WorldState, player: ShipState): void {
+    const incomingOwners = new Set<string>();
+    for (const projectile of state.projectiles) {
+      if (projectile.ownerId === player.id) continue;
+      const toPlayerX = player.position.x - projectile.position.x;
+      const toPlayerZ = player.position.z - projectile.position.z;
+      const distance = Math.hypot(toPlayerX, toPlayerZ);
+      const closing = projectile.velocity.x * toPlayerX + projectile.velocity.z * toPlayerZ > 0;
+      if (distance < 185 && closing) incomingOwners.add(projectile.ownerId);
+    }
+
+    const threats = state.ships
+      .filter((ship) => ship.id !== player.id && !ship.surrendered
+        && (ship.targetId === player.id || areFactionsHostile(ship.faction, player.faction)))
+      .map((ship) => ({
+        ship,
+        distance: Math.hypot(ship.position.x - player.position.x, ship.position.z - player.position.z),
+      }))
+      .filter((entry) => entry.distance < 440)
+      .sort((first, second) => first.distance - second.distance)
+      .slice(0, 4);
+
+    this.els.threatCompass.hidden = threats.length === 0 || state.race.active;
+    for (let index = 0; index < 4; index += 1) {
+      const pip = this.els[`threat-${index}`];
+      const threat = threats[index];
+      pip.hidden = !threat;
+      if (!threat) continue;
+      const dx = threat.ship.position.x - player.position.x;
+      const dz = threat.ship.position.z - player.position.z;
+      const bearing = Math.atan2(-dx, -dz);
+      const relative = Math.atan2(Math.sin(bearing - player.heading), Math.cos(bearing - player.heading));
+      const ready = Math.min(
+        threat.ship.weapons.portCooldown,
+        threat.ship.weapons.starboardCooldown,
+        threat.ship.weapons.bowCooldown,
+      ) <= 0.15;
+      const level = incomingOwners.has(threat.ship.id) ? 'incoming' : ready && threat.distance < 185 ? 'armed' : 'tracking';
+      pip.dataset.level = level;
+      pip.style.left = `${50 + Math.sin(relative) * 46}%`;
+      pip.style.top = `${50 - Math.cos(relative) * 43}%`;
+      pip.style.setProperty('--threat-angle', `${relative * 180 / Math.PI + 180}deg`);
+      pip.title = `${getShipCaptain(threat.ship.kind).name} aboard ${threat.ship.name}: ${level}`;
+    }
   }
 
   private updateRace(state: WorldState): void {
@@ -768,7 +980,9 @@ export class Hud {
       const x = (ship.position.x - player.position.x) * scale;
       const y = (ship.position.z - player.position.z) * scale;
       if (Math.hypot(x, y) > 44) return '';
-      const relation = ship.surrendered ? 'neutral' : ship.targetId === player.id || state.mode === 'combat' ? 'hostile' : 'unknown';
+      const relation = ship.surrendered
+        ? 'neutral'
+        : ship.targetId === player.id || areFactionsHostile(ship.faction, player.faction) ? 'hostile' : 'unknown';
       return `<path class="chart-ship chart-ship--${relation}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${this.normalizedDegrees(ship.heading).toFixed(1)})" d="M0-4L3 3L0 2L-3 3Z"/>`;
     }).join('');
     this.els.radarIslands.innerHTML = islandMarkup;
@@ -783,10 +997,14 @@ export class Hud {
       weather: state.weather,
       objective: state.objective,
       hull,
-      targetId: player.targetId,
+      targetId: this.currentTarget?.id,
       repairing: player.repairing,
       countdown: Math.ceil(state.race.countdown),
       raceActive: state.race.active,
+      targetHull: this.currentTarget ? this.integrity(this.currentTarget.damage.hull) : 100,
+      targetSurrendered: this.currentTarget?.surrendered ?? false,
+      targetOpening: this.currentTargetReadout?.opening ?? false,
+      targetWeakPoint: this.currentTargetReadout?.weakPoint ?? '',
     };
     const previous = this.snapshot;
     this.snapshot = next;
@@ -796,7 +1014,16 @@ export class Hud {
     if (next.hull < 30 && previous.hull >= 30) this.callout('SHIPWRIGHT', 'Hull is critical! Give me a repair crew!', 'danger');
     if (next.targetId && next.targetId !== previous.targetId) {
       const target = state.ships.find((ship) => ship.id === next.targetId);
-      this.callout('LOOKOUT', `${target?.name ?? 'Target'} in cannon range!`, 'danger');
+      const captain = target ? getShipCaptain(target.kind).name : undefined;
+      this.callout('LOOKOUT', `${captain ? `${captain}'s ` : ''}${target?.name ?? 'target'} in cannon range!`, 'danger');
+    }
+    if (next.targetId && next.targetId === previous.targetId) {
+      if (next.targetHull < 30 && previous.targetHull >= 30) this.callout('GUNNER', 'Enemy hull critical—one clean broadside!', 'success');
+      if (next.targetSurrendered && !previous.targetSurrendered) this.callout('LOOKOUT', 'Their colors are down—they surrender!', 'success');
+      if (next.targetOpening && !previous.targetOpening) {
+        this.restartAnimation(this.els.targetOpening, 'is-active');
+        this.callout('GUNNER', `Opening on ${next.targetWeakPoint.toLowerCase()}—fire!`, 'success');
+      }
     }
     if (next.repairing && !previous.repairing) this.callout('SHIPWRIGHT', 'Tools out! Keep us steady!', 'info');
     if (!next.repairing && previous.repairing) this.callout('SHIPWRIGHT', 'Patch is holding, Captain!', 'success');
@@ -808,7 +1035,8 @@ export class Hud {
     let nearest: ShipState | undefined;
     let nearestDistance = Number.POSITIVE_INFINITY;
     for (const ship of state.ships) {
-      if (ship.id === player.id || ship.surrendered) continue;
+      if (ship.id === player.id || ship.surrendered
+        || ship.targetId !== player.id && !areFactionsHostile(ship.faction, player.faction)) continue;
       const distance = Math.hypot(ship.position.x - player.position.x, ship.position.z - player.position.z);
       if (distance < nearestDistance) {
         nearest = ship;
@@ -828,9 +1056,74 @@ export class Hud {
   private setWeapon(key: 'port' | 'starboard' | 'bow', cooldown: number): void {
     const ready = cooldown <= 0.001;
     const box = this.els[`weapon${this.capitalize(key)}`];
+    const wasReady = box.dataset.ready === 'true';
     box.dataset.ready = String(ready);
     this.els[`weapon${this.capitalize(key)}State`].textContent = ready ? 'READY' : `${cooldown.toFixed(1)}s`;
     this.els[`weapon${this.capitalize(key)}Bar`].style.width = ready ? '100%' : `${Math.max(4, 100 - Math.min(100, cooldown * 28))}%`;
+    if (ready && !wasReady) {
+      this.restartAnimation(box, 'just-reloaded');
+      this.showVolleyStatus(key, 'RELOADED', 'ready');
+    }
+  }
+
+  private registerHit(
+    targetId: string,
+    severity: number,
+    section?: ShipSide,
+    options: { critical?: boolean; disabled?: boolean; weakPoint?: string; combo?: number } = {},
+  ): void {
+    const now = performance.now();
+    this.hitCombo = options.combo ?? (now - this.lastHitAt < 2200 ? this.hitCombo + 1 : 1);
+    this.lastHitAt = now;
+    const critical = options.critical || severity >= 0.82;
+    this.els.hitLabel.textContent = options.disabled ? 'SHIP DISABLED!' : critical ? 'CRITICAL HIT!' : 'HULL HIT';
+    this.els.comboCount.textContent = this.hitCombo > 1 ? `${this.hitCombo} HIT CHAIN` : 'DIRECT HIT';
+    this.els.hitSection.textContent = options.weakPoint ?? (section ? `${section.toUpperCase()} SECTION` : 'SOLID CONTACT');
+    this.els.hitConfirm.dataset.tone = options.disabled ? 'disabled' : critical ? 'critical' : 'hit';
+    this.els.hitConfirm.dataset.target = targetId;
+    this.els.hitConfirm.hidden = false;
+    this.restartAnimation(this.els.hitConfirm, 'is-active');
+    if (this.hitTimer) window.clearTimeout(this.hitTimer);
+    this.hitTimer = window.setTimeout(() => {
+      this.els.hitConfirm.hidden = true;
+      this.hitTimer = undefined;
+    }, critical ? 1450 : 1050);
+    if (options.disabled) this.callout('LOOKOUT', 'Target disabled! Their colors are coming down!', 'success');
+  }
+
+  private showVolleyStatus(side: ShipSide | undefined, label: string, tone: 'fire' | 'ready'): void {
+    const sideLabel = side === 'port' || side === 'starboard' ? `${side.toUpperCase()} BATTERY` : side === 'bow' ? 'BOW CANNON' : 'BROADSIDE';
+    this.els.volleySide.textContent = sideLabel;
+    this.els.volleyLabel.textContent = label;
+    this.els.volleyStamp.dataset.tone = tone;
+    this.els.volleyStamp.hidden = false;
+    this.restartAnimation(this.els.volleyStamp, 'is-active');
+    if (this.volleyTimer) window.clearTimeout(this.volleyTimer);
+    this.volleyTimer = window.setTimeout(() => {
+      this.els.volleyStamp.hidden = true;
+      this.volleyTimer = undefined;
+    }, 780);
+  }
+
+  private pulseWeapon(side: ShipSide, ready: boolean): void {
+    if (side === 'stern') return;
+    const box = this.els[`weapon${this.capitalize(side)}`];
+    if (!box) return;
+    this.restartAnimation(box, ready ? 'just-reloaded' : 'just-fired');
+  }
+
+  private showTargetOpening(weakPoint: string): void {
+    this.els.targetOpening.hidden = false;
+    this.els.targetWeak.textContent = weakPoint.toUpperCase();
+    this.els.target.dataset.intent = 'opening';
+    this.restartAnimation(this.els.targetOpening, 'is-active');
+  }
+
+  private pulseThreats(): void {
+    for (let index = 0; index < 4; index += 1) {
+      const pip = this.els[`threat-${index}`];
+      if (pip && !pip.hidden) this.restartAnimation(pip, 'is-alerting');
+    }
   }
 
   private presentNextCallout(): void {
@@ -857,6 +1150,9 @@ export class Hud {
   }
 
   private flashDamage(severity: number, section?: ShipSide): void {
+    const now = performance.now();
+    if (now - this.lastDamageAt < 70) return;
+    this.lastDamageAt = now;
     this.els.damageFlash.dataset.side = section ?? 'all';
     this.els.damageFlash.style.setProperty('--damage-alpha', String(0.18 + Math.min(1, Math.max(0, severity)) * 0.38));
     this.restartAnimation(this.els.damageFlash, 'is-active');

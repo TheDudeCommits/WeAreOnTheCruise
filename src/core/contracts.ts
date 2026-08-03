@@ -16,6 +16,17 @@ export type GameMode = 'explore' | 'combat' | 'race' | 'discovery' | 'boarding';
 export type AmmoKind = 'round' | 'chain' | 'heavy' | 'explosive';
 export type ShipSide = 'bow' | 'stern' | 'port' | 'starboard';
 export type AiPersonality = 'aggressive' | 'tactical' | 'reckless' | 'racer';
+export type ShipFaction =
+  | 'straw-hat'
+  | 'marine'
+  | 'red-hair'
+  | 'whitebeard'
+  | 'heart'
+  | 'big-mom'
+  | 'roger'
+  | 'merchant'
+  | 'independent';
+export type AiCombatRole = 'broadside' | 'ranged' | 'rammer' | 'flanker' | 'escort' | 'flee';
 
 export interface ShipDamage {
   hull: number;
@@ -54,7 +65,20 @@ export interface ShipState {
   repairing: boolean;
   surrendered: boolean;
   ai?: AiPersonality;
+  faction?: ShipFaction;
+  combatRole?: AiCombatRole;
   targetId?: string;
+}
+
+export interface CombatState {
+  combo: number;
+  comboTimer: number;
+  weakPointTargetId?: string;
+  weakPointSide?: ShipSide;
+  weakPointTimer: number;
+  defeated: number;
+  surrendered: number;
+  reinforcements: number;
 }
 
 export interface ProjectileState {
@@ -107,6 +131,8 @@ export interface WorldState {
   projectiles: ProjectileState[];
   islands: IslandState[];
   race: RaceState;
+  /** Optional for bootstrap compatibility; GameSimulation always supplies it. */
+  combat?: CombatState;
 }
 
 export type InputAction =

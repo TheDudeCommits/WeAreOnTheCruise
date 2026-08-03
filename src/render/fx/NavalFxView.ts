@@ -21,6 +21,15 @@ interface WakeTrail {
   width: number;
 }
 
+interface ShockRing {
+  active: boolean;
+  position: THREE.Vector3;
+  life: number;
+  maxLife: number;
+  size: number;
+  color: THREE.Color;
+}
+
 export interface NavalFxViewOptions {
   projectileCapacity?: number;
   puffCapacity?: number;
@@ -35,8 +44,10 @@ export class NavalFxView {
   private readonly projectileMesh: THREE.InstancedMesh;
   private readonly trailMesh: THREE.InstancedMesh;
   private readonly puffMesh: THREE.InstancedMesh;
+  private readonly ringMesh: THREE.InstancedMesh;
   private readonly projectileCapacity: number;
   private readonly puffs: Puff[];
+  private readonly rings: ShockRing[];
   private readonly wakeSegments: number;
   private readonly wakes = new Map<string, WakeTrail>();
   private readonly dummy = new THREE.Object3D();
@@ -44,6 +55,7 @@ export class NavalFxView {
   private readonly direction = new THREE.Vector3();
   private readonly projectileColor = new THREE.Color();
   private readonly damageSpawnTime = new Map<string, number>();
+  private readonly ships = new Map<string, ShipState>();
   private waveSampler?: OceanSampler;
   private lastTime = 0;
 
@@ -54,7 +66,7 @@ export class NavalFxView {
     this.wakeSegments = Math.max(12, options.wakeSegments ?? 42);
     this.waveSampler = options.waveSampler;
 
-    const projectileGeometry = new THREE.IcosahedronGeometry(0.42, 1);
+    const projectileGeometry = new THREE.IcosahedronGeometry(0.52, 1);
     const projectileMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
     this.projectileMesh = new THREE.InstancedMesh(projectileGeometry, projectileMaterial, this.projectileCapacity);
     this.projectileMesh.name = 'pooled-projectiles';
@@ -62,8 +74,8 @@ export class NavalFxView {
     this.projectileMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.root.add(this.projectileMesh);
 
-    const trailGeometry = new THREE.CylinderGeometry(0.1, 0.3, 2.8, 5, 1, true);
-    const trailMaterial = new THREE.MeshBasicMaterial({ color: 0xf6d79a, transparent: true, opacity: 0.68, depthWrite: false });
+    const trailGeometry = new THREE.CylinderGeometry(0.07, 0.22, 2.8, 6, 1, true);
+    const trailMaterial = new THREE.MeshBasicMaterial({ color: 0xdedbd2, transparent: true, opacity: 0.34, depthWrite: false });
     this.trailMesh = new THREE.InstancedMesh(trailGeometry, trailMaterial, this.projectileCapacity);
     this.trailMesh.name = 'pooled-projectile-trails';
     this.trailMesh.frustumCulled = false;
@@ -87,6 +99,25 @@ export class NavalFxView {
       color: new THREE.Color(),
     }));
     this.root.add(this.puffMesh);
+
+    const ringCapacity = 48;
+    this.ringMesh = new THREE.InstancedMesh(
+      new THREE.RingGeometry(0.76, 1, 28),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.58, depthWrite: false, side: THREE.DoubleSide }),
+      ringCapacity,
+    );
+    this.ringMesh.name = 'pooled-combat-shock-rings';
+    this.ringMesh.frustumCulled = false;
+    this.ringMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.rings = Array.from({ length: ringCapacity }, () => ({
+      active: false,
+      position: new THREE.Vector3(),
+      life: 0,
+      maxLife: 1,
+      size: 1,
+      color: new THREE.Color(),
+    }));
+    this.root.add(this.ringMesh);
   }
 
   setWaveSampler(sampler: OceanSampler | undefined): void {
@@ -96,36 +127,68 @@ export class NavalFxView {
   sync(state: WorldState, time = state.elapsed): void {
     const dt = Math.min(0.1, Math.max(0, time - this.lastTime));
     this.lastTime = time;
+    this.ships.clear();
+    for (const ship of state.ships) this.ships.set(ship.id, ship);
     this.syncProjectiles(state);
     this.spawnDamageSmoke(state, time);
     this.updatePuffs(dt);
+    this.updateRings(dt);
     this.syncWakes(state, time);
   }
 
   consume(events: readonly SimulationEvent[]): void {
     for (const event of events) {
       switch (event.type) {
-        case 'cannon-fired':
-          this.spawnBurst(event.position, Math.min(14, event.count + 7), 0x2b2935, 2.15, 1.65, event.shipId.length);
-          this.spawnBurst(event.position, 4, 0xffd66b, 1.6, 0.38, event.count);
+        case 'cannon-fired': {
+          const ship = this.ships.get(event.shipId);
+          const spec = ship ? getShipSpec(ship.kind) : undefined;
+          const sideSign = event.side === 'port' ? -1 : 1;
+          const forwardX = ship ? -Math.sin(ship.heading) : 0;
+          const forwardZ = ship ? -Math.cos(ship.heading) : -1;
+          const starboardX = ship ? Math.cos(ship.heading) : 1;
+          const starboardZ = ship ? -Math.sin(ship.heading) : 0;
+          const count = Math.max(1, event.count);
+          for (let index = 0; index < count; index += 1) {
+            const along = event.side === 'bow' || !spec ? 0 : (index / Math.max(1, count - 1) - 0.5) * spec.length * 0.44;
+            const muzzle = event.side === 'bow' || !ship || !spec
+              ? event.position
+              : {
+                  x: ship.position.x + forwardX * along + starboardX * sideSign * spec.beam * 0.52,
+                  y: ship.position.y + spec.draft * 0.46 + 1.2,
+                  z: ship.position.z + forwardZ * along + starboardZ * sideSign * spec.beam * 0.52,
+                };
+            const bias = event.side === 'bow'
+              ? { x: forwardX * 4.5, y: 0.8, z: forwardZ * 4.5 }
+              : { x: starboardX * sideSign * 4.2, y: 0.7, z: starboardZ * sideSign * 4.2 };
+            this.spawnBurst(muzzle, 6, 0x45414a, 1.9, 1.55, event.shipId.length * 19 + index * 31, 1.75, bias);
+            this.spawnBurst(muzzle, 3, 0xffe7a0, 2.5, 0.2, event.count * 11 + index * 17, 1.15, bias);
+          }
           break;
+        }
         case 'projectile-impact':
-          this.spawnBurst(event.position, event.ammo === 'explosive' ? 16 : 8, event.ammo === 'explosive' ? 0xff693f : 0x302735, 2.25, 1.15, event.projectileId);
+          this.spawnBurst(event.position, event.ammo === 'explosive' ? 24 : 14, event.ammo === 'explosive' ? 0xff693f : 0x302735, 3.7, 1.55, event.projectileId, event.weakPoint ? 2.7 : 2.05, { x: 0, y: 2.8, z: 0 });
+          this.spawnBurst(event.position, event.weakPoint ? 16 : 8, event.weakPoint ? 0xffe36b : 0xd6a46a, 5.2, 0.72, event.projectileId + 101, event.weakPoint ? 2.1 : 1.25);
+          this.spawnRing(event.position, event.weakPoint ? 8.5 : 5.2, event.weakPoint ? 0xffef72 : 0xff8b4e, event.weakPoint ? 0.7 : 0.48);
           break;
         case 'water-impact':
-          this.spawnBurst(event.position, event.projectileId === 0 ? 15 : 7, 0xeafaff, event.projectileId === 0 ? 2.8 : 1.4, 0.85, event.projectileId + 17);
+          this.spawnBurst(event.position, event.projectileId === 0 ? 26 : 14, 0xeafaff, event.projectileId === 0 ? 4.8 : 3.1, 1.35, event.projectileId + 17, event.projectileId === 0 ? 3.6 : 2.25, { x: 0, y: 4.8, z: 0 });
+          this.spawnRing(event.position, event.projectileId === 0 ? 11 : 6.5, 0xeafaff, 0.85);
           break;
         case 'ram':
-          this.spawnBurst(event.position, 18, 0xf1e3c1, Math.min(4, 1.5 + event.force * 0.15), 1.05, event.attackerId.length + event.targetId.length);
+          this.spawnBurst(event.position, 32, 0xf1e3c1, Math.min(7, 2.8 + event.force * 0.18), 1.5, event.attackerId.length + event.targetId.length, 3.2, { x: 0, y: 3.5, z: 0 });
+          this.spawnRing(event.position, Math.min(15, 7 + event.force * 0.3), 0xffe6a3, 0.9);
           break;
         case 'special':
-          this.spawnBurst(event.position, 24, 0x58efff, 3.5, 1.1, event.name.length);
+          this.spawnBurst(event.position, 38, 0x58efff, 6.2, 1.65, event.name.length, 3.4, { x: 0, y: 3, z: 0 });
+          this.spawnRing(event.position, 15, 0x58efff, 1.1);
           break;
         case 'repair':
           this.spawnBurst(event.position, 4, 0xf6dc77, 0.8, 0.65, event.shipId.length);
           break;
         case 'ship-disabled':
-          this.spawnBurst(event.position, 26, 0x211f2a, 3.4, 2.2, event.shipId.length * 3);
+          this.spawnBurst(event.position, 42, 0x211f2a, 4.5, 4.2, event.shipId.length * 3, 3.8, { x: 0, y: 4.2, z: 0 });
+          this.spawnBurst(event.position, 18, event.surrendered ? 0xe9e1c7 : 0xff6a39, 3.4, 1.2, event.shipId.length * 13, 2.4);
+          this.spawnRing(event.position, 13, event.surrendered ? 0xf6efcf : 0xff643e, 1.2);
           break;
         case 'checkpoint':
         case 'race-finished':
@@ -148,6 +211,8 @@ export class NavalFxView {
     (this.trailMesh.material as THREE.Material).dispose();
     this.puffMesh.geometry.dispose();
     (this.puffMesh.material as THREE.Material).dispose();
+    this.ringMesh.geometry.dispose();
+    (this.ringMesh.material as THREE.Material).dispose();
     this.root.removeFromParent();
   }
 
@@ -156,7 +221,7 @@ export class NavalFxView {
     for (let index = 0; index < count; index += 1) {
       const projectile = state.projectiles[index];
       const speed = Math.hypot(projectile.velocity.x, projectile.velocity.y, projectile.velocity.z);
-      const scale = projectile.ammo === 'heavy' ? 1.45 : projectile.ammo === 'explosive' ? 1.22 : projectile.ammo === 'chain' ? 0.82 : 1;
+      const scale = projectile.ammo === 'heavy' ? 1.25 : projectile.ammo === 'explosive' ? 1.1 : projectile.ammo === 'chain' ? 0.7 : 0.92;
       this.dummy.position.set(projectile.position.x, projectile.position.y, projectile.position.z);
       this.dummy.scale.setScalar(scale);
       this.dummy.quaternion.identity();
@@ -167,12 +232,12 @@ export class NavalFxView {
 
       this.direction.set(projectile.velocity.x, projectile.velocity.y, projectile.velocity.z).normalize();
       this.dummy.position.set(
-        projectile.position.x - this.direction.x * 1.8,
-        projectile.position.y - this.direction.y * 1.8,
-        projectile.position.z - this.direction.z * 1.8,
+        projectile.position.x - this.direction.x * 1.35,
+        projectile.position.y - this.direction.y * 1.35,
+        projectile.position.z - this.direction.z * 1.35,
       );
       this.dummy.quaternion.setFromUnitVectors(this.up, this.direction);
-      this.dummy.scale.set(1, Math.min(2.4, speed / 34), 1);
+      this.dummy.scale.set(1, Math.min(2.1, speed / 48), 1);
       this.dummy.updateMatrix();
       this.trailMesh.setMatrixAt(index, this.dummy.matrix);
     }
@@ -208,6 +273,31 @@ export class NavalFxView {
     this.puffMesh.count = rendered;
     this.puffMesh.instanceMatrix.needsUpdate = true;
     if (this.puffMesh.instanceColor) this.puffMesh.instanceColor.needsUpdate = true;
+  }
+
+  private updateRings(dt: number): void {
+    let rendered = 0;
+    for (const ring of this.rings) {
+      if (!ring.active) continue;
+      ring.life -= dt;
+      if (ring.life <= 0) {
+        ring.active = false;
+        continue;
+      }
+      const age = 1 - ring.life / ring.maxLife;
+      const scale = ring.size * (0.12 + age * 1.25);
+      this.dummy.position.copy(ring.position);
+      this.dummy.position.y += age * ring.size * 0.08;
+      this.dummy.rotation.set(-Math.PI / 2, 0, 0);
+      this.dummy.scale.setScalar(scale);
+      this.dummy.updateMatrix();
+      this.ringMesh.setMatrixAt(rendered, this.dummy.matrix);
+      this.ringMesh.setColorAt(rendered, ring.color);
+      rendered += 1;
+    }
+    this.ringMesh.count = rendered;
+    this.ringMesh.instanceMatrix.needsUpdate = true;
+    if (this.ringMesh.instanceColor) this.ringMesh.instanceColor.needsUpdate = true;
   }
 
   private syncWakes(state: WorldState, time: number): void {
@@ -344,12 +434,23 @@ export class NavalFxView {
           0.95 + layer * 0.18,
           2.8 + layer * 0.35,
           Math.floor(time * 10) + ship.id.length + layer * 19,
+          severe ? 2.8 + layer * 0.9 : 1.75,
+          { x: 0, y: 1.8 + layer, z: 0 },
         );
       }
     }
   }
 
-  private spawnBurst(position: Vec3, count: number, color: number, speed: number, life: number, seed: number): void {
+  private spawnBurst(
+    position: Vec3,
+    count: number,
+    color: number,
+    speed: number,
+    life: number,
+    seed: number,
+    sizeScale = 1,
+    bias?: Vec3,
+  ): void {
     for (let index = 0; index < count; index += 1) {
       const puff = this.puffs.find((candidate) => !candidate.active);
       if (!puff) return;
@@ -358,17 +459,32 @@ export class NavalFxView {
       const magnitude = speed * (0.45 + pseudo(seed + index * 47) * 0.75);
       puff.active = true;
       puff.position.set(position.x, position.y, position.z);
-      puff.velocity.set(Math.cos(angle) * magnitude, lift * magnitude, Math.sin(angle) * magnitude);
+      puff.velocity.set(
+        Math.cos(angle) * magnitude + (bias?.x ?? 0),
+        lift * magnitude + (bias?.y ?? 0),
+        Math.sin(angle) * magnitude + (bias?.z ?? 0),
+      );
       puff.maxLife = life * (0.7 + pseudo(seed + index * 61) * 0.6);
       puff.life = puff.maxLife;
-      puff.size = 0.65 + pseudo(seed + index * 79) * 1.15;
+      puff.size = (0.65 + pseudo(seed + index * 79) * 1.15) * sizeScale;
       puff.color.setHex(color);
     }
+  }
+
+  private spawnRing(position: Vec3, size: number, color: number, life: number): void {
+    const ring = this.rings.find((candidate) => !candidate.active);
+    if (!ring) return;
+    ring.active = true;
+    ring.position.set(position.x, position.y, position.z);
+    ring.life = life;
+    ring.maxLife = life;
+    ring.size = size;
+    ring.color.setHex(color);
   }
 }
 
 function ammoColor(ammo: AmmoKind): number {
-  if (ammo === 'chain') return 0x8feaff;
+  if (ammo === 'chain') return 0x343947;
   if (ammo === 'heavy') return 0x332b32;
   if (ammo === 'explosive') return 0xff653f;
   return 0x292735;

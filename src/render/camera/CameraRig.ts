@@ -8,7 +8,7 @@ const OFFSETS: Record<CameraPreset, THREE.Vector3> = {
   broadside: new THREE.Vector3(64, 20, 8),
   bow: new THREE.Vector3(0, 10, -24),
   deck: new THREE.Vector3(-24, 14, 18),
-  cinematic: new THREE.Vector3(-55, 18, 48),
+  cinematic: new THREE.Vector3(-55, 20, -48),
   overhead: new THREE.Vector3(0, 150, 62),
 };
 

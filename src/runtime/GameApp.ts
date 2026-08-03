@@ -16,7 +16,13 @@ import { NavalFxView, RaceCourseView } from '../render/fx';
 import { CelEdgeComposer } from '../render/npr';
 import { ShipFleetView } from '../render/ships';
 import { WorldRenderer } from '../render/world';
-import { GameSimulation, type OceanSampler, type SimulationEvent } from '../simulation';
+import {
+  defaultCombatRoleForShip,
+  defaultFactionForShip,
+  GameSimulation,
+  type OceanSampler,
+  type SimulationEvent,
+} from '../simulation';
 import { Hud } from '../ui';
 import type { AppConfig } from './AppConfig';
 import { toPresentationEvents } from './eventAdapter';
@@ -43,6 +49,7 @@ export class GameApp {
   private cameraPresetIndex = 0;
   private viewportWidth = 0;
   private viewportHeight = 0;
+  private impactFreeze = 0;
   private disposed = false;
   private readonly shipMaterials = new Set<THREE.Material>();
 
@@ -136,7 +143,8 @@ export class GameApp {
     const delta = Math.min(0.1, Math.max(0, (now - this.lastFrameAt) / 1000));
     this.lastFrameAt = now;
     this.input.pollGamepad();
-    this.simulation.update(delta);
+    if (this.impactFreeze > 0) this.impactFreeze = Math.max(0, this.impactFreeze - delta);
+    else this.simulation.update(delta);
     this.renderFrame(delta);
     this.frameRequest = requestAnimationFrame(this.loop);
   };
@@ -162,7 +170,7 @@ export class GameApp {
     this.raceCourse.update(state.elapsed);
     this.raceCourse.setActiveCheckpoint(state.race.checkpoint);
     const cameraSubject = this.options.captureMode && this.scene === 'moby-scale'
-      ? state.ships.find((ship) => ship.id === player.targetId) ?? player
+      ? state.ships.find((ship) => ship.kind === 'moby-dick') ?? player
       : player;
     this.cameraRig.update(cameraSubject, Math.max(delta, 1 / 240), state.elapsed, immediateCamera);
     const speedRatio = Math.min(1, Math.abs(player.speed) / Math.max(1, player.maxSpeed));
@@ -189,9 +197,24 @@ export class GameApp {
         this.hud.push(presentation);
         this.audio.handle(presentation);
       }
-      if (event.type === 'cannon-fired') this.cameraRig.impulse(event.shipId === state.playerId ? 0.62 : 0.18);
-      if (event.type === 'projectile-impact' || event.type === 'ram') this.cameraRig.impulse(0.85);
-      if (event.type === 'special') this.cameraRig.impulse(1.1);
+      const dx = 'position' in event ? event.position.x - (state.ships.find((ship) => ship.id === state.playerId)?.position.x ?? 0) : 0;
+      const dz = 'position' in event ? event.position.z - (state.ships.find((ship) => ship.id === state.playerId)?.position.z ?? 0) : 0;
+      const proximity = 1 - THREE.MathUtils.clamp(Math.hypot(dx, dz) / 620, 0, 0.88);
+      if (event.type === 'cannon-fired') this.cameraRig.impulse(event.shipId === state.playerId ? 0.78 : 0.08 + proximity * 0.12);
+      if (event.type === 'projectile-impact') {
+        this.cameraRig.impulse(0.18 + proximity * (event.weakPoint ? 1.05 : 0.62));
+        if (event.shipId === state.playerId || event.combo) {
+          this.impactFreeze = Math.max(this.impactFreeze, event.weakPoint ? 0.07 : 0.035);
+        }
+      }
+      if (event.type === 'ram') {
+        this.cameraRig.impulse(0.32 + proximity * 0.82);
+        if (event.attackerId === state.playerId || event.targetId === state.playerId) this.impactFreeze = Math.max(this.impactFreeze, 0.085);
+      }
+      if (event.type === 'special') {
+        this.cameraRig.impulse(event.shipId === state.playerId ? 1.2 : 0.24 + proximity * 0.5);
+        if (event.shipId === state.playerId) this.impactFreeze = Math.max(this.impactFreeze, 0.06);
+      }
     }
   }
 
@@ -223,11 +246,20 @@ export class GameApp {
       }
       return;
     }
+    if (scene === 'fleet-battle') {
+      // Stage the deterministic proof frame after the formations have closed
+      // and exchanged multiple volleys, rather than during the opening sail.
+      this.simulation.step(600);
+      this.simulation.step(600);
+      this.simulation.step(180);
+      this.simulation.drainEvents();
+      this.simulation.step(20);
+      return;
+    }
     const frames: Partial<Record<DebugScene, number>> = {
       'calm-sailing': 120,
       'storm-sailing': 150,
       'moby-scale': 45,
-      'fleet-battle': 100,
       'island-discovery': 30,
       'race-rough': 60,
       'crew-closeup': 60,
@@ -246,6 +278,8 @@ export class GameApp {
     player.mass = spec.mass;
     player.maxSpeed = spec.maxSpeed;
     player.speed = Math.min(player.speed, spec.maxSpeed);
+    player.faction = defaultFactionForShip(kind);
+    player.combatRole = defaultCombatRoleForShip(kind);
     this.renderFrame(1 / 60, true);
   }
 

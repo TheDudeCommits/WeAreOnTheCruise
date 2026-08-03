@@ -15,14 +15,14 @@ export interface OceanSampler {
 
 export type SimulationEvent =
   | { type: 'cannon-fired'; shipId: string; side: ShipSide; ammo: AmmoKind; position: Vec3; count: number }
-  | { type: 'projectile-impact'; projectileId: number; shipId: string; ammo: AmmoKind; position: Vec3; side: ShipSide }
+  | { type: 'projectile-impact'; projectileId: number; ownerId: string; shipId: string; ammo: AmmoKind; position: Vec3; side: ShipSide; weakPoint?: boolean; combo?: number }
   | { type: 'water-impact'; projectileId: number; ammo: AmmoKind; position: Vec3 }
   | { type: 'ram'; attackerId: string; targetId: string; position: Vec3; force: number }
   | { type: 'special'; shipId: string; name: string; position: Vec3 }
   | { type: 'repair'; shipId: string; position: Vec3 }
   | { type: 'checkpoint'; shipId: string; checkpoint: number; lap: number }
   | { type: 'race-finished'; shipId: string; placement: number; elapsed: number }
-  | { type: 'ship-disabled'; shipId: string; position: Vec3 };
+  | { type: 'ship-disabled'; shipId: string; attackerId?: string; position: Vec3; surrendered?: boolean; bountyReward?: number; treasureReward?: number };
 
 export interface GameSimulationOptions {
   fixedStep?: number;

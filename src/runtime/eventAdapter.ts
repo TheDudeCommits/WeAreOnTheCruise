@@ -11,15 +11,32 @@ export function toPresentationEvents(event: SimulationEvent, state: WorldState):
         side: event.side, ammo: event.ammo, weight: Math.min(1, event.count / 10 + 0.35),
       }];
     }
-    case 'projectile-impact':
+    case 'projectile-impact': {
+      if (event.ownerId !== state.playerId && event.shipId !== state.playerId) return [];
+      const incoming = event.shipId === state.playerId;
+      const weakPoint = event.weakPoint ? `${event.side.toUpperCase()} RELOAD WINDOW` : undefined;
       return [
-        { type: 'impact', targetId: event.shipId, section: event.side, severity: event.ammo === 'heavy' ? 0.88 : 0.58, material: 'hull' },
-        { type: 'damage', targetId: event.shipId, section: event.side, severity: event.ammo === 'chain' ? 0.62 : 0.5 },
+        {
+          type: 'impact', targetId: event.shipId, sourceId: event.ownerId, section: event.side,
+          severity: event.ammo === 'heavy' ? 0.88 : 0.58, material: 'hull', incoming,
+          critical: event.weakPoint, weakPoint, combo: event.combo,
+        },
+        {
+          type: 'damage', targetId: event.shipId, sourceId: event.ownerId, section: event.side,
+          severity: event.ammo === 'chain' ? 0.62 : 0.5, incoming,
+          critical: event.weakPoint, weakPoint, combo: event.combo,
+        },
       ];
+    }
     case 'water-impact':
       return [{ type: 'impact', severity: 0.3, material: 'water' }];
-    case 'ram':
-      return [{ type: 'impact', targetId: event.targetId, severity: Math.min(1, event.force / 30), material: 'hull' }];
+    case 'ram': {
+      if (event.attackerId !== state.playerId && event.targetId !== state.playerId) return [];
+      return [{
+        type: 'impact', targetId: event.targetId, sourceId: event.attackerId,
+        severity: Math.min(1, event.force / 30), material: 'hull', incoming: event.targetId === state.playerId,
+      }];
+    }
     case 'special': {
       const ship = state.ships.find((candidate) => candidate.id === event.shipId);
       return [{ type: 'special', shipId: event.shipId, shipKind: ship?.kind, phase: 'fire', name: event.name, power: 1 }];
@@ -35,9 +52,17 @@ export function toPresentationEvents(event: SimulationEvent, state: WorldState):
       return event.placement === 1
         ? [{ type: 'victory', title: 'PIRATE CUP WON!', subtitle: `${event.elapsed.toFixed(2)} seconds · First across the line` }]
         : [{ type: 'defeat', title: `${event.placement} PLACE`, subtitle: 'Catch the next wind and challenge them again' }];
-    case 'ship-disabled':
-      return event.shipId === state.playerId
-        ? [{ type: 'defeat', title: 'SHIP DISABLED', subtitle: 'Assign the crew, patch the hull, and return to the sea' }]
-        : [{ type: 'victory', title: 'ENEMY DISABLED', subtitle: 'Their colors are coming down!' }];
+    case 'ship-disabled': {
+      if (event.shipId === state.playerId) {
+        return [{ type: 'defeat', title: 'SHIP DISABLED', subtitle: 'Assign the crew, patch the hull, and return to the sea' }];
+      }
+      const credited = (event.bountyReward ?? 0) > 0 || (event.treasureReward ?? 0) > 0;
+      if (!credited) return [];
+      return [{
+        type: 'victory',
+        title: event.surrendered ? 'ENEMY SURRENDERED' : 'ENEMY DISABLED',
+        subtitle: event.surrendered ? 'Their colors are down!' : 'Their guns have gone silent!',
+      }];
+    }
   }
 }

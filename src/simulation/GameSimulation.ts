@@ -1,4 +1,5 @@
 import type {
+  AiCombatRole,
   AmmoKind,
   DebugScene,
   InputAction,
@@ -11,6 +12,12 @@ import type {
 } from '../core/contracts';
 import { getScenarioPreset, getShipSpec, type ScenarioPreset, type ScenarioShip, type ShipSpec } from '../content';
 import { FallbackWaveSampler } from './fallbackWaves';
+import {
+  areFactionsAllied,
+  areFactionsHostile,
+  defaultCombatRoleForShip,
+  defaultFactionForShip,
+} from './factions';
 import type { ActionState, GameSimulationOptions, OceanSampler, SimulationEvent } from './types';
 
 const TAU = Math.PI * 2;
@@ -39,6 +46,18 @@ interface ShipRuntime {
   disabledEventSent: boolean;
   previousWaterY: number;
   airtime: number;
+  homeX: number;
+  homeZ: number;
+  aggroTimer: number;
+  provokedBy?: string;
+  targetLockTimer: number;
+  lastAttackerId?: string;
+  weakPointSide?: ShipSide;
+  weakPointTimer: number;
+  weakPointCooldown: number;
+  hazardCooldown: number;
+  rewardGranted: boolean;
+  tacticalPhase: number;
 }
 
 interface ProjectileSlot {
@@ -47,6 +66,8 @@ interface ProjectileSlot {
 }
 
 interface BuoyancyPoint { x: number; z: number }
+interface ProjectileImpactResult { weakPoint: boolean; combo?: number }
+interface CombatReward { bountyReward: number; treasureReward: number }
 
 const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
 const damp = (current: number, target: number, smoothing: number, dt: number): number =>
@@ -125,6 +146,8 @@ export class GameSimulation {
   private state: WorldState;
   private raceCourse: readonly Vec3[] = [];
   private finishOrder: string[] = [];
+  private directorTimer = 0;
+  private reinforcementSerial = 0;
 
   constructor(seed: string, options: GameSimulationOptions = {}) {
     this.seed = seed;
@@ -157,6 +180,8 @@ export class GameSimulation {
     this.raceCourse = this.scenario.raceCourse ?? [];
     this.accumulator = 0;
     this.finishOrder = [];
+    this.directorTimer = 0;
+    this.reinforcementSerial = 0;
     this.events.length = 0;
     this.runtimes.clear();
     for (const ship of this.state.ships) this.runtimes.set(ship.id, this.createRuntime(ship));
@@ -230,8 +255,12 @@ export class GameSimulation {
 
   private createWorldState(preset: ScenarioPreset): WorldState {
     const ships = [preset.player, ...preset.rivals].map((source, index) => this.createShip(source, index === 0));
-    const firstRival = ships.find((ship) => !ship.isPlayer);
-    if (ships[0]) ships[0].targetId = firstRival?.id;
+    const player = ships[0];
+    if (player) {
+      player.targetId = ships
+        .filter((ship) => ship.id !== player.id && areFactionsHostile(player.faction, ship.faction))
+        .sort((first, second) => distanceSquared(player.position, first.position) - distanceSquared(player.position, second.position))[0]?.id;
+    }
     return {
       seed: this.seed,
       seedNumber: this.seedNumber,
@@ -261,6 +290,14 @@ export class GameSimulation {
         elapsed: 0,
         wrongWay: false,
       },
+      combat: {
+        combo: 0,
+        comboTimer: 0,
+        weakPointTimer: 0,
+        defeated: 0,
+        surrendered: 0,
+        reinforcements: 0,
+      },
     };
   }
 
@@ -280,7 +317,7 @@ export class GameSimulation {
     return {
       id: source.id,
       kind: source.kind,
-      name: spec.displayName,
+      name: source.name ?? spec.displayName,
       isPlayer,
       position: cloneVec(source.position),
       heading: source.heading,
@@ -299,7 +336,9 @@ export class GameSimulation {
       repairing: false,
       surrendered: false,
       ai: source.ai,
-      targetId: isPlayer ? undefined : this.scenario.player.id,
+      faction: source.faction ?? defaultFactionForShip(source.kind),
+      combatRole: source.combatRole ?? defaultCombatRoleForShip(source.kind),
+      targetId: undefined,
     };
   }
 
@@ -322,26 +361,163 @@ export class GameSimulation {
       disabledEventSent: false,
       previousWaterY: ship.position.y,
       airtime: 0,
+      homeX: ship.position.x,
+      homeZ: ship.position.z,
+      aggroTimer: 0,
+      targetLockTimer: 0,
+      weakPointTimer: 0,
+      weakPointCooldown: 0,
+      hazardCooldown: 0,
+      rewardGranted: false,
+      tacticalPhase: this.deterministicNoise(ship.id, 31) * TAU,
     };
   }
 
   private tick(dt: number): void {
     this.state.elapsed += dt;
+    this.updateCombatClock(dt);
+    this.updateEncounterDirector(dt);
     this.updateRaceClock(dt);
     const player = this.findShip(this.state.playerId);
-    if (player) this.updatePlayerIntent(player, dt);
+    if (player) {
+      this.updatePlayerTarget(player);
+      this.updatePlayerIntent(player, dt);
+    }
     for (const ship of this.state.ships) {
       const runtime = this.getRuntime(ship);
       runtime.impactCooldown = Math.max(0, runtime.impactCooldown - dt);
+      runtime.aggroTimer = Math.max(0, runtime.aggroTimer - dt);
+      runtime.targetLockTimer = Math.max(0, runtime.targetLockTimer - dt);
+      runtime.weakPointTimer = Math.max(0, runtime.weakPointTimer - dt);
+      runtime.weakPointCooldown = Math.max(0, runtime.weakPointCooldown - dt);
+      runtime.hazardCooldown = Math.max(0, runtime.hazardCooldown - dt);
+      if (runtime.aggroTimer <= 0) runtime.provokedBy = undefined;
       if (!ship.isPlayer && !ship.surrendered) this.updateAiIntent(ship, runtime, dt);
       this.updateShip(ship, runtime, dt);
+      this.updateEnvironmentalHazards(ship, runtime, dt);
     }
     this.resolveShipCollisions();
     this.updateProjectiles(dt);
     this.updateRaceProgress();
     this.updateDiscoveries();
+    this.syncCombatTelemetry();
     this.syncProjectileView();
     if (this.events.length > 256) this.events.splice(0, this.events.length - 256);
+  }
+
+  private updateCombatClock(dt: number): void {
+    const combat = this.state.combat;
+    if (!combat) return;
+    combat.comboTimer = Math.max(0, combat.comboTimer - dt);
+    if (combat.comboTimer <= 0) combat.combo = 0;
+  }
+
+  private updateEncounterDirector(dt: number): void {
+    if (this.state.mode === 'race') return;
+    this.directorTimer -= dt;
+    if (this.directorTimer > 0) return;
+    this.directorTimer = 2;
+    const player = this.findShip(this.state.playerId);
+    if (!player) return;
+
+    if (this.state.mode === 'explore' || this.state.mode === 'discovery') {
+      for (const ship of this.state.ships) {
+        if (ship.isPlayer || ship.surrendered) continue;
+        const runtime = this.getRuntime(ship);
+        const distance = Math.sqrt(distanceSquared(ship.position, player.position));
+        if (distance > 680 && !ship.targetId) {
+          const angle = this.deterministicNoise(ship.id, Math.floor(this.state.elapsed / 18) + 200) * TAU;
+          runtime.homeX = player.position.x + Math.cos(angle) * 480;
+          runtime.homeZ = player.position.z + Math.sin(angle) * 480;
+        }
+        if (distance > 1_450) {
+          const angle = this.deterministicNoise(ship.id, Math.floor(this.state.elapsed / 25) + 400) * TAU;
+          const radius = 560 + this.deterministicNoise(ship.id, 405) * 110;
+          ship.position.x = player.position.x + Math.cos(angle) * radius;
+          ship.position.z = player.position.z + Math.sin(angle) * radius;
+          runtime.homeX = ship.position.x;
+          runtime.homeZ = ship.position.z;
+          runtime.velocityX = 0;
+          runtime.velocityZ = 0;
+          ship.targetId = undefined;
+        }
+      }
+    }
+
+    if (this.scenario.scene !== 'calm-sailing' || this.state.elapsed < 32 || this.reinforcementSerial >= 1 || this.state.ships.length >= 10) return;
+    const nearbyHostiles = this.state.ships.filter((ship) =>
+      !ship.surrendered && this.shipsHostile(player, ship) && distanceSquared(player.position, ship.position) < 720 * 720).length;
+    if (nearbyHostiles >= 3) return;
+    this.spawnMarineReinforcement(player);
+  }
+
+  private spawnMarineReinforcement(player: ShipState): void {
+    this.reinforcementSerial += 1;
+    const id = `marine-reinforcement-${this.reinforcementSerial}`;
+    const angle = this.deterministicNoise(id, 501) * TAU;
+    const radius = 480;
+    const x = player.position.x + Math.cos(angle) * radius;
+    const z = player.position.z + Math.sin(angle) * radius;
+    const heading = Math.atan2(-(player.position.x - x), -(player.position.z - z));
+    const ship = this.createShip({
+      id,
+      name: `Marine Hunter ${String(this.reinforcementSerial).padStart(2, '0')}`,
+      kind: 'navy-galleon',
+      position: { x, y: 0, z },
+      heading,
+      ai: 'tactical',
+      faction: 'marine',
+      combatRole: this.reinforcementSerial % 2 ? 'ranged' : 'flanker',
+    }, false);
+    ship.targetId = player.id;
+    this.state.ships.push(ship);
+    const runtime = this.createRuntime(ship);
+    runtime.targetLockTimer = 7.5;
+    this.runtimes.set(ship.id, runtime);
+    if (this.state.combat) this.state.combat.reinforcements += 1;
+  }
+
+  private updatePlayerTarget(player: ShipState): void {
+    const current = player.targetId ? this.findShip(player.targetId) : undefined;
+    let best: ShipState | undefined;
+    let bestScore = Number.POSITIVE_INFINITY;
+    for (const candidate of this.state.ships) {
+      if (candidate.id === player.id || candidate.surrendered || !this.shipsHostile(player, candidate)) continue;
+      const distance = Math.sqrt(distanceSquared(player.position, candidate.position));
+      if (distance > 1_200) continue;
+      let score = distance;
+      if (candidate.targetId === player.id) score -= 180;
+      if (candidate.id === current?.id) score -= 40;
+      if (score < bestScore) {
+        bestScore = score;
+        best = candidate;
+      }
+    }
+    player.targetId = best?.id;
+  }
+
+  private syncCombatTelemetry(): void {
+    const combat = this.state.combat;
+    const player = this.findShip(this.state.playerId);
+    if (!combat || !player?.targetId) {
+      if (combat) {
+        combat.weakPointTargetId = undefined;
+        combat.weakPointSide = undefined;
+        combat.weakPointTimer = 0;
+      }
+      return;
+    }
+    const target = this.findShip(player.targetId);
+    const runtime = target ? this.runtimes.get(target.id) : undefined;
+    if (!target || !runtime || runtime.weakPointTimer <= 0) {
+      combat.weakPointTargetId = undefined;
+      combat.weakPointSide = undefined;
+      combat.weakPointTimer = 0;
+      return;
+    }
+    combat.weakPointTargetId = target.id;
+    combat.weakPointSide = runtime.weakPointSide;
+    combat.weakPointTimer = runtime.weakPointTimer;
   }
 
   private updatePlayerIntent(ship: ShipState, dt: number): void {
@@ -385,48 +561,218 @@ export class GameSimulation {
       this.updateRaceAi(ship, runtime);
       return;
     }
-    const target = this.findShip(ship.targetId ?? this.state.playerId);
-    if (!target || target.surrendered) {
-      runtime.desiredThrottle = 0.35;
-      runtime.desiredRudder = runtime.aiMistake;
+    const role = ship.combatRole ?? defaultCombatRoleForShip(ship.kind);
+    if (this.shouldSurrender(ship, role)) {
+      this.surrenderShip(ship, runtime.lastAttackerId);
       return;
     }
-    const dx = target.position.x - ship.position.x;
-    const dz = target.position.z - ship.position.z;
+    if (role === 'flee') {
+      this.updateFleeIntent(ship, runtime);
+      return;
+    }
+    const target = this.selectAiTarget(ship, runtime);
+    if (!target) {
+      this.updatePatrolIntent(ship, runtime, role);
+      return;
+    }
+    ship.targetId = target.id;
+    let aimX = target.position.x;
+    let aimZ = target.position.z;
+    if (role === 'flanker') {
+      const targetSpec = getShipSpec(target.kind);
+      aimX -= forwardX(target.heading) * targetSpec.length * 0.58;
+      aimZ -= forwardZ(target.heading) * targetSpec.length * 0.58;
+    }
+    const dx = aimX - ship.position.x;
+    const dz = aimZ - ship.position.z;
     const distance = Math.hypot(dx, dz);
     const bearing = Math.atan2(-dx, -dz);
     const personality = ship.ai ?? 'tactical';
     let desiredHeading = bearing;
     let desiredRange = 72;
-    if (personality === 'aggressive') {
-      desiredRange = 28;
-      desiredHeading = bearing + (distance < 42 ? Math.sin(this.state.elapsed * 0.42) * 0.3 : 0);
-      runtime.desiredThrottle = distance < 20 ? 0.3 : 1;
-    } else if (personality === 'reckless') {
-      desiredRange = 44;
-      desiredHeading = bearing + Math.sin(this.state.elapsed * 0.73 + this.deterministicNoise(ship.id, 7) * TAU) * 0.8;
-      runtime.desiredThrottle = 0.95;
-    } else {
-      const orbitSign = this.deterministicNoise(ship.id, 8) > 0.5 ? 1 : -1;
-      desiredHeading = bearing + orbitSign * (distance < 115 ? Math.PI * 0.46 : 0.28);
-      runtime.desiredThrottle = distance < desiredRange * 0.72 ? 0.28 : distance > desiredRange * 1.35 ? 0.95 : 0.62;
+    const orbitSign = this.deterministicNoise(ship.id, 8) > 0.5 ? 1 : -1;
+    switch (role) {
+      case 'rammer':
+        desiredRange = 16;
+        desiredHeading = bearing;
+        runtime.desiredThrottle = distance < 14 ? 0.28 : 1;
+        break;
+      case 'ranged':
+        desiredRange = 138;
+        desiredHeading = bearing + orbitSign * (distance < 190 ? Math.PI * 0.47 : 0.22);
+        runtime.desiredThrottle = distance < 95 ? -0.12 : distance > 175 ? 0.94 : 0.48;
+        break;
+      case 'flanker':
+        desiredRange = 48;
+        desiredHeading = bearing + orbitSign * (distance < 72 ? 0.34 : 0);
+        runtime.desiredThrottle = distance < 28 ? 0.32 : 1;
+        break;
+      case 'escort':
+        desiredRange = 66;
+        desiredHeading = bearing + orbitSign * (distance < 115 ? Math.PI * 0.43 : 0.2);
+        runtime.desiredThrottle = distance < 42 ? 0.32 : distance > 105 ? 0.92 : 0.6;
+        break;
+      case 'broadside':
+      default:
+        desiredRange = 76;
+        desiredHeading = bearing + orbitSign * (distance < 128 ? Math.PI * 0.47 : 0.26);
+        runtime.desiredThrottle = distance < 48 ? 0.25 : distance > 115 ? 0.92 : 0.58;
+        break;
     }
+    if (personality === 'aggressive') runtime.desiredThrottle = Math.max(runtime.desiredThrottle, distance > desiredRange * 0.55 ? 0.78 : 0.25);
+    if (personality === 'reckless') desiredHeading += Math.sin(this.state.elapsed * 0.73 + runtime.tacticalPhase) * 0.34;
     desiredHeading += this.collisionAvoidanceHeading(ship) + runtime.aiMistake;
     runtime.desiredRudder = clamp(angleDelta(ship.heading, desiredHeading) * 1.65, -1, 1);
 
-    const localForward = dx * forwardX(ship.heading) + dz * forwardZ(ship.heading);
-    const localStarboard = dx * starboardX(ship.heading) + dz * starboardZ(ship.heading);
+    const targetDx = target.position.x - ship.position.x;
+    const targetDz = target.position.z - ship.position.z;
+    const targetDistance = Math.hypot(targetDx, targetDz);
+    const localForward = targetDx * forwardX(ship.heading) + targetDz * forwardZ(ship.heading);
+    const localStarboard = targetDx * starboardX(ship.heading) + targetDz * starboardZ(ship.heading);
     const broadsideWindow = Math.abs(localForward) < Math.abs(localStarboard) * 0.75;
-    if (distance < 160 && broadsideWindow && ship.brace < 0.5) {
+    ship.weapons.ammo = this.chooseAiAmmo(role, target, targetDistance);
+    if (role !== 'rammer' && targetDistance < (role === 'ranged' ? 205 : 165) && broadsideWindow && ship.brace < 0.5 && !ship.repairing) {
       this.fire(ship, localStarboard > 0 ? 'starboard' : 'port');
-    } else if (distance < 135 && localForward > Math.abs(localStarboard) * 0.72) {
+    } else if (targetDistance < 138 && localForward > Math.abs(localStarboard) * 0.72 && !ship.repairing) {
       this.fire(ship, 'bow');
     }
     const incomingDanger = this.state.projectiles.some((projectile) =>
-      projectile.ownerId !== ship.id && distanceSquared(projectile.position, ship.position) < 65 * 65);
-    ship.brace = damp(ship.brace, incomingDanger && personality === 'tactical' ? 1 : 0, 5, this.fixedStep * 8);
-    ship.repairing = ship.damage.hull > 0.62 && distance > 145 && personality !== 'aggressive';
-    if (ship.special >= 1 && (distance < desiredRange || ship.damage.hull > 0.7)) this.activateSpecial(ship);
+      projectile.ownerId !== ship.id
+      && distanceSquared(projectile.position, ship.position) < 78 * 78
+      && this.projectileThreatensShip(projectile.ownerId, ship));
+    const ramBrace = role === 'rammer' && targetDistance < 42 && localForward > 0;
+    const braceDecision = incomingDanger && (personality === 'tactical' || ship.damage.hull > 0.42) || ramBrace;
+    ship.brace = damp(ship.brace, braceDecision ? 1 : 0, 5, this.fixedStep * 8);
+    const damagePressure = ship.damage.hull + ship.damage.sails * 0.45 + ship.damage.weapons * 0.35;
+    const repairDistance = role === 'ranged' ? 125 : 175;
+    ship.repairing = damagePressure > 0.62 && targetDistance > repairDistance && personality !== 'aggressive' && !incomingDanger;
+    if (ship.special >= 1 && (targetDistance < desiredRange || ship.damage.hull > 0.7)) this.activateSpecial(ship);
+  }
+
+  private shouldSurrender(ship: ShipState, role: AiCombatRole): boolean {
+    const hullThreshold = role === 'flee' ? 0.56 : role === 'escort' ? 0.76 : role === 'rammer' ? 0.93 : 0.86;
+    const crewThreshold = role === 'flee' ? 0.48 : 0.68;
+    return ship.damage.hull >= hullThreshold && (ship.damage.crew >= crewThreshold || ship.damage.weapons >= 0.88)
+      || ship.damage.hull >= Math.min(0.97, hullThreshold + 0.09);
+  }
+
+  private selectAiTarget(ship: ShipState, runtime: ShipRuntime): ShipState | undefined {
+    const current = ship.targetId ? this.findShip(ship.targetId) : undefined;
+    const leash = this.state.mode === 'combat' ? 1_050 : 780;
+    if (current && !current.surrendered && this.shipsHostile(ship, current)
+      && distanceSquared(ship.position, current.position) <= leash * leash && runtime.targetLockTimer > 0) {
+      return current;
+    }
+    const role = ship.combatRole ?? defaultCombatRoleForShip(ship.kind);
+    const aggroRange = this.state.mode === 'combat' ? 900 : role === 'ranged' ? 520 : role === 'escort' ? 440 : 390;
+    const escort = role === 'escort' ? this.findEscortAnchor(ship) : undefined;
+    let best: ShipState | undefined;
+    let bestScore = Number.POSITIVE_INFINITY;
+    for (const candidate of this.state.ships) {
+      if (candidate.id === ship.id || candidate.surrendered || !this.shipsHostile(ship, candidate)) continue;
+      const distance = Math.sqrt(distanceSquared(ship.position, candidate.position));
+      const urgent = candidate.targetId === ship.id || escort && candidate.targetId === escort.id || runtime.provokedBy === candidate.id;
+      if (!urgent && distance > aggroRange) continue;
+      let score = distance;
+      if (candidate.targetId === ship.id) score -= 145;
+      if (escort && candidate.targetId === escort.id) score -= 190;
+      if (runtime.provokedBy === candidate.id) score -= 240;
+      if (candidate.isPlayer && ship.faction === 'marine') {
+        // Marine captains treat the player's opening bounty as a standing warrant,
+        // strong enough to beat incidental escort aggro in the open world.
+        score -= Math.min(360, 160 + this.state.bounty / 250_000);
+      }
+      if (candidate.id === current?.id) score -= 35;
+      if (score < bestScore) {
+        bestScore = score;
+        best = candidate;
+      }
+    }
+    ship.targetId = best?.id;
+    runtime.targetLockTimer = best ? 2.4 : 0;
+    return best;
+  }
+
+  private updatePatrolIntent(ship: ShipState, runtime: ShipRuntime, role: AiCombatRole): void {
+    ship.targetId = undefined;
+    ship.brace = damp(ship.brace, 0, 3.5, this.fixedStep * 8);
+    ship.repairing = ship.damage.hull + ship.damage.sails * 0.5 > 0.32;
+    ship.weapons.ammo = 'round';
+    let targetX = runtime.homeX + Math.cos(this.state.elapsed * 0.035 + runtime.tacticalPhase) * 95;
+    let targetZ = runtime.homeZ + Math.sin(this.state.elapsed * 0.035 + runtime.tacticalPhase) * 95;
+    if (role === 'escort') {
+      const anchor = this.findEscortAnchor(ship);
+      if (anchor) {
+        const spacing = getShipSpec(anchor.kind).beam + getShipSpec(ship.kind).beam + 18;
+        const side = this.deterministicNoise(ship.id, 44) > 0.5 ? 1 : -1;
+        targetX = anchor.position.x + starboardX(anchor.heading) * spacing * side - forwardX(anchor.heading) * spacing * 0.45;
+        targetZ = anchor.position.z + starboardZ(anchor.heading) * spacing * side - forwardZ(anchor.heading) * spacing * 0.45;
+      }
+    }
+    const dx = targetX - ship.position.x;
+    const dz = targetZ - ship.position.z;
+    const desired = Math.atan2(-dx, -dz) + this.collisionAvoidanceHeading(ship);
+    runtime.desiredRudder = clamp(angleDelta(ship.heading, desired) * 1.45 + runtime.aiMistake * 0.25, -1, 1);
+    runtime.desiredThrottle = Math.hypot(dx, dz) > 70 ? 0.64 : 0.38;
+  }
+
+  private updateFleeIntent(ship: ShipState, runtime: ShipRuntime): void {
+    let threat = runtime.provokedBy ? this.findShip(runtime.provokedBy) : undefined;
+    let nearestDistance = threat ? Math.sqrt(distanceSquared(ship.position, threat.position)) : Number.POSITIVE_INFINITY;
+    for (const candidate of this.state.ships) {
+      if (candidate.id === ship.id || candidate.surrendered || areFactionsAllied(ship.faction, candidate.faction)) continue;
+      const distance = Math.sqrt(distanceSquared(ship.position, candidate.position));
+      const combatNearby = candidate.targetId === ship.id || candidate.targetId !== undefined && distance < 230;
+      if (combatNearby && distance < nearestDistance) {
+        threat = candidate;
+        nearestDistance = distance;
+      }
+    }
+    if (!threat || nearestDistance > 420) {
+      this.updatePatrolIntent(ship, runtime, 'flee');
+      return;
+    }
+    // Merchants may flee any nearby battle without treating neutral ships as
+    // an offensive target. Retaliation still promotes an aggressor to hostile.
+    ship.targetId = this.shipsHostile(ship, threat) ? threat.id : undefined;
+    const away = Math.atan2(-(threat.position.x - ship.position.x), -(threat.position.z - ship.position.z)) + Math.PI;
+    runtime.desiredRudder = clamp(angleDelta(ship.heading, away + this.collisionAvoidanceHeading(ship)) * 1.8, -1, 1);
+    runtime.desiredThrottle = 1;
+    ship.brace = damp(ship.brace, nearestDistance < 105 ? 1 : 0, 5, this.fixedStep * 8);
+    ship.repairing = nearestDistance > 175 && ship.damage.hull + ship.damage.sails > 0.28;
+  }
+
+  private chooseAiAmmo(role: AiCombatRole, target: ShipState, distance: number): AmmoKind {
+    const targetRuntime = this.getRuntime(target);
+    if (targetRuntime.weakPointTimer > 0 && distance < 125) return 'heavy';
+    if (role === 'flanker' && target.damage.sails < 0.68) return 'chain';
+    if (role === 'ranged') return target.damage.weapons < 0.62 ? 'explosive' : 'round';
+    if (role === 'rammer') return 'heavy';
+    if (role === 'escort' && target.damage.sails < 0.48) return 'chain';
+    return distance < 58 ? 'heavy' : 'round';
+  }
+
+  private projectileThreatensShip(ownerId: string, ship: ShipState): boolean {
+    const owner = this.findShip(ownerId);
+    return Boolean(owner && this.shipsHostile(owner, ship));
+  }
+
+  private shipsHostile(attacker: ShipState, target: ShipState): boolean {
+    const runtime = this.runtimes.get(attacker.id);
+    if (runtime?.aggroTimer && runtime.provokedBy === target.id && !areFactionsAllied(attacker.faction, target.faction)) return true;
+    if (target.targetId === attacker.id && !areFactionsAllied(attacker.faction, target.faction)) return true;
+    return areFactionsHostile(attacker.faction, target.faction);
+  }
+
+  private findEscortAnchor(ship: ShipState): ShipState | undefined {
+    const player = this.findShip(this.state.playerId);
+    if (player && player.id !== ship.id && areFactionsAllied(ship.faction, player.faction)) return player;
+    let anchor: ShipState | undefined;
+    for (const candidate of this.state.ships) {
+      if (candidate.id === ship.id || candidate.surrendered || !areFactionsAllied(ship.faction, candidate.faction)) continue;
+      if (!anchor || candidate.mass > anchor.mass) anchor = candidate;
+    }
+    return anchor;
   }
 
   private updateRaceAi(ship: ShipState, runtime: ShipRuntime): void {
@@ -551,6 +897,34 @@ export class GameSimulation {
     runtime.previousWaterY = waterY;
   }
 
+  private updateEnvironmentalHazards(ship: ShipState, runtime: ShipRuntime, dt: number): void {
+    if (ship.surrendered) return;
+    for (const island of this.state.islands) {
+      if (island.landmark !== 'needles') continue;
+      const dx = ship.position.x - island.position.x;
+      const dz = ship.position.z - island.position.z;
+      const distance = Math.hypot(dx, dz);
+      const hazardRadius = island.radius + 24;
+      if (distance >= hazardRadius || distance < 0.001) continue;
+      const pressure = 1 - distance / hazardRadius;
+      ship.damage.hull = clamp(ship.damage.hull + dt * (0.012 + pressure * 0.026), 0, 1);
+      ship.damage.sails = clamp(ship.damage.sails + dt * pressure * 0.009, 0, 1);
+      runtime.velocityX += dx / distance * pressure * dt * 8;
+      runtime.velocityZ += dz / distance * pressure * dt * 8;
+      if (runtime.hazardCooldown <= 0) {
+        runtime.hazardCooldown = 1.35;
+        this.events.push({
+          type: 'ram',
+          attackerId: `reef:${island.id}`,
+          targetId: ship.id,
+          position: cloneVec(ship.position),
+          force: 4 + pressure * 10,
+        });
+      }
+      this.checkDisabled(ship);
+    }
+  }
+
   private updateRepairs(ship: ShipState, runtime: ShipRuntime, spec: ShipSpec, dt: number): void {
     if (!ship.repairing || ship.surrendered) {
       runtime.repairTimer = 0;
@@ -612,6 +986,12 @@ export class GameSimulation {
       spawned += 1;
     }
     if (spawned > 0) {
+      const runtime = this.getRuntime(ship);
+      if (runtime.weakPointCooldown <= 0) {
+        runtime.weakPointSide = side;
+        runtime.weakPointTimer = side === 'bow' ? 1.65 : 2.35;
+        runtime.weakPointCooldown = 0.8;
+      }
       const eventPosition = cloneVec(ship.position);
       if (side === 'bow') {
         eventPosition.x += forward.x * spec.length * 0.48;
@@ -693,7 +1073,7 @@ export class GameSimulation {
 
   private applyAreaDamage(source: ShipState, radius: number, hullDamage: number, crewMultiplier: number): void {
     for (const target of this.state.ships) {
-      if (target.id === source.id || target.surrendered) continue;
+      if (target.id === source.id || target.surrendered || !this.shipsHostile(source, target)) continue;
       const distance = Math.sqrt(distanceSquared(source.position, target.position));
       if (distance > radius) continue;
       const falloff = 1 - distance / radius * 0.55;
@@ -701,6 +1081,11 @@ export class GameSimulation {
       target.damage.hull = clamp(target.damage.hull + hullDamage * falloff / spec.hullStrength, 0, 1);
       target.damage.crew = clamp(target.damage.crew + hullDamage * crewMultiplier * falloff / spec.crewStrength, 0, 1);
       target.damage.sails = clamp(target.damage.sails + hullDamage * 0.65 * falloff / spec.sailStrength, 0, 1);
+      const runtime = this.getRuntime(target);
+      runtime.lastAttackerId = source.id;
+      runtime.provokedBy = source.id;
+      runtime.aggroTimer = 42;
+      this.checkDisabled(target, source.id);
     }
   }
 
@@ -727,10 +1112,10 @@ export class GameSimulation {
           && projectile.position.y < ship.position.y + spec.draft * 1.9;
         if (!withinHull) continue;
         const side = this.impactSide(localForward, localSide, spec);
-        this.applyProjectileDamage(ship, side, projectile);
+        const impact = this.applyProjectileDamage(ship, side, projectile);
         this.events.push({
-          type: 'projectile-impact', projectileId: projectile.id, shipId: ship.id, ammo: projectile.ammo,
-          position: cloneVec(projectile.position), side,
+          type: 'projectile-impact', projectileId: projectile.id, ownerId: projectile.ownerId, shipId: ship.id, ammo: projectile.ammo,
+          position: cloneVec(projectile.position), side, weakPoint: impact.weakPoint, combo: impact.combo,
         });
         slot.active = false;
         hit = true;
@@ -749,20 +1134,37 @@ export class GameSimulation {
     }
   }
 
-  private applyProjectileDamage(ship: ShipState, side: ShipSide, projectile: ProjectileState): void {
+  private applyProjectileDamage(ship: ShipState, side: ShipSide, projectile: ProjectileState): ProjectileImpactResult {
     const attacker = this.findShip(projectile.ownerId);
+    const wasHostile = attacker ? this.shipsHostile(attacker, ship) : false;
     const distance = attacker ? Math.sqrt(distanceSquared(attacker.position, ship.position)) : 90;
     const profile = damageProfile(projectile.ammo, distance);
     const spec = getShipSpec(ship.kind);
+    const runtime = this.getRuntime(ship);
+    const weakPoint = runtime.weakPointTimer > 0 && runtime.weakPointSide === side;
+    const weakPointMultiplier = weakPoint ? projectile.ammo === 'heavy' ? 1.82 : 1.52 : 1;
     const braceReduction = 1 - ship.brace * 0.68;
-    ship.damage.hull = clamp(ship.damage.hull + profile.hull / spec.hullStrength * braceReduction, 0, 1);
-    ship.damage.sails = clamp(ship.damage.sails + profile.sails / spec.sailStrength * braceReduction, 0, 1);
-    ship.damage.weapons = clamp(ship.damage.weapons + profile.weapons / spec.weaponStrength * braceReduction, 0, 1);
+    ship.damage.hull = clamp(ship.damage.hull + profile.hull / spec.hullStrength * braceReduction * weakPointMultiplier, 0, 1);
+    ship.damage.sails = clamp(ship.damage.sails + profile.sails / spec.sailStrength * braceReduction * weakPointMultiplier, 0, 1);
+    ship.damage.weapons = clamp(ship.damage.weapons + profile.weapons / spec.weaponStrength * braceReduction * weakPointMultiplier, 0, 1);
     ship.damage.crew = clamp(ship.damage.crew + profile.crew / spec.crewStrength * braceReduction, 0, 1);
-    ship.damage.sections[side] = clamp(ship.damage.sections[side] + profile.hull / spec.hullStrength * 1.7 * braceReduction, 0, 1);
+    ship.damage.sections[side] = clamp(ship.damage.sections[side] + profile.hull / spec.hullStrength * 1.7 * braceReduction * weakPointMultiplier, 0, 1);
     ship.roll += (side === 'starboard' ? -1 : side === 'port' ? 1 : 0) * profile.hull / spec.mass * 0.8;
-    if (ship.damage.hull >= 0.9 && ship.ai && ship.damage.crew > 0.58) ship.surrendered = true;
-    this.checkDisabled(ship);
+    if (weakPoint) {
+      runtime.weakPointTimer = 0;
+      runtime.weakPointSide = undefined;
+      runtime.weakPointCooldown = 1.8;
+    }
+    let combo: number | undefined;
+    if (attacker) {
+      runtime.lastAttackerId = attacker.id;
+      runtime.provokedBy = attacker.id;
+      runtime.aggroTimer = 42;
+      if (!ship.isPlayer) ship.targetId = attacker.id;
+      if (attacker.isPlayer && wasHostile) combo = this.registerPlayerHit(attacker, weakPoint);
+    }
+    this.checkDisabled(ship, attacker?.id);
+    return { weakPoint, combo };
   }
 
   private resolveShipCollisions(): void {
@@ -807,7 +1209,12 @@ export class GameSimulation {
         secondRuntime.impactCooldown = 0.8;
         const position = { x: (first.position.x + second.position.x) * 0.5, y: (first.position.y + second.position.y) * 0.5, z: (first.position.z + second.position.z) * 0.5 };
         this.events.push({ type: 'ram', attackerId: attacker.id, targetId: target.id, position, force });
-        this.checkDisabled(target);
+        const targetRuntime = this.getRuntime(target);
+        targetRuntime.lastAttackerId = attacker.id;
+        targetRuntime.provokedBy = attacker.id;
+        targetRuntime.aggroTimer = 38;
+        if (!target.isPlayer) target.targetId = attacker.id;
+        this.checkDisabled(target, attacker.id);
       }
     }
   }
@@ -915,14 +1322,68 @@ export class GameSimulation {
     return localSide > 0 ? 'starboard' : 'port';
   }
 
-  private checkDisabled(ship: ShipState): void {
-    if (ship.damage.hull < 0.98) return;
+  private registerPlayerHit(player: ShipState, weakPoint: boolean): number {
+    const combat = this.state.combat;
+    if (!combat) return 0;
+    combat.combo = combat.comboTimer > 0 ? combat.combo + 1 : 1;
+    combat.comboTimer = 4.25;
+    const comboGain = Math.min(0.1, combat.combo * 0.009);
+    player.special = clamp(player.special + 0.035 + comboGain + (weakPoint ? 0.14 : 0), 0, 1);
+    return combat.combo;
+  }
+
+  private surrenderShip(ship: ShipState, attackerId?: string): void {
+    if (ship.surrendered) return;
     ship.surrendered = true;
     ship.throttle = 0;
+    ship.targetId = undefined;
     const runtime = this.getRuntime(ship);
     if (runtime.disabledEventSent) return;
     runtime.disabledEventSent = true;
-    this.events.push({ type: 'ship-disabled', shipId: ship.id, position: cloneVec(ship.position) });
+    if (this.state.combat && !ship.isPlayer) this.state.combat.surrendered += 1;
+    const creditedAttackerId = attackerId ?? runtime.lastAttackerId;
+    const reward = this.grantCombatReward(ship, creditedAttackerId, 0.62);
+    this.events.push({
+      type: 'ship-disabled',
+      shipId: ship.id,
+      attackerId: creditedAttackerId,
+      position: cloneVec(ship.position),
+      surrendered: true,
+      ...reward,
+    });
+  }
+
+  private checkDisabled(ship: ShipState, attackerId?: string): void {
+    if (ship.damage.hull < 0.98) return;
+    ship.surrendered = true;
+    ship.throttle = 0;
+    ship.targetId = undefined;
+    const runtime = this.getRuntime(ship);
+    if (runtime.disabledEventSent) return;
+    runtime.disabledEventSent = true;
+    if (this.state.combat && !ship.isPlayer) this.state.combat.defeated += 1;
+    const creditedAttackerId = attackerId ?? runtime.lastAttackerId;
+    const reward = this.grantCombatReward(ship, creditedAttackerId, 1);
+    this.events.push({ type: 'ship-disabled', shipId: ship.id, attackerId: creditedAttackerId, position: cloneVec(ship.position), ...reward });
+  }
+
+  private grantCombatReward(ship: ShipState, attackerId: string | undefined, scale: number): CombatReward {
+    const runtime = this.getRuntime(ship);
+    if (runtime.rewardGranted || ship.isPlayer || !attackerId) return { bountyReward: 0, treasureReward: 0 };
+    const attacker = this.findShip(attackerId);
+    const player = this.findShip(this.state.playerId);
+    if (!attacker || !player) return { bountyReward: 0, treasureReward: 0 };
+    if (areFactionsAllied(ship.faction, player.faction)) return { bountyReward: 0, treasureReward: 0 };
+    const contribution = attacker.id === player.id ? 1 : areFactionsAllied(attacker.faction, player.faction) ? 0.32 : 0;
+    if (contribution <= 0) return { bountyReward: 0, treasureReward: 0 };
+    runtime.rewardGranted = true;
+    const spec = getShipSpec(ship.kind);
+    const bountyReward = Math.round(spec.hullStrength * 32_000 * scale * contribution / 10_000) * 10_000;
+    const treasureReward = attacker.id === player.id ? Math.max(1, Math.round(Math.ceil(spec.hullStrength / 190) * scale)) : 0;
+    this.state.bounty += bountyReward;
+    this.state.treasure += treasureReward;
+    player.special = clamp(player.special + 0.22 * scale * contribution, 0, 1);
+    return { bountyReward, treasureReward };
   }
 
   private acquireProjectile(): ProjectileSlot | undefined {

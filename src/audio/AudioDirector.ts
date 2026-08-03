@@ -1,4 +1,5 @@
-import type { ShipKind, ShipState, WorldState } from '../core/contracts';
+import type { AmmoKind, ShipKind, ShipSide, ShipState, WorldState } from '../core/contracts';
+import { areFactionsHostile } from '../simulation/factions';
 import type { PresentationEvent } from '../ui/presentation';
 
 export type MusicMode = 'exploration' | 'combat' | 'race' | 'storm';
@@ -96,6 +97,23 @@ export class AudioDirector {
   private nextThunderAt = 0;
   private randomState = 0x6d2b79f5;
   private lastCountdown = -1;
+  private currentPlayerId?: string;
+  private lastPlayerKind?: ShipKind;
+  private lastWeaponCooldowns?: Record<'port' | 'starboard' | 'bow', number>;
+  private reloadStages: Record<'port' | 'starboard' | 'bow', 'idle' | 'started' | 'rammed'> = {
+    port: 'idle', starboard: 'idle', bow: 'idle',
+  };
+  private nextThreatCueAt = 0;
+  private lastImpactAt = 0;
+  private lastImpactTarget?: string;
+  private lastImpactSection?: ShipSide;
+  private hitCombo = 0;
+  private lastHitConfirmAt = 0;
+  private surrenderedShips = new Set<string>();
+  private hasObservedSurrenders = false;
+  private trackedTargetId?: string;
+  private trackedTargetOpening = false;
+  private trackedTargetCritical = false;
   private gestureCleanup?: () => void;
   private readonly onVisibilityChange = (): void => {
     if (!this.context) return;
@@ -161,13 +179,28 @@ export class AudioDirector {
 
     if (state.seedNumber && this.randomState === 0x6d2b79f5) this.randomState ^= state.seedNumber | 0;
     const player = state.ships.find((ship) => ship.id === state.playerId);
-    if (player) this.currentProfile = AUDIO_PROFILES[player.kind];
+    this.currentPlayerId = state.playerId;
+    if (player) {
+      this.currentProfile = AUDIO_PROFILES[player.kind];
+      if (this.lastPlayerKind !== player.kind) {
+        this.lastPlayerKind = player.kind;
+        this.lastWeaponCooldowns = undefined;
+        this.reloadStages = { port: 'idle', starboard: 'idle', bow: 'idle' };
+      }
+    }
     const profile = this.currentProfile;
     const now = context.currentTime;
     const speedRatio = player ? this.clamp(Math.abs(player.speed) / Math.max(1, player.maxSpeed)) : 0;
     const storm = state.weather === 'storm' || state.weather === 'maelstrom';
     const wind = this.normalizedLevel(state.windStrength);
     const pausedScale = state.paused ? 0.2 : 1;
+
+    if (player) {
+      this.updateReloadAudio(player);
+      if (!state.paused) this.updateThreatAudio(state, player, now);
+      if (!state.paused) this.updateTargetStatusAudio(state, player);
+    }
+    this.updateSurrenderAudio(state);
 
     this.target(graph.master.gain, this.muted ? 0 : this.options.masterVolume * pausedScale, now, 0.12);
     this.target(graph.waterGain.gain, this.options.ambienceVolume * (0.025 + speedRatio * 0.22), now, 0.18);
@@ -202,12 +235,30 @@ export class AudioDirector {
   handle(event: PresentationEvent): void {
     switch (event.type) {
       case 'cannon-fired':
-        this.playCannon(event.shipKind, event.weight ?? 0.65, event.ammo);
+        this.playCannon(event.shipKind, event.weight ?? 0.65, event.ammo, event.side);
         break;
-      case 'impact':
-      case 'damage':
-        this.playImpact(event.severity ?? 0.5, event.type === 'impact' ? event.material : 'hull');
+      case 'impact': {
+        const incoming = event.incoming ?? (!event.targetId || event.targetId === this.currentPlayerId);
+        this.playImpact(event.severity ?? 0.5, event.material, event.section, incoming);
+        if (!incoming && event.targetId && event.material !== 'water') {
+          this.playHitConfirm(event.severity ?? 0.5, event.critical, event.combo);
+        }
+        if (event.disabled) this.playStatus('disabled');
+        this.lastImpactAt = performance.now();
+        this.lastImpactTarget = event.targetId;
+        this.lastImpactSection = event.section;
         break;
+      }
+      case 'damage': {
+        const pairedImpact = performance.now() - this.lastImpactAt < 80
+          && event.targetId === this.lastImpactTarget
+          && event.section === this.lastImpactSection;
+        if (pairedImpact) break;
+        const incoming = event.incoming ?? (!event.targetId || event.targetId === this.currentPlayerId);
+        this.playImpact(event.severity ?? 0.5, 'hull', event.section, incoming);
+        if (!incoming && event.targetId) this.playHitConfirm(event.severity ?? 0.5, event.critical, event.combo);
+        break;
+      }
       case 'special':
         this.playSpecial(event.phase ?? 'fire', event.shipKind, event.power ?? 0.8);
         break;
@@ -221,6 +272,7 @@ export class AudioDirector {
         this.playCheckpoint();
         break;
       case 'victory':
+        if (event.title?.includes('DISABLED')) this.playStatus('disabled');
         this.playFanfare(true);
         break;
       case 'defeat':
@@ -240,6 +292,28 @@ export class AudioDirector {
         break;
       case 'target-acquired':
         this.playCalloutCue('danger');
+        if (event.opening) this.playOpeningCue();
+        break;
+      case 'target-status':
+        if (event.status === 'critical') this.playStatus('critical');
+        if (event.status === 'disabled') this.playStatus('disabled');
+        if (event.status === 'surrendered') this.playStatus('surrendered');
+        if (event.opening) this.playOpeningCue();
+        break;
+      case 'reload':
+        this.playReload(event.side, event.phase);
+        break;
+      case 'combo':
+        this.playHitConfirm(event.critical ? 1 : 0.55, event.critical, event.count);
+        break;
+      case 'threat':
+        this.playThreatCue(
+          event.side,
+          event.level ?? 'tracking',
+          event.bearing === undefined
+            ? undefined
+            : Math.sin(Math.abs(event.bearing) > Math.PI * 2 ? event.bearing * Math.PI / 180 : event.bearing) * 0.8,
+        );
         break;
     }
   }
@@ -264,7 +338,12 @@ export class AudioDirector {
     else this.target(graph[channel].gain, amount, context.currentTime, 0.05);
   }
 
-  playCannon(shipKind?: ShipKind, weight = 0.65, ammo: 'round' | 'chain' | 'heavy' | 'explosive' = 'round'): void {
+  playCannon(
+    shipKind?: ShipKind,
+    weight = 0.65,
+    ammo: AmmoKind = 'round',
+    side?: ShipSide,
+  ): void {
     const context = this.context;
     const graph = this.graph;
     if (!context || !graph || context.state !== 'running') return;
@@ -272,35 +351,127 @@ export class AudioDirector {
     const now = context.currentTime;
     const force = this.clamp(weight);
     const ammoWeight = ammo === 'heavy' ? 1.22 : ammo === 'explosive' ? 1.14 : ammo === 'chain' ? 0.82 : 1;
-    this.noiseBurst(now, 0.26 + force * 0.16, 150 + profile.cannonPitch * 2, 1.1 + force * 3.8, graph.effects, 0.22 * ammoWeight);
-    this.pitchDrop(profile.cannonPitch * ammoWeight, profile.cannonPitch * 0.35, now, 0.34, 0.17 + force * 0.12, 'sine', graph.effects);
-    this.pitchDrop(profile.cannonPitch * 2.1, profile.cannonPitch * 0.72, now + 0.012, 0.17, 0.045, 'square', graph.effects);
-    if (ammo === 'chain') {
-      this.tone(profile.cannonPitch * 5.5, now + 0.03, 0.28, 0.035, 'sawtooth', graph.effects, -18);
-      this.tone(profile.cannonPitch * 6.2, now + 0.045, 0.24, 0.028, 'sawtooth', graph.effects, 22);
+    const output = this.pannedOutput(graph.effects, this.sidePan(side));
+    const reports = 2 + Math.round(force * 4);
+    for (let index = 0; index < reports; index += 1) {
+      const offset = index * (0.012 + force * 0.009);
+      this.noiseBurst(now + offset, 0.12 + force * 0.08, 420 + profile.cannonPitch * 4 + index * 70, 1.4 + force * 2.4, output, (0.055 + force * 0.025) * ammoWeight);
+      this.pitchDrop(profile.cannonPitch * (1.9 + index * 0.08), profile.cannonPitch * 0.62, now + offset, 0.16, 0.024 + force * 0.012, 'square', output);
     }
-    if (ammo === 'explosive') this.noiseBurst(now + 0.16, 0.38, 580, 0.9, graph.effects, 0.11);
+    this.noiseBurst(now, 0.3 + force * 0.18, 145 + profile.cannonPitch * 1.7, 1.1 + force * 3.8, output, 0.18 * ammoWeight);
+    this.pitchDrop(profile.cannonPitch * ammoWeight, profile.cannonPitch * 0.3, now, 0.42, 0.15 + force * 0.11, 'sine', output);
+    this.pitchDrop(54 + force * 26, 24, now + 0.035, 0.5, 0.1 + force * 0.08, 'sine', output);
+    this.tone(620 + profile.cannonPitch * 2.2, now + 0.075, 0.18, 0.022, 'triangle', output, side === 'port' ? -11 : 11);
+    this.noiseBurst(now + 0.08, 0.28, 2600, 0.62, output, 0.035 + force * 0.02, 'highpass');
+    if (ammo === 'chain') {
+      this.tone(profile.cannonPitch * 5.5, now + 0.03, 0.28, 0.035, 'sawtooth', output, -18);
+      this.tone(profile.cannonPitch * 6.2, now + 0.045, 0.24, 0.028, 'sawtooth', output, 22);
+    }
+    if (ammo === 'explosive') this.noiseBurst(now + 0.16, 0.38, 580, 0.9, output, 0.11);
   }
 
-  playImpact(severity = 0.5, material: 'hull' | 'water' | 'mast' | 'reef' = 'hull'): void {
+  playImpact(
+    severity = 0.5,
+    material: 'hull' | 'water' | 'mast' | 'reef' = 'hull',
+    section?: ShipSide,
+    incoming = true,
+  ): void {
     const context = this.context;
     const graph = this.graph;
     if (!context || !graph || context.state !== 'running') return;
     const now = context.currentTime;
     const force = this.clamp(severity);
+    const output = this.pannedOutput(graph.effects, this.sidePan(section) * (incoming ? 1 : 0.45));
     if (material === 'water') {
-      this.noiseBurst(now, 0.28 + force * 0.3, 1200 + force * 2400, 0.7, graph.effects, 0.09 + force * 0.11, 'highpass');
-      this.pitchDrop(180 + force * 80, 70, now, 0.23, 0.04, 'sine', graph.effects);
+      this.noiseBurst(now, 0.28 + force * 0.3, 1200 + force * 2400, 0.7, output, 0.09 + force * 0.11, 'highpass');
+      this.pitchDrop(180 + force * 80, 70, now, 0.23, 0.04, 'sine', output);
       return;
     }
     const base = material === 'mast' ? 150 : material === 'reef' ? 54 : this.currentProfile.hullPitch;
-    this.noiseBurst(now, 0.12 + force * 0.24, material === 'reef' ? 240 : 740, 2.8, graph.effects, 0.1 + force * 0.16);
-    this.pitchDrop(base * 1.5, base * 0.65, now, 0.2 + force * 0.2, 0.08 + force * 0.1, 'triangle', graph.effects);
-    const splinters = 2 + Math.round(force * 4);
+    this.noiseBurst(now, 0.15 + force * 0.3, material === 'reef' ? 240 : 720, 2.8, output, 0.1 + force * 0.16);
+    this.pitchDrop(base * 1.65, base * 0.58, now, 0.24 + force * 0.24, 0.08 + force * 0.1, 'triangle', output);
+    this.pitchDrop(72 + force * 48, 26, now + 0.012, 0.36 + force * 0.2, 0.075 + force * 0.09, 'sine', output);
+    this.noiseBurst(now + 0.035, 0.19 + force * 0.16, 1900 + force * 1300, 0.85, output, 0.055 + force * 0.07, 'highpass');
+    const splinters = 3 + Math.round(force * 6);
     for (let index = 0; index < splinters; index += 1) {
       const offset = 0.018 + index * 0.026 + this.random() * 0.02;
-      this.tone(480 + this.random() * 1200, now + offset, 0.035 + this.random() * 0.045, 0.018, 'square', graph.effects, this.random() * 30 - 15);
+      this.tone(420 + this.random() * 1500, now + offset, 0.035 + this.random() * 0.06, 0.014 + force * 0.009, 'square', output, this.random() * 30 - 15);
     }
+    if (incoming && force > 0.68) this.pitchRise(base * 1.7, base * 2.15, now + 0.14, 0.42, 0.026, 'sawtooth', output);
+  }
+
+  playReload(side: ShipSide, phase: 'start' | 'ram' | 'ready'): void {
+    const context = this.context;
+    const graph = this.graph;
+    if (!context || !graph || context.state !== 'running') return;
+    const output = this.pannedOutput(graph.effects, this.sidePan(side));
+    const now = context.currentTime;
+    if (phase === 'start') {
+      this.noiseBurst(now + 0.18, 0.11, 2100, 1.8, output, 0.026, 'bandpass');
+      this.pitchDrop(520, 155, now + 0.2, 0.14, 0.025, 'triangle', output);
+      return;
+    }
+    if (phase === 'ram') {
+      this.noiseBurst(now, 0.21, 980, 4.2, output, 0.035, 'bandpass');
+      this.pitchDrop(205, 92, now, 0.2, 0.036, 'sawtooth', output);
+      this.tone(760, now + 0.13, 0.06, 0.017, 'square', output);
+      return;
+    }
+    this.pitchDrop(1280, 610, now, 0.075, 0.026, 'square', output);
+    this.tone(940, now + 0.065, 0.12, 0.025, 'triangle', output);
+    this.tone(1480, now + 0.12, 0.1, 0.018, 'square', output);
+    this.pitchDrop(118, 62, now + 0.035, 0.16, 0.035, 'sine', output);
+  }
+
+  private playHitConfirm(severity: number, critical = false, combo?: number): void {
+    const context = this.context;
+    const graph = this.graph;
+    if (!context || !graph || context.state !== 'running') return;
+    const nowMs = performance.now();
+    this.hitCombo = combo ?? (nowMs - this.lastHitConfirmAt < 2200 ? this.hitCombo + 1 : 1);
+    this.lastHitConfirmAt = nowMs;
+    const force = this.clamp(severity);
+    const now = context.currentTime;
+    const note = 72 + Math.min(7, this.hitCombo - 1);
+    this.noiseBurst(now, 0.055, 2600 + force * 1700, 1.2, graph.effects, 0.022 + force * 0.014, 'highpass');
+    this.tone(this.midi(note), now, 0.11, 0.025 + force * 0.012, 'square', graph.effects);
+    if (this.hitCombo > 1) this.tone(this.midi(note + 7), now + 0.045, 0.13, 0.019, 'triangle', graph.effects);
+    if (critical || force >= 0.82) {
+      this.pitchDrop(145, 38, now, 0.33, 0.09, 'sine', graph.effects);
+      this.noiseBurst(now + 0.025, 0.18, 780, 2.2, graph.effects, 0.065);
+    }
+  }
+
+  private playOpeningCue(): void {
+    if (!this.context || !this.graph || this.context.state !== 'running') return;
+    const now = this.context.currentTime;
+    [69, 76, 81].forEach((note, index) => this.tone(this.midi(note), now + index * 0.055, 0.14, 0.019, 'square', this.graph!.effects));
+  }
+
+  private playStatus(status: 'critical' | 'disabled' | 'surrendered'): void {
+    if (!this.context || !this.graph || this.context.state !== 'running') return;
+    const now = this.context.currentTime;
+    if (status === 'critical') {
+      this.pitchDrop(116, 44, now, 0.28, 0.07, 'sawtooth', this.graph.effects);
+      this.tone(this.midi(51), now + 0.08, 0.26, 0.035, 'square', this.graph.effects);
+      return;
+    }
+    const notes = status === 'disabled' ? [55, 60, 67, 72] : [67, 64, 60];
+    notes.forEach((note, index) => this.tone(this.midi(note), now + index * 0.1, index === notes.length - 1 ? 0.45 : 0.18, 0.03, status === 'disabled' ? 'square' : 'triangle', this.graph!.effects));
+    if (status === 'disabled') this.pitchDrop(88, 28, now, 0.55, 0.075, 'sine', this.graph.effects);
+  }
+
+  private playThreatCue(
+    side?: ShipSide,
+    level: 'tracking' | 'armed' | 'incoming' = 'tracking',
+    panOverride?: number,
+  ): void {
+    if (!this.context || !this.graph || this.context.state !== 'running') return;
+    const output = this.pannedOutput(this.graph.effects, panOverride ?? this.sidePan(side));
+    const now = this.context.currentTime;
+    const notes = level === 'incoming' ? [76, 64, 76] : level === 'armed' ? [67, 61] : [64];
+    notes.forEach((note, index) => this.tone(this.midi(note), now + index * 0.07, 0.11, level === 'incoming' ? 0.032 : 0.018, 'square', output));
+    if (level === 'incoming') this.noiseBurst(now, 0.055, 4200, 0.7, output, 0.025, 'highpass');
   }
 
   playSpecial(phase: 'charge' | 'fire' | 'ready', shipKind?: ShipKind, power = 0.8): void {
@@ -433,6 +604,94 @@ export class AudioDirector {
       data[index] = white * 0.64 + previous * 0.36;
     }
     return buffer;
+  }
+
+  private updateReloadAudio(player: ShipState): void {
+    const current = {
+      port: player.weapons.portCooldown,
+      starboard: player.weapons.starboardCooldown,
+      bow: player.weapons.bowCooldown,
+    };
+    const previous = this.lastWeaponCooldowns;
+    this.lastWeaponCooldowns = current;
+    if (!previous) return;
+
+    (['port', 'starboard', 'bow'] as const).forEach((side) => {
+      if (current[side] > previous[side] + 0.08) {
+        this.reloadStages[side] = 'started';
+        this.playReload(side, 'start');
+      }
+      if (this.reloadStages[side] === 'started' && previous[side] > 1 && current[side] <= 1) {
+        this.reloadStages[side] = 'rammed';
+        this.playReload(side, 'ram');
+      }
+      if (previous[side] > 0.001 && current[side] <= 0.001) {
+        this.reloadStages[side] = 'idle';
+        this.playReload(side, 'ready');
+      }
+    });
+  }
+
+  private updateThreatAudio(state: WorldState, player: ShipState, now: number): void {
+    if (now < this.nextThreatCueAt) return;
+    let nearest: { distance: number; pan: number } | undefined;
+    for (const projectile of state.projectiles) {
+      if (projectile.ownerId === player.id) continue;
+      const toPlayerX = player.position.x - projectile.position.x;
+      const toPlayerZ = player.position.z - projectile.position.z;
+      const distance = Math.hypot(toPlayerX, toPlayerZ);
+      const closing = projectile.velocity.x * toPlayerX + projectile.velocity.z * toPlayerZ > 0;
+      if (!closing || distance > 150 || (nearest && distance >= nearest.distance)) continue;
+      const bearing = Math.atan2(-(projectile.position.x - player.position.x), -(projectile.position.z - player.position.z));
+      const relative = Math.atan2(Math.sin(bearing - player.heading), Math.cos(bearing - player.heading));
+      nearest = { distance, pan: Math.sin(relative) * 0.8 };
+    }
+    if (!nearest) return;
+    this.playThreatCue(undefined, 'incoming', nearest.pan);
+    this.nextThreatCueAt = now + 1.35;
+  }
+
+  private updateSurrenderAudio(state: WorldState): void {
+    const surrendered = new Set(state.ships.filter((ship) => ship.surrendered).map((ship) => ship.id));
+    if (this.hasObservedSurrenders) {
+      for (const shipId of surrendered) {
+        if (!this.surrenderedShips.has(shipId) && shipId !== state.playerId) this.playStatus('surrendered');
+      }
+    }
+    this.surrenderedShips = surrendered;
+    this.hasObservedSurrenders = true;
+  }
+
+  private updateTargetStatusAudio(state: WorldState, player: ShipState): void {
+    const explicit = player.targetId ? state.ships.find((ship) => ship.id === player.targetId) : undefined;
+    const target = explicit ?? (state.mode === 'combat'
+      ? state.ships
+        .filter((ship) => ship.id !== player.id && !ship.surrendered
+          && (ship.targetId === player.id || areFactionsHostile(ship.faction, player.faction)))
+        .sort((first, second) => {
+          const firstDistance = Math.hypot(first.position.x - player.position.x, first.position.z - player.position.z);
+          const secondDistance = Math.hypot(second.position.x - player.position.x, second.position.z - player.position.z);
+          return firstDistance - secondDistance;
+        })[0]
+      : undefined);
+    if (!target) {
+      this.trackedTargetId = undefined;
+      this.trackedTargetOpening = false;
+      this.trackedTargetCritical = false;
+      return;
+    }
+    const opening = state.combat?.weakPointTargetId === target.id && state.combat.weakPointTimer > 0;
+    const critical = target.damage.hull >= 0.7;
+    if (target.id !== this.trackedTargetId) {
+      this.trackedTargetId = target.id;
+      this.trackedTargetOpening = opening;
+      this.trackedTargetCritical = critical;
+      return;
+    }
+    if (opening && !this.trackedTargetOpening) this.playOpeningCue();
+    if (critical && !this.trackedTargetCritical) this.playStatus('critical');
+    this.trackedTargetOpening = opening;
+    this.trackedTargetCritical = critical;
   }
 
   private selectMusicMode(state: WorldState): MusicMode {
@@ -674,6 +933,23 @@ export class AudioDirector {
     parameter.setTargetAtTime(Math.max(0.0001, value), at, constant);
   }
 
+  private pannedOutput(destination: AudioNode, pan: number): AudioNode {
+    const context = this.context;
+    const amount = Math.min(1, Math.max(-1, pan));
+    if (!context || Math.abs(amount) < 0.01) return destination;
+    const panner = context.createStereoPanner();
+    panner.pan.value = amount;
+    panner.connect(destination);
+    window.setTimeout(() => panner.disconnect(), 2400);
+    return panner;
+  }
+
+  private sidePan(side?: ShipSide): number {
+    if (side === 'port') return -0.58;
+    if (side === 'starboard') return 0.58;
+    return 0;
+  }
+
   private midi(note: number): number {
     return 440 * 2 ** ((note - 69) / 12);
   }
@@ -695,4 +971,3 @@ export class AudioDirector {
     return (value >>> 0) / 4_294_967_296;
   }
 }
-

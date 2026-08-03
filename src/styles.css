@@ -428,15 +428,30 @@ kbd { font: 900 10px/1 var(--condensed); }
 .race-progress span { font: 900 8px/1 var(--condensed); letter-spacing: .1em; }
 .race-card time { padding: 0 12px; font: 400 18px/1 var(--display); }
 
-.target-tag { position: absolute; top: clamp(150px, 27vh, 290px); right: var(--safe-right); display: grid; grid-template-columns: 35px minmax(130px, 1fr); gap: 3px 10px; width: clamp(205px, 18vw, 280px); padding: 10px 14px 11px; color: var(--paper); background: rgba(6, 27, 45, .88); border: 3px solid var(--paper); border-right: 0; box-shadow: -5px 6px 0 rgba(6, 27, 45, .5); clip-path: polygon(8% 0, 100% 0, 100% 100%, 0 92%, 4% 45%); }
+.target-tag { position: absolute; top: clamp(150px, 27vh, 290px); right: var(--safe-right); display: grid; grid-template-columns: 35px minmax(130px, 1fr); gap: 3px 10px; width: clamp(220px, 20vw, 300px); padding: 10px 14px 11px; color: var(--paper); background: rgba(6, 27, 45, .88); border: 3px solid var(--paper); border-right: 0; box-shadow: -5px 6px 0 rgba(6, 27, 45, .5); clip-path: polygon(8% 0, 100% 0, 100% 100%, 0 92%, 4% 45%); }
 .target-eye { grid-row: 1 / 3; align-self: center; width: 28px; aspect-ratio: 1; border: 4px solid var(--coral); border-radius: 50%; box-shadow: inset 0 0 0 5px var(--ink), inset 0 0 0 8px var(--coral); }
-.target-tag div:nth-child(2) { display: grid; }
+.target-tag div:nth-child(2) { display: grid; min-width: 0; }
 .target-tag small { font: 900 7px/1 var(--condensed); letter-spacing: .12em; color: var(--coral); }
 .target-tag strong { overflow: hidden; font: 400 18px/1 var(--display); text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.target-captain { margin-top: 3px; overflow: hidden; font: 900 7px/1 var(--condensed); letter-spacing: .08em; opacity: .66; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.target-captain b { color: var(--paper); }
 .target-hull { grid-column: 2; height: 7px; overflow: hidden; background: rgba(255, 244, 206, .2); transform: skewX(-18deg); }
 .target-hull i { display: block; width: 100%; height: 100%; background: var(--coral); transition: width 180ms ease; }
 .target-tag em { grid-column: 2; font: 900 7px/1 var(--condensed); letter-spacing: .13em; text-align: right; }
 .target-tag[data-condition="critical"] { animation: target-danger 850ms steps(2, jump-none) infinite; }
+.target-tag[data-intent="surrendered"] { border-color: var(--mint); }
+.target-tag[data-intent="surrendered"] .target-eye { border-color: var(--mint); box-shadow: inset 0 0 0 5px var(--ink), inset 0 0 0 8px var(--mint); }
+.target-opening { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 5px 0 -3px 27px; padding: 5px 7px 4px; color: var(--ink); background: var(--sun); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--coral); clip-path: polygon(3% 0, 100% 5%, 96% 100%, 0 88%); }
+.target-opening span { font: 900 7px/1 var(--condensed); letter-spacing: .12em; }
+.target-opening b { overflow: hidden; font: 400 13px/1 var(--display); text-overflow: ellipsis; white-space: nowrap; }
+.target-opening.is-active { animation: opening-pop 480ms cubic-bezier(.16,.8,.2,1) both; }
+
+.threat-compass { position: absolute; z-index: 12; inset: 0; overflow: hidden; pointer-events: none; }
+.threat-pip { --threat-angle: 180deg; position: absolute; display: grid; place-items: center; width: 26px; height: 32px; color: var(--ink); background: var(--sun); border: 3px solid var(--ink); box-shadow: 3px 3px 0 rgba(1, 12, 23, .42); clip-path: polygon(50% 0, 100% 35%, 77% 100%, 23% 100%, 0 35%); transform: translate(-50%, -50%) rotate(var(--threat-angle)); transform-origin: center; }
+.threat-pip b { font: 400 17px/1 var(--display); transform: rotate(calc(-1 * var(--threat-angle))); }
+.threat-pip[data-level="armed"] { color: var(--paper); background: var(--coral); }
+.threat-pip[data-level="incoming"] { width: 32px; height: 39px; color: var(--paper); background: var(--coral); border-color: var(--paper); animation: threat-incoming 430ms steps(2) infinite; }
+.threat-pip.is-alerting { animation: threat-alert 520ms cubic-bezier(.16,.8,.2,1); }
 
 .ship-vitals { position: absolute; bottom: var(--safe-bottom); left: var(--safe-left); width: clamp(230px, 20vw, 292px); padding: 11px 14px 12px; color: var(--paper); background: rgba(6, 27, 45, .9); border: 3px solid var(--paper); clip-path: polygon(0 7%, 96% 0, 100% 91%, 8% 100%, 0 85%); }
 .ship-identity { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; padding-bottom: 6px; border-bottom: 2px solid rgba(255, 244, 206, .35); }
@@ -498,6 +513,8 @@ kbd { font: 900 10px/1 var(--condensed); }
 .weapon-box[data-ready="true"] > i { background: rgba(6, 27, 45, .18); }
 .weapon-box[data-ready="true"] > i b { background: var(--sea); }
 .weapon-box[data-ready="true"] > kbd { color: var(--ink); }
+.weapon-box.just-fired { animation: weapon-fire 300ms cubic-bezier(.1,.8,.2,1); }
+.weapon-box.just-reloaded { animation: weapon-ready 620ms cubic-bezier(.16,.8,.2,1); }
 .special-meter { margin-top: 5px; padding: 7px 10px 9px; color: var(--paper); background: rgba(6, 27, 45, .9); border: 2px solid var(--paper); clip-path: polygon(0 7%, 98% 0, 100% 89%, 4% 100%); }
 .special-meter > div { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
 .special-meter small { font: 900 7px/1 var(--condensed); letter-spacing: .16em; }
@@ -515,6 +532,22 @@ kbd { font: 900 10px/1 var(--condensed); }
 .countdown-burst { position: absolute; z-index: 25; top: 36%; left: 50%; color: var(--sun); font: 400 clamp(100px, 18vw, 240px)/.8 var(--display); -webkit-text-stroke: 7px var(--ink); filter: drop-shadow(11px 12px 0 var(--coral)); transform: translate(-50%, -50%); }
 .countdown-burst.is-active { animation: countdown-pop 820ms cubic-bezier(.12,.82,.22,1) both; }
 .pause-stamp { position: absolute; z-index: 18; top: 50%; left: 50%; padding: 9px 18px; color: var(--ink); font: 400 clamp(22px, 3vw, 42px)/1 var(--display); letter-spacing: .04em; background: var(--paper); border: 4px solid var(--ink); box-shadow: 6px 6px 0 var(--coral); transform: translate(-50%, -50%) rotate(-2deg); }
+
+.hit-confirm { position: absolute; z-index: 19; top: clamp(285px, 44vh, 480px); right: var(--safe-right); display: grid; justify-items: end; min-width: 150px; padding: 7px 12px 8px; color: var(--ink); text-align: right; background: var(--sun); border: 3px solid var(--ink); box-shadow: -5px 5px 0 var(--coral); clip-path: polygon(5% 0, 100% 4%, 96% 100%, 0 89%); }
+.hit-confirm small { font: 400 20px/.9 var(--display); }
+.hit-confirm strong { margin-top: 3px; color: var(--coral); font: 400 14px/1 var(--display); letter-spacing: .04em; }
+.hit-confirm span { margin-top: 3px; font: 900 7px/1 var(--condensed); letter-spacing: .1em; }
+.hit-confirm[data-tone="critical"],
+.hit-confirm[data-tone="disabled"] { color: var(--paper); background: var(--coral); box-shadow: -6px 6px 0 var(--sun); }
+.hit-confirm[data-tone="critical"] strong,
+.hit-confirm[data-tone="disabled"] strong { color: var(--sun); }
+.hit-confirm.is-active { animation: hit-confirm 1.05s cubic-bezier(.16,.8,.2,1) both; }
+
+.volley-stamp { position: absolute; z-index: 18; right: var(--safe-right); bottom: calc(var(--safe-bottom) + 142px); display: grid; justify-items: end; padding: 5px 9px 6px; color: var(--paper); background: var(--coral); border: 2px solid var(--ink); box-shadow: -3px 3px 0 var(--sun); clip-path: polygon(7% 0, 100% 4%, 94% 100%, 0 86%); }
+.volley-stamp small { font: 900 7px/1 var(--condensed); letter-spacing: .12em; }
+.volley-stamp strong { font: 400 21px/.9 var(--display); }
+.volley-stamp[data-tone="ready"] { color: var(--ink); background: var(--mint); box-shadow: -3px 3px 0 var(--ink); }
+.volley-stamp.is-active { animation: volley-stamp 760ms cubic-bezier(.12,.8,.2,1) both; }
 
 .crew-callout { position: absolute; z-index: 22; top: clamp(105px, 16vh, 180px); left: var(--safe-left); display: grid; grid-template-columns: 66px minmax(190px, 300px); align-items: center; color: var(--ink); filter: drop-shadow(7px 8px 0 var(--shadow)); }
 .crew-callout > div:last-child { min-height: 65px; padding: 10px 19px 10px 24px; background: var(--paper); border: 3px solid var(--ink); clip-path: polygon(4% 0, 100% 5%, 95% 100%, 0 88%); }
@@ -581,8 +614,15 @@ kbd { font: 900 10px/1 var(--condensed); }
 .drawer-footer { display: block; margin-top: 13px; font: 900 8px/1 var(--condensed); letter-spacing: .14em; text-align: center; text-transform: uppercase; }
 
 @keyframes target-danger { 50% { border-color: var(--coral); } }
+@keyframes opening-pop { from { opacity: 0; transform: translateX(28px) skewX(-12deg); } 60% { transform: translateX(-3px) skewX(3deg); } to { opacity: 1; transform: translateX(0); } }
+@keyframes threat-incoming { 50% { filter: brightness(1.6); } }
+@keyframes threat-alert { 50% { scale: 1.45; filter: brightness(1.7); } }
 @keyframes meter-pulse { 50% { opacity: .45; } }
 @keyframes special-ready { 50% { filter: brightness(1.3); } }
+@keyframes weapon-fire { 30% { color: var(--paper); background: var(--coral); transform: translateY(5px) skewX(-3deg); filter: brightness(1.5); } }
+@keyframes weapon-ready { 35% { transform: scale(1.07) rotate(-1deg); filter: brightness(1.55); } }
+@keyframes hit-confirm { 0% { opacity: 0; transform: translateX(65px) scale(1.5) rotate(4deg); } 16% { opacity: 1; transform: translateX(-7px) scale(.96) rotate(-2deg); } 28%, 78% { opacity: 1; transform: translateX(0) scale(1); } 100% { opacity: 0; transform: translateX(15px) scale(.92); } }
+@keyframes volley-stamp { 0% { opacity: 0; transform: translateX(45px) rotate(6deg) scale(1.35); } 22% { opacity: 1; transform: translateX(-4px) rotate(-2deg) scale(.96); } 38%, 76% { opacity: 1; transform: translateX(0) scale(1); } 100% { opacity: 0; transform: translateY(-8px) scale(.9); } }
 @keyframes wrong-way { 50% { transform: translateX(-50%) rotate(2deg) scale(1.03); } }
 @keyframes countdown-pop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(2.4) rotate(-8deg); } 18% { opacity: 1; transform: translate(-50%, -50%) scale(.92) rotate(2deg); } 65% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(.72); } }
 @keyframes callout-in { from { opacity: 0; transform: translateX(-110%) rotate(-4deg); } 70% { transform: translateX(8px) rotate(1deg); } to { opacity: 1; transform: translateX(0); } }

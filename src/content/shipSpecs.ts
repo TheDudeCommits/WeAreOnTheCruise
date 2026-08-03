@@ -60,7 +60,7 @@ export const SHIP_SPECS: Readonly<Record<ShipKind, ShipSpec>> = {
   },
   'going-merry': {
     kind: 'going-merry', displayName: 'Going Merry', subtitle: 'The Beloved Caravel',
-    length: 34, beam: 13, draft: 4.2, mastCount: 2, crewCount: 7, buoyancySamples: 5,
+    length: 34, beam: 13, draft: 4.2, mastCount: 1, crewCount: 7, buoyancySamples: 5,
     mass: 350, maxSpeed: 26, acceleration: 5.8, reverseSpeed: 6.5, turnRate: 0.71, hardTurnGrip: 0.94,
     hullStrength: 78, sailStrength: 88, weaponStrength: 68, crewStrength: 135,
     broadsideCannons: 4, bowCannons: 1, reloadTime: 3.2, projectileSpeed: 66,
@@ -69,8 +69,8 @@ export const SHIP_SPECS: Readonly<Record<ShipKind, ShipSpec>> = {
   },
   'moby-dick': {
     kind: 'moby-dick', displayName: 'Moby Dick', subtitle: "Whitebeard's Flagship",
-    length: 104, beam: 40, draft: 13, mastCount: 3, crewCount: 22, buoyancySamples: 8,
-    mass: 4_600, maxSpeed: 20, acceleration: 2.1, reverseSpeed: 3.2, turnRate: 0.22, hardTurnGrip: 0.52,
+    length: 122, beam: 48, draft: 15, mastCount: 4, crewCount: 22, buoyancySamples: 8,
+    mass: 6_400, maxSpeed: 19, acceleration: 1.85, reverseSpeed: 3, turnRate: 0.19, hardTurnGrip: 0.48,
     hullStrength: 260, sailStrength: 178, weaponStrength: 230, crewStrength: 220,
     broadsideCannons: 14, bowCannons: 2, reloadTime: 5.2, projectileSpeed: 72,
     special: 'tremor-broadside',
@@ -78,7 +78,7 @@ export const SHIP_SPECS: Readonly<Record<ShipKind, ShipSpec>> = {
   },
   'red-force': {
     kind: 'red-force', displayName: 'Red Force', subtitle: "Red-Haired Pirates' Dread Ship",
-    length: 78, beam: 27, draft: 9.5, mastCount: 3, crewCount: 15, buoyancySamples: 8,
+    length: 78, beam: 27, draft: 9.5, mastCount: 4, crewCount: 15, buoyancySamples: 8,
     mass: 2_050, maxSpeed: 25, acceleration: 3.3, reverseSpeed: 4.2, turnRate: 0.37, hardTurnGrip: 0.72,
     hullStrength: 188, sailStrength: 142, weaponStrength: 170, crewStrength: 190,
     broadsideCannons: 10, bowCannons: 1, reloadTime: 4.15, projectileSpeed: 76,
@@ -105,8 +105,8 @@ export const SHIP_SPECS: Readonly<Record<ShipKind, ShipSpec>> = {
   },
   'queen-mama-chanter': {
     kind: 'queen-mama-chanter', displayName: 'Queen Mama Chanter', subtitle: 'The Singing Candy Galleon',
-    length: 91, beam: 36, draft: 11.5, mastCount: 3, crewCount: 18, buoyancySamples: 8,
-    mass: 3_500, maxSpeed: 21, acceleration: 2.6, reverseSpeed: 3.5, turnRate: 0.28, hardTurnGrip: 0.59,
+    length: 108, beam: 44, draft: 14, mastCount: 3, crewCount: 18, buoyancySamples: 8,
+    mass: 5_250, maxSpeed: 20, acceleration: 2.3, reverseSpeed: 3.3, turnRate: 0.24, hardTurnGrip: 0.54,
     hullStrength: 238, sailStrength: 168, weaponStrength: 205, crewStrength: 185,
     broadsideCannons: 12, bowCannons: 2, reloadTime: 4.6, projectileSpeed: 69,
     special: 'soul-cannon',
