@@ -2,6 +2,8 @@
 
 A zero-asset, cel-shaded naval adventure built with Vite, TypeScript, and Three.js. Every hull, sail, island, ocean wave, texture, effect, UI mark, sound, and musical layer is generated in code at runtime.
 
+**[Play We Are On The Cruise](https://we-are-on-the-cruise.vercel.app)**
+
 > **Fan-project notice:** This is an unofficial, non-commercial technical fan work. One Piece and its characters and vessels belong to their respective rights holders. No original anime, manga, model, texture, audio, or logo assets are distributed here.
 
 ## Run it
