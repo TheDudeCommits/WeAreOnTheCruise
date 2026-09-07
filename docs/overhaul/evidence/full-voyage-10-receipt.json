@@ -1,0 +1,6397 @@
+{
+  "method": "Real launch, ship, contract, build, crew, route, salvage and reward UI. Public debug action/step only for accelerated legal helm/fire/repair/special. Aim enters through ordinary keyboard/pointer listeners; no mutable state, fixtures or save injection. Not a performance benchmark.",
+  "policy": {
+    "seed": "full-voyage-02",
+    "ship": "oro-jackson",
+    "build": "guardian",
+    "contract": "lost-cargo",
+    "routes": "measured",
+    "crew": "repair",
+    "reward": "supplies",
+    "decisionFrames": 12,
+    "maxFramesPerLeg": 36000,
+    "maxWallSecondsPerLeg": 180,
+    "source": "output/overhaul-gauntlet/full-voyage-probe.test.ts",
+    "note": "Same steering, range, velocity-lead and repair formulas as successful Node probe, sampled every 12 fixed steps to bound render cost. Normal RAF ticks also continue; browser result is independently checked."
+  },
+  "url": "http://127.0.0.1:4191/?seed=full-voyage-02",
+  "startedAt": "2026-09-07T10:58:46.043Z",
+  "legs": [
+    {
+      "fixedFrames": 2412,
+      "wallSeconds": 3.3422999999821186,
+      "phase": "encounter",
+      "completed": true,
+      "encounter": {
+        "id": "full-voyage-02:1:leg-1",
+        "kind": "salvage",
+        "title": "The Wreck Channel",
+        "objective": "Reach the wreck marker; hold within 65 m for 12 seconds to recover cargo",
+        "targetIds": [],
+        "waypoint": {
+          "x": 0,
+          "y": 0,
+          "z": -220
+        },
+        "progress": 12,
+        "target": 12,
+        "elapsed": 43.59999999999881,
+        "reward": 175,
+        "completed": true,
+        "resolvedAt": 43.58333333333214
+      },
+      "ships": [
+        {
+          "id": "player",
+          "kind": "oro-jackson",
+          "name": "Oro Jackson",
+          "isPlayer": true,
+          "position": {
+            "x": -1.4276586877803754,
+            "y": 2.0207075030687167,
+            "z": -208.942493106018
+          },
+          "heading": 0,
+          "speed": 1.0550104350480256,
+          "verticalSpeed": -0.35013922576414047,
+          "pitch": -0.014348891214940797,
+          "roll": 0.08127843935904357,
+          "throttle": -0.023999999999999827,
+          "rudder": 0,
+          "maxSpeed": 27,
+          "mass": 2220,
+          "damage": {
+            "hull": 0,
+            "sails": 0,
+            "weapons": 0,
+            "crew": 0,
+            "sections": {
+              "bow": 0,
+              "stern": 0,
+              "port": 0,
+              "starboard": 0
+            }
+          },
+          "weapons": {
+            "portCooldown": 0,
+            "starboardCooldown": 0,
+            "bowCooldown": 0,
+            "ammo": "round"
+          },
+          "special": 1,
+          "brace": 0,
+          "repairing": true,
+          "surrendered": false,
+          "faction": "roger",
+          "combatRole": "ranged",
+          "crew": {
+            "helm": 2,
+            "guns": 1,
+            "repair": 6,
+            "special": 1
+          },
+          "crewPreset": "repair",
+          "damageStage": "intact"
+        }
+      ],
+      "actions": {
+        "steer-left:up": 1,
+        "steer-right:up": 1,
+        "throttle-up:down": 7,
+        "throttle-down:up": 9,
+        "repair:up": 1,
+        "throttle-up:up": 7,
+        "throttle-down:down": 8
+      },
+      "samples": [
+        {
+          "elapsed": 6.516666666666649,
+          "progress": 0,
+          "position": {
+            "x": -0.08549700492086032,
+            "y": -1.6131521865101832,
+            "z": 76.59285800111928
+          },
+          "heading": 0,
+          "speed": 6.200541863616764,
+          "hullDamage": 0,
+          "aim": {
+            "adjustment": 0,
+            "guideVisible": false
+          }
+        },
+        {
+          "elapsed": 13.03333333333356,
+          "progress": 0,
+          "position": {
+            "x": -0.27061988512741386,
+            "y": 1.2599704006469141,
+            "z": 26.9486508840631
+          },
+          "heading": 0,
+          "speed": 8.675259161532882,
+          "hullDamage": 0,
+          "aim": {
+            "adjustment": 0,
+            "guideVisible": false
+          }
+        },
+        {
+          "elapsed": 19.51666666666684,
+          "progress": 0,
+          "position": {
+            "x": -0.49630965916895525,
+            "y": 0.28139791030914557,
+            "z": -33.13567723758678
+          },
+          "heading": 0,
+          "speed": 9.709858504494761,
+          "hullDamage": 0,
+          "aim": {
+            "adjustment": 0,
+            "guideVisible": false
+          }
+        },
+        {
+          "elapsed": 26.01666666666647,
+          "progress": 0,
+          "position": {
+            "x": -0.7400491474977453,
+            "y": -1.9013108205947646,
+            "z": -97.87465684133569
+          },
+          "heading": 0,
+          "speed": 10.146424555806664,
+          "hullDamage": 0,
+          "aim": {
+            "adjustment": 0,
+            "guideVisible": false
+          }
+        },
+        {
+          "elapsed": 32.516666666666104,
+          "progress": 0.9333333333333346,
+          "position": {
+            "x": -0.9917836916785682,
+            "y": 1.9160514824723014,
+            "z": -164.6393840917776
+          },
+          "heading": 0,
+          "speed": 10.144746916931336,
+          "hullDamage": 0,
+          "aim": {
+            "adjustment": 0,
+            "guideVisible": false
+          }
+        },
+        {
+          "elapsed": 39.016666666665735,
+          "progress": 7.433333333333312,
+          "position": {
+            "x": -1.2470685398450783,
+            "y": -1.0958771510942453,
+            "z": -201.12409740426267
+          },
+          "heading": 0,
+          "speed": 2.6211962143752703,
+          "hullDamage": 0,
+          "aim": {
+            "adjustment": 0,
+            "guideVisible": false
+          }
+        }
+      ],
+      "beforeReward": {
+        "seed": "full-voyage-02",
+        "seedNumber": 630842247,
+        "elapsed": 43.96666666666545,
+        "timeScale": 1,
+        "paused": true,
+        "mode": "explore",
+        "weather": "calm",
+        "windDirection": 0.25,
+        "windStrength": 0.92,
+        "currentDirection": 0.15,
+        "currentStrength": 0.12,
+        "playerId": "player",
+        "objective": "Spoils collected — choose a refit or extract",
+        "bounty": 30000000,
+        "treasure": 1,
+        "ships": [
+          {
+            "id": "player",
+            "kind": "oro-jackson",
+            "name": "Oro Jackson",
+            "isPlayer": true,
+            "position": {
+              "x": -1.4421140612954317,
+              "y": 1.8533998563532794,
+              "z": -209.31579656371125
+            },
+            "heading": 0,
+            "speed": 0.98529440862387,
+            "verticalSpeed": -0.5489047741757139,
+            "pitch": -0.027743948918105832,
+            "roll": 0.09517400152119225,
+            "throttle": -0.023999999999999827,
+            "rudder": 0,
+            "maxSpeed": 27,
+            "mass": 2220,
+            "damage": {
+              "hull": 0,
+              "sails": 0,
+              "weapons": 0,
+              "crew": 0,
+              "sections": {
+                "bow": 0,
+                "stern": 0,
+                "port": 0,
+                "starboard": 0
+              }
+            },
+            "weapons": {
+              "portCooldown": 0,
+              "starboardCooldown": 0,
+              "bowCooldown": 0,
+              "ammo": "round"
+            },
+            "special": 1,
+            "brace": 0,
+            "repairing": true,
+            "surrendered": false,
+            "faction": "roger",
+            "combatRole": "ranged",
+            "crew": {
+              "helm": 2,
+              "guns": 1,
+              "repair": 6,
+              "special": 1
+            },
+            "crewPreset": "repair",
+            "damageStage": "intact"
+          }
+        ],
+        "projectiles": [],
+        "islands": [
+          {
+            "id": "dawn-harbor",
+            "name": "Dawn Harbor",
+            "position": {
+              "x": 310,
+              "y": 0,
+              "z": 80
+            },
+            "radius": 100,
+            "height": 55,
+            "palette": 1,
+            "discovered": true,
+            "landmark": "palms",
+            "service": "harbor"
+          },
+          {
+            "id": "sky-arch",
+            "name": "The Sky Arch",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": -420
+            },
+            "radius": 125,
+            "height": 165,
+            "palette": 2,
+            "discovered": true,
+            "landmark": "arches",
+            "service": "passage"
+          },
+          {
+            "id": "razor-reef",
+            "name": "Razor Reef",
+            "position": {
+              "x": -250,
+              "y": 0,
+              "z": -240
+            },
+            "radius": 68,
+            "height": 57,
+            "palette": 1,
+            "discovered": false,
+            "landmark": "needles",
+            "service": "ambush"
+          },
+          {
+            "id": "sunwatch-fort",
+            "name": "Sunwatch Fort",
+            "position": {
+              "x": 270,
+              "y": 0,
+              "z": -480
+            },
+            "radius": 108,
+            "height": 85,
+            "palette": 3,
+            "discovered": false,
+            "landmark": "fort",
+            "service": "fort"
+          },
+          {
+            "id": "island:-1:-2:0",
+            "name": "Sun Rest",
+            "position": {
+              "x": -752.5619749411941,
+              "y": 0,
+              "z": -1245.444671780616
+            },
+            "radius": 55.322910910472274,
+            "height": 23.78637829519573,
+            "palette": 2,
+            "discovered": false,
+            "landmark": "palms",
+            "rotation": 0.334962237230259,
+            "tierCount": 2,
+            "palms": 10
+          },
+          {
+            "id": "island:-1:-2:1",
+            "name": "Amber Atoll",
+            "position": {
+              "x": -783.7350342750549,
+              "y": 0,
+              "z": -1484.2456627450883
+            },
+            "radius": 70.26044982671738,
+            "height": 56.4606476143165,
+            "palette": 3,
+            "discovered": false,
+            "landmark": "palms",
+            "rotation": 1.455319144409593,
+            "tierCount": 2,
+            "palms": 10
+          },
+          {
+            "id": "island:1:-2:0",
+            "name": "Gull Spire",
+            "position": {
+              "x": 809.2275523625315,
+              "y": 0,
+              "z": -1586.2616810135544
+            },
+            "radius": 100.0315313860774,
+            "height": 39.69594481346754,
+            "palette": 2,
+            "discovered": false,
+            "landmark": "arches",
+            "rotation": 0.6159103615159061,
+            "tierCount": 2,
+            "palms": 4
+          },
+          {
+            "id": "island:1:-2:1",
+            "name": "Gull Atoll",
+            "position": {
+              "x": 949.6037937104702,
+              "y": 0,
+              "z": -1598.117179942131
+            },
+            "radius": 71.54509272426367,
+            "height": 51.3279771436755,
+            "palette": 0,
+            "discovered": false,
+            "landmark": "palms",
+            "rotation": 0.8349132414877709,
+            "tierCount": 4,
+            "palms": 7
+          },
+          {
+            "id": "island:2:-1:0",
+            "name": "Laughing Garden",
+            "position": {
+              "x": 1275.9054423876107,
+              "y": 0,
+              "z": -876.4623799860477
+            },
+            "radius": 129.86432294221595,
+            "height": 81.08089705015657,
+            "palette": 1,
+            "discovered": false,
+            "landmark": "fort",
+            "rotation": 1.1057315138815698,
+            "tierCount": 2,
+            "palms": 3
+          },
+          {
+            "id": "island:-2:0:0",
+            "name": "Scarlet Key",
+            "position": {
+              "x": -1457.3204812757672,
+              "y": 0,
+              "z": 194.73719691038133
+            },
+            "radius": 81.77312587760389,
+            "height": 29.828231209751518,
+            "palette": 3,
+            "discovered": false,
+            "landmark": "needles",
+            "rotation": -2.6235080599840694,
+            "tierCount": 3,
+            "palms": 1
+          },
+          {
+            "id": "island:-1:0:0",
+            "name": "Turtle Watch",
+            "position": {
+              "x": -812.9079237632453,
+              "y": 0,
+              "z": -57.658205149322754
+            },
+            "radius": 68.72609283961356,
+            "height": 26.619678539508897,
+            "palette": 0,
+            "discovered": false,
+            "landmark": "fort",
+            "rotation": 0.07279178123558205,
+            "tierCount": 3,
+            "palms": 3
+          },
+          {
+            "id": "island:1:0:0",
+            "name": "Whale Crown",
+            "position": {
+              "x": 743.5951710663736,
+              "y": 0,
+              "z": 7.932497019320721
+            },
+            "radius": 62.14457046613097,
+            "height": 41.509124106559646,
+            "palette": 2,
+            "discovered": false,
+            "landmark": "volcano",
+            "rotation": 2.530563138306438,
+            "tierCount": 3,
+            "palms": 1
+          },
+          {
+            "id": "island:0:1:0",
+            "name": "Sun Crown",
+            "position": {
+              "x": -212.15959133952856,
+              "y": 0,
+              "z": 622.9794296577572
+            },
+            "radius": 57.838838912546635,
+            "height": 20.705145074405078,
+            "palette": 2,
+            "discovered": false,
+            "landmark": "fort",
+            "rotation": 0.15138295594775197,
+            "tierCount": 3,
+            "palms": 3
+          },
+          {
+            "id": "island:2:1:0",
+            "name": "Scarlet Key",
+            "position": {
+              "x": 1461.640231371671,
+              "y": 0,
+              "z": 595.3698538787663
+            },
+            "radius": 89.02825777046382,
+            "height": 59.23410308519979,
+            "palette": 3,
+            "discovered": false,
+            "landmark": "fort",
+            "rotation": 0.017749214937474278,
+            "tierCount": 3,
+            "palms": 3
+          }
+        ],
+        "race": {
+          "active": false,
+          "countdown": 0,
+          "lap": 1,
+          "totalLaps": 3,
+          "checkpoint": 0,
+          "placement": 1,
+          "elapsed": 0,
+          "wrongWay": false
+        },
+        "progression": {
+          "version": 1,
+          "bankedCoins": 0,
+          "totalVoyages": 1,
+          "completedVoyages": 0,
+          "selectedShip": "oro-jackson",
+          "refits": {},
+          "discoveredIds": [
+            "sky-arch"
+          ],
+          "paidVoyageIds": [],
+          "rivals": {}
+        },
+        "combat": {
+          "combo": 0,
+          "comboTimer": 0,
+          "weakPointTimer": 0,
+          "defeated": 0,
+          "surrendered": 0,
+          "reinforcements": 0
+        },
+        "worldFeatures": [
+          {
+            "id": "stack:-2:-2:0",
+            "x": -1445.6337815254926,
+            "z": -1650.0412338897586,
+            "radius": 8.328591626835987,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:1",
+            "x": -1291.851358859986,
+            "z": -1585.1808091387152,
+            "radius": 4.658808445208706,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:2",
+            "x": -1515.5524162709712,
+            "z": -1347.3050689056515,
+            "radius": 5.425555753172375,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:3",
+            "x": -1288.5241338975727,
+            "z": -1600.9584764532744,
+            "radius": 8.21307502198033,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:4",
+            "x": -1263.8317751258612,
+            "z": -1506.0204993478953,
+            "radius": 6.077336920192465,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:5",
+            "x": -1429.3781775288285,
+            "z": -1601.1859659522772,
+            "radius": 5.829561019549146,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:-2:0:stack:0",
+            "x": -677.9594925635702,
+            "z": -1330.8816199031317,
+            "radius": 7.599816999863833,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:-2:0:stack:1",
+            "x": -691.9894555783278,
+            "z": -1282.3966482796927,
+            "radius": 5.414549814304337,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:-2:0:stack:2",
+            "x": -821.0390482093827,
+            "z": -1236.8128721877906,
+            "radius": 5.992279672063887,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:-2:1:stack:0",
+            "x": -825.6125132819053,
+            "z": -1555.2025681376201,
+            "radius": 5.165184932993725,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:-2:0:reef",
+            "x": -757.3585016349314,
+            "z": -1329.5820889197341,
+            "radius": 21.934152939247944,
+            "kind": "reef"
+          },
+          {
+            "id": "island:-1:-2:1:reef",
+            "x": -864.0782659211237,
+            "z": -1474.5411625871525,
+            "radius": 29.006182421208628,
+            "kind": "reef"
+          },
+          {
+            "id": "stack:0:-2:0",
+            "x": 153.28746361881497,
+            "z": -1511.6360693246127,
+            "radius": 7.0238791283918545,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:0:-2:1",
+            "x": -224.95043059810996,
+            "z": -1674.6436277769506,
+            "radius": 6.294014253537171,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:0:-2:2",
+            "x": -243.49012136757375,
+            "z": -1543.6677785776556,
+            "radius": 3.6673997753532603,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:0:-2:3",
+            "x": 95.67354760095475,
+            "z": -1284.1282372556627,
+            "radius": 4.066782737383619,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:0:-2:4",
+            "x": 143.44841594025496,
+            "z": -1421.0683714717627,
+            "radius": 4.9380335251335055,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:0:stack:0",
+            "x": 683.2556765248166,
+            "z": -1499.1011883747117,
+            "radius": 5.3163672459777445,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:0:stack:1",
+            "x": 918.2448437113835,
+            "z": -1686.9632685982085,
+            "radius": 6.789971522521228,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:0:stack:2",
+            "x": 1011.7851215121391,
+            "z": -1636.7864195284112,
+            "radius": 6.742774866288528,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:0:stack:3",
+            "x": 911.2709953988987,
+            "z": -1426.8487459186215,
+            "radius": 8.74817009200342,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:1:stack:0",
+            "x": 896.7336263954871,
+            "z": -1736.8466263818984,
+            "radius": 8.401318942196667,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:0:reef",
+            "x": 729.5013526146478,
+            "z": -1730.5421438504727,
+            "radius": 29.078012651901446,
+            "kind": "reef"
+          },
+          {
+            "id": "island:1:-2:1:reef",
+            "x": 894.2261885332056,
+            "z": -1675.0195289481292,
+            "radius": 37.14074208810285,
+            "kind": "reef"
+          },
+          {
+            "id": "stack:0:-1:0",
+            "x": -70.98276217281818,
+            "z": -722.96393295452,
+            "radius": 5.637401471962221,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:0:-1:1",
+            "x": 159.83794109076263,
+            "z": -558.9120374388992,
+            "radius": 7.526661782874726,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:-1:0:stack:0",
+            "x": 1471.9044913929956,
+            "z": -910.2518234115707,
+            "radius": 7.125630350783467,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:-1:0:stack:1",
+            "x": 1508.6865703481965,
+            "z": -1028.795644166195,
+            "radius": 6.303801735630259,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:-1:0:stack:2",
+            "x": 1349.446958504623,
+            "z": -697.6221664672943,
+            "radius": 7.594450791366398,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:-1:0:stack:3",
+            "x": 1274.163512854922,
+            "z": -670.125633988432,
+            "radius": 7.856816047569737,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:stack:0",
+            "x": -1590.1804270762,
+            "z": 269.7658060217069,
+            "radius": 9.109956628875807,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:stack:1",
+            "x": -1402.36170269611,
+            "z": 99.12562844193067,
+            "radius": 6.78064991091378,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:stack:2",
+            "x": -1376.869897257022,
+            "z": 58.588832296964085,
+            "radius": 11.668994159204885,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:stack:3",
+            "x": -1578.5311674482957,
+            "z": 265.80011944821183,
+            "radius": 9.548018573783338,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:stack:4",
+            "x": -1428.3392437109085,
+            "z": 304.20488627317206,
+            "radius": 12.879284317605197,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:reef",
+            "x": -1566.484980628553,
+            "z": 145.85400050701458,
+            "radius": 33.154582677628945,
+            "kind": "reef"
+          },
+          {
+            "id": "island:-1:0:0:stack:0",
+            "x": -708.321926319128,
+            "z": 23.94952528309277,
+            "radius": 7.457545041106641,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:0:0:stack:1",
+            "x": -830.2754104579918,
+            "z": -190.41334975815704,
+            "radius": 6.058575924253091,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:0:0:reef",
+            "x": -906.6945017252291,
+            "z": -116.25375876208363,
+            "radius": 24.277415239503476,
+            "kind": "reef"
+          },
+          {
+            "id": "island:1:0:0:stack:0",
+            "x": 659.996223104423,
+            "z": 51.58557064976987,
+            "radius": 9.902464437764138,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:0:0:stack:1",
+            "x": 728.8335532932748,
+            "z": 83.1607139846459,
+            "radius": 6.151596640702337,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:0:0:stack:2",
+            "x": 637.1625647454264,
+            "z": 54.760005409118236,
+            "radius": 7.531468217493966,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:0:0:stack:3",
+            "x": 765.4579947963725,
+            "z": -79.00086091288209,
+            "radius": 5.602378536714241,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:0:0:reef",
+            "x": 840.0607865825971,
+            "z": -9.944843463939524,
+            "radius": 20.304333791917333,
+            "kind": "reef"
+          },
+          {
+            "id": "stack:-2:1:0",
+            "x": -1627.2687660254537,
+            "z": 526.5078158967196,
+            "radius": 5.731141346739605,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:1:1",
+            "x": -1210.9153039969503,
+            "z": 541.8780223354697,
+            "radius": 3.606401704950258,
+            "kind": "stack"
+          },
+          {
+            "id": "island:0:1:0:stack:0",
+            "x": -297.4267686885469,
+            "z": 688.6775515280277,
+            "radius": 8.687671317020431,
+            "kind": "stack"
+          },
+          {
+            "id": "island:0:1:0:stack:1",
+            "x": -163.9185367899385,
+            "z": 721.9159460142648,
+            "radius": 8.846109323203564,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:1:0:stack:0",
+            "x": 1404.163876196214,
+            "z": 754.243503593334,
+            "radius": 8.406040960690007,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:1:0:stack:1",
+            "x": 1347.5313219154862,
+            "z": 581.0116701265658,
+            "radius": 9.138182437745854,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:1:0:stack:2",
+            "x": 1426.6449976801132,
+            "z": 728.4618472389571,
+            "radius": 9.706269461894408,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:2:2:0",
+            "x": 1434.3662184745074,
+            "z": 1229.9587661102414,
+            "radius": 8.328591626835987,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:2:2:1",
+            "x": 1588.148641140014,
+            "z": 1294.8191908612848,
+            "radius": 4.658808445208706,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:2:2:2",
+            "x": 1364.4475837290288,
+            "z": 1532.6949310943485,
+            "radius": 5.425555753172375,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:2:2:3",
+            "x": 1591.4758661024273,
+            "z": 1279.0415235467256,
+            "radius": 8.21307502198033,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:2:2:4",
+            "x": 1616.1682248741388,
+            "z": 1373.9795006521047,
+            "radius": 6.077336920192465,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:2:2:5",
+            "x": 1450.6218224711715,
+            "z": 1278.8140340477228,
+            "radius": 5.829561019549146,
+            "kind": "stack"
+          },
+          {
+            "id": "dawn-harbor",
+            "x": 310,
+            "z": 80,
+            "radius": 100,
+            "kind": "shore"
+          },
+          {
+            "id": "sky-arch:pylon:-1",
+            "x": -95,
+            "z": -420,
+            "radius": 27.5,
+            "kind": "shore"
+          },
+          {
+            "id": "sky-arch:pylon:1",
+            "x": 95,
+            "z": -420,
+            "radius": 27.5,
+            "kind": "shore"
+          },
+          {
+            "id": "razor-reef",
+            "x": -250,
+            "z": -240,
+            "radius": 68,
+            "kind": "reef"
+          },
+          {
+            "id": "sunwatch-fort",
+            "x": 270,
+            "z": -480,
+            "radius": 108,
+            "kind": "shore"
+          },
+          {
+            "id": "island:-1:-2:0",
+            "x": -752.5619749411941,
+            "z": -1245.444671780616,
+            "radius": 55.322910910472274,
+            "kind": "shore"
+          },
+          {
+            "id": "island:-1:-2:1",
+            "x": -783.7350342750549,
+            "z": -1484.2456627450883,
+            "radius": 70.26044982671738,
+            "kind": "shore"
+          },
+          {
+            "id": "island:1:-2:0:pylon:-1",
+            "x": 733.2035885091126,
+            "z": -1586.2616810135544,
+            "radius": 22.006936904937028,
+            "kind": "shore"
+          },
+          {
+            "id": "island:1:-2:0:pylon:1",
+            "x": 885.2515162159503,
+            "z": -1586.2616810135544,
+            "radius": 22.006936904937028,
+            "kind": "shore"
+          },
+          {
+            "id": "island:1:-2:1",
+            "x": 949.6037937104702,
+            "z": -1598.117179942131,
+            "radius": 71.54509272426367,
+            "kind": "shore"
+          },
+          {
+            "id": "island:2:-1:0",
+            "x": 1275.9054423876107,
+            "z": -876.4623799860477,
+            "radius": 129.86432294221595,
+            "kind": "shore"
+          },
+          {
+            "id": "island:-2:0:0",
+            "x": -1457.3204812757672,
+            "z": 194.73719691038133,
+            "radius": 81.77312587760389,
+            "kind": "reef"
+          },
+          {
+            "id": "island:-1:0:0",
+            "x": -812.9079237632453,
+            "z": -57.658205149322754,
+            "radius": 68.72609283961356,
+            "kind": "shore"
+          },
+          {
+            "id": "island:1:0:0",
+            "x": 743.5951710663736,
+            "z": 7.932497019320721,
+            "radius": 62.14457046613097,
+            "kind": "shore"
+          },
+          {
+            "id": "island:0:1:0",
+            "x": -212.15959133952856,
+            "z": 622.9794296577572,
+            "radius": 57.838838912546635,
+            "kind": "shore"
+          },
+          {
+            "id": "island:2:1:0",
+            "x": 1461.640231371671,
+            "z": 595.3698538787663,
+            "radius": 89.02825777046382,
+            "kind": "shore"
+          }
+        ],
+        "voyage": {
+          "id": "full-voyage-02:1",
+          "phase": "reward",
+          "contractId": "lost-cargo",
+          "buildId": "guardian",
+          "leg": 1,
+          "totalLegs": 3,
+          "routes": [],
+          "unbankedCoins": 175,
+          "earnedBounty": 0,
+          "upgrades": [],
+          "rewardChoices": [
+            "supplies",
+            "powder",
+            "hull"
+          ],
+          "extractionReady": true,
+          "encounter": {
+            "id": "full-voyage-02:1:leg-1",
+            "kind": "salvage",
+            "title": "The Wreck Channel",
+            "objective": "Reach the wreck marker; hold within 65 m for 12 seconds to recover cargo",
+            "targetIds": [],
+            "waypoint": {
+              "x": 0,
+              "y": 0,
+              "z": -220
+            },
+            "progress": 12,
+            "target": 12,
+            "elapsed": 43.96666666666545,
+            "reward": 175,
+            "completed": true,
+            "resolvedAt": 43.58333333333214
+          }
+        }
+      }
+    },
+    {
+      "fixedFrames": 2520,
+      "wallSeconds": 3.6276999999880792,
+      "phase": "encounter",
+      "completed": true,
+      "encounter": {
+        "id": "full-voyage-02:1:leg-2",
+        "kind": "storm",
+        "title": "The Storm Gates",
+        "objective": "Sail through the central arch to the gate beyond it",
+        "targetIds": [],
+        "waypoint": {
+          "x": 0,
+          "y": 0,
+          "z": -560
+        },
+        "progress": 3,
+        "target": 3,
+        "elapsed": 45.61666666666536,
+        "reward": 230,
+        "completed": true,
+        "gates": [
+          {
+            "id": "approach",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": -280
+            },
+            "halfWidth": 62.5
+          },
+          {
+            "id": "arch",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": -420
+            },
+            "halfWidth": 62.5
+          },
+          {
+            "id": "exit",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": -560
+            },
+            "halfWidth": 62.5
+          }
+        ],
+        "nextGate": 3,
+        "previousPosition": {
+          "x": -1.501972892096302,
+          "y": -2.2143835656621658,
+          "z": -560.0344632855298
+        },
+        "resolvedAt": 45.516666666665365
+      },
+      "ships": [
+        {
+          "id": "player",
+          "kind": "oro-jackson",
+          "name": "Oro Jackson",
+          "isPlayer": true,
+          "position": {
+            "x": -1.505915333588013,
+            "y": -2.4797697055147503,
+            "z": -561.7756614550588
+          },
+          "heading": 0,
+          "speed": 17.412094667228022,
+          "verticalSpeed": -2.688290549070967,
+          "pitch": -0.035055262445873106,
+          "roll": 0.13680374388581337,
+          "throttle": 0.7919999999999989,
+          "rudder": 0,
+          "maxSpeed": 27,
+          "mass": 2220,
+          "damage": {
+            "hull": 0,
+            "sails": 0,
+            "weapons": 0,
+            "crew": 0,
+            "sections": {
+              "bow": 0,
+              "stern": 0,
+              "port": 0,
+              "starboard": 0
+            }
+          },
+          "weapons": {
+            "portCooldown": 0,
+            "starboardCooldown": 0,
+            "bowCooldown": 0,
+            "ammo": "round"
+          },
+          "special": 1,
+          "brace": 0,
+          "repairing": true,
+          "surrendered": false,
+          "faction": "roger",
+          "combatRole": "ranged",
+          "crew": {
+            "helm": 2,
+            "guns": 1,
+            "repair": 6,
+            "special": 1
+          },
+          "crewPreset": "repair",
+          "damageStage": "intact"
+        }
+      ],
+      "actions": {
+        "steer-left:up": 1,
+        "steer-right:up": 1,
+        "throttle-up:down": 1,
+        "throttle-down:up": 1,
+        "repair:up": 1,
+        "throttle-up:up": 1
+      },
+      "samples": [
+        {
+          "elapsed": 6.516666666666649,
+          "progress": 0,
+          "position": {
+            "x": -0.08549700492086032,
+            "y": 3.181244718829706,
+            "z": 64.1439487934462
+          },
+          "heading": 0,
+          "speed": 9.923029705016436,
+          "hullDamage": 0,
+          "aim": {
+            "adjustment": 0,
+            "guideVisible": false
+          }
+        },
+        {
+          "elapsed": 13.000000000000226,
+          "progress": 0,
+          "position": {
+            "x": -0.26953641946502666,
+            "y": -3.4718308744513924,
+            "z": -16.301634101871162
+          },
+          "heading": 0,
+          "speed": 14.264144264691916,
+          "hullDamage": 0,
+          "aim": {
+            "adjustment": 0,
+            "guideVisible": false
+          }
+        },
+        {
+          "elapsed": 19.51666666666684,
+          "progress": 0,
+          "position": {
+            "x": -0.49630965916895525,
+            "y": -0.8241840959108877,
+            "z": -116.10486337701599
+          },
+          "heading": 0,
+          "speed": 16.098896986107192,
+          "hullDamage": 0,
+          "aim": {
+            "adjustment": 0,
+            "guideVisible": false
+          }
+        },
+        {
+          "elapsed": 26.01666666666647,
+          "progress": 0,
+          "position": {
+            "x": -0.7400491474977453,
+            "y": 4.1032878539481175,
+            "z": -223.60727119177062
+          },
+          "heading": 0,
+          "speed": 16.867187302496998,
+          "hullDamage": 0,
+          "aim": {
+            "adjustment": 0,
+            "guideVisible": false
+          }
+        },
+        {
+          "elapsed": 32.49999999999944,
+          "progress": 1,
+          "position": {
+            "x": -0.9905133781741331,
+            "y": 1.4700540816216918,
+            "z": -334.16596068593094
+          },
+          "heading": 0,
+          "speed": 17.205023347737974,
+          "hullDamage": 0,
+          "aim": {
+            "adjustment": 0,
+            "guideVisible": false
+          }
+        },
+        {
+          "elapsed": 39.09999999999906,
+          "progress": 2,
+          "position": {
+            "x": -1.2492132906170528,
+            "y": -3.3189673553325654,
+            "z": -448.40447225719566
+          },
+          "heading": 0,
+          "speed": 17.372994687904963,
+          "hullDamage": 0,
+          "aim": {
+            "adjustment": 0,
+            "guideVisible": false
+          }
+        },
+        {
+          "elapsed": 45.599999999998694,
+          "progress": 3,
+          "position": {
+            "x": -1.5052582558527534,
+            "y": -2.4349648630302343,
+            "z": -561.4854598772716
+          },
+          "heading": 0,
+          "speed": 17.41204969930751,
+          "hullDamage": 0,
+          "aim": {
+            "adjustment": 0,
+            "guideVisible": false
+          }
+        }
+      ],
+      "beforeReward": {
+        "seed": "full-voyage-02",
+        "seedNumber": 630842247,
+        "elapsed": 89.91666666666285,
+        "timeScale": 1,
+        "paused": true,
+        "mode": "explore",
+        "weather": "storm",
+        "windDirection": 0.7,
+        "windStrength": 1.45,
+        "currentDirection": 0.15,
+        "currentStrength": 0.12,
+        "playerId": "player",
+        "objective": "Spoils collected — choose a refit or extract",
+        "bounty": 30000000,
+        "treasure": 1,
+        "ships": [
+          {
+            "id": "player",
+            "kind": "oro-jackson",
+            "name": "Oro Jackson",
+            "isPlayer": true,
+            "position": {
+              "x": -1.5190572263078543,
+              "y": -3.387769174096704,
+              "z": -567.579846246771
+            },
+            "heading": 0,
+            "speed": 17.41296025184416,
+            "verticalSpeed": -2.619834105274049,
+            "pitch": -0.05210694973975735,
+            "roll": 0.12915998674514498,
+            "throttle": 0.7919999999999989,
+            "rudder": 0,
+            "maxSpeed": 27,
+            "mass": 2220,
+            "damage": {
+              "hull": 0,
+              "sails": 0,
+              "weapons": 0,
+              "crew": 0,
+              "sections": {
+                "bow": 0,
+                "stern": 0,
+                "port": 0,
+                "starboard": 0
+              }
+            },
+            "weapons": {
+              "portCooldown": 0,
+              "starboardCooldown": 0,
+              "bowCooldown": 0,
+              "ammo": "round"
+            },
+            "special": 1,
+            "brace": 0,
+            "repairing": true,
+            "surrendered": false,
+            "faction": "roger",
+            "combatRole": "ranged",
+            "crew": {
+              "helm": 2,
+              "guns": 1,
+              "repair": 6,
+              "special": 1
+            },
+            "crewPreset": "repair",
+            "damageStage": "intact"
+          }
+        ],
+        "projectiles": [],
+        "islands": [
+          {
+            "id": "dawn-harbor",
+            "name": "Dawn Harbor",
+            "position": {
+              "x": 310,
+              "y": 0,
+              "z": 80
+            },
+            "radius": 100,
+            "height": 55,
+            "palette": 1,
+            "discovered": true,
+            "landmark": "palms",
+            "service": "harbor"
+          },
+          {
+            "id": "sky-arch",
+            "name": "The Sky Arch",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": -420
+            },
+            "radius": 125,
+            "height": 165,
+            "palette": 2,
+            "discovered": true,
+            "landmark": "arches",
+            "service": "passage"
+          },
+          {
+            "id": "razor-reef",
+            "name": "Razor Reef",
+            "position": {
+              "x": -250,
+              "y": 0,
+              "z": -240
+            },
+            "radius": 68,
+            "height": 57,
+            "palette": 1,
+            "discovered": false,
+            "landmark": "needles",
+            "service": "ambush"
+          },
+          {
+            "id": "sunwatch-fort",
+            "name": "Sunwatch Fort",
+            "position": {
+              "x": 270,
+              "y": 0,
+              "z": -480
+            },
+            "radius": 108,
+            "height": 85,
+            "palette": 3,
+            "discovered": false,
+            "landmark": "fort",
+            "service": "fort"
+          },
+          {
+            "id": "island:-2:-3:0",
+            "name": "Gull Rest",
+            "position": {
+              "x": -1216.7703245088458,
+              "y": 0,
+              "z": -1920.2950239770114
+            },
+            "radius": 81.94902457855642,
+            "height": 48.70537074911862,
+            "palette": 0,
+            "discovered": false,
+            "landmark": "palms",
+            "rotation": 0.7580745768032493,
+            "tierCount": 4,
+            "palms": 11
+          },
+          {
+            "id": "island:-1:-2:0",
+            "name": "Sun Rest",
+            "position": {
+              "x": -752.5619749411941,
+              "y": 0,
+              "z": -1245.444671780616
+            },
+            "radius": 55.322910910472274,
+            "height": 23.78637829519573,
+            "palette": 2,
+            "discovered": false,
+            "landmark": "palms",
+            "rotation": 0.334962237230259,
+            "tierCount": 2,
+            "palms": 10
+          },
+          {
+            "id": "island:-1:-2:1",
+            "name": "Amber Atoll",
+            "position": {
+              "x": -783.7350342750549,
+              "y": 0,
+              "z": -1484.2456627450883
+            },
+            "radius": 70.26044982671738,
+            "height": 56.4606476143165,
+            "palette": 3,
+            "discovered": false,
+            "landmark": "palms",
+            "rotation": 1.455319144409593,
+            "tierCount": 2,
+            "palms": 10
+          },
+          {
+            "id": "island:1:-2:0",
+            "name": "Gull Spire",
+            "position": {
+              "x": 809.2275523625315,
+              "y": 0,
+              "z": -1586.2616810135544
+            },
+            "radius": 100.0315313860774,
+            "height": 39.69594481346754,
+            "palette": 2,
+            "discovered": false,
+            "landmark": "arches",
+            "rotation": 0.6159103615159061,
+            "tierCount": 2,
+            "palms": 4
+          },
+          {
+            "id": "island:1:-2:1",
+            "name": "Gull Atoll",
+            "position": {
+              "x": 949.6037937104702,
+              "y": 0,
+              "z": -1598.117179942131
+            },
+            "radius": 71.54509272426367,
+            "height": 51.3279771436755,
+            "palette": 0,
+            "discovered": false,
+            "landmark": "palms",
+            "rotation": 0.8349132414877709,
+            "tierCount": 4,
+            "palms": 7
+          },
+          {
+            "id": "island:2:-1:0",
+            "name": "Laughing Garden",
+            "position": {
+              "x": 1275.9054423876107,
+              "y": 0,
+              "z": -876.4623799860477
+            },
+            "radius": 129.86432294221595,
+            "height": 81.08089705015657,
+            "palette": 1,
+            "discovered": false,
+            "landmark": "fort",
+            "rotation": 1.1057315138815698,
+            "tierCount": 2,
+            "palms": 3
+          },
+          {
+            "id": "island:-2:0:0",
+            "name": "Scarlet Key",
+            "position": {
+              "x": -1457.3204812757672,
+              "y": 0,
+              "z": 194.73719691038133
+            },
+            "radius": 81.77312587760389,
+            "height": 29.828231209751518,
+            "palette": 3,
+            "discovered": false,
+            "landmark": "needles",
+            "rotation": -2.6235080599840694,
+            "tierCount": 3,
+            "palms": 1
+          },
+          {
+            "id": "island:-1:0:0",
+            "name": "Turtle Watch",
+            "position": {
+              "x": -812.9079237632453,
+              "y": 0,
+              "z": -57.658205149322754
+            },
+            "radius": 68.72609283961356,
+            "height": 26.619678539508897,
+            "palette": 0,
+            "discovered": false,
+            "landmark": "fort",
+            "rotation": 0.07279178123558205,
+            "tierCount": 3,
+            "palms": 3
+          },
+          {
+            "id": "island:1:0:0",
+            "name": "Whale Crown",
+            "position": {
+              "x": 743.5951710663736,
+              "y": 0,
+              "z": 7.932497019320721
+            },
+            "radius": 62.14457046613097,
+            "height": 41.509124106559646,
+            "palette": 2,
+            "discovered": false,
+            "landmark": "volcano",
+            "rotation": 2.530563138306438,
+            "tierCount": 3,
+            "palms": 1
+          },
+          {
+            "id": "island:0:1:0",
+            "name": "Sun Crown",
+            "position": {
+              "x": -212.15959133952856,
+              "y": 0,
+              "z": 622.9794296577572
+            },
+            "radius": 57.838838912546635,
+            "height": 20.705145074405078,
+            "palette": 2,
+            "discovered": false,
+            "landmark": "fort",
+            "rotation": 0.15138295594775197,
+            "tierCount": 3,
+            "palms": 3
+          },
+          {
+            "id": "island:2:1:0",
+            "name": "Scarlet Key",
+            "position": {
+              "x": 1461.640231371671,
+              "y": 0,
+              "z": 595.3698538787663
+            },
+            "radius": 89.02825777046382,
+            "height": 59.23410308519979,
+            "palette": 3,
+            "discovered": false,
+            "landmark": "fort",
+            "rotation": 0.017749214937474278,
+            "tierCount": 3,
+            "palms": 3
+          }
+        ],
+        "race": {
+          "active": false,
+          "countdown": 0,
+          "lap": 1,
+          "totalLaps": 3,
+          "checkpoint": 0,
+          "placement": 1,
+          "elapsed": 0,
+          "wrongWay": false
+        },
+        "progression": {
+          "version": 1,
+          "bankedCoins": 0,
+          "totalVoyages": 1,
+          "completedVoyages": 0,
+          "selectedShip": "oro-jackson",
+          "refits": {},
+          "discoveredIds": [
+            "sky-arch"
+          ],
+          "paidVoyageIds": [],
+          "rivals": {}
+        },
+        "combat": {
+          "combo": 0,
+          "comboTimer": 0,
+          "weakPointTimer": 0,
+          "defeated": 0,
+          "surrendered": 0,
+          "reinforcements": 0
+        },
+        "worldFeatures": [
+          {
+            "id": "island:-2:-3:0:stack:0",
+            "x": -1084.1982233897625,
+            "z": -1931.8693451514564,
+            "radius": 8.77767716650851,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:-3:0:stack:1",
+            "x": -1352.746210678761,
+            "z": -1980.6253410517145,
+            "radius": 7.965606480138376,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:-3:0:stack:2",
+            "x": -1123.6534207450466,
+            "z": -1859.9741066309832,
+            "radius": 9.023212421452627,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:-3:0:stack:3",
+            "x": -1100.3477464349044,
+            "z": -1824.4659286558558,
+            "radius": 8.938153601484373,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:-3:0:reef",
+            "x": -1220.7992183962083,
+            "z": -1825.760421729657,
+            "radius": 21.952491656985433,
+            "kind": "reef"
+          },
+          {
+            "id": "stack:-1:-3:0",
+            "x": -747.644773670286,
+            "z": -1938.1210230968893,
+            "radius": 7.950651482795365,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-1:-3:1",
+            "x": -704.7043110206723,
+            "z": -2183.6159963808955,
+            "radius": 6.65201843099203,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-1:-3:2",
+            "x": -643.5351049862802,
+            "z": -2086.8877394132314,
+            "radius": 6.722544229705818,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-1:-3:3",
+            "x": -543.783124474436,
+            "z": -2261.288432702422,
+            "radius": 6.214298302307725,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:2:-3:0",
+            "x": 1510.7685781538487,
+            "z": -2178.1742621742187,
+            "radius": 5.565718830679543,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:2:-3:1",
+            "x": 1667.3661817878485,
+            "z": -2090.5393974646927,
+            "radius": 4.828491456340998,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:2:-3:2",
+            "x": 1429.3019270204009,
+            "z": -2024.920501188934,
+            "radius": 5.988995816092938,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:0",
+            "x": -1445.6337815254926,
+            "z": -1650.0412338897586,
+            "radius": 8.328591626835987,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:1",
+            "x": -1291.851358859986,
+            "z": -1585.1808091387152,
+            "radius": 4.658808445208706,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:2",
+            "x": -1515.5524162709712,
+            "z": -1347.3050689056515,
+            "radius": 5.425555753172375,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:3",
+            "x": -1288.5241338975727,
+            "z": -1600.9584764532744,
+            "radius": 8.21307502198033,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:4",
+            "x": -1263.8317751258612,
+            "z": -1506.0204993478953,
+            "radius": 6.077336920192465,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:5",
+            "x": -1429.3781775288285,
+            "z": -1601.1859659522772,
+            "radius": 5.829561019549146,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:-2:0:stack:0",
+            "x": -677.9594925635702,
+            "z": -1330.8816199031317,
+            "radius": 7.599816999863833,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:-2:0:stack:1",
+            "x": -691.9894555783278,
+            "z": -1282.3966482796927,
+            "radius": 5.414549814304337,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:-2:0:stack:2",
+            "x": -821.0390482093827,
+            "z": -1236.8128721877906,
+            "radius": 5.992279672063887,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:-2:1:stack:0",
+            "x": -825.6125132819053,
+            "z": -1555.2025681376201,
+            "radius": 5.165184932993725,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:-2:0:reef",
+            "x": -757.3585016349314,
+            "z": -1329.5820889197341,
+            "radius": 21.934152939247944,
+            "kind": "reef"
+          },
+          {
+            "id": "island:-1:-2:1:reef",
+            "x": -864.0782659211237,
+            "z": -1474.5411625871525,
+            "radius": 29.006182421208628,
+            "kind": "reef"
+          },
+          {
+            "id": "stack:0:-2:0",
+            "x": 153.28746361881497,
+            "z": -1511.6360693246127,
+            "radius": 7.0238791283918545,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:0:-2:1",
+            "x": -224.95043059810996,
+            "z": -1674.6436277769506,
+            "radius": 6.294014253537171,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:0:-2:2",
+            "x": -243.49012136757375,
+            "z": -1543.6677785776556,
+            "radius": 3.6673997753532603,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:0:-2:3",
+            "x": 95.67354760095475,
+            "z": -1284.1282372556627,
+            "radius": 4.066782737383619,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:0:-2:4",
+            "x": 143.44841594025496,
+            "z": -1421.0683714717627,
+            "radius": 4.9380335251335055,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:0:stack:0",
+            "x": 683.2556765248166,
+            "z": -1499.1011883747117,
+            "radius": 5.3163672459777445,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:0:stack:1",
+            "x": 918.2448437113835,
+            "z": -1686.9632685982085,
+            "radius": 6.789971522521228,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:0:stack:2",
+            "x": 1011.7851215121391,
+            "z": -1636.7864195284112,
+            "radius": 6.742774866288528,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:0:stack:3",
+            "x": 911.2709953988987,
+            "z": -1426.8487459186215,
+            "radius": 8.74817009200342,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:1:stack:0",
+            "x": 896.7336263954871,
+            "z": -1736.8466263818984,
+            "radius": 8.401318942196667,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:0:reef",
+            "x": 729.5013526146478,
+            "z": -1730.5421438504727,
+            "radius": 29.078012651901446,
+            "kind": "reef"
+          },
+          {
+            "id": "island:1:-2:1:reef",
+            "x": 894.2261885332056,
+            "z": -1675.0195289481292,
+            "radius": 37.14074208810285,
+            "kind": "reef"
+          },
+          {
+            "id": "stack:0:-1:0",
+            "x": -70.98276217281818,
+            "z": -722.96393295452,
+            "radius": 5.637401471962221,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:0:-1:1",
+            "x": 159.83794109076263,
+            "z": -558.9120374388992,
+            "radius": 7.526661782874726,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:-1:0:stack:0",
+            "x": 1471.9044913929956,
+            "z": -910.2518234115707,
+            "radius": 7.125630350783467,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:-1:0:stack:1",
+            "x": 1508.6865703481965,
+            "z": -1028.795644166195,
+            "radius": 6.303801735630259,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:-1:0:stack:2",
+            "x": 1349.446958504623,
+            "z": -697.6221664672943,
+            "radius": 7.594450791366398,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:-1:0:stack:3",
+            "x": 1274.163512854922,
+            "z": -670.125633988432,
+            "radius": 7.856816047569737,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:stack:0",
+            "x": -1590.1804270762,
+            "z": 269.7658060217069,
+            "radius": 9.109956628875807,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:stack:1",
+            "x": -1402.36170269611,
+            "z": 99.12562844193067,
+            "radius": 6.78064991091378,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:stack:2",
+            "x": -1376.869897257022,
+            "z": 58.588832296964085,
+            "radius": 11.668994159204885,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:stack:3",
+            "x": -1578.5311674482957,
+            "z": 265.80011944821183,
+            "radius": 9.548018573783338,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:stack:4",
+            "x": -1428.3392437109085,
+            "z": 304.20488627317206,
+            "radius": 12.879284317605197,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:reef",
+            "x": -1566.484980628553,
+            "z": 145.85400050701458,
+            "radius": 33.154582677628945,
+            "kind": "reef"
+          },
+          {
+            "id": "island:-1:0:0:stack:0",
+            "x": -708.321926319128,
+            "z": 23.94952528309277,
+            "radius": 7.457545041106641,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:0:0:stack:1",
+            "x": -830.2754104579918,
+            "z": -190.41334975815704,
+            "radius": 6.058575924253091,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:0:0:reef",
+            "x": -906.6945017252291,
+            "z": -116.25375876208363,
+            "radius": 24.277415239503476,
+            "kind": "reef"
+          },
+          {
+            "id": "island:1:0:0:stack:0",
+            "x": 659.996223104423,
+            "z": 51.58557064976987,
+            "radius": 9.902464437764138,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:0:0:stack:1",
+            "x": 728.8335532932748,
+            "z": 83.1607139846459,
+            "radius": 6.151596640702337,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:0:0:stack:2",
+            "x": 637.1625647454264,
+            "z": 54.760005409118236,
+            "radius": 7.531468217493966,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:0:0:stack:3",
+            "x": 765.4579947963725,
+            "z": -79.00086091288209,
+            "radius": 5.602378536714241,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:0:0:reef",
+            "x": 840.0607865825971,
+            "z": -9.944843463939524,
+            "radius": 20.304333791917333,
+            "kind": "reef"
+          },
+          {
+            "id": "stack:-2:1:0",
+            "x": -1627.2687660254537,
+            "z": 526.5078158967196,
+            "radius": 5.731141346739605,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:1:1",
+            "x": -1210.9153039969503,
+            "z": 541.8780223354697,
+            "radius": 3.606401704950258,
+            "kind": "stack"
+          },
+          {
+            "id": "island:0:1:0:stack:0",
+            "x": -297.4267686885469,
+            "z": 688.6775515280277,
+            "radius": 8.687671317020431,
+            "kind": "stack"
+          },
+          {
+            "id": "island:0:1:0:stack:1",
+            "x": -163.9185367899385,
+            "z": 721.9159460142648,
+            "radius": 8.846109323203564,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:1:0:stack:0",
+            "x": 1404.163876196214,
+            "z": 754.243503593334,
+            "radius": 8.406040960690007,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:1:0:stack:1",
+            "x": 1347.5313219154862,
+            "z": 581.0116701265658,
+            "radius": 9.138182437745854,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:1:0:stack:2",
+            "x": 1426.6449976801132,
+            "z": 728.4618472389571,
+            "radius": 9.706269461894408,
+            "kind": "stack"
+          },
+          {
+            "id": "dawn-harbor",
+            "x": 310,
+            "z": 80,
+            "radius": 100,
+            "kind": "shore"
+          },
+          {
+            "id": "sky-arch:pylon:-1",
+            "x": -95,
+            "z": -420,
+            "radius": 27.5,
+            "kind": "shore"
+          },
+          {
+            "id": "sky-arch:pylon:1",
+            "x": 95,
+            "z": -420,
+            "radius": 27.5,
+            "kind": "shore"
+          },
+          {
+            "id": "razor-reef",
+            "x": -250,
+            "z": -240,
+            "radius": 68,
+            "kind": "reef"
+          },
+          {
+            "id": "sunwatch-fort",
+            "x": 270,
+            "z": -480,
+            "radius": 108,
+            "kind": "shore"
+          },
+          {
+            "id": "island:-2:-3:0",
+            "x": -1216.7703245088458,
+            "z": -1920.2950239770114,
+            "radius": 81.94902457855642,
+            "kind": "shore"
+          },
+          {
+            "id": "island:-1:-2:0",
+            "x": -752.5619749411941,
+            "z": -1245.444671780616,
+            "radius": 55.322910910472274,
+            "kind": "shore"
+          },
+          {
+            "id": "island:-1:-2:1",
+            "x": -783.7350342750549,
+            "z": -1484.2456627450883,
+            "radius": 70.26044982671738,
+            "kind": "shore"
+          },
+          {
+            "id": "island:1:-2:0:pylon:-1",
+            "x": 733.2035885091126,
+            "z": -1586.2616810135544,
+            "radius": 22.006936904937028,
+            "kind": "shore"
+          },
+          {
+            "id": "island:1:-2:0:pylon:1",
+            "x": 885.2515162159503,
+            "z": -1586.2616810135544,
+            "radius": 22.006936904937028,
+            "kind": "shore"
+          },
+          {
+            "id": "island:1:-2:1",
+            "x": 949.6037937104702,
+            "z": -1598.117179942131,
+            "radius": 71.54509272426367,
+            "kind": "shore"
+          },
+          {
+            "id": "island:2:-1:0",
+            "x": 1275.9054423876107,
+            "z": -876.4623799860477,
+            "radius": 129.86432294221595,
+            "kind": "shore"
+          },
+          {
+            "id": "island:-2:0:0",
+            "x": -1457.3204812757672,
+            "z": 194.73719691038133,
+            "radius": 81.77312587760389,
+            "kind": "reef"
+          },
+          {
+            "id": "island:-1:0:0",
+            "x": -812.9079237632453,
+            "z": -57.658205149322754,
+            "radius": 68.72609283961356,
+            "kind": "shore"
+          },
+          {
+            "id": "island:1:0:0",
+            "x": 743.5951710663736,
+            "z": 7.932497019320721,
+            "radius": 62.14457046613097,
+            "kind": "shore"
+          },
+          {
+            "id": "island:0:1:0",
+            "x": -212.15959133952856,
+            "z": 622.9794296577572,
+            "radius": 57.838838912546635,
+            "kind": "shore"
+          },
+          {
+            "id": "island:2:1:0",
+            "x": 1461.640231371671,
+            "z": 595.3698538787663,
+            "radius": 89.02825777046382,
+            "kind": "shore"
+          }
+        ],
+        "voyage": {
+          "id": "full-voyage-02:1",
+          "phase": "reward",
+          "contractId": "lost-cargo",
+          "buildId": "guardian",
+          "leg": 2,
+          "totalLegs": 3,
+          "routes": [],
+          "unbankedCoins": 405,
+          "earnedBounty": 0,
+          "upgrades": [],
+          "rewardChoices": [
+            "medic",
+            "supplies",
+            "powder"
+          ],
+          "extractionReady": true,
+          "encounter": {
+            "id": "full-voyage-02:1:leg-2",
+            "kind": "storm",
+            "title": "The Storm Gates",
+            "objective": "Sail through the central arch to the gate beyond it",
+            "targetIds": [],
+            "waypoint": {
+              "x": 0,
+              "y": 0,
+              "z": -560
+            },
+            "progress": 3,
+            "target": 3,
+            "elapsed": 45.949999999998674,
+            "reward": 230,
+            "completed": true,
+            "gates": [
+              {
+                "id": "approach",
+                "position": {
+                  "x": 0,
+                  "y": 0,
+                  "z": -280
+                },
+                "halfWidth": 62.5
+              },
+              {
+                "id": "arch",
+                "position": {
+                  "x": 0,
+                  "y": 0,
+                  "z": -420
+                },
+                "halfWidth": 62.5
+              },
+              {
+                "id": "exit",
+                "position": {
+                  "x": 0,
+                  "y": 0,
+                  "z": -560
+                },
+                "halfWidth": 62.5
+              }
+            ],
+            "nextGate": 3,
+            "previousPosition": {
+              "x": -1.501972892096302,
+              "y": -2.2143835656621658,
+              "z": -560.0344632855298
+            },
+            "resolvedAt": 45.516666666665365
+          }
+        }
+      }
+    },
+    {
+      "fixedFrames": 2292,
+      "wallSeconds": 6.391800000011921,
+      "phase": "encounter",
+      "completed": true,
+      "encounter": {
+        "id": "full-voyage-02:1:leg-3",
+        "kind": "boss",
+        "title": "The Captain’s Challenge",
+        "objective": "Defeat the Captain of Sunwatch and claim the contract",
+        "targetIds": [
+          "full-voyage-02:1:leg-3:enemy-0"
+        ],
+        "waypoint": {
+          "x": 0,
+          "y": 0,
+          "z": -220
+        },
+        "progress": 1,
+        "target": 1,
+        "elapsed": 43.81666666666546,
+        "reward": 285,
+        "completed": true,
+        "resolvedAt": 43.61666666666547
+      },
+      "ships": [
+        {
+          "id": "player",
+          "kind": "oro-jackson",
+          "name": "Oro Jackson",
+          "isPlayer": true,
+          "position": {
+            "x": -38.918836352054655,
+            "y": 0.9861086834782781,
+            "z": -214.3242902881975
+          },
+          "heading": 4.47093619948445,
+          "speed": 4.605836072384057,
+          "verticalSpeed": -0.21523604489856588,
+          "pitch": 0.05193624874091106,
+          "roll": 0.029626664968083444,
+          "throttle": 0.4179999999999998,
+          "rudder": -0.9971207858732389,
+          "maxSpeed": 27,
+          "mass": 2220,
+          "damage": {
+            "hull": 0,
+            "sails": 0,
+            "weapons": 0,
+            "crew": 0.2616190476190476,
+            "sections": {
+              "bow": 0,
+              "stern": 0,
+              "port": 0,
+              "starboard": 0.06187447326378477
+            }
+          },
+          "weapons": {
+            "portCooldown": 6.290252190476193,
+            "starboardCooldown": 6.290252190476193,
+            "bowCooldown": 6.290252190476193,
+            "ammo": "round"
+          },
+          "special": 0.33374034910072703,
+          "brace": 0,
+          "repairing": true,
+          "surrendered": false,
+          "faction": "roger",
+          "combatRole": "ranged",
+          "crew": {
+            "helm": 2,
+            "guns": 1,
+            "repair": 6,
+            "special": 1
+          },
+          "crewPreset": "repair",
+          "damageStage": "intact",
+          "specialPhase": {
+            "phase": "active",
+            "elapsed": 1.0666666666666678,
+            "duration": 1.2,
+            "name": "roger-volley"
+          }
+        },
+        {
+          "id": "full-voyage-02:1:leg-3:enemy-0",
+          "kind": "navy-galleon",
+          "name": "Captain of Sunwatch",
+          "isPlayer": false,
+          "position": {
+            "x": -57.44842131326259,
+            "y": 2.426872472017707,
+            "z": -119.5946008666134
+          },
+          "heading": 5.381968848996422,
+          "speed": 1.8466006707092695,
+          "verticalSpeed": 0.34007027365995474,
+          "pitch": 0.02260559827056278,
+          "roll": 0.01793542177460352,
+          "throttle": 0,
+          "rudder": -0.6183749130863051,
+          "maxSpeed": 23,
+          "mass": 2200,
+          "damage": {
+            "hull": 0.990741812478327,
+            "sails": 0.6875987105061486,
+            "weapons": 0.6930558815803756,
+            "crew": 0.5861537290829925,
+            "sections": {
+              "bow": 1,
+              "stern": 0.11912696667134508,
+              "port": 0.22902652787557143,
+              "starboard": 0
+            }
+          },
+          "weapons": {
+            "portCooldown": 0,
+            "starboardCooldown": 0,
+            "bowCooldown": 2.5090654984445475,
+            "ammo": "heavy"
+          },
+          "special": 0.19332404236385262,
+          "brace": 0.9351722665151172,
+          "repairing": false,
+          "surrendered": true,
+          "ai": "tactical",
+          "faction": "marine",
+          "combatRole": "broadside",
+          "crew": {
+            "helm": 3,
+            "guns": 3,
+            "repair": 2,
+            "special": 2
+          },
+          "crewPreset": "balanced",
+          "damageStage": "disabled",
+          "finish": {
+            "state": "available",
+            "elapsed": 0.19999999999999998,
+            "creditedTo": "player"
+          }
+        }
+      ],
+      "actions": {
+        "steer-left:down": 4,
+        "steer-right:up": 18,
+        "throttle-up:down": 45,
+        "throttle-down:up": 45,
+        "aimPointer": 114,
+        "repair:up": 5,
+        "brace:up": 1,
+        "throttle-up:up": 45,
+        "throttle-down:down": 44,
+        "steer-left:up": 4,
+        "steer-right:down": 18,
+        "fire-bow:down": 1,
+        "fire-bow:up": 1,
+        "special:down": 3,
+        "special:up": 3,
+        "repair:down": 4,
+        "fire-starboard:down": 3,
+        "fire-starboard:up": 3
+      },
+      "samples": [
+        {
+          "elapsed": 7.1666666666666465,
+          "progress": 0,
+          "position": {
+            "x": -11.854129920349944,
+            "y": -1.5465840368765413,
+            "z": 66.22184580058313
+          },
+          "heading": 0.543481309373961,
+          "speed": 9.101518640138725,
+          "hullDamage": 0,
+          "aim": {
+            "side": "starboard",
+            "adjustment": 0.28,
+            "targetId": "full-voyage-02:1:leg-3:enemy-0",
+            "markerTargetId": "full-voyage-02:1:leg-3:enemy-0",
+            "impact": {
+              "x": 98.03057359215649,
+              "y": 0,
+              "z": -63.113770479136825
+            },
+            "guideVisible": true
+          }
+        },
+        {
+          "elapsed": 14.16666666666695,
+          "progress": 0,
+          "position": {
+            "x": -45.5559421592516,
+            "y": -1.4828799281639016,
+            "z": -6.026205495687304
+          },
+          "heading": 0.06301615646637249,
+          "speed": 12.492941979822941,
+          "hullDamage": 0,
+          "aim": {
+            "side": "starboard",
+            "adjustment": 0.28,
+            "targetId": "full-voyage-02:1:leg-3:enemy-0",
+            "markerTargetId": "full-voyage-02:1:leg-3:enemy-0",
+            "impact": {
+              "x": 111.6999005729362,
+              "y": 0,
+              "z": -74.38968355537114
+            },
+            "guideVisible": true
+          }
+        },
+        {
+          "elapsed": 21.00000000000009,
+          "progress": 0,
+          "position": {
+            "x": -67.26441419872344,
+            "y": -0.15391992488954234,
+            "z": -76.9479310802374
+          },
+          "heading": 0.6103114373719549,
+          "speed": 8.97757627277745,
+          "hullDamage": 0.18152529281377383,
+          "aim": {
+            "side": "starboard",
+            "adjustment": -0.14899999999999994,
+            "targetId": "full-voyage-02:1:leg-3:enemy-0",
+            "markerTargetId": "full-voyage-02:1:leg-3:enemy-0",
+            "impact": {
+              "x": 80.47553396946516,
+              "y": 0,
+              "z": -165.90596752455295
+            },
+            "guideVisible": true
+          }
+        },
+        {
+          "elapsed": 27.88333333333303,
+          "progress": 0,
+          "position": {
+            "x": -85.3204180207653,
+            "y": 1.476698058208704,
+            "z": -132.23684102870467
+          },
+          "heading": 5.814932861568391,
+          "speed": 6.5335601676543815,
+          "hullDamage": 0,
+          "aim": {
+            "side": "starboard",
+            "adjustment": -0.05449999999999995,
+            "targetId": "full-voyage-02:1:leg-3:enemy-0",
+            "markerTargetId": "full-voyage-02:1:leg-3:enemy-0",
+            "impact": {
+              "x": 76.3237235624757,
+              "y": 0,
+              "z": -50.477176410053914
+            },
+            "guideVisible": true
+          }
+        },
+        {
+          "elapsed": 34.59999999999932,
+          "progress": 0,
+          "position": {
+            "x": -77.95613452546598,
+            "y": -1.4208595541112148,
+            "z": -177.66848148710145
+          },
+          "heading": 5.158629335757098,
+          "speed": 4.94742618163032,
+          "hullDamage": 0.25443539515022195,
+          "aim": {
+            "side": "starboard",
+            "adjustment": 0.02050000000000005,
+            "targetId": "full-voyage-02:1:leg-3:enemy-0",
+            "markerTargetId": "full-voyage-02:1:leg-3:enemy-0",
+            "impact": {
+              "x": 2.888972485061572,
+              "y": 0,
+              "z": -30.658631602252996
+            },
+            "guideVisible": true
+          }
+        },
+        {
+          "elapsed": 41.39999999999893,
+          "progress": 0,
+          "position": {
+            "x": -51.18257226734546,
+            "y": 1.5147994142777939,
+            "z": -208.18185167862214
+          },
+          "heading": 4.650282742857332,
+          "speed": 4.689139931655035,
+          "hullDamage": 0.008978626799999983,
+          "aim": {
+            "side": "starboard",
+            "adjustment": 0.0025000000000000577,
+            "targetId": "full-voyage-02:1:leg-3:enemy-0",
+            "markerTargetId": "full-voyage-02:1:leg-3:enemy-0",
+            "impact": {
+              "x": -55.494998100615845,
+              "y": 0,
+              "z": -26.53555373410819
+            },
+            "guideVisible": true
+          }
+        }
+      ],
+      "salvage": {
+        "beforeCoins": 475,
+        "after": 565
+      },
+      "beforeReward": {
+        "seed": "full-voyage-02",
+        "seedNumber": 630842247,
+        "elapsed": 134.6499999999993,
+        "timeScale": 1,
+        "paused": true,
+        "mode": "combat",
+        "weather": "calm",
+        "windDirection": 0.25,
+        "windStrength": 0.92,
+        "currentDirection": 0.15,
+        "currentStrength": 0.12,
+        "playerId": "player",
+        "objective": "Spoils collected — choose a refit or extract",
+        "bounty": 36240000,
+        "treasure": 4,
+        "ships": [
+          {
+            "id": "player",
+            "kind": "oro-jackson",
+            "name": "Oro Jackson",
+            "isPlayer": true,
+            "position": {
+              "x": -34.08708647035328,
+              "y": 0.5545627819549652,
+              "z": -215.99028524430761
+            },
+            "heading": 4.400486750825472,
+            "speed": 4.550983202428072,
+            "verticalSpeed": -0.5613372701365246,
+            "pitch": 0.07949798636053738,
+            "roll": -0.023359052120262222,
+            "throttle": 0.4179999999999998,
+            "rudder": -0.006444359456110953,
+            "maxSpeed": 27,
+            "mass": 2220,
+            "damage": {
+              "hull": 0,
+              "sails": 0,
+              "weapons": 0,
+              "crew": 0.2616190476190476,
+              "sections": {
+                "bow": 0,
+                "stern": 0,
+                "port": 0,
+                "starboard": 0.023644596138784908
+              }
+            },
+            "weapons": {
+              "portCooldown": 5.373585523809529,
+              "starboardCooldown": 5.373585523809529,
+              "bowCooldown": 5.373585523809529,
+              "ammo": "round"
+            },
+            "special": 0.34601272163213936,
+            "brace": 0,
+            "repairing": true,
+            "surrendered": false,
+            "faction": "roger",
+            "combatRole": "ranged",
+            "crew": {
+              "helm": 2,
+              "guns": 1,
+              "repair": 6,
+              "special": 1
+            },
+            "crewPreset": "repair",
+            "damageStage": "intact",
+            "specialPhase": {
+              "phase": "recovery",
+              "elapsed": 0.7833333333333341,
+              "duration": 1.25,
+              "name": "roger-volley"
+            }
+          },
+          {
+            "id": "full-voyage-02:1:leg-3:enemy-0",
+            "kind": "navy-galleon",
+            "name": "Captain of Sunwatch",
+            "isPlayer": false,
+            "position": {
+              "x": -58.23795182242846,
+              "y": 2.214087072189638,
+              "z": -123.17522704759841
+            },
+            "heading": 5.320488890936048,
+            "speed": 1.4552115325105452,
+            "verticalSpeed": -0.8384397181732018,
+            "pitch": 0.029188022568365984,
+            "roll": 0.12889811527165987,
+            "throttle": 0,
+            "rudder": -0.5463387894053369,
+            "maxSpeed": 23,
+            "mass": 2200,
+            "damage": {
+              "hull": 0.990741812478327,
+              "sails": 0.6875987105061486,
+              "weapons": 0.6930558815803756,
+              "crew": 0.5861537290829925,
+              "sections": {
+                "bow": 1,
+                "stern": 0.11912696667134508,
+                "port": 0.22902652787557143,
+                "starboard": 0
+              }
+            },
+            "weapons": {
+              "portCooldown": 0,
+              "starboardCooldown": 0,
+              "bowCooldown": 1.592398831777884,
+              "ammo": "heavy"
+            },
+            "special": 0.21287949341244183,
+            "brace": 0.9351722665151172,
+            "repairing": false,
+            "surrendered": true,
+            "ai": "tactical",
+            "faction": "marine",
+            "combatRole": "broadside",
+            "crew": {
+              "helm": 3,
+              "guns": 3,
+              "repair": 2,
+              "special": 2
+            },
+            "crewPreset": "balanced",
+            "damageStage": "disabled",
+            "finish": {
+              "state": "salvaged",
+              "elapsed": 0.41666666666666663,
+              "creditedTo": "player"
+            }
+          }
+        ],
+        "projectiles": [
+          {
+            "id": 1,
+            "ownerId": "player",
+            "ammo": "explosive",
+            "position": {
+              "x": -35.262822619167274,
+              "y": 1.984542677718908,
+              "z": -382.6194778345163
+            },
+            "velocity": {
+              "x": 12.258506979222886,
+              "y": -15.599999999999982,
+              "z": -76.92246747828877
+            },
+            "life": 3.500000000000007
+          },
+          {
+            "id": 2,
+            "ownerId": "player",
+            "ammo": "explosive",
+            "position": {
+              "x": -25.27005503748796,
+              "y": 2.9851375414630237,
+              "z": -375.95889601080273
+            },
+            "velocity": {
+              "x": 13.995033268786575,
+              "y": -14.78666666666665,
+              "z": -76.692228566434
+            },
+            "life": 3.5666666666666735
+          },
+          {
+            "id": 3,
+            "ownerId": "player",
+            "ammo": "explosive",
+            "position": {
+              "x": -15.528574998003904,
+              "y": 3.9316143673934523,
+              "z": -369.25109991241675
+            },
+            "velocity": {
+              "x": 15.72186542127152,
+              "y": -13.973333333333317,
+              "z": -76.42436350188096
+            },
+            "life": 3.63333333333334
+          },
+          {
+            "id": 4,
+            "ownerId": "player",
+            "ammo": "explosive",
+            "position": {
+              "x": -6.2315218882902315,
+              "y": 5.038724528086506,
+              "z": -361.2745802086406
+            },
+            "velocity": {
+              "x": 17.443960556505377,
+              "y": -12.956666666666651,
+              "z": -76.11801679626518
+            },
+            "life": 3.716666666666673
+          },
+          {
+            "id": 5,
+            "ownerId": "player",
+            "ammo": "explosive",
+            "position": {
+              "x": 2.9787368073284526,
+              "y": 5.8637502548776315,
+              "z": -354.50737025721446
+            },
+            "velocity": {
+              "x": 19.147202999127764,
+              "y": -12.143333333333318,
+              "z": -75.77634864146299
+            },
+            "life": 3.7833333333333394
+          },
+          {
+            "id": 6,
+            "ownerId": "player",
+            "ammo": "explosive",
+            "position": {
+              "x": 11.68544941133803,
+              "y": 6.819402135512341,
+              "z": -346.5023913709023
+            },
+            "velocity": {
+              "x": 20.84138661138835,
+              "y": -11.126666666666653,
+              "z": -75.39761738111498
+            },
+            "life": 3.8666666666666725
+          },
+          {
+            "id": 7,
+            "ownerId": "player",
+            "ammo": "explosive",
+            "position": {
+              "x": -88.84196306426679,
+              "y": 1.984542677718908,
+              "z": -47.25251482566044
+            },
+            "velocity": {
+              "x": -12.111569585377499,
+              "y": -15.599999999999982,
+              "z": 77.05289780110004
+            },
+            "life": 3.500000000000007
+          },
+          {
+            "id": 8,
+            "ownerId": "player",
+            "ammo": "explosive",
+            "position": {
+              "x": -77.37460977041133,
+              "y": 2.9851375414630237,
+              "z": -50.70496648976637
+            },
+            "velocity": {
+              "x": -10.44704968341113,
+              "y": -14.78666666666665,
+              "z": 77.36274652659476
+            },
+            "life": 3.5666666666666735
+          },
+          {
+            "id": 9,
+            "ownerId": "player",
+            "ammo": "explosive",
+            "position": {
+              "x": -66.10406661831374,
+              "y": 3.9316143673934523,
+              "z": -54.25610578688162
+            },
+            "velocity": {
+              "x": -8.769480897243541,
+              "y": -13.973333333333317,
+              "z": 77.63751836813674
+            },
+            "life": 3.63333333333334
+          },
+          {
+            "id": 10,
+            "ownerId": "player",
+            "ammo": "explosive",
+            "position": {
+              "x": -54.84045304433098,
+              "y": 5.038724528086506,
+              "z": -59.23996697198288
+            },
+            "velocity": {
+              "x": -7.0846378393676925,
+              "y": -12.956666666666651,
+              "z": 77.8763060862925
+            },
+            "life": 3.716666666666673
+          },
+          {
+            "id": 12,
+            "ownerId": "player",
+            "ammo": "explosive",
+            "position": {
+              "x": -33.26873424379595,
+              "y": 6.819402135512341,
+              "z": -68.1442626083238
+            },
+            "velocity": {
+              "x": -3.6965816422744,
+              "y": -11.126666666666653,
+              "z": 78.24423953396
+            },
+            "life": 3.8666666666666725
+          },
+          {
+            "id": 13,
+            "ownerId": "player",
+            "ammo": "explosive",
+            "position": {
+              "x": 154.46163816530415,
+              "y": 5.584542677719002,
+              "z": -180.78463415069862
+            },
+            "velocity": {
+              "x": 80.06734227093737,
+              "y": -13.899999999999983,
+              "z": 12.152428723576133
+            },
+            "life": 3.500000000000007
+          },
+          {
+            "id": 14,
+            "ownerId": "player",
+            "ammo": "explosive",
+            "position": {
+              "x": 148.15478228791517,
+              "y": 6.471804208129784,
+              "z": -174.25654133863478
+            },
+            "velocity": {
+              "x": 79.39146892935155,
+              "y": -13.08666666666665,
+              "z": 16.02479207766871
+            },
+            "life": 3.5666666666666735
+          }
+        ],
+        "islands": [
+          {
+            "id": "dawn-harbor",
+            "name": "Dawn Harbor",
+            "position": {
+              "x": 310,
+              "y": 0,
+              "z": 80
+            },
+            "radius": 100,
+            "height": 55,
+            "palette": 1,
+            "discovered": true,
+            "landmark": "palms",
+            "service": "harbor"
+          },
+          {
+            "id": "sky-arch",
+            "name": "The Sky Arch",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": -420
+            },
+            "radius": 125,
+            "height": 165,
+            "palette": 2,
+            "discovered": true,
+            "landmark": "arches",
+            "service": "passage"
+          },
+          {
+            "id": "razor-reef",
+            "name": "Razor Reef",
+            "position": {
+              "x": -250,
+              "y": 0,
+              "z": -240
+            },
+            "radius": 68,
+            "height": 57,
+            "palette": 1,
+            "discovered": true,
+            "landmark": "needles",
+            "service": "ambush"
+          },
+          {
+            "id": "sunwatch-fort",
+            "name": "Sunwatch Fort",
+            "position": {
+              "x": 270,
+              "y": 0,
+              "z": -480
+            },
+            "radius": 108,
+            "height": 85,
+            "palette": 3,
+            "discovered": false,
+            "landmark": "fort",
+            "service": "fort"
+          },
+          {
+            "id": "island:-1:-2:0",
+            "name": "Sun Rest",
+            "position": {
+              "x": -752.5619749411941,
+              "y": 0,
+              "z": -1245.444671780616
+            },
+            "radius": 55.322910910472274,
+            "height": 23.78637829519573,
+            "palette": 2,
+            "discovered": false,
+            "landmark": "palms",
+            "rotation": 0.334962237230259,
+            "tierCount": 2,
+            "palms": 10
+          },
+          {
+            "id": "island:-1:-2:1",
+            "name": "Amber Atoll",
+            "position": {
+              "x": -783.7350342750549,
+              "y": 0,
+              "z": -1484.2456627450883
+            },
+            "radius": 70.26044982671738,
+            "height": 56.4606476143165,
+            "palette": 3,
+            "discovered": false,
+            "landmark": "palms",
+            "rotation": 1.455319144409593,
+            "tierCount": 2,
+            "palms": 10
+          },
+          {
+            "id": "island:1:-2:0",
+            "name": "Gull Spire",
+            "position": {
+              "x": 809.2275523625315,
+              "y": 0,
+              "z": -1586.2616810135544
+            },
+            "radius": 100.0315313860774,
+            "height": 39.69594481346754,
+            "palette": 2,
+            "discovered": false,
+            "landmark": "arches",
+            "rotation": 0.6159103615159061,
+            "tierCount": 2,
+            "palms": 4
+          },
+          {
+            "id": "island:1:-2:1",
+            "name": "Gull Atoll",
+            "position": {
+              "x": 949.6037937104702,
+              "y": 0,
+              "z": -1598.117179942131
+            },
+            "radius": 71.54509272426367,
+            "height": 51.3279771436755,
+            "palette": 0,
+            "discovered": false,
+            "landmark": "palms",
+            "rotation": 0.8349132414877709,
+            "tierCount": 4,
+            "palms": 7
+          },
+          {
+            "id": "island:2:-1:0",
+            "name": "Laughing Garden",
+            "position": {
+              "x": 1275.9054423876107,
+              "y": 0,
+              "z": -876.4623799860477
+            },
+            "radius": 129.86432294221595,
+            "height": 81.08089705015657,
+            "palette": 1,
+            "discovered": false,
+            "landmark": "fort",
+            "rotation": 1.1057315138815698,
+            "tierCount": 2,
+            "palms": 3
+          },
+          {
+            "id": "island:-2:0:0",
+            "name": "Scarlet Key",
+            "position": {
+              "x": -1457.3204812757672,
+              "y": 0,
+              "z": 194.73719691038133
+            },
+            "radius": 81.77312587760389,
+            "height": 29.828231209751518,
+            "palette": 3,
+            "discovered": false,
+            "landmark": "needles",
+            "rotation": -2.6235080599840694,
+            "tierCount": 3,
+            "palms": 1
+          },
+          {
+            "id": "island:-1:0:0",
+            "name": "Turtle Watch",
+            "position": {
+              "x": -812.9079237632453,
+              "y": 0,
+              "z": -57.658205149322754
+            },
+            "radius": 68.72609283961356,
+            "height": 26.619678539508897,
+            "palette": 0,
+            "discovered": false,
+            "landmark": "fort",
+            "rotation": 0.07279178123558205,
+            "tierCount": 3,
+            "palms": 3
+          },
+          {
+            "id": "island:1:0:0",
+            "name": "Whale Crown",
+            "position": {
+              "x": 743.5951710663736,
+              "y": 0,
+              "z": 7.932497019320721
+            },
+            "radius": 62.14457046613097,
+            "height": 41.509124106559646,
+            "palette": 2,
+            "discovered": false,
+            "landmark": "volcano",
+            "rotation": 2.530563138306438,
+            "tierCount": 3,
+            "palms": 1
+          },
+          {
+            "id": "island:0:1:0",
+            "name": "Sun Crown",
+            "position": {
+              "x": -212.15959133952856,
+              "y": 0,
+              "z": 622.9794296577572
+            },
+            "radius": 57.838838912546635,
+            "height": 20.705145074405078,
+            "palette": 2,
+            "discovered": false,
+            "landmark": "fort",
+            "rotation": 0.15138295594775197,
+            "tierCount": 3,
+            "palms": 3
+          },
+          {
+            "id": "island:2:1:0",
+            "name": "Scarlet Key",
+            "position": {
+              "x": 1461.640231371671,
+              "y": 0,
+              "z": 595.3698538787663
+            },
+            "radius": 89.02825777046382,
+            "height": 59.23410308519979,
+            "palette": 3,
+            "discovered": false,
+            "landmark": "fort",
+            "rotation": 0.017749214937474278,
+            "tierCount": 3,
+            "palms": 3
+          }
+        ],
+        "race": {
+          "active": false,
+          "countdown": 0,
+          "lap": 1,
+          "totalLaps": 3,
+          "checkpoint": 0,
+          "placement": 1,
+          "elapsed": 0,
+          "wrongWay": false
+        },
+        "progression": {
+          "version": 1,
+          "bankedCoins": 0,
+          "totalVoyages": 1,
+          "completedVoyages": 0,
+          "selectedShip": "oro-jackson",
+          "refits": {},
+          "discoveredIds": [
+            "sky-arch",
+            "razor-reef"
+          ],
+          "paidVoyageIds": [],
+          "rivals": {
+            "sunwatch-captain": {
+              "encounters": 1,
+              "escapes": 0,
+              "defeated": 0
+            }
+          }
+        },
+        "combat": {
+          "combo": 7,
+          "comboTimer": 3.1333333333333373,
+          "weakPointTimer": 0,
+          "defeated": 1,
+          "surrendered": 0,
+          "reinforcements": 0
+        },
+        "worldFeatures": [
+          {
+            "id": "stack:-2:-2:0",
+            "x": -1445.6337815254926,
+            "z": -1650.0412338897586,
+            "radius": 8.328591626835987,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:1",
+            "x": -1291.851358859986,
+            "z": -1585.1808091387152,
+            "radius": 4.658808445208706,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:2",
+            "x": -1515.5524162709712,
+            "z": -1347.3050689056515,
+            "radius": 5.425555753172375,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:3",
+            "x": -1288.5241338975727,
+            "z": -1600.9584764532744,
+            "radius": 8.21307502198033,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:4",
+            "x": -1263.8317751258612,
+            "z": -1506.0204993478953,
+            "radius": 6.077336920192465,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:-2:5",
+            "x": -1429.3781775288285,
+            "z": -1601.1859659522772,
+            "radius": 5.829561019549146,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:-2:0:stack:0",
+            "x": -677.9594925635702,
+            "z": -1330.8816199031317,
+            "radius": 7.599816999863833,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:-2:0:stack:1",
+            "x": -691.9894555783278,
+            "z": -1282.3966482796927,
+            "radius": 5.414549814304337,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:-2:0:stack:2",
+            "x": -821.0390482093827,
+            "z": -1236.8128721877906,
+            "radius": 5.992279672063887,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:-2:1:stack:0",
+            "x": -825.6125132819053,
+            "z": -1555.2025681376201,
+            "radius": 5.165184932993725,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:-2:0:reef",
+            "x": -757.3585016349314,
+            "z": -1329.5820889197341,
+            "radius": 21.934152939247944,
+            "kind": "reef"
+          },
+          {
+            "id": "island:-1:-2:1:reef",
+            "x": -864.0782659211237,
+            "z": -1474.5411625871525,
+            "radius": 29.006182421208628,
+            "kind": "reef"
+          },
+          {
+            "id": "stack:0:-2:0",
+            "x": 153.28746361881497,
+            "z": -1511.6360693246127,
+            "radius": 7.0238791283918545,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:0:-2:1",
+            "x": -224.95043059810996,
+            "z": -1674.6436277769506,
+            "radius": 6.294014253537171,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:0:-2:2",
+            "x": -243.49012136757375,
+            "z": -1543.6677785776556,
+            "radius": 3.6673997753532603,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:0:-2:3",
+            "x": 95.67354760095475,
+            "z": -1284.1282372556627,
+            "radius": 4.066782737383619,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:0:-2:4",
+            "x": 143.44841594025496,
+            "z": -1421.0683714717627,
+            "radius": 4.9380335251335055,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:0:stack:0",
+            "x": 683.2556765248166,
+            "z": -1499.1011883747117,
+            "radius": 5.3163672459777445,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:0:stack:1",
+            "x": 918.2448437113835,
+            "z": -1686.9632685982085,
+            "radius": 6.789971522521228,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:0:stack:2",
+            "x": 1011.7851215121391,
+            "z": -1636.7864195284112,
+            "radius": 6.742774866288528,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:0:stack:3",
+            "x": 911.2709953988987,
+            "z": -1426.8487459186215,
+            "radius": 8.74817009200342,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:1:stack:0",
+            "x": 896.7336263954871,
+            "z": -1736.8466263818984,
+            "radius": 8.401318942196667,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:-2:0:reef",
+            "x": 729.5013526146478,
+            "z": -1730.5421438504727,
+            "radius": 29.078012651901446,
+            "kind": "reef"
+          },
+          {
+            "id": "island:1:-2:1:reef",
+            "x": 894.2261885332056,
+            "z": -1675.0195289481292,
+            "radius": 37.14074208810285,
+            "kind": "reef"
+          },
+          {
+            "id": "stack:0:-1:0",
+            "x": -70.98276217281818,
+            "z": -722.96393295452,
+            "radius": 5.637401471962221,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:0:-1:1",
+            "x": 159.83794109076263,
+            "z": -558.9120374388992,
+            "radius": 7.526661782874726,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:-1:0:stack:0",
+            "x": 1471.9044913929956,
+            "z": -910.2518234115707,
+            "radius": 7.125630350783467,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:-1:0:stack:1",
+            "x": 1508.6865703481965,
+            "z": -1028.795644166195,
+            "radius": 6.303801735630259,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:-1:0:stack:2",
+            "x": 1349.446958504623,
+            "z": -697.6221664672943,
+            "radius": 7.594450791366398,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:-1:0:stack:3",
+            "x": 1274.163512854922,
+            "z": -670.125633988432,
+            "radius": 7.856816047569737,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:stack:0",
+            "x": -1590.1804270762,
+            "z": 269.7658060217069,
+            "radius": 9.109956628875807,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:stack:1",
+            "x": -1402.36170269611,
+            "z": 99.12562844193067,
+            "radius": 6.78064991091378,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:stack:2",
+            "x": -1376.869897257022,
+            "z": 58.588832296964085,
+            "radius": 11.668994159204885,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:stack:3",
+            "x": -1578.5311674482957,
+            "z": 265.80011944821183,
+            "radius": 9.548018573783338,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:stack:4",
+            "x": -1428.3392437109085,
+            "z": 304.20488627317206,
+            "radius": 12.879284317605197,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-2:0:0:reef",
+            "x": -1566.484980628553,
+            "z": 145.85400050701458,
+            "radius": 33.154582677628945,
+            "kind": "reef"
+          },
+          {
+            "id": "island:-1:0:0:stack:0",
+            "x": -708.321926319128,
+            "z": 23.94952528309277,
+            "radius": 7.457545041106641,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:0:0:stack:1",
+            "x": -830.2754104579918,
+            "z": -190.41334975815704,
+            "radius": 6.058575924253091,
+            "kind": "stack"
+          },
+          {
+            "id": "island:-1:0:0:reef",
+            "x": -906.6945017252291,
+            "z": -116.25375876208363,
+            "radius": 24.277415239503476,
+            "kind": "reef"
+          },
+          {
+            "id": "island:1:0:0:stack:0",
+            "x": 659.996223104423,
+            "z": 51.58557064976987,
+            "radius": 9.902464437764138,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:0:0:stack:1",
+            "x": 728.8335532932748,
+            "z": 83.1607139846459,
+            "radius": 6.151596640702337,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:0:0:stack:2",
+            "x": 637.1625647454264,
+            "z": 54.760005409118236,
+            "radius": 7.531468217493966,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:0:0:stack:3",
+            "x": 765.4579947963725,
+            "z": -79.00086091288209,
+            "radius": 5.602378536714241,
+            "kind": "stack"
+          },
+          {
+            "id": "island:1:0:0:reef",
+            "x": 840.0607865825971,
+            "z": -9.944843463939524,
+            "radius": 20.304333791917333,
+            "kind": "reef"
+          },
+          {
+            "id": "stack:-2:1:0",
+            "x": -1627.2687660254537,
+            "z": 526.5078158967196,
+            "radius": 5.731141346739605,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:-2:1:1",
+            "x": -1210.9153039969503,
+            "z": 541.8780223354697,
+            "radius": 3.606401704950258,
+            "kind": "stack"
+          },
+          {
+            "id": "island:0:1:0:stack:0",
+            "x": -297.4267686885469,
+            "z": 688.6775515280277,
+            "radius": 8.687671317020431,
+            "kind": "stack"
+          },
+          {
+            "id": "island:0:1:0:stack:1",
+            "x": -163.9185367899385,
+            "z": 721.9159460142648,
+            "radius": 8.846109323203564,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:1:0:stack:0",
+            "x": 1404.163876196214,
+            "z": 754.243503593334,
+            "radius": 8.406040960690007,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:1:0:stack:1",
+            "x": 1347.5313219154862,
+            "z": 581.0116701265658,
+            "radius": 9.138182437745854,
+            "kind": "stack"
+          },
+          {
+            "id": "island:2:1:0:stack:2",
+            "x": 1426.6449976801132,
+            "z": 728.4618472389571,
+            "radius": 9.706269461894408,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:2:2:0",
+            "x": 1434.3662184745074,
+            "z": 1229.9587661102414,
+            "radius": 8.328591626835987,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:2:2:1",
+            "x": 1588.148641140014,
+            "z": 1294.8191908612848,
+            "radius": 4.658808445208706,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:2:2:2",
+            "x": 1364.4475837290288,
+            "z": 1532.6949310943485,
+            "radius": 5.425555753172375,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:2:2:3",
+            "x": 1591.4758661024273,
+            "z": 1279.0415235467256,
+            "radius": 8.21307502198033,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:2:2:4",
+            "x": 1616.1682248741388,
+            "z": 1373.9795006521047,
+            "radius": 6.077336920192465,
+            "kind": "stack"
+          },
+          {
+            "id": "stack:2:2:5",
+            "x": 1450.6218224711715,
+            "z": 1278.8140340477228,
+            "radius": 5.829561019549146,
+            "kind": "stack"
+          },
+          {
+            "id": "dawn-harbor",
+            "x": 310,
+            "z": 80,
+            "radius": 100,
+            "kind": "shore"
+          },
+          {
+            "id": "sky-arch:pylon:-1",
+            "x": -95,
+            "z": -420,
+            "radius": 27.5,
+            "kind": "shore"
+          },
+          {
+            "id": "sky-arch:pylon:1",
+            "x": 95,
+            "z": -420,
+            "radius": 27.5,
+            "kind": "shore"
+          },
+          {
+            "id": "razor-reef",
+            "x": -250,
+            "z": -240,
+            "radius": 68,
+            "kind": "reef"
+          },
+          {
+            "id": "sunwatch-fort",
+            "x": 270,
+            "z": -480,
+            "radius": 108,
+            "kind": "shore"
+          },
+          {
+            "id": "island:-1:-2:0",
+            "x": -752.5619749411941,
+            "z": -1245.444671780616,
+            "radius": 55.322910910472274,
+            "kind": "shore"
+          },
+          {
+            "id": "island:-1:-2:1",
+            "x": -783.7350342750549,
+            "z": -1484.2456627450883,
+            "radius": 70.26044982671738,
+            "kind": "shore"
+          },
+          {
+            "id": "island:1:-2:0:pylon:-1",
+            "x": 733.2035885091126,
+            "z": -1586.2616810135544,
+            "radius": 22.006936904937028,
+            "kind": "shore"
+          },
+          {
+            "id": "island:1:-2:0:pylon:1",
+            "x": 885.2515162159503,
+            "z": -1586.2616810135544,
+            "radius": 22.006936904937028,
+            "kind": "shore"
+          },
+          {
+            "id": "island:1:-2:1",
+            "x": 949.6037937104702,
+            "z": -1598.117179942131,
+            "radius": 71.54509272426367,
+            "kind": "shore"
+          },
+          {
+            "id": "island:2:-1:0",
+            "x": 1275.9054423876107,
+            "z": -876.4623799860477,
+            "radius": 129.86432294221595,
+            "kind": "shore"
+          },
+          {
+            "id": "island:-2:0:0",
+            "x": -1457.3204812757672,
+            "z": 194.73719691038133,
+            "radius": 81.77312587760389,
+            "kind": "reef"
+          },
+          {
+            "id": "island:-1:0:0",
+            "x": -812.9079237632453,
+            "z": -57.658205149322754,
+            "radius": 68.72609283961356,
+            "kind": "shore"
+          },
+          {
+            "id": "island:1:0:0",
+            "x": 743.5951710663736,
+            "z": 7.932497019320721,
+            "radius": 62.14457046613097,
+            "kind": "shore"
+          },
+          {
+            "id": "island:0:1:0",
+            "x": -212.15959133952856,
+            "z": 622.9794296577572,
+            "radius": 57.838838912546635,
+            "kind": "shore"
+          },
+          {
+            "id": "island:2:1:0",
+            "x": 1461.640231371671,
+            "z": 595.3698538787663,
+            "radius": 89.02825777046382,
+            "kind": "shore"
+          }
+        ],
+        "voyage": {
+          "id": "full-voyage-02:1",
+          "phase": "reward",
+          "contractId": "lost-cargo",
+          "buildId": "guardian",
+          "leg": 3,
+          "totalLegs": 3,
+          "routes": [],
+          "unbankedCoins": 850,
+          "earnedBounty": 6240000,
+          "upgrades": [],
+          "rewardChoices": [
+            "chain",
+            "medic",
+            "supplies"
+          ],
+          "extractionReady": true,
+          "encounter": {
+            "id": "full-voyage-02:1:leg-3",
+            "kind": "boss",
+            "title": "The Captain’s Challenge",
+            "objective": "Defeat the Captain of Sunwatch and claim the contract",
+            "targetIds": [
+              "full-voyage-02:1:leg-3:enemy-0"
+            ],
+            "waypoint": {
+              "x": 0,
+              "y": 0,
+              "z": -220
+            },
+            "progress": 1,
+            "target": 1,
+            "elapsed": 44.73333333333208,
+            "reward": 285,
+            "completed": true,
+            "resolvedAt": 43.61666666666547
+          }
+        }
+      }
+    }
+  ],
+  "screenshots": [
+    "00-selected-vessel.png",
+    "leg-1-route.png",
+    "leg-1-secured.png",
+    "leg-1-reward.png",
+    "leg-2-route.png",
+    "leg-2-secured.png",
+    "leg-2-reward.png",
+    "leg-3-route.png",
+    "leg-3-secured.png",
+    "leg-3-salvaged.png",
+    "leg-3-reward.png",
+    "04-contract-completed.png",
+    "05-completed-save-restored.png"
+  ],
+  "checks": [
+    {
+      "name": "Leg 1 completed through legal commands",
+      "pass": true,
+      "detail": {
+        "phase": "encounter",
+        "encounter": {
+          "id": "full-voyage-02:1:leg-1",
+          "kind": "salvage",
+          "title": "The Wreck Channel",
+          "objective": "Reach the wreck marker; hold within 65 m for 12 seconds to recover cargo",
+          "targetIds": [],
+          "waypoint": {
+            "x": 0,
+            "y": 0,
+            "z": -220
+          },
+          "progress": 12,
+          "target": 12,
+          "elapsed": 43.59999999999881,
+          "reward": 175,
+          "completed": true,
+          "resolvedAt": 43.58333333333214
+        }
+      }
+    },
+    {
+      "name": "Leg 2 completed through legal commands",
+      "pass": true,
+      "detail": {
+        "phase": "encounter",
+        "encounter": {
+          "id": "full-voyage-02:1:leg-2",
+          "kind": "storm",
+          "title": "The Storm Gates",
+          "objective": "Sail through the central arch to the gate beyond it",
+          "targetIds": [],
+          "waypoint": {
+            "x": 0,
+            "y": 0,
+            "z": -560
+          },
+          "progress": 3,
+          "target": 3,
+          "elapsed": 45.61666666666536,
+          "reward": 230,
+          "completed": true,
+          "gates": [
+            {
+              "id": "approach",
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": -280
+              },
+              "halfWidth": 62.5
+            },
+            {
+              "id": "arch",
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": -420
+              },
+              "halfWidth": 62.5
+            },
+            {
+              "id": "exit",
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": -560
+              },
+              "halfWidth": 62.5
+            }
+          ],
+          "nextGate": 3,
+          "previousPosition": {
+            "x": -1.501972892096302,
+            "y": -2.2143835656621658,
+            "z": -560.0344632855298
+          },
+          "resolvedAt": 45.516666666665365
+        }
+      }
+    },
+    {
+      "name": "Leg 3 completed through legal commands",
+      "pass": true,
+      "detail": {
+        "phase": "encounter",
+        "encounter": {
+          "id": "full-voyage-02:1:leg-3",
+          "kind": "boss",
+          "title": "The Captain’s Challenge",
+          "objective": "Defeat the Captain of Sunwatch and claim the contract",
+          "targetIds": [
+            "full-voyage-02:1:leg-3:enemy-0"
+          ],
+          "waypoint": {
+            "x": 0,
+            "y": 0,
+            "z": -220
+          },
+          "progress": 1,
+          "target": 1,
+          "elapsed": 43.81666666666546,
+          "reward": 285,
+          "completed": true,
+          "resolvedAt": 43.61666666666547
+        }
+      }
+    },
+    {
+      "name": "Leg 3 salvage credited once",
+      "pass": true,
+      "detail": {
+        "beforeCoins": 475,
+        "after": 565
+      }
+    },
+    {
+      "name": "Full contract is completed, not extracted",
+      "pass": true,
+      "detail": {
+        "voyage": {
+          "id": "full-voyage-02:1",
+          "phase": "complete",
+          "contractId": "lost-cargo",
+          "buildId": "guardian",
+          "leg": 3,
+          "totalLegs": 3,
+          "routes": [],
+          "unbankedCoins": 0,
+          "earnedBounty": 6240000,
+          "upgrades": [],
+          "rewardChoices": [],
+          "extractionReady": false,
+          "encounter": {
+            "id": "full-voyage-02:1:leg-3",
+            "kind": "boss",
+            "title": "The Captain’s Challenge",
+            "objective": "Defeat the Captain of Sunwatch and claim the contract",
+            "targetIds": [
+              "full-voyage-02:1:leg-3:enemy-0"
+            ],
+            "waypoint": {
+              "x": 0,
+              "y": 0,
+              "z": -220
+            },
+            "progress": 1,
+            "target": 1,
+            "elapsed": 44.73333333333208,
+            "reward": 285,
+            "completed": true,
+            "resolvedAt": 43.61666666666547
+          },
+          "result": {
+            "coins": 1210,
+            "bounty": 6240000,
+            "outcome": "completed"
+          }
+        },
+        "progression": {
+          "version": 1,
+          "bankedCoins": 1210,
+          "totalVoyages": 1,
+          "completedVoyages": 1,
+          "selectedShip": "oro-jackson",
+          "refits": {},
+          "discoveredIds": [
+            "sky-arch",
+            "razor-reef"
+          ],
+          "paidVoyageIds": [
+            "full-voyage-02:1"
+          ],
+          "rivals": {
+            "sunwatch-captain": {
+              "encounters": 1,
+              "escapes": 0,
+              "defeated": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Exact third-leg payout plus contract bonus",
+      "pass": true,
+      "detail": {
+        "payout": {
+          "coins": 1210,
+          "bounty": 6240000,
+          "outcome": "completed"
+        },
+        "bank": 1210,
+        "before": 850
+      }
+    },
+    {
+      "name": "Paid ledger has one entry for this voyage",
+      "pass": true,
+      "detail": [
+        "full-voyage-02:1"
+      ]
+    },
+    {
+      "name": "Browser storage contains final payout and ledger",
+      "pass": true,
+      "detail": {
+        "version": 1,
+        "result": {
+          "coins": 1210,
+          "bounty": 6240000,
+          "outcome": "completed"
+        }
+      }
+    },
+    {
+      "name": "Reload restores exact completed voyage and payout ledger",
+      "pass": true,
+      "detail": {
+        "phase": "complete",
+        "bank": 1210,
+        "paid": [
+          "full-voyage-02:1"
+        ]
+      }
+    },
+    {
+      "name": "No browser console or page errors",
+      "pass": true,
+      "detail": []
+    }
+  ],
+  "errors": [],
+  "scripts": [
+    {
+      "url": "http://127.0.0.1:4191/assets/index-CW4qsvng.js",
+      "status": 200,
+      "bytes": 974774,
+      "sha256": "6850e910fa755cba2ae8fc47de7ff448dd8decc9f71c561558b050a79e584909"
+    },
+    {
+      "url": "http://127.0.0.1:4191/assets/index-CW4qsvng.js",
+      "status": 200,
+      "bytes": 974774,
+      "sha256": "6850e910fa755cba2ae8fc47de7ff448dd8decc9f71c561558b050a79e584909"
+    }
+  ],
+  "browserVersion": "151.0.7922.34",
+  "final": {
+    "seed": "full-voyage-02",
+    "seedNumber": 630842247,
+    "elapsed": 134.6499999999993,
+    "timeScale": 1,
+    "paused": true,
+    "mode": "combat",
+    "weather": "calm",
+    "windDirection": 0.25,
+    "windStrength": 0.92,
+    "currentDirection": 0.15,
+    "currentStrength": 0.12,
+    "playerId": "player",
+    "objective": "Voyage completed — 1210 coins banked at Dawn Harbor",
+    "bounty": 36240000,
+    "treasure": 4,
+    "ships": [
+      {
+        "id": "player",
+        "kind": "oro-jackson",
+        "name": "Oro Jackson",
+        "isPlayer": true,
+        "position": {
+          "x": -34.08708647035328,
+          "y": 0.5545627819549652,
+          "z": -215.99028524430761
+        },
+        "heading": 4.400486750825472,
+        "speed": 4.550983202428072,
+        "verticalSpeed": -0.5613372701365246,
+        "pitch": 0.07949798636053738,
+        "roll": -0.023359052120262222,
+        "throttle": 0.4179999999999998,
+        "rudder": -0.006444359456110953,
+        "maxSpeed": 27,
+        "mass": 2220,
+        "damage": {
+          "hull": 0,
+          "sails": 0,
+          "weapons": 0,
+          "crew": 0.021619047619047593,
+          "sections": {
+            "bow": 0,
+            "stern": 0,
+            "port": 0,
+            "starboard": 0
+          }
+        },
+        "weapons": {
+          "portCooldown": 5.373585523809529,
+          "starboardCooldown": 5.373585523809529,
+          "bowCooldown": 5.373585523809529,
+          "ammo": "round"
+        },
+        "special": 0.34601272163213936,
+        "brace": 0,
+        "repairing": true,
+        "surrendered": false,
+        "faction": "roger",
+        "combatRole": "ranged",
+        "crew": {
+          "helm": 2,
+          "guns": 1,
+          "repair": 6,
+          "special": 1
+        },
+        "crewPreset": "repair",
+        "damageStage": "intact",
+        "specialPhase": {
+          "phase": "recovery",
+          "elapsed": 0.7833333333333341,
+          "duration": 1.25,
+          "name": "roger-volley"
+        }
+      },
+      {
+        "id": "full-voyage-02:1:leg-3:enemy-0",
+        "kind": "navy-galleon",
+        "name": "Captain of Sunwatch",
+        "isPlayer": false,
+        "position": {
+          "x": -58.23795182242846,
+          "y": 2.214087072189638,
+          "z": -123.17522704759841
+        },
+        "heading": 5.320488890936048,
+        "speed": 1.4552115325105452,
+        "verticalSpeed": -0.8384397181732018,
+        "pitch": 0.029188022568365984,
+        "roll": 0.12889811527165987,
+        "throttle": 0,
+        "rudder": -0.5463387894053369,
+        "maxSpeed": 23,
+        "mass": 2200,
+        "damage": {
+          "hull": 0.990741812478327,
+          "sails": 0.6875987105061486,
+          "weapons": 0.6930558815803756,
+          "crew": 0.5861537290829925,
+          "sections": {
+            "bow": 1,
+            "stern": 0.11912696667134508,
+            "port": 0.22902652787557143,
+            "starboard": 0
+          }
+        },
+        "weapons": {
+          "portCooldown": 0,
+          "starboardCooldown": 0,
+          "bowCooldown": 1.592398831777884,
+          "ammo": "heavy"
+        },
+        "special": 0.21287949341244183,
+        "brace": 0.9351722665151172,
+        "repairing": false,
+        "surrendered": true,
+        "ai": "tactical",
+        "faction": "marine",
+        "combatRole": "broadside",
+        "crew": {
+          "helm": 3,
+          "guns": 3,
+          "repair": 2,
+          "special": 2
+        },
+        "crewPreset": "balanced",
+        "damageStage": "disabled",
+        "finish": {
+          "state": "salvaged",
+          "elapsed": 0.41666666666666663,
+          "creditedTo": "player"
+        }
+      }
+    ],
+    "projectiles": [
+      {
+        "id": 1,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -35.262822619167274,
+          "y": 1.984542677718908,
+          "z": -382.6194778345163
+        },
+        "velocity": {
+          "x": 12.258506979222886,
+          "y": -15.599999999999982,
+          "z": -76.92246747828877
+        },
+        "life": 3.500000000000007
+      },
+      {
+        "id": 2,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -25.27005503748796,
+          "y": 2.9851375414630237,
+          "z": -375.95889601080273
+        },
+        "velocity": {
+          "x": 13.995033268786575,
+          "y": -14.78666666666665,
+          "z": -76.692228566434
+        },
+        "life": 3.5666666666666735
+      },
+      {
+        "id": 3,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -15.528574998003904,
+          "y": 3.9316143673934523,
+          "z": -369.25109991241675
+        },
+        "velocity": {
+          "x": 15.72186542127152,
+          "y": -13.973333333333317,
+          "z": -76.42436350188096
+        },
+        "life": 3.63333333333334
+      },
+      {
+        "id": 4,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -6.2315218882902315,
+          "y": 5.038724528086506,
+          "z": -361.2745802086406
+        },
+        "velocity": {
+          "x": 17.443960556505377,
+          "y": -12.956666666666651,
+          "z": -76.11801679626518
+        },
+        "life": 3.716666666666673
+      },
+      {
+        "id": 5,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": 2.9787368073284526,
+          "y": 5.8637502548776315,
+          "z": -354.50737025721446
+        },
+        "velocity": {
+          "x": 19.147202999127764,
+          "y": -12.143333333333318,
+          "z": -75.77634864146299
+        },
+        "life": 3.7833333333333394
+      },
+      {
+        "id": 6,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": 11.68544941133803,
+          "y": 6.819402135512341,
+          "z": -346.5023913709023
+        },
+        "velocity": {
+          "x": 20.84138661138835,
+          "y": -11.126666666666653,
+          "z": -75.39761738111498
+        },
+        "life": 3.8666666666666725
+      },
+      {
+        "id": 7,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -88.84196306426679,
+          "y": 1.984542677718908,
+          "z": -47.25251482566044
+        },
+        "velocity": {
+          "x": -12.111569585377499,
+          "y": -15.599999999999982,
+          "z": 77.05289780110004
+        },
+        "life": 3.500000000000007
+      },
+      {
+        "id": 8,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -77.37460977041133,
+          "y": 2.9851375414630237,
+          "z": -50.70496648976637
+        },
+        "velocity": {
+          "x": -10.44704968341113,
+          "y": -14.78666666666665,
+          "z": 77.36274652659476
+        },
+        "life": 3.5666666666666735
+      },
+      {
+        "id": 9,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -66.10406661831374,
+          "y": 3.9316143673934523,
+          "z": -54.25610578688162
+        },
+        "velocity": {
+          "x": -8.769480897243541,
+          "y": -13.973333333333317,
+          "z": 77.63751836813674
+        },
+        "life": 3.63333333333334
+      },
+      {
+        "id": 10,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -54.84045304433098,
+          "y": 5.038724528086506,
+          "z": -59.23996697198288
+        },
+        "velocity": {
+          "x": -7.0846378393676925,
+          "y": -12.956666666666651,
+          "z": 77.8763060862925
+        },
+        "life": 3.716666666666673
+      },
+      {
+        "id": 12,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -33.26873424379595,
+          "y": 6.819402135512341,
+          "z": -68.1442626083238
+        },
+        "velocity": {
+          "x": -3.6965816422744,
+          "y": -11.126666666666653,
+          "z": 78.24423953396
+        },
+        "life": 3.8666666666666725
+      },
+      {
+        "id": 13,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": 154.46163816530415,
+          "y": 5.584542677719002,
+          "z": -180.78463415069862
+        },
+        "velocity": {
+          "x": 80.06734227093737,
+          "y": -13.899999999999983,
+          "z": 12.152428723576133
+        },
+        "life": 3.500000000000007
+      },
+      {
+        "id": 14,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": 148.15478228791517,
+          "y": 6.471804208129784,
+          "z": -174.25654133863478
+        },
+        "velocity": {
+          "x": 79.39146892935155,
+          "y": -13.08666666666665,
+          "z": 16.02479207766871
+        },
+        "life": 3.5666666666666735
+      }
+    ],
+    "islands": [
+      {
+        "id": "dawn-harbor",
+        "name": "Dawn Harbor",
+        "position": {
+          "x": 310,
+          "y": 0,
+          "z": 80
+        },
+        "radius": 100,
+        "height": 55,
+        "palette": 1,
+        "discovered": true,
+        "landmark": "palms",
+        "service": "harbor"
+      },
+      {
+        "id": "sky-arch",
+        "name": "The Sky Arch",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": -420
+        },
+        "radius": 125,
+        "height": 165,
+        "palette": 2,
+        "discovered": true,
+        "landmark": "arches",
+        "service": "passage"
+      },
+      {
+        "id": "razor-reef",
+        "name": "Razor Reef",
+        "position": {
+          "x": -250,
+          "y": 0,
+          "z": -240
+        },
+        "radius": 68,
+        "height": 57,
+        "palette": 1,
+        "discovered": true,
+        "landmark": "needles",
+        "service": "ambush"
+      },
+      {
+        "id": "sunwatch-fort",
+        "name": "Sunwatch Fort",
+        "position": {
+          "x": 270,
+          "y": 0,
+          "z": -480
+        },
+        "radius": 108,
+        "height": 85,
+        "palette": 3,
+        "discovered": false,
+        "landmark": "fort",
+        "service": "fort"
+      },
+      {
+        "id": "island:-1:-2:0",
+        "name": "Sun Rest",
+        "position": {
+          "x": -752.5619749411941,
+          "y": 0,
+          "z": -1245.444671780616
+        },
+        "radius": 55.322910910472274,
+        "height": 23.78637829519573,
+        "palette": 2,
+        "discovered": false,
+        "landmark": "palms",
+        "rotation": 0.334962237230259,
+        "tierCount": 2,
+        "palms": 10
+      },
+      {
+        "id": "island:-1:-2:1",
+        "name": "Amber Atoll",
+        "position": {
+          "x": -783.7350342750549,
+          "y": 0,
+          "z": -1484.2456627450883
+        },
+        "radius": 70.26044982671738,
+        "height": 56.4606476143165,
+        "palette": 3,
+        "discovered": false,
+        "landmark": "palms",
+        "rotation": 1.455319144409593,
+        "tierCount": 2,
+        "palms": 10
+      },
+      {
+        "id": "island:1:-2:0",
+        "name": "Gull Spire",
+        "position": {
+          "x": 809.2275523625315,
+          "y": 0,
+          "z": -1586.2616810135544
+        },
+        "radius": 100.0315313860774,
+        "height": 39.69594481346754,
+        "palette": 2,
+        "discovered": false,
+        "landmark": "arches",
+        "rotation": 0.6159103615159061,
+        "tierCount": 2,
+        "palms": 4
+      },
+      {
+        "id": "island:1:-2:1",
+        "name": "Gull Atoll",
+        "position": {
+          "x": 949.6037937104702,
+          "y": 0,
+          "z": -1598.117179942131
+        },
+        "radius": 71.54509272426367,
+        "height": 51.3279771436755,
+        "palette": 0,
+        "discovered": false,
+        "landmark": "palms",
+        "rotation": 0.8349132414877709,
+        "tierCount": 4,
+        "palms": 7
+      },
+      {
+        "id": "island:2:-1:0",
+        "name": "Laughing Garden",
+        "position": {
+          "x": 1275.9054423876107,
+          "y": 0,
+          "z": -876.4623799860477
+        },
+        "radius": 129.86432294221595,
+        "height": 81.08089705015657,
+        "palette": 1,
+        "discovered": false,
+        "landmark": "fort",
+        "rotation": 1.1057315138815698,
+        "tierCount": 2,
+        "palms": 3
+      },
+      {
+        "id": "island:-2:0:0",
+        "name": "Scarlet Key",
+        "position": {
+          "x": -1457.3204812757672,
+          "y": 0,
+          "z": 194.73719691038133
+        },
+        "radius": 81.77312587760389,
+        "height": 29.828231209751518,
+        "palette": 3,
+        "discovered": false,
+        "landmark": "needles",
+        "rotation": -2.6235080599840694,
+        "tierCount": 3,
+        "palms": 1
+      },
+      {
+        "id": "island:-1:0:0",
+        "name": "Turtle Watch",
+        "position": {
+          "x": -812.9079237632453,
+          "y": 0,
+          "z": -57.658205149322754
+        },
+        "radius": 68.72609283961356,
+        "height": 26.619678539508897,
+        "palette": 0,
+        "discovered": false,
+        "landmark": "fort",
+        "rotation": 0.07279178123558205,
+        "tierCount": 3,
+        "palms": 3
+      },
+      {
+        "id": "island:1:0:0",
+        "name": "Whale Crown",
+        "position": {
+          "x": 743.5951710663736,
+          "y": 0,
+          "z": 7.932497019320721
+        },
+        "radius": 62.14457046613097,
+        "height": 41.509124106559646,
+        "palette": 2,
+        "discovered": false,
+        "landmark": "volcano",
+        "rotation": 2.530563138306438,
+        "tierCount": 3,
+        "palms": 1
+      },
+      {
+        "id": "island:0:1:0",
+        "name": "Sun Crown",
+        "position": {
+          "x": -212.15959133952856,
+          "y": 0,
+          "z": 622.9794296577572
+        },
+        "radius": 57.838838912546635,
+        "height": 20.705145074405078,
+        "palette": 2,
+        "discovered": false,
+        "landmark": "fort",
+        "rotation": 0.15138295594775197,
+        "tierCount": 3,
+        "palms": 3
+      },
+      {
+        "id": "island:2:1:0",
+        "name": "Scarlet Key",
+        "position": {
+          "x": 1461.640231371671,
+          "y": 0,
+          "z": 595.3698538787663
+        },
+        "radius": 89.02825777046382,
+        "height": 59.23410308519979,
+        "palette": 3,
+        "discovered": false,
+        "landmark": "fort",
+        "rotation": 0.017749214937474278,
+        "tierCount": 3,
+        "palms": 3
+      }
+    ],
+    "race": {
+      "active": false,
+      "countdown": 0,
+      "lap": 1,
+      "totalLaps": 3,
+      "checkpoint": 0,
+      "placement": 1,
+      "elapsed": 0,
+      "wrongWay": false
+    },
+    "progression": {
+      "version": 1,
+      "bankedCoins": 1210,
+      "totalVoyages": 1,
+      "completedVoyages": 1,
+      "selectedShip": "oro-jackson",
+      "refits": {},
+      "discoveredIds": [
+        "sky-arch",
+        "razor-reef"
+      ],
+      "paidVoyageIds": [
+        "full-voyage-02:1"
+      ],
+      "rivals": {
+        "sunwatch-captain": {
+          "encounters": 1,
+          "escapes": 0,
+          "defeated": 1
+        }
+      }
+    },
+    "combat": {
+      "combo": 7,
+      "comboTimer": 3.1333333333333373,
+      "weakPointTimer": 0,
+      "defeated": 1,
+      "surrendered": 0,
+      "reinforcements": 0
+    },
+    "worldFeatures": [
+      {
+        "id": "stack:-2:-2:0",
+        "x": -1445.6337815254926,
+        "z": -1650.0412338897586,
+        "radius": 8.328591626835987,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:-2:-2:1",
+        "x": -1291.851358859986,
+        "z": -1585.1808091387152,
+        "radius": 4.658808445208706,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:-2:-2:2",
+        "x": -1515.5524162709712,
+        "z": -1347.3050689056515,
+        "radius": 5.425555753172375,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:-2:-2:3",
+        "x": -1288.5241338975727,
+        "z": -1600.9584764532744,
+        "radius": 8.21307502198033,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:-2:-2:4",
+        "x": -1263.8317751258612,
+        "z": -1506.0204993478953,
+        "radius": 6.077336920192465,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:-2:-2:5",
+        "x": -1429.3781775288285,
+        "z": -1601.1859659522772,
+        "radius": 5.829561019549146,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-1:-2:0:stack:0",
+        "x": -677.9594925635702,
+        "z": -1330.8816199031317,
+        "radius": 7.599816999863833,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-1:-2:0:stack:1",
+        "x": -691.9894555783278,
+        "z": -1282.3966482796927,
+        "radius": 5.414549814304337,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-1:-2:0:stack:2",
+        "x": -821.0390482093827,
+        "z": -1236.8128721877906,
+        "radius": 5.992279672063887,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-1:-2:1:stack:0",
+        "x": -825.6125132819053,
+        "z": -1555.2025681376201,
+        "radius": 5.165184932993725,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-1:-2:0:reef",
+        "x": -757.3585016349314,
+        "z": -1329.5820889197341,
+        "radius": 21.934152939247944,
+        "kind": "reef"
+      },
+      {
+        "id": "island:-1:-2:1:reef",
+        "x": -864.0782659211237,
+        "z": -1474.5411625871525,
+        "radius": 29.006182421208628,
+        "kind": "reef"
+      },
+      {
+        "id": "stack:0:-2:0",
+        "x": 153.28746361881497,
+        "z": -1511.6360693246127,
+        "radius": 7.0238791283918545,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:0:-2:1",
+        "x": -224.95043059810996,
+        "z": -1674.6436277769506,
+        "radius": 6.294014253537171,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:0:-2:2",
+        "x": -243.49012136757375,
+        "z": -1543.6677785776556,
+        "radius": 3.6673997753532603,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:0:-2:3",
+        "x": 95.67354760095475,
+        "z": -1284.1282372556627,
+        "radius": 4.066782737383619,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:0:-2:4",
+        "x": 143.44841594025496,
+        "z": -1421.0683714717627,
+        "radius": 4.9380335251335055,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:-2:0:stack:0",
+        "x": 683.2556765248166,
+        "z": -1499.1011883747117,
+        "radius": 5.3163672459777445,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:-2:0:stack:1",
+        "x": 918.2448437113835,
+        "z": -1686.9632685982085,
+        "radius": 6.789971522521228,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:-2:0:stack:2",
+        "x": 1011.7851215121391,
+        "z": -1636.7864195284112,
+        "radius": 6.742774866288528,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:-2:0:stack:3",
+        "x": 911.2709953988987,
+        "z": -1426.8487459186215,
+        "radius": 8.74817009200342,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:-2:1:stack:0",
+        "x": 896.7336263954871,
+        "z": -1736.8466263818984,
+        "radius": 8.401318942196667,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:-2:0:reef",
+        "x": 729.5013526146478,
+        "z": -1730.5421438504727,
+        "radius": 29.078012651901446,
+        "kind": "reef"
+      },
+      {
+        "id": "island:1:-2:1:reef",
+        "x": 894.2261885332056,
+        "z": -1675.0195289481292,
+        "radius": 37.14074208810285,
+        "kind": "reef"
+      },
+      {
+        "id": "stack:0:-1:0",
+        "x": -70.98276217281818,
+        "z": -722.96393295452,
+        "radius": 5.637401471962221,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:0:-1:1",
+        "x": 159.83794109076263,
+        "z": -558.9120374388992,
+        "radius": 7.526661782874726,
+        "kind": "stack"
+      },
+      {
+        "id": "island:2:-1:0:stack:0",
+        "x": 1471.9044913929956,
+        "z": -910.2518234115707,
+        "radius": 7.125630350783467,
+        "kind": "stack"
+      },
+      {
+        "id": "island:2:-1:0:stack:1",
+        "x": 1508.6865703481965,
+        "z": -1028.795644166195,
+        "radius": 6.303801735630259,
+        "kind": "stack"
+      },
+      {
+        "id": "island:2:-1:0:stack:2",
+        "x": 1349.446958504623,
+        "z": -697.6221664672943,
+        "radius": 7.594450791366398,
+        "kind": "stack"
+      },
+      {
+        "id": "island:2:-1:0:stack:3",
+        "x": 1274.163512854922,
+        "z": -670.125633988432,
+        "radius": 7.856816047569737,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-2:0:0:stack:0",
+        "x": -1590.1804270762,
+        "z": 269.7658060217069,
+        "radius": 9.109956628875807,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-2:0:0:stack:1",
+        "x": -1402.36170269611,
+        "z": 99.12562844193067,
+        "radius": 6.78064991091378,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-2:0:0:stack:2",
+        "x": -1376.869897257022,
+        "z": 58.588832296964085,
+        "radius": 11.668994159204885,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-2:0:0:stack:3",
+        "x": -1578.5311674482957,
+        "z": 265.80011944821183,
+        "radius": 9.548018573783338,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-2:0:0:stack:4",
+        "x": -1428.3392437109085,
+        "z": 304.20488627317206,
+        "radius": 12.879284317605197,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-2:0:0:reef",
+        "x": -1566.484980628553,
+        "z": 145.85400050701458,
+        "radius": 33.154582677628945,
+        "kind": "reef"
+      },
+      {
+        "id": "island:-1:0:0:stack:0",
+        "x": -708.321926319128,
+        "z": 23.94952528309277,
+        "radius": 7.457545041106641,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-1:0:0:stack:1",
+        "x": -830.2754104579918,
+        "z": -190.41334975815704,
+        "radius": 6.058575924253091,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-1:0:0:reef",
+        "x": -906.6945017252291,
+        "z": -116.25375876208363,
+        "radius": 24.277415239503476,
+        "kind": "reef"
+      },
+      {
+        "id": "island:1:0:0:stack:0",
+        "x": 659.996223104423,
+        "z": 51.58557064976987,
+        "radius": 9.902464437764138,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:0:0:stack:1",
+        "x": 728.8335532932748,
+        "z": 83.1607139846459,
+        "radius": 6.151596640702337,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:0:0:stack:2",
+        "x": 637.1625647454264,
+        "z": 54.760005409118236,
+        "radius": 7.531468217493966,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:0:0:stack:3",
+        "x": 765.4579947963725,
+        "z": -79.00086091288209,
+        "radius": 5.602378536714241,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:0:0:reef",
+        "x": 840.0607865825971,
+        "z": -9.944843463939524,
+        "radius": 20.304333791917333,
+        "kind": "reef"
+      },
+      {
+        "id": "stack:-2:1:0",
+        "x": -1627.2687660254537,
+        "z": 526.5078158967196,
+        "radius": 5.731141346739605,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:-2:1:1",
+        "x": -1210.9153039969503,
+        "z": 541.8780223354697,
+        "radius": 3.606401704950258,
+        "kind": "stack"
+      },
+      {
+        "id": "island:0:1:0:stack:0",
+        "x": -297.4267686885469,
+        "z": 688.6775515280277,
+        "radius": 8.687671317020431,
+        "kind": "stack"
+      },
+      {
+        "id": "island:0:1:0:stack:1",
+        "x": -163.9185367899385,
+        "z": 721.9159460142648,
+        "radius": 8.846109323203564,
+        "kind": "stack"
+      },
+      {
+        "id": "island:2:1:0:stack:0",
+        "x": 1404.163876196214,
+        "z": 754.243503593334,
+        "radius": 8.406040960690007,
+        "kind": "stack"
+      },
+      {
+        "id": "island:2:1:0:stack:1",
+        "x": 1347.5313219154862,
+        "z": 581.0116701265658,
+        "radius": 9.138182437745854,
+        "kind": "stack"
+      },
+      {
+        "id": "island:2:1:0:stack:2",
+        "x": 1426.6449976801132,
+        "z": 728.4618472389571,
+        "radius": 9.706269461894408,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:2:2:0",
+        "x": 1434.3662184745074,
+        "z": 1229.9587661102414,
+        "radius": 8.328591626835987,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:2:2:1",
+        "x": 1588.148641140014,
+        "z": 1294.8191908612848,
+        "radius": 4.658808445208706,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:2:2:2",
+        "x": 1364.4475837290288,
+        "z": 1532.6949310943485,
+        "radius": 5.425555753172375,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:2:2:3",
+        "x": 1591.4758661024273,
+        "z": 1279.0415235467256,
+        "radius": 8.21307502198033,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:2:2:4",
+        "x": 1616.1682248741388,
+        "z": 1373.9795006521047,
+        "radius": 6.077336920192465,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:2:2:5",
+        "x": 1450.6218224711715,
+        "z": 1278.8140340477228,
+        "radius": 5.829561019549146,
+        "kind": "stack"
+      },
+      {
+        "id": "dawn-harbor",
+        "x": 310,
+        "z": 80,
+        "radius": 100,
+        "kind": "shore"
+      },
+      {
+        "id": "sky-arch:pylon:-1",
+        "x": -95,
+        "z": -420,
+        "radius": 27.5,
+        "kind": "shore"
+      },
+      {
+        "id": "sky-arch:pylon:1",
+        "x": 95,
+        "z": -420,
+        "radius": 27.5,
+        "kind": "shore"
+      },
+      {
+        "id": "razor-reef",
+        "x": -250,
+        "z": -240,
+        "radius": 68,
+        "kind": "reef"
+      },
+      {
+        "id": "sunwatch-fort",
+        "x": 270,
+        "z": -480,
+        "radius": 108,
+        "kind": "shore"
+      },
+      {
+        "id": "island:-1:-2:0",
+        "x": -752.5619749411941,
+        "z": -1245.444671780616,
+        "radius": 55.322910910472274,
+        "kind": "shore"
+      },
+      {
+        "id": "island:-1:-2:1",
+        "x": -783.7350342750549,
+        "z": -1484.2456627450883,
+        "radius": 70.26044982671738,
+        "kind": "shore"
+      },
+      {
+        "id": "island:1:-2:0:pylon:-1",
+        "x": 733.2035885091126,
+        "z": -1586.2616810135544,
+        "radius": 22.006936904937028,
+        "kind": "shore"
+      },
+      {
+        "id": "island:1:-2:0:pylon:1",
+        "x": 885.2515162159503,
+        "z": -1586.2616810135544,
+        "radius": 22.006936904937028,
+        "kind": "shore"
+      },
+      {
+        "id": "island:1:-2:1",
+        "x": 949.6037937104702,
+        "z": -1598.117179942131,
+        "radius": 71.54509272426367,
+        "kind": "shore"
+      },
+      {
+        "id": "island:2:-1:0",
+        "x": 1275.9054423876107,
+        "z": -876.4623799860477,
+        "radius": 129.86432294221595,
+        "kind": "shore"
+      },
+      {
+        "id": "island:-2:0:0",
+        "x": -1457.3204812757672,
+        "z": 194.73719691038133,
+        "radius": 81.77312587760389,
+        "kind": "reef"
+      },
+      {
+        "id": "island:-1:0:0",
+        "x": -812.9079237632453,
+        "z": -57.658205149322754,
+        "radius": 68.72609283961356,
+        "kind": "shore"
+      },
+      {
+        "id": "island:1:0:0",
+        "x": 743.5951710663736,
+        "z": 7.932497019320721,
+        "radius": 62.14457046613097,
+        "kind": "shore"
+      },
+      {
+        "id": "island:0:1:0",
+        "x": -212.15959133952856,
+        "z": 622.9794296577572,
+        "radius": 57.838838912546635,
+        "kind": "shore"
+      },
+      {
+        "id": "island:2:1:0",
+        "x": 1461.640231371671,
+        "z": 595.3698538787663,
+        "radius": 89.02825777046382,
+        "kind": "shore"
+      }
+    ],
+    "voyage": {
+      "id": "full-voyage-02:1",
+      "phase": "complete",
+      "contractId": "lost-cargo",
+      "buildId": "guardian",
+      "leg": 3,
+      "totalLegs": 3,
+      "routes": [],
+      "unbankedCoins": 0,
+      "earnedBounty": 6240000,
+      "upgrades": [],
+      "rewardChoices": [],
+      "extractionReady": false,
+      "encounter": {
+        "id": "full-voyage-02:1:leg-3",
+        "kind": "boss",
+        "title": "The Captain’s Challenge",
+        "objective": "Defeat the Captain of Sunwatch and claim the contract",
+        "targetIds": [
+          "full-voyage-02:1:leg-3:enemy-0"
+        ],
+        "waypoint": {
+          "x": 0,
+          "y": 0,
+          "z": -220
+        },
+        "progress": 1,
+        "target": 1,
+        "elapsed": 44.73333333333208,
+        "reward": 285,
+        "completed": true,
+        "resolvedAt": 43.61666666666547
+      },
+      "result": {
+        "coins": 1210,
+        "bounty": 6240000,
+        "outcome": "completed"
+      }
+    }
+  },
+  "restored": {
+    "seed": "full-voyage-02",
+    "seedNumber": 630842247,
+    "elapsed": 134.6499999999993,
+    "timeScale": 1,
+    "paused": true,
+    "mode": "combat",
+    "weather": "calm",
+    "windDirection": 0.25,
+    "windStrength": 0.92,
+    "currentDirection": 0.15,
+    "currentStrength": 0.12,
+    "playerId": "player",
+    "objective": "Voyage completed — 1210 coins banked at Dawn Harbor",
+    "bounty": 36240000,
+    "treasure": 4,
+    "ships": [
+      {
+        "id": "player",
+        "kind": "oro-jackson",
+        "name": "Oro Jackson",
+        "isPlayer": true,
+        "position": {
+          "x": -34.08708647035328,
+          "y": 0.5545627819549652,
+          "z": -215.99028524430761
+        },
+        "heading": 4.400486750825472,
+        "speed": 4.550983202428072,
+        "verticalSpeed": -0.5613372701365246,
+        "pitch": 0.07949798636053738,
+        "roll": -0.023359052120262222,
+        "throttle": 0.4179999999999998,
+        "rudder": -0.006444359456110953,
+        "maxSpeed": 27,
+        "mass": 2220,
+        "damage": {
+          "hull": 0,
+          "sails": 0,
+          "weapons": 0,
+          "crew": 0.021619047619047593,
+          "sections": {
+            "bow": 0,
+            "stern": 0,
+            "port": 0,
+            "starboard": 0
+          }
+        },
+        "weapons": {
+          "portCooldown": 5.373585523809529,
+          "starboardCooldown": 5.373585523809529,
+          "bowCooldown": 5.373585523809529,
+          "ammo": "round"
+        },
+        "special": 0.34601272163213936,
+        "brace": 0,
+        "repairing": true,
+        "surrendered": false,
+        "faction": "roger",
+        "combatRole": "ranged",
+        "crew": {
+          "helm": 2,
+          "guns": 1,
+          "repair": 6,
+          "special": 1
+        },
+        "crewPreset": "repair",
+        "damageStage": "intact",
+        "specialPhase": {
+          "phase": "recovery",
+          "elapsed": 0.7833333333333341,
+          "duration": 1.25,
+          "name": "roger-volley"
+        }
+      },
+      {
+        "id": "full-voyage-02:1:leg-3:enemy-0",
+        "kind": "navy-galleon",
+        "name": "Captain of Sunwatch",
+        "isPlayer": false,
+        "position": {
+          "x": -58.23795182242846,
+          "y": 2.214087072189638,
+          "z": -123.17522704759841
+        },
+        "heading": 5.320488890936048,
+        "speed": 1.4552115325105452,
+        "verticalSpeed": -0.8384397181732018,
+        "pitch": 0.029188022568365984,
+        "roll": 0.12889811527165987,
+        "throttle": 0,
+        "rudder": -0.5463387894053369,
+        "maxSpeed": 23,
+        "mass": 2200,
+        "damage": {
+          "hull": 0.990741812478327,
+          "sails": 0.6875987105061486,
+          "weapons": 0.6930558815803756,
+          "crew": 0.5861537290829925,
+          "sections": {
+            "bow": 1,
+            "stern": 0.11912696667134508,
+            "port": 0.22902652787557143,
+            "starboard": 0
+          }
+        },
+        "weapons": {
+          "portCooldown": 0,
+          "starboardCooldown": 0,
+          "bowCooldown": 1.592398831777884,
+          "ammo": "heavy"
+        },
+        "special": 0.21287949341244183,
+        "brace": 0.9351722665151172,
+        "repairing": false,
+        "surrendered": true,
+        "ai": "tactical",
+        "faction": "marine",
+        "combatRole": "broadside",
+        "crew": {
+          "helm": 3,
+          "guns": 3,
+          "repair": 2,
+          "special": 2
+        },
+        "crewPreset": "balanced",
+        "damageStage": "disabled",
+        "finish": {
+          "state": "salvaged",
+          "elapsed": 0.41666666666666663,
+          "creditedTo": "player"
+        }
+      }
+    ],
+    "projectiles": [
+      {
+        "id": 1,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -35.262822619167274,
+          "y": 1.984542677718908,
+          "z": -382.6194778345163
+        },
+        "velocity": {
+          "x": 12.258506979222886,
+          "y": -15.599999999999982,
+          "z": -76.92246747828877
+        },
+        "life": 3.500000000000007
+      },
+      {
+        "id": 2,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -25.27005503748796,
+          "y": 2.9851375414630237,
+          "z": -375.95889601080273
+        },
+        "velocity": {
+          "x": 13.995033268786575,
+          "y": -14.78666666666665,
+          "z": -76.692228566434
+        },
+        "life": 3.5666666666666735
+      },
+      {
+        "id": 3,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -15.528574998003904,
+          "y": 3.9316143673934523,
+          "z": -369.25109991241675
+        },
+        "velocity": {
+          "x": 15.72186542127152,
+          "y": -13.973333333333317,
+          "z": -76.42436350188096
+        },
+        "life": 3.63333333333334
+      },
+      {
+        "id": 4,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -6.2315218882902315,
+          "y": 5.038724528086506,
+          "z": -361.2745802086406
+        },
+        "velocity": {
+          "x": 17.443960556505377,
+          "y": -12.956666666666651,
+          "z": -76.11801679626518
+        },
+        "life": 3.716666666666673
+      },
+      {
+        "id": 5,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": 2.9787368073284526,
+          "y": 5.8637502548776315,
+          "z": -354.50737025721446
+        },
+        "velocity": {
+          "x": 19.147202999127764,
+          "y": -12.143333333333318,
+          "z": -75.77634864146299
+        },
+        "life": 3.7833333333333394
+      },
+      {
+        "id": 6,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": 11.68544941133803,
+          "y": 6.819402135512341,
+          "z": -346.5023913709023
+        },
+        "velocity": {
+          "x": 20.84138661138835,
+          "y": -11.126666666666653,
+          "z": -75.39761738111498
+        },
+        "life": 3.8666666666666725
+      },
+      {
+        "id": 7,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -88.84196306426679,
+          "y": 1.984542677718908,
+          "z": -47.25251482566044
+        },
+        "velocity": {
+          "x": -12.111569585377499,
+          "y": -15.599999999999982,
+          "z": 77.05289780110004
+        },
+        "life": 3.500000000000007
+      },
+      {
+        "id": 8,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -77.37460977041133,
+          "y": 2.9851375414630237,
+          "z": -50.70496648976637
+        },
+        "velocity": {
+          "x": -10.44704968341113,
+          "y": -14.78666666666665,
+          "z": 77.36274652659476
+        },
+        "life": 3.5666666666666735
+      },
+      {
+        "id": 9,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -66.10406661831374,
+          "y": 3.9316143673934523,
+          "z": -54.25610578688162
+        },
+        "velocity": {
+          "x": -8.769480897243541,
+          "y": -13.973333333333317,
+          "z": 77.63751836813674
+        },
+        "life": 3.63333333333334
+      },
+      {
+        "id": 10,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -54.84045304433098,
+          "y": 5.038724528086506,
+          "z": -59.23996697198288
+        },
+        "velocity": {
+          "x": -7.0846378393676925,
+          "y": -12.956666666666651,
+          "z": 77.8763060862925
+        },
+        "life": 3.716666666666673
+      },
+      {
+        "id": 12,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": -33.26873424379595,
+          "y": 6.819402135512341,
+          "z": -68.1442626083238
+        },
+        "velocity": {
+          "x": -3.6965816422744,
+          "y": -11.126666666666653,
+          "z": 78.24423953396
+        },
+        "life": 3.8666666666666725
+      },
+      {
+        "id": 13,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": 154.46163816530415,
+          "y": 5.584542677719002,
+          "z": -180.78463415069862
+        },
+        "velocity": {
+          "x": 80.06734227093737,
+          "y": -13.899999999999983,
+          "z": 12.152428723576133
+        },
+        "life": 3.500000000000007
+      },
+      {
+        "id": 14,
+        "ownerId": "player",
+        "ammo": "explosive",
+        "position": {
+          "x": 148.15478228791517,
+          "y": 6.471804208129784,
+          "z": -174.25654133863478
+        },
+        "velocity": {
+          "x": 79.39146892935155,
+          "y": -13.08666666666665,
+          "z": 16.02479207766871
+        },
+        "life": 3.5666666666666735
+      }
+    ],
+    "islands": [
+      {
+        "id": "dawn-harbor",
+        "name": "Dawn Harbor",
+        "position": {
+          "x": 310,
+          "y": 0,
+          "z": 80
+        },
+        "radius": 100,
+        "height": 55,
+        "palette": 1,
+        "discovered": true,
+        "landmark": "palms",
+        "service": "harbor"
+      },
+      {
+        "id": "sky-arch",
+        "name": "The Sky Arch",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": -420
+        },
+        "radius": 125,
+        "height": 165,
+        "palette": 2,
+        "discovered": true,
+        "landmark": "arches",
+        "service": "passage"
+      },
+      {
+        "id": "razor-reef",
+        "name": "Razor Reef",
+        "position": {
+          "x": -250,
+          "y": 0,
+          "z": -240
+        },
+        "radius": 68,
+        "height": 57,
+        "palette": 1,
+        "discovered": true,
+        "landmark": "needles",
+        "service": "ambush"
+      },
+      {
+        "id": "sunwatch-fort",
+        "name": "Sunwatch Fort",
+        "position": {
+          "x": 270,
+          "y": 0,
+          "z": -480
+        },
+        "radius": 108,
+        "height": 85,
+        "palette": 3,
+        "discovered": false,
+        "landmark": "fort",
+        "service": "fort"
+      },
+      {
+        "id": "island:-1:-2:0",
+        "name": "Sun Rest",
+        "position": {
+          "x": -752.5619749411941,
+          "y": 0,
+          "z": -1245.444671780616
+        },
+        "radius": 55.322910910472274,
+        "height": 23.78637829519573,
+        "palette": 2,
+        "discovered": false,
+        "landmark": "palms",
+        "rotation": 0.334962237230259,
+        "tierCount": 2,
+        "palms": 10
+      },
+      {
+        "id": "island:-1:-2:1",
+        "name": "Amber Atoll",
+        "position": {
+          "x": -783.7350342750549,
+          "y": 0,
+          "z": -1484.2456627450883
+        },
+        "radius": 70.26044982671738,
+        "height": 56.4606476143165,
+        "palette": 3,
+        "discovered": false,
+        "landmark": "palms",
+        "rotation": 1.455319144409593,
+        "tierCount": 2,
+        "palms": 10
+      },
+      {
+        "id": "island:1:-2:0",
+        "name": "Gull Spire",
+        "position": {
+          "x": 809.2275523625315,
+          "y": 0,
+          "z": -1586.2616810135544
+        },
+        "radius": 100.0315313860774,
+        "height": 39.69594481346754,
+        "palette": 2,
+        "discovered": false,
+        "landmark": "arches",
+        "rotation": 0.6159103615159061,
+        "tierCount": 2,
+        "palms": 4
+      },
+      {
+        "id": "island:1:-2:1",
+        "name": "Gull Atoll",
+        "position": {
+          "x": 949.6037937104702,
+          "y": 0,
+          "z": -1598.117179942131
+        },
+        "radius": 71.54509272426367,
+        "height": 51.3279771436755,
+        "palette": 0,
+        "discovered": false,
+        "landmark": "palms",
+        "rotation": 0.8349132414877709,
+        "tierCount": 4,
+        "palms": 7
+      },
+      {
+        "id": "island:2:-1:0",
+        "name": "Laughing Garden",
+        "position": {
+          "x": 1275.9054423876107,
+          "y": 0,
+          "z": -876.4623799860477
+        },
+        "radius": 129.86432294221595,
+        "height": 81.08089705015657,
+        "palette": 1,
+        "discovered": false,
+        "landmark": "fort",
+        "rotation": 1.1057315138815698,
+        "tierCount": 2,
+        "palms": 3
+      },
+      {
+        "id": "island:-2:0:0",
+        "name": "Scarlet Key",
+        "position": {
+          "x": -1457.3204812757672,
+          "y": 0,
+          "z": 194.73719691038133
+        },
+        "radius": 81.77312587760389,
+        "height": 29.828231209751518,
+        "palette": 3,
+        "discovered": false,
+        "landmark": "needles",
+        "rotation": -2.6235080599840694,
+        "tierCount": 3,
+        "palms": 1
+      },
+      {
+        "id": "island:-1:0:0",
+        "name": "Turtle Watch",
+        "position": {
+          "x": -812.9079237632453,
+          "y": 0,
+          "z": -57.658205149322754
+        },
+        "radius": 68.72609283961356,
+        "height": 26.619678539508897,
+        "palette": 0,
+        "discovered": false,
+        "landmark": "fort",
+        "rotation": 0.07279178123558205,
+        "tierCount": 3,
+        "palms": 3
+      },
+      {
+        "id": "island:1:0:0",
+        "name": "Whale Crown",
+        "position": {
+          "x": 743.5951710663736,
+          "y": 0,
+          "z": 7.932497019320721
+        },
+        "radius": 62.14457046613097,
+        "height": 41.509124106559646,
+        "palette": 2,
+        "discovered": false,
+        "landmark": "volcano",
+        "rotation": 2.530563138306438,
+        "tierCount": 3,
+        "palms": 1
+      },
+      {
+        "id": "island:0:1:0",
+        "name": "Sun Crown",
+        "position": {
+          "x": -212.15959133952856,
+          "y": 0,
+          "z": 622.9794296577572
+        },
+        "radius": 57.838838912546635,
+        "height": 20.705145074405078,
+        "palette": 2,
+        "discovered": false,
+        "landmark": "fort",
+        "rotation": 0.15138295594775197,
+        "tierCount": 3,
+        "palms": 3
+      },
+      {
+        "id": "island:2:1:0",
+        "name": "Scarlet Key",
+        "position": {
+          "x": 1461.640231371671,
+          "y": 0,
+          "z": 595.3698538787663
+        },
+        "radius": 89.02825777046382,
+        "height": 59.23410308519979,
+        "palette": 3,
+        "discovered": false,
+        "landmark": "fort",
+        "rotation": 0.017749214937474278,
+        "tierCount": 3,
+        "palms": 3
+      }
+    ],
+    "race": {
+      "active": false,
+      "countdown": 0,
+      "lap": 1,
+      "totalLaps": 3,
+      "checkpoint": 0,
+      "placement": 1,
+      "elapsed": 0,
+      "wrongWay": false
+    },
+    "progression": {
+      "version": 1,
+      "bankedCoins": 1210,
+      "totalVoyages": 1,
+      "completedVoyages": 1,
+      "selectedShip": "oro-jackson",
+      "refits": {},
+      "discoveredIds": [
+        "sky-arch",
+        "razor-reef"
+      ],
+      "paidVoyageIds": [
+        "full-voyage-02:1"
+      ],
+      "rivals": {
+        "sunwatch-captain": {
+          "encounters": 1,
+          "escapes": 0,
+          "defeated": 1
+        }
+      }
+    },
+    "combat": {
+      "combo": 7,
+      "comboTimer": 3.1333333333333373,
+      "weakPointTimer": 0,
+      "defeated": 1,
+      "surrendered": 0,
+      "reinforcements": 0
+    },
+    "worldFeatures": [
+      {
+        "id": "stack:-2:-2:0",
+        "x": -1445.6337815254926,
+        "z": -1650.0412338897586,
+        "radius": 8.328591626835987,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:-2:-2:1",
+        "x": -1291.851358859986,
+        "z": -1585.1808091387152,
+        "radius": 4.658808445208706,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:-2:-2:2",
+        "x": -1515.5524162709712,
+        "z": -1347.3050689056515,
+        "radius": 5.425555753172375,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:-2:-2:3",
+        "x": -1288.5241338975727,
+        "z": -1600.9584764532744,
+        "radius": 8.21307502198033,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:-2:-2:4",
+        "x": -1263.8317751258612,
+        "z": -1506.0204993478953,
+        "radius": 6.077336920192465,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:-2:-2:5",
+        "x": -1429.3781775288285,
+        "z": -1601.1859659522772,
+        "radius": 5.829561019549146,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-1:-2:0:stack:0",
+        "x": -677.9594925635702,
+        "z": -1330.8816199031317,
+        "radius": 7.599816999863833,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-1:-2:0:stack:1",
+        "x": -691.9894555783278,
+        "z": -1282.3966482796927,
+        "radius": 5.414549814304337,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-1:-2:0:stack:2",
+        "x": -821.0390482093827,
+        "z": -1236.8128721877906,
+        "radius": 5.992279672063887,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-1:-2:1:stack:0",
+        "x": -825.6125132819053,
+        "z": -1555.2025681376201,
+        "radius": 5.165184932993725,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-1:-2:0:reef",
+        "x": -757.3585016349314,
+        "z": -1329.5820889197341,
+        "radius": 21.934152939247944,
+        "kind": "reef"
+      },
+      {
+        "id": "island:-1:-2:1:reef",
+        "x": -864.0782659211237,
+        "z": -1474.5411625871525,
+        "radius": 29.006182421208628,
+        "kind": "reef"
+      },
+      {
+        "id": "stack:0:-2:0",
+        "x": 153.28746361881497,
+        "z": -1511.6360693246127,
+        "radius": 7.0238791283918545,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:0:-2:1",
+        "x": -224.95043059810996,
+        "z": -1674.6436277769506,
+        "radius": 6.294014253537171,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:0:-2:2",
+        "x": -243.49012136757375,
+        "z": -1543.6677785776556,
+        "radius": 3.6673997753532603,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:0:-2:3",
+        "x": 95.67354760095475,
+        "z": -1284.1282372556627,
+        "radius": 4.066782737383619,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:0:-2:4",
+        "x": 143.44841594025496,
+        "z": -1421.0683714717627,
+        "radius": 4.9380335251335055,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:-2:0:stack:0",
+        "x": 683.2556765248166,
+        "z": -1499.1011883747117,
+        "radius": 5.3163672459777445,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:-2:0:stack:1",
+        "x": 918.2448437113835,
+        "z": -1686.9632685982085,
+        "radius": 6.789971522521228,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:-2:0:stack:2",
+        "x": 1011.7851215121391,
+        "z": -1636.7864195284112,
+        "radius": 6.742774866288528,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:-2:0:stack:3",
+        "x": 911.2709953988987,
+        "z": -1426.8487459186215,
+        "radius": 8.74817009200342,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:-2:1:stack:0",
+        "x": 896.7336263954871,
+        "z": -1736.8466263818984,
+        "radius": 8.401318942196667,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:-2:0:reef",
+        "x": 729.5013526146478,
+        "z": -1730.5421438504727,
+        "radius": 29.078012651901446,
+        "kind": "reef"
+      },
+      {
+        "id": "island:1:-2:1:reef",
+        "x": 894.2261885332056,
+        "z": -1675.0195289481292,
+        "radius": 37.14074208810285,
+        "kind": "reef"
+      },
+      {
+        "id": "stack:0:-1:0",
+        "x": -70.98276217281818,
+        "z": -722.96393295452,
+        "radius": 5.637401471962221,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:0:-1:1",
+        "x": 159.83794109076263,
+        "z": -558.9120374388992,
+        "radius": 7.526661782874726,
+        "kind": "stack"
+      },
+      {
+        "id": "island:2:-1:0:stack:0",
+        "x": 1471.9044913929956,
+        "z": -910.2518234115707,
+        "radius": 7.125630350783467,
+        "kind": "stack"
+      },
+      {
+        "id": "island:2:-1:0:stack:1",
+        "x": 1508.6865703481965,
+        "z": -1028.795644166195,
+        "radius": 6.303801735630259,
+        "kind": "stack"
+      },
+      {
+        "id": "island:2:-1:0:stack:2",
+        "x": 1349.446958504623,
+        "z": -697.6221664672943,
+        "radius": 7.594450791366398,
+        "kind": "stack"
+      },
+      {
+        "id": "island:2:-1:0:stack:3",
+        "x": 1274.163512854922,
+        "z": -670.125633988432,
+        "radius": 7.856816047569737,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-2:0:0:stack:0",
+        "x": -1590.1804270762,
+        "z": 269.7658060217069,
+        "radius": 9.109956628875807,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-2:0:0:stack:1",
+        "x": -1402.36170269611,
+        "z": 99.12562844193067,
+        "radius": 6.78064991091378,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-2:0:0:stack:2",
+        "x": -1376.869897257022,
+        "z": 58.588832296964085,
+        "radius": 11.668994159204885,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-2:0:0:stack:3",
+        "x": -1578.5311674482957,
+        "z": 265.80011944821183,
+        "radius": 9.548018573783338,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-2:0:0:stack:4",
+        "x": -1428.3392437109085,
+        "z": 304.20488627317206,
+        "radius": 12.879284317605197,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-2:0:0:reef",
+        "x": -1566.484980628553,
+        "z": 145.85400050701458,
+        "radius": 33.154582677628945,
+        "kind": "reef"
+      },
+      {
+        "id": "island:-1:0:0:stack:0",
+        "x": -708.321926319128,
+        "z": 23.94952528309277,
+        "radius": 7.457545041106641,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-1:0:0:stack:1",
+        "x": -830.2754104579918,
+        "z": -190.41334975815704,
+        "radius": 6.058575924253091,
+        "kind": "stack"
+      },
+      {
+        "id": "island:-1:0:0:reef",
+        "x": -906.6945017252291,
+        "z": -116.25375876208363,
+        "radius": 24.277415239503476,
+        "kind": "reef"
+      },
+      {
+        "id": "island:1:0:0:stack:0",
+        "x": 659.996223104423,
+        "z": 51.58557064976987,
+        "radius": 9.902464437764138,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:0:0:stack:1",
+        "x": 728.8335532932748,
+        "z": 83.1607139846459,
+        "radius": 6.151596640702337,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:0:0:stack:2",
+        "x": 637.1625647454264,
+        "z": 54.760005409118236,
+        "radius": 7.531468217493966,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:0:0:stack:3",
+        "x": 765.4579947963725,
+        "z": -79.00086091288209,
+        "radius": 5.602378536714241,
+        "kind": "stack"
+      },
+      {
+        "id": "island:1:0:0:reef",
+        "x": 840.0607865825971,
+        "z": -9.944843463939524,
+        "radius": 20.304333791917333,
+        "kind": "reef"
+      },
+      {
+        "id": "stack:-2:1:0",
+        "x": -1627.2687660254537,
+        "z": 526.5078158967196,
+        "radius": 5.731141346739605,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:-2:1:1",
+        "x": -1210.9153039969503,
+        "z": 541.8780223354697,
+        "radius": 3.606401704950258,
+        "kind": "stack"
+      },
+      {
+        "id": "island:0:1:0:stack:0",
+        "x": -297.4267686885469,
+        "z": 688.6775515280277,
+        "radius": 8.687671317020431,
+        "kind": "stack"
+      },
+      {
+        "id": "island:0:1:0:stack:1",
+        "x": -163.9185367899385,
+        "z": 721.9159460142648,
+        "radius": 8.846109323203564,
+        "kind": "stack"
+      },
+      {
+        "id": "island:2:1:0:stack:0",
+        "x": 1404.163876196214,
+        "z": 754.243503593334,
+        "radius": 8.406040960690007,
+        "kind": "stack"
+      },
+      {
+        "id": "island:2:1:0:stack:1",
+        "x": 1347.5313219154862,
+        "z": 581.0116701265658,
+        "radius": 9.138182437745854,
+        "kind": "stack"
+      },
+      {
+        "id": "island:2:1:0:stack:2",
+        "x": 1426.6449976801132,
+        "z": 728.4618472389571,
+        "radius": 9.706269461894408,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:2:2:0",
+        "x": 1434.3662184745074,
+        "z": 1229.9587661102414,
+        "radius": 8.328591626835987,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:2:2:1",
+        "x": 1588.148641140014,
+        "z": 1294.8191908612848,
+        "radius": 4.658808445208706,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:2:2:2",
+        "x": 1364.4475837290288,
+        "z": 1532.6949310943485,
+        "radius": 5.425555753172375,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:2:2:3",
+        "x": 1591.4758661024273,
+        "z": 1279.0415235467256,
+        "radius": 8.21307502198033,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:2:2:4",
+        "x": 1616.1682248741388,
+        "z": 1373.9795006521047,
+        "radius": 6.077336920192465,
+        "kind": "stack"
+      },
+      {
+        "id": "stack:2:2:5",
+        "x": 1450.6218224711715,
+        "z": 1278.8140340477228,
+        "radius": 5.829561019549146,
+        "kind": "stack"
+      },
+      {
+        "id": "dawn-harbor",
+        "x": 310,
+        "z": 80,
+        "radius": 100,
+        "kind": "shore"
+      },
+      {
+        "id": "sky-arch:pylon:-1",
+        "x": -95,
+        "z": -420,
+        "radius": 27.5,
+        "kind": "shore"
+      },
+      {
+        "id": "sky-arch:pylon:1",
+        "x": 95,
+        "z": -420,
+        "radius": 27.5,
+        "kind": "shore"
+      },
+      {
+        "id": "razor-reef",
+        "x": -250,
+        "z": -240,
+        "radius": 68,
+        "kind": "reef"
+      },
+      {
+        "id": "sunwatch-fort",
+        "x": 270,
+        "z": -480,
+        "radius": 108,
+        "kind": "shore"
+      },
+      {
+        "id": "island:-1:-2:0",
+        "x": -752.5619749411941,
+        "z": -1245.444671780616,
+        "radius": 55.322910910472274,
+        "kind": "shore"
+      },
+      {
+        "id": "island:-1:-2:1",
+        "x": -783.7350342750549,
+        "z": -1484.2456627450883,
+        "radius": 70.26044982671738,
+        "kind": "shore"
+      },
+      {
+        "id": "island:1:-2:0:pylon:-1",
+        "x": 733.2035885091126,
+        "z": -1586.2616810135544,
+        "radius": 22.006936904937028,
+        "kind": "shore"
+      },
+      {
+        "id": "island:1:-2:0:pylon:1",
+        "x": 885.2515162159503,
+        "z": -1586.2616810135544,
+        "radius": 22.006936904937028,
+        "kind": "shore"
+      },
+      {
+        "id": "island:1:-2:1",
+        "x": 949.6037937104702,
+        "z": -1598.117179942131,
+        "radius": 71.54509272426367,
+        "kind": "shore"
+      },
+      {
+        "id": "island:2:-1:0",
+        "x": 1275.9054423876107,
+        "z": -876.4623799860477,
+        "radius": 129.86432294221595,
+        "kind": "shore"
+      },
+      {
+        "id": "island:-2:0:0",
+        "x": -1457.3204812757672,
+        "z": 194.73719691038133,
+        "radius": 81.77312587760389,
+        "kind": "reef"
+      },
+      {
+        "id": "island:-1:0:0",
+        "x": -812.9079237632453,
+        "z": -57.658205149322754,
+        "radius": 68.72609283961356,
+        "kind": "shore"
+      },
+      {
+        "id": "island:1:0:0",
+        "x": 743.5951710663736,
+        "z": 7.932497019320721,
+        "radius": 62.14457046613097,
+        "kind": "shore"
+      },
+      {
+        "id": "island:0:1:0",
+        "x": -212.15959133952856,
+        "z": 622.9794296577572,
+        "radius": 57.838838912546635,
+        "kind": "shore"
+      },
+      {
+        "id": "island:2:1:0",
+        "x": 1461.640231371671,
+        "z": 595.3698538787663,
+        "radius": 89.02825777046382,
+        "kind": "shore"
+      }
+    ],
+    "voyage": {
+      "id": "full-voyage-02:1",
+      "phase": "complete",
+      "contractId": "lost-cargo",
+      "buildId": "guardian",
+      "leg": 3,
+      "totalLegs": 3,
+      "routes": [],
+      "unbankedCoins": 0,
+      "earnedBounty": 6240000,
+      "upgrades": [],
+      "rewardChoices": [],
+      "extractionReady": false,
+      "encounter": {
+        "id": "full-voyage-02:1:leg-3",
+        "kind": "boss",
+        "title": "The Captain’s Challenge",
+        "objective": "Defeat the Captain of Sunwatch and claim the contract",
+        "targetIds": [
+          "full-voyage-02:1:leg-3:enemy-0"
+        ],
+        "waypoint": {
+          "x": 0,
+          "y": 0,
+          "z": -220
+        },
+        "progress": 1,
+        "target": 1,
+        "elapsed": 44.73333333333208,
+        "reward": 285,
+        "completed": true,
+        "resolvedAt": 43.61666666666547
+      },
+      "result": {
+        "coins": 1210,
+        "bounty": 6240000,
+        "outcome": "completed"
+      }
+    }
+  },
+  "finishedAt": "2026-09-07T10:59:06.729Z"
+}

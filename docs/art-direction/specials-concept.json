@@ -1,0 +1,8 @@
+{
+  "kind": "imagegen-concept-not-engine-capture",
+  "file": "concepts/09-ship-specials.png",
+  "source": "/Users/amir/.codex/generated_images/01a076e9-035f-7f32-ba88-3605c73b66c9/exec-ec576edb-5d0d-4be5-a489-662bfce34014.png",
+  "sha256": "6a8eae12c0dc7855c2e12ae5e7a61c6c46eafb99f2cb13d893b018ebf5b95254",
+  "reference": "approved-direction-A.png",
+  "notes": "Three reference specials. Corrected Sunny panel to place thrust at stern. No concept is composited onto gameplay."
+}

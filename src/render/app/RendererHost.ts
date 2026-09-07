@@ -16,9 +16,7 @@ export class RendererHost {
     this.renderer = new THREE.WebGLRenderer({ antialias: !performanceMode, alpha: false, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.NoToneMapping;
-    // The NPR pipeline renders normals, color/depth, and the full-screen edge pass.
-    // Keep counters cumulative across those passes so the debug receipt describes
-    // the complete frame instead of only the final screen quad.
+    // Keep metrics cumulative if a presentation pass is added.
     this.renderer.info.autoReset = false;
     this.renderer.shadowMap.enabled = !performanceMode;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -30,7 +28,7 @@ export class RendererHost {
 
     this.camera = new THREE.PerspectiveCamera(54, 1, 0.2, 5000);
     this.camera.position.set(0, 20, 36);
-    this.pixelRatio = captureMode ? 2 : performanceMode ? 1 : Math.min(window.devicePixelRatio, 1.75);
+    this.pixelRatio = captureMode ? 2 : performanceMode ? 1 : Math.min(window.devicePixelRatio, 1.5);
     this.renderer.setPixelRatio(this.pixelRatio);
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -112,14 +110,15 @@ export class RendererHost {
     if (!Number.isFinite(this.lastRatioReviewAt) || this.frameSamples.length < 60) return;
     const sorted = [...this.frameSamples].sort((a, b) => a - b);
     const p90 = sorted[Math.floor(sorted.length * 0.9)] ?? 16.7;
-    const limit = Math.min(window.devicePixelRatio, 2);
+    const limit = Math.min(window.devicePixelRatio, 1.5);
     let next = this.pixelRatio;
     if (p90 > 19 && this.pixelRatio > 1) next = Math.max(1, this.pixelRatio - 0.15);
     else if (p90 < 13.5 && this.pixelRatio < limit) next = Math.min(limit, this.pixelRatio + 0.1);
     if (Math.abs(next - this.pixelRatio) >= 0.05) {
       this.pixelRatio = next;
+      // Three's setPixelRatio already resizes its drawing buffer. A second
+      // setSize here needlessly reallocates the same canvas during play.
       this.renderer.setPixelRatio(next);
-      this.resize();
     }
   }
 

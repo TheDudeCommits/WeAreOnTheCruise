@@ -1,0 +1,91 @@
+{
+  "build": "13",
+  "createdAt": "2026-09-07T11:46:04.844367+00:00",
+  "files": [
+    {
+      "path": "assets/index-Cb8uZWYg.css",
+      "bytes": 46598,
+      "sha256": "6cb78d80455fcd2f53df14125572b6f8c20fac0c02979bce30d914937e25dfbe"
+    },
+    {
+      "path": "assets/index-DkMxQ-GQ.js",
+      "bytes": 986929,
+      "sha256": "16c3bd3c865837c7a0be086b043ccd262b0d1043f2655566b027f28f0cf9500a"
+    },
+    {
+      "path": "assets/index-DkMxQ-GQ.js.map",
+      "bytes": 4064893,
+      "sha256": "bd8d4a55316e70caa526c9d2df473b1c528be03720f3bec313ed8811bc6c8ab6"
+    },
+    {
+      "path": "assets/materials/cinematic-sky.png",
+      "bytes": 1738729,
+      "sha256": "9ab3d6acb2d74e00ecf979396c811f340815e5e87a5010ab3329b279460120fe"
+    },
+    {
+      "path": "assets/materials/limestone.png",
+      "bytes": 2629620,
+      "sha256": "dfe0680734034aafe2d47a2d9cdd060c0fdcadddc11a1488978f4bd320bc391a"
+    },
+    {
+      "path": "assets/materials/painted-timber.png",
+      "bytes": 3037664,
+      "sha256": "caa10fa3036163004119911670c9f85c93dde57616d3fab77e925cc7ac744369"
+    },
+    {
+      "path": "assets/ships/baratie-hull.glb",
+      "bytes": 209420,
+      "sha256": "f8b1500e0783fcbfe8bdd3239824f570fcd84cd2cf411a1b68458d81d5131849"
+    },
+    {
+      "path": "assets/ships/going-merry-hull.glb",
+      "bytes": 209520,
+      "sha256": "ccf01c4405188a57eaab413f94a3f6380700495468319e4282b4de0dd1ffbc73"
+    },
+    {
+      "path": "assets/ships/hull-manifest.json",
+      "bytes": 4226,
+      "sha256": "17e922303749dc0c882c2cd1993ee73cbbcb0f7cc3ec3d2ab2f5a5d570ba5178"
+    },
+    {
+      "path": "assets/ships/moby-dick-hull.glb",
+      "bytes": 209440,
+      "sha256": "375e567d4dc6191a87224bc50e699c901be3a6d7a3b8b5f33892d915959bff22"
+    },
+    {
+      "path": "assets/ships/navy-galleon-hull.glb",
+      "bytes": 209420,
+      "sha256": "abea53ed2a533c8fc637dfeec45e7419b344b78d898def4e96c586758067a1f3"
+    },
+    {
+      "path": "assets/ships/oro-jackson-hull.glb",
+      "bytes": 209444,
+      "sha256": "42e1618af97cfff2c49a01bec228569dc4031be5926f157722937aa11f2703ed"
+    },
+    {
+      "path": "assets/ships/queen-mama-chanter-hull.glb",
+      "bytes": 209496,
+      "sha256": "340b79bbc484635f470310ef7814f1256bef31542ce1bf0ba8c92e4ac1315012"
+    },
+    {
+      "path": "assets/ships/red-force-hull.glb",
+      "bytes": 209436,
+      "sha256": "8efd8495c5b67cb513a4d99f1468e43527d6a8f01b1dfe98c51772c5c2576059"
+    },
+    {
+      "path": "assets/ships/thousand-sunny-hull.glb",
+      "bytes": 209476,
+      "sha256": "e53385decc59de30e6f2ff70eff3d1e2f2b9f23e6abe73f9cc4f947da14511de"
+    },
+    {
+      "path": "favicon.svg",
+      "bytes": 335,
+      "sha256": "f3e75173b2307365b751f6c5bc1584c245f040cfb286f656838acbd31809a0a3"
+    },
+    {
+      "path": "index.html",
+      "bytes": 1157,
+      "sha256": "4bd017fd50c03b4d00e3b96cae41b397bf0c7f1f72db5be285424c28497e4c6d"
+    }
+  ]
+}

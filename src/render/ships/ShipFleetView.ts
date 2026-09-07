@@ -36,7 +36,9 @@ export class ShipFleetView {
       model.root.position.set(ship.position.x, ship.position.y, ship.position.z);
       model.root.rotation.order = 'YXZ';
       model.root.rotation.set(ship.pitch, ship.heading, ship.roll);
-      model.root.visible = !ship.surrendered || ship.damage.hull < 0.995;
+      // Disabled ships remain inspectable for salvage/spare and through the sinking animation.
+      // A legacy snapshot without finishing state retains its previous disappearance behavior.
+      model.root.visible = ship.finish ? ship.finish.state !== 'sunk' : !ship.surrendered || ship.damage.hull < .995;
       model.root.userData.shipId = ship.id;
       model.root.userData.isPlayer = ship.isPlayer;
       model.update(ship, time);
@@ -47,6 +49,10 @@ export class ShipFleetView {
       this.models.delete(id);
     }
   }
+
+  ready(): Promise<void> { return this.factory.ready(); }
+
+  get assetStatus(): ReadonlyMap<ShipKind, 'loading' | 'ready' | 'fallback'> { return this.factory.hullAssets.status; }
 
   getModel(shipId: string): ProceduralShipModel | undefined {
     return this.models.get(shipId);

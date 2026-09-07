@@ -1,130 +1,124 @@
 # We Are On The Cruise
 
-A zero-asset, cel-shaded naval adventure built with Vite, TypeScript, and Three.js. Every hull, sail, island, ocean wave, texture, effect, UI mark, sound, and musical layer is generated in code at runtime.
+A browser naval adventure built with Vite, TypeScript and Three.js, inspired by One Piece and the ship combat of Assassin’s Creed IV: Black Flag. The current overhaul follows the selected **Cinematic Anime A** direction: cobalt and turquoise water, ivory sails, warm timber, cool stone shadows, sculpted clouds and restrained navy contours.
 
-**[Play We Are On The Cruise](https://we-are-on-the-cruise.vercel.app)**
+**[Existing live baseline](https://we-are-on-the-cruise.vercel.app)** — this link is not evidence that the current overhaul branch has been deployed. Consult [HANDOVER.md](./HANDOVER.md) for the checkout, release status and latest verification.
 
-> **Fan-project notice:** This is an unofficial, non-commercial technical fan work. One Piece and its characters and vessels belong to their respective rights holders. No original anime, manga, model, texture, audio, or logo assets are distributed here.
+This is an unofficial, non-commercial fan project. One Piece and its characters and vessels belong to their respective rights holders. The current hull kits and crew geometry are original fan-work implementations; they are not official licensed game assets. See [ASSET-LICENSES.md](./ASSET-LICENSES.md) for source and acquisition records.
 
-## Run it
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open `http://localhost:4173`. Chrome on Apple silicon is the primary performance target.
-
-For a production build:
+Open `http://localhost:4173`. Chrome/Chromium on Apple silicon is the primary browser and performance target.
 
 ```bash
+npm test
 npm run build
 npm run preview
 ```
 
+The dev and preview servers both use port 4173; run one at a time. Tests cover deterministic simulation, combat and voyage transitions, full-save recovery, world/collision relationships, input, aiming and ship presentation.
+
+## Make a voyage
+
+Choose one of nine vessels and launch to Dawn Harbor. Accept **Break the Dawn Blockade**, **The Sunken Payroll**, or **Chart the Tempest**, then choose a crew build: Deadeye Broadside, Storm Interceptor or Ironheart Crew. Each contract has three legs with generated route offers, measured or dangerous water, encounter rewards and a final captain battle.
+
+Encounters include patrol battles, a 12-second cargo hold, a 75-second escort and three ordered storm gates through the arch. Winning an objective leaves a navigable aftermath. Approach disabled enemies to salvage, spare or scuttle them; available targets remain until a choice is made. Sinking continues over time. Collect the encounter reward explicitly when ready, then choose an upgrade or supplies and continue, or extract to bank the spoils. Losing the ship forfeits unbanked coins. Banked refits, discoveries, selected vessel and rival history persist across voyages.
+
+Ten crew members are allocated among helm, guns, repairs and special ability stations. Moving hands changes handling, reload, repairs and special charge continuously; moving them away from guns preserves the fraction of reload work already completed. Crew presets and three voyage builds have explicit advantages and costs.
+
+Ship specials show charging, active and recovery phases. Sunny charges its stern nozzles before a burst; Polar dives and locks its batteries until all gun mounts clear the water during resurfacing; Moby sends a growing pressure front that damages each target once when it arrives. Brace against the pressure front. Polar's dive does not confer invulnerability.
+
+The normal entry URL saves the complete versioned simulation in browser local storage and resumes it on return. Saves include active encounters, crew, damage, pending volleys, projectiles, timers, progression and the payout ledger. This is local persistence, not cloud synchronization. Free Sail & Practice in the help drawer retains the twelve exploration, battle and race scenes. Explicit `?scene=...` review URLs are isolated from voyage autosave.
+
 ## Controls
 
-| Action | Control |
+| Action | Default control |
 | --- | --- |
-| Raise / lower sail | `W` / `S` |
-| Steer | `A` / `D` |
-| Hard turn | `Shift` |
+| Raise / lower sail | `W` / `S`, or up / down arrows |
+| Steer port / starboard | `A` / `D`, or left / right arrows |
+| Hard turn | `Shift` while steering underway |
 | Fire port / starboard broadside | `Q` / `E` |
 | Fire bow weapon | `F` |
+| Hold port / starboard aim | `Z` / `V` |
+| Adjust lead while aiming | Mouse movement over the sea, or `,` / `.` |
 | Cycle ammunition | `X` |
 | Brace | `Space` |
-| Assign crew to repair | `R` |
+| Repair while held | Hold `R`; the Repair crew preset also repairs automatically when not bracing |
 | Ship special | `C` |
-| Camera presets | `1`–`6` |
+| Cycle crew preset | `T`; crew buttons also offer direct selection |
+| Captain’s chart | `J` |
+| Camera presets | `1`–`6`; `[` / `]` cycle, `\` resets |
 | Pause / help | `Esc` / `H` |
 | Mute | `M` |
 
-Drag on the ocean to orbit the spring-damped chase camera. The HUD keeps the centre and lower-middle of the playfield clear; detailed controls live in the help drawer.
+Drag on the sea to orbit the camera. Aim assistance frames targets; the firing bearing and lead still determine the shot. Port, starboard and bow batteries use independent reloads. Round, chain, heavy and explosive ammunition have different trajectories and damage effects.
 
-## Play loop
+The Controls & Comfort drawer provides action remapping, camera shake, target framing assistance and subtitle sizing. Touch controls expose helm, weapons, brace, repair, special and aim actions; gamepads use the same named action layer. Menus and loss of focus clear held input so commands do not leak into the next interaction. Portrait and landscape viewport testing on a desktop GPU does not establish physical phone performance.
 
-Choose one of nine ships, launch into the open sea, then use **Voyage Chapters** in the captain's-log menu (`H` or `Esc`) to enter exploration, naval combat, the Pirate Cup, a Grand Line squall, island discovery, or a night encounter. Each chapter runs through the same sailing, wave, damage, AI, camera, HUD, and audio systems; this vertical slice exposes the breadth directly instead of pretending it is already a seamless campaign.
+## Ships, scenery and asset provenance
 
-Ship handling is arcade-readable but wave-driven. Throttle, steering, currents, wind alignment, ship mass, and a shared five-wave Gerstner field affect motion. Buoyancy and rendered displacement use the same wave parameters so ships climb the waves that are visibly beneath them.
+All nine ships are selectable: Thousand Sunny, Going Merry, Moby Dick, Red Force, Oro Jackson, Polar Tang, Queen Mama Chanter, Baratie and Navy Galleon. Eight sailing hull kits are original Blender-authored GLBs, created through Blender MCP and optimized for browser loading. Polar Tang remains procedural. Sails, figureheads, fittings, articulated crew stations and damage presentation are built by the game’s ship factory. This is a hybrid authored/procedural asset pipeline.
 
-### Combat
+- Runtime hulls and their hash/size/triangle manifest: `public/assets/ships/`.
+- Original imagegen surface and sky artwork: `public/assets/materials/`.
+- Reproducible Blender authoring and optimization: `scripts/assets/`.
+- Raw exports and provider catalog records, outside public output: `assets/source/`.
 
-- Port and starboard broadsides have independent reloads and firing arcs.
-- Round, chain, heavy, and explosive ammunition trade hull damage, sail damage, range, and blast radius.
-- Directional bow/stern/port/starboard damage, sail integrity, weapons, crew readiness, bracing, and timed repairs affect behavior.
-- AI captains use aggressive, tactical, reckless, and racing steering profiles.
-- The Thousand Sunny’s burst is the reference special move; other procedural ship specifications provide distinct mass, silhouette, battery layout, and handling.
+The requested Sketchfab search inventory exhausted 72 official API pages and recorded **1,676 unique catalog records**, including **28 ship candidates** identified from titles/tags. **Zero model bytes were downloaded**: the official model-download endpoint requires authenticated access, and that access was unavailable. Candidate geometry has not been inspected or integrated. These records are an acquisition inventory, not a claim that the requested Sketchfab collection is in the game. Attribution, offered licenses and exact status are in [ASSET-LICENSES.md](./ASSET-LICENSES.md).
 
-### Racing
+The shared logical world provides authored landmarks and a bounded, seeded ocean region. The arch has two collision pylons and a clear central passage; the harbor, reefs and fort have corresponding simulation records. Rendered geography adds fractured stone, vegetation, terraces, windows, roofs and waterfalls around those records. Exploration is streamed, while voyage legs are discrete encounter transitions rather than a seamless narrative campaign.
 
-Race scenarios use four ships, a countdown, three laps, water-riding checkpoints, placement, wrong-way detection, and results presentation. The circuit remains an optional event inside the streamed ocean rather than replacing exploration.
+## Rendering and audio
 
-## Procedural ships
+The ocean shader and CPU buoyancy sampler share Gerstner wave configuration. Weather changes ocean color, sky and cel lighting; wakes, bow spray, foam and impact effects accompany moving ships and combat. Ship/world materials use painted surfaces, shadow bands and directional shadows in normal quality. Selective geometry contours replace the former full-scene normal/Sobel edge pass.
 
-Ship construction lives under `src/content` and `src/render/ships`. A ship blueprint contains simulation stats, proportions, silhouette landmarks, palette, mast and sail plans, weapon mounts, and a construction recipe. Rendering consumes the recipe; simulation consumes only serializable stats and mount metadata.
+The browser loads local GLBs and PNG textures at runtime. Asset readiness is included in the debug bridge’s ready signal. Near, medium and distant ship detail, merged world geometry and pooled projectiles/effects limit cost. Audio remains synthesized through Web Audio and begins after a user gesture.
 
-To add a ship:
+Normal automatic quality starts at at most DPR 1.5 and adapts under frame pressure. `?quality=performance` starts at DPR 1 and disables antialiasing and shadows; capture mode pins DPR 2. A 40–60 FPS experience is the target, not a claim established by a concept frame or an old profile. Check the latest hardware-identified gauntlet report before quoting performance.
 
-1. Add its id to `ShipKind` in `src/core/contracts.ts`.
-2. Add a blueprint with genuinely different length, beam, mass, acceleration, turn rate, damage capacity, batteries, and silhouette anchors.
-3. Add distinctive procedural construction—not a recolor—to the ship factory: figurehead, hull profile, sail plan, superstructure, and palette blocks should remain readable at the far LOD.
-4. Add a capture scenario or extend `moby-scale` so the new silhouette is checked from chase, broadside, and distant cameras.
-5. Run the build, capture suite, and high-load profile before shipping.
+## Evidence and verification
 
-## Procedural world
+[Implementation review](./docs/overhaul/IMPLEMENTATION-REVIEW.md) records the eight overhaul scopes, current verification and outstanding acceptance. [Section concepts](./docs/art-direction/SECTION-CONCEPTS.md) and `docs/art-direction/concepts/` contain generated **visual targets**, not in-game screenshots. Actual captures, critic findings and test/performance receipts live under `output/overhaul-gauntlet/`. Screenshots can establish visible quality at a moment; motion, controls, sustained frame rate and replayability need separate evidence.
 
-The logical world is divided into deterministic ocean chunks. Chunk content is derived from the global seed and integer chunk coordinate, so generation order does not change an island, reef, wreck, route, or landmark. A moving active window creates and disposes chunk views around the player. Render recentering is a view concern; it never changes a logical chunk id or seed.
-
-Islands use generated BufferGeometry, layered profiles, exaggerated cliff/beach bands, and instanced graphic vegetation. Strong landmark templates and spacing rules keep the horizon readable while seeded variation prevents a small hand-placed arena from masquerading as an infinite world.
-
-## Ocean and NPR rendering
-
-- Five Gerstner waves combine a long swell, crossing body waves, and short chop.
-- CPU sampling and GLSL displacement share one configuration.
-- The ocean grid recentres around the player, with banded deep/mid/crest color, hard crest foam, quantized glitter, wind/current marks, and wake/spray systems.
-- Ships and major world props use quantized cel materials, banded highlights, Fresnel-like rim response, and distance-aware inverted-hull ink meshes.
-- A screen-space edge pass supplements silhouette ink where enabled; its cost is measurable and can degrade independently of the core toon materials.
-- Sky, clouds, sun, weather color shifts, sails, markings, and UI textures are code-generated. There are no runtime model, image, environment, font, or audio requests.
-
-## Architecture
-
-The authoritative state is a serializable fixed-step simulation, not the Three.js scene graph. See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full contract.
-
-```text
-simulation + seeded world state
-        │ immutable snapshots / events
-        ├── Three.js render adapters (ocean, ships, islands, FX, camera)
-        ├── DOM presentation (HUD, menus, callouts, results)
-        └── Web Audio presentation (synthesis, ambience, adaptive score)
-```
-
-Input is mapped to named actions once. The simulation advances at 60 Hz. Rendering interpolates and manages visual LOD, but it cannot award damage, progress a lap, spawn a logical encounter, or mutate a saveable discovery.
-
-## AI
-
-AI uses destination steering with lookahead, relative-bearing combat decisions, broadside range bands, brace/repair decisions, and personality weights. Expensive tactical decisions are staggered; distant ships update simplified navigation. Race opponents use the same ship motion system rather than following decorative splines.
-
-## Audio
-
-Audio starts only after a user gesture. Web Audio oscillators, filtered noise buffers, waveshaping, and short envelopes synthesize water, wood, sail strain, weapons, impacts, countdowns, specials, and musical layers. Exploration, combat, racing, victory, and storm states change the procedural arrangement. No audio files ship.
-
-## Deterministic screenshots
-
-The Playwright harness boots a retina browser, loads a seeded scenario, pauses wall-clock simulation, advances exact fixed ticks, chooses a camera, and writes a PNG plus JSON receipt:
+Run browser harnesses against a running local server, one at a time, and close the browser after use. The gauntlet harnesses close their browser in `finally` blocks.
 
 ```bash
-# Capture all required evidence states
-npm run dev
-npm run capture
+# Core verification
+npm test
+npm run build
 
-# One state from all six camera presets
+git diff --check
+
+# Deterministic visual captures; these pause and step simulation
+node scripts/gauntlet-capture.mjs calm-sailing sunny-broadside crew-closeup
 npm run capture -- sunny-broadside --all-angles
 
-# High-load runtime sample
-npm run profile
+# Real UI/input and responsive-layout checks
+node scripts/gauntlet-ui.mjs
+node scripts/gauntlet-aim.mjs
+
+# Voyage navigation, extraction, refit and reload with accelerated fixed ticks
+# This is progression evidence, not a real-time performance test.
+node scripts/gauntlet-progression.mjs
+node scripts/gauntlet-full-voyage.mjs
+
+# Trusted special inputs with paused phase captures, then a separate real RAF profile
+node scripts/gauntlet-specials.mjs
+node scripts/profile-specials.mjs
+
+# Sustained real RAF performance: 5s warmup + 15s sample per case
+node scripts/profile-gauntlet.mjs --dry-run
+node scripts/profile-gauntlet.mjs
 ```
 
-Available scene ids:
+The harnesses accept `CRUISE_URL`. Output overrides include `CRUISE_CAPTURE_DIR`, `CRUISE_UI_DIR`, `CRUISE_AIM_DIR`, `CRUISE_PROGRESSION_DIR` and `CRUISE_PROFILE_DIR`. `CRUISE_PROFILE_VIEWPORTS=desktop` or `landscape` selects part of the performance matrix. Its default is five scenes at 1920×1080 and 844×390, device scale 2, normal auto quality. It records uncapped RAF intervals, percentiles, long frames, actual canvas DPR changes, simulation advancement, GPU/browser/OS identity, script hashes and screenshots. The HUD’s rolling FPS and legacy `npm run profile` output are not substitutes for this sustained receipt.
+
+Available scene IDs:
 
 ```text
 calm-sailing       storm-sailing      sunny-broadside
@@ -133,23 +127,6 @@ island-discovery   race-start         race-rough
 crew-closeup       night-encounter    perf-fleet
 ```
 
-The dev bridge is available as `window.__CRUISE_DEBUG__`. It can load a scene, select a ship, dispatch named actions, pause, step exact frames, switch cameras, return the serializable state, and report renderer metrics. Use a stable `?seed=...&scene=...&capture=1` URL for reproducible review.
+`window.__CRUISE_DEBUG__` exposes readiness, scene selection, named actions, pause, exact stepping, cameras, snapshots, renderer counters and save export/restore. Use `?seed=...&scene=...&capture=1` for controlled visual review. Use ordinary URLs without capture mode for real-time profiling.
 
-## Performance strategy
-
-- Device pixel ratio adapts between 1 and 2 against frame-time pressure; capture mode pins DPR 2.
-- `?quality=performance` starts at DPR 1 and disables the premium screen-space and inverted-hull outline passes while retaining cel materials.
-- Projectiles and short-lived visual effects are pooled and capped.
-- Ocean and world views recenter instead of growing with distance.
-- Ships have near, mid, and silhouette detail boundaries; distant crew and rigging are reduced.
-- Chunk creation/disposal is deterministic and bounded to the active window.
-- Frustum culling, instancing for repeated vegetation/foam marks, staggered AI, and update budgets keep scene cost measurable.
-- `window.__CRUISE_DEBUG__.getMetrics()` reports FPS, frame time, calls, triangles, geometry/texture counts, entities, and active chunks.
-
-The checked Metal profile on Apple silicon (`1512×982`, DPR 1, eight ships, 25 chunks) sampled 464 frames at **16.7 ms p50 / 17.2 ms p95** with one frame above 33.4 ms. The measured render frame contained 315 calls and about 96.9k triangles. Run `npm run profile` on the target machine to regenerate `output/perf/perf-fleet.json`; other GPUs, browsers, thermals, and the premium visual tier will vary.
-
-## Honest scope and known limitations
-
-This repository begins with a polished browser vertical slice, not the hundreds of person-years implied by a literal AAA open-world production. The slice is designed to prove the difficult systems together: generated art, shared CPU/GPU waves, distinctive ships, sailing, four-ship race/combat states, damage, crew motion, deterministic streaming, NPR rendering, audio, HUD, capture automation, and performance instrumentation.
-
-The current quality bar should be judged from the checked capture scenes. Areas intended for later production passes include more authored encounter templates, deeper boarding resolution, save migration, every ship’s unique finishing sequence, more island interiors, wider weather variety, richer crew choreography, accessibility remapping, and exhaustive browser/GPU coverage. The project documents these limits rather than presenting procedural breadth as finished AAA content.
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for ownership and persistence contracts and [HANDOVER.md](./HANDOVER.md) for current results and remaining work. Visual parity with the concept targets, full browser/device coverage, deeper encounter variety and authenticated Sketchfab acquisition remain acceptance work; this repository does not claim a finished AAA production.

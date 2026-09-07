@@ -1,0 +1,34 @@
+{
+  "sunnyCamera": {
+    "assistanceMovesCamera": true,
+    "aimOrbitDisabledOverrides": true,
+    "stateUnchanged": true
+  },
+  "polarAssistedCamera": [
+    {
+      "preset": "chase",
+      "y": 43.34271785243193
+    },
+    {
+      "preset": "cinematic",
+      "y": 29.895145234954626
+    }
+  ],
+  "pressureBuffers": {
+    "fronts": 20,
+    "rows": 4,
+    "frames": 100,
+    "finite": true,
+    "indicesInBounds": true,
+    "identityStable": true,
+    "outerRadiusExact": true,
+    "stateUnchanged": true,
+    "clearsAndDisposes": true
+  },
+  "adaptiveDpr": {
+    "calls": [
+      1.35
+    ],
+    "noDuplicateResize": true
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "checkedAt": "2026-09-07T11:56:24.059849+00:00",
+  "method": "Blender MCP get_sketchfab_status",
+  "result": "Communication error with Blender: Connection closed before receiving any data",
+  "previousConfirmedStatus": "Sketchfab integration disabled; official download HTTP 401",
+  "downloadedModels": 0,
+  "downloadedBytes": 0
+}

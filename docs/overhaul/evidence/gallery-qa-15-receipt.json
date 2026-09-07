@@ -1,0 +1,233 @@
+{
+  "gallery": "/Users/amir/Projects/WeAreOnTheCruise/docs/overhaul/gallery/index.html",
+  "runs": [
+    {
+      "name": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "checks": [
+        {
+          "label": "Nine concept sections",
+          "pass": true
+        },
+        {
+          "label": "Section 1 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 1 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 2 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 2 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 3 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 3 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 4 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 4 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 5 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 5 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 6 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 6 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 7 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 7 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 8 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 8 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 9 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 9 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Keyboard changes selected section",
+          "pass": true
+        },
+        {
+          "label": "Full-size viewer opens",
+          "pass": true
+        },
+        {
+          "label": "Native image can be inspected",
+          "pass": true
+        },
+        {
+          "label": "Viewer closes and restores focus",
+          "pass": true
+        },
+        {
+          "label": "Local evidence links resolve",
+          "pass": true
+        },
+        {
+          "label": "No page-wide overflow",
+          "pass": true
+        },
+        {
+          "label": "No browser errors",
+          "pass": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "portrait",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "checks": [
+        {
+          "label": "Nine concept sections",
+          "pass": true
+        },
+        {
+          "label": "Section 1 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 1 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 2 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 2 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 3 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 3 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 4 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 4 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 5 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 5 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 6 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 6 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 7 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 7 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 8 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 8 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Section 9 selected",
+          "pass": true
+        },
+        {
+          "label": "Section 9 has both uncropped images",
+          "pass": true
+        },
+        {
+          "label": "Keyboard changes selected section",
+          "pass": true
+        },
+        {
+          "label": "Full-size viewer opens",
+          "pass": true
+        },
+        {
+          "label": "Native image can be inspected",
+          "pass": true
+        },
+        {
+          "label": "Viewer closes and restores focus",
+          "pass": true
+        },
+        {
+          "label": "Local evidence links resolve",
+          "pass": true
+        },
+        {
+          "label": "No page-wide overflow",
+          "pass": true
+        },
+        {
+          "label": "No browser errors",
+          "pass": true
+        }
+      ],
+      "errors": []
+    }
+  ]
+}

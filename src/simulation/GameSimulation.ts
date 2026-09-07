@@ -1,5 +1,9 @@
 import type {
   AiCombatRole,
+  CrewAllocation,
+  CrewPreset,
+  ShipKind,
+  VoyageBuildId,
   AmmoKind,
   DebugScene,
   InputAction,
@@ -11,6 +15,12 @@ import type {
   WorldState,
 } from '../core/contracts';
 import { getScenarioPreset, getShipSpec, type ScenarioPreset, type ScenarioShip, type ShipSpec } from '../content';
+import { CREW_PRESETS, HARBOR_REFITS, VOYAGE_BUILDS, VOYAGE_CONTRACTS, VOYAGE_LANDMARKS, VOYAGE_UPGRADES, createVoyageRoutes } from '../content/voyages';
+import { cannonVolleyCount, cannonVolleyOffset, sampleCannonTrajectory } from './ballistics';
+import { isNavalSave } from './saveValidation';
+import { voyageSequence } from './voyageIdentity';
+import { MOBY_PRESSURE_DURATION, MOBY_PRESSURE_RADIUS, polarDiveDepth, polarWeaponsLocked, pressureWaveRadius } from './specials';
+import { LogicalWorld } from '../world/LogicalWorld';
 import { FallbackWaveSampler } from './fallbackWaves';
 import {
   areFactionsAllied,
@@ -63,6 +73,22 @@ interface ShipRuntime {
 interface ProjectileSlot {
   active: boolean;
   state: ProjectileState;
+  pending?: { delay: number; side: 'port' | 'starboard' | 'bow'; lead: number; gunOffset: number; spread: number };
+}
+
+export interface NavalSave {
+  version: 1;
+  seed: string;
+  state: WorldState;
+  scenario: DebugScene;
+  runtimes: [string, ShipRuntime][];
+  projectiles: ProjectileSlot[];
+  accumulator: number;
+  directorTimer: number;
+  reinforcementSerial: number;
+  finishOrder: string[];
+  raceCourse: readonly Vec3[];
+  authoredIslands: WorldState['islands'];
 }
 
 interface BuoyancyPoint { x: number; z: number }
@@ -133,12 +159,15 @@ function damageProfile(ammo: AmmoKind, distance: number): { hull: number; sails:
 export class GameSimulation {
   readonly fixedStep: number;
 
-  private readonly seed: string;
-  private readonly seedNumber: number;
+  private seed: string;
+  private seedNumber: number;
   private readonly projectileSlots: ProjectileSlot[];
   private readonly actions = new Map<InputAction, boolean>();
   private readonly edgeLatch = new Map<InputAction, boolean>();
+  /** Retain a fast tap until the next fixed step; never replay an old shot after a blocked state. */
+  private readonly pendingPressed = new Map<InputAction, number>();
   private readonly runtimes = new Map<string, ShipRuntime>();
+  private readonly tickStartPositions = new Map<string, { x: number; z: number }>();
   private readonly events: SimulationEvent[] = [];
   private accumulator = 0;
   private waveSampler: OceanSampler;
@@ -148,10 +177,15 @@ export class GameSimulation {
   private finishOrder: string[] = [];
   private directorTimer = 0;
   private reinforcementSerial = 0;
+  private logicalWorld: LogicalWorld;
+  private authoredIslands: WorldState['islands'] = [];
+  private aimSide?: 'port' | 'starboard';
+  private aimAdjustment = 0;
 
   constructor(seed: string, options: GameSimulationOptions = {}) {
     this.seed = seed;
     this.seedNumber = seedHash(seed);
+    this.logicalWorld = new LogicalWorld(this.seedNumber);
     this.fixedStep = options.fixedStep ?? 1 / 60;
     this.waveSampler = options.waveSampler ?? new FallbackWaveSampler();
     const capacity = Math.max(24, Math.floor(options.projectileCapacity ?? 160));
@@ -172,11 +206,23 @@ export class GameSimulation {
     }
     this.scenario = getScenarioPreset('calm-sailing');
     this.state = this.createWorldState(this.scenario);
+    this.resetLogicalWorld(this.scenario.islands.map((island) => ({ ...island, discovered: island.discovered ?? false })));
+    for (const ship of this.state.ships) this.runtimes.set(ship.id, this.createRuntime(ship));
   }
 
-  loadScenario(scene: DebugScene): WorldState {
+  loadScenario(scene: DebugScene, options: { preservePlayer?: boolean } = {}): WorldState {
+    const previousPlayer = options.preservePlayer ? structuredClone(this.findShip(this.state.playerId)) : undefined;
+    const progression = this.state.progression;
     this.scenario = getScenarioPreset(scene);
     this.state = this.createWorldState(this.scenario);
+    if (progression) this.state.progression = progression;
+    if (previousPlayer) {
+      const spawn = this.state.ships[0]!;
+      this.state.ships[0] = { ...previousPlayer, id: spawn.id, position: spawn.position, heading: spawn.heading, targetId: spawn.targetId, surrendered: false, finish: undefined };
+      this.state.progression!.selectedShip = previousPlayer.kind;
+    }
+    this.resetLogicalWorld(this.scenario.islands.map((island) => ({ ...island, discovered: island.discovered ?? false })));
+    this.clearActions();
     this.raceCourse = this.scenario.raceCourse ?? [];
     this.accumulator = 0;
     this.finishOrder = [];
@@ -193,15 +239,435 @@ export class GameSimulation {
     return this.state;
   }
 
+  selectPlayerShip(kind: ShipKind): void {
+    const previous = this.findShip(this.state.playerId);
+    if (!previous) return;
+    const replacement = this.createShip({ id: previous.id, kind, position: previous.position, heading: previous.heading }, true);
+    Object.assign(replacement, { damage: previous.damage, crew: previous.crew, crewPreset: previous.crewPreset, special: previous.special, throttle: previous.throttle, weapons: previous.weapons });
+    this.state.ships[this.state.ships.indexOf(previous)] = replacement;
+    this.state.progression!.selectedShip = kind;
+    this.runtimes.set(replacement.id, this.createRuntime(replacement));
+  }
+
+  setCrewPreset(preset: CrewPreset): boolean {
+    if (!Object.hasOwn(CREW_PRESETS, preset)) return false;
+    const player = this.findShip(this.state.playerId);
+    if (!player || player.surrendered) return false;
+    this.rescaleCrewReload(player, CREW_PRESETS[preset]);
+    player.crew = { ...CREW_PRESETS[preset] };
+    player.crewPreset = preset;
+    return true;
+  }
+
+  setCrewAllocation(allocation: CrewAllocation): boolean {
+    if (!allocation || typeof allocation !== 'object') return false;
+    const values = [allocation.helm, allocation.guns, allocation.repair, allocation.special];
+    if (values.some((value) => !Number.isInteger(value) || value < 1) || values.reduce((sum, value) => sum + value, 0) !== 10) return false;
+    const player = this.findShip(this.state.playerId);
+    if (!player || player.surrendered) return false;
+    this.rescaleCrewReload(player, allocation);
+    player.crew = { ...allocation };
+    player.crewPreset = undefined;
+    return true;
+  }
+
+  /** Preserve reload work when hands leave or return to the guns. */
+  private rescaleCrewReload(ship: ShipState, next: CrewAllocation): void {
+    const previousEfficiency = .55 + (ship.crew?.guns ?? 3) * .15;
+    const nextEfficiency = .55 + next.guns * .15;
+    const ratio = previousEfficiency / nextEfficiency;
+    for (const key of ['portCooldown', 'starboardCooldown', 'bowCooldown'] as const) ship.weapons[key] *= ratio;
+  }
+
+  returnToHarbor(): boolean {
+    const old = this.state.voyage;
+    if (old && ['encounter', 'route', 'reward'].includes(old.phase)) return false;
+    const kind = this.state.progression!.selectedShip;
+    this.loadScenario('crew-closeup');
+    this.selectPlayerShip(kind);
+    this.state.ships[0]!.throttle = 0;
+    this.state.voyage = { id: '', phase: 'harbor', contractId: '', buildId: 'precision', leg: 0, totalLegs: 3, routes: [], unbankedCoins: 0, earnedBounty: 0, upgrades: [], rewardChoices: [], extractionReady: false };
+    this.state.objective = 'Dawn Harbor — choose a contract, fit your ship, and make sail';
+    this.resetLogicalWorld(VOYAGE_LANDMARKS);
+    return true;
+  }
+
+  startVoyage(contractId: string, buildId: VoyageBuildId): boolean {
+    const contract = VOYAGE_CONTRACTS.find((entry) => entry.id === contractId);
+    const build = VOYAGE_BUILDS.find((entry) => entry.id === buildId);
+    if (!contract || !build || this.state.voyage && ['route', 'encounter', 'reward'].includes(this.state.voyage.phase)) return false;
+    const progression = this.state.progression!;
+    // Do not reuse an existing payout identity, even if an in-memory caller changed the counter.
+    const sequence = progression.paidVoyageIds.reduce((latest, id) => Math.max(latest, voyageSequence(this.seed, id) ?? 0), progression.totalVoyages) + 1;
+    if (!Number.isInteger(sequence) || sequence < 1 || sequence > 1e9) return false;
+    const kind = this.state.progression!.selectedShip;
+    this.loadScenario('crew-closeup');
+    this.selectPlayerShip(kind);
+    this.state.progression!.totalVoyages = sequence;
+    const id = `${this.seed}:${sequence}`;
+    this.state.voyage = {
+      id, phase: 'route', contractId, buildId, leg: 1, totalLegs: contract.legs,
+      routes: createVoyageRoutes(id, contractId, 1), unbankedCoins: 0, earnedBounty: 0,
+      upgrades: [], rewardChoices: [], extractionReady: false,
+    };
+    this.state.objective = 'Choose your first route';
+    this.state.paused = false;
+    this.setCrewPreset(build.crew);
+    this.resetLogicalWorld(VOYAGE_LANDMARKS);
+    return true;
+  }
+
+  chooseRoute(routeId: string): boolean {
+    const voyage = this.state.voyage;
+    if (!voyage || voyage.phase !== 'route') return false;
+    const route = createVoyageRoutes(voyage.id, voyage.contractId, voyage.leg).find((entry) => entry.id === routeId);
+    const player = this.findShip(this.state.playerId);
+    if (!route || !voyage.routes.some((entry) => entry.id === routeId) || !player) return false;
+    this.clearActions();
+    this.events.length = 0;
+    this.state.ships = [player];
+    player.position = { x: 0, y: 0, z: 100 };
+    player.heading = 0;
+    player.speed = 0;
+    player.throttle = 0.35;
+    player.targetId = undefined;
+    this.runtimes.clear();
+    this.runtimes.set(player.id, this.createRuntime(player));
+    for (const slot of this.projectileSlots) slot.active = false;
+    this.syncProjectileView();
+    const targets: string[] = [];
+    const hostileFaction = player.faction === 'marine' ? 'big-mom' : 'marine';
+    const isCombat = route.kind === 'battle' || route.kind === 'boss' || route.kind === 'escort';
+    const enemyCount = isCombat ? route.risk === 'dangerous' ? 2 : 1 : 0;
+    const rival = this.state.progression!.rivals['sunwatch-captain'];
+    for (let index = 0; index < enemyCount; index += 1) {
+      const id = `${voyage.id}:leg-${voyage.leg}:enemy-${index}`;
+      const boss = route.kind === 'boss' && index === 0;
+      const kind: ShipKind = boss && (rival?.escapes ?? 0) > 0 ? 'red-force' : index === 0 ? 'navy-galleon' : 'polar-tang';
+      const enemy = this.createShip({ id, kind, name: boss ? 'Captain of Sunwatch' : index === 0 ? 'Dawn Patrol' : 'Reef Interceptor', position: { x: index === 0 ? -105 : 110, y: 0, z: index === 0 ? -65 : -140 }, heading: index === 0 ? 0.2 : -0.6, faction: hostileFaction, ai: boss ? 'tactical' : index === 0 ? 'tactical' : 'reckless', combatRole: boss && (rival?.escapes ?? 0) > 0 ? 'ranged' : index === 0 ? 'broadside' : 'flanker', damage: boss ? 0 : 0.2 }, false);
+      enemy.targetId = player.id;
+      enemy.special = boss ? 0.65 : 0.25;
+      this.state.ships.push(enemy);
+      this.runtimes.set(id, this.createRuntime(enemy));
+      targets.push(id);
+    }
+    let escortId: string | undefined;
+    if (route.kind === 'escort') {
+      escortId = `${voyage.id}:merchant`;
+      const merchant = this.createShip({ id: escortId, kind: 'baratie', name: 'Dawn Relief Ship', position: { x: 70, y: 0, z: 90 }, heading: 0, faction: player.faction, ai: 'tactical', combatRole: 'escort', damage: 0.38 }, false);
+      this.state.ships.push(merchant);
+      this.runtimes.set(escortId, this.createRuntime(merchant));
+    }
+    if (route.kind === 'boss') {
+      this.state.progression!.rivals['sunwatch-captain'] ??= { encounters: 0, escapes: 0, defeated: 0 };
+      this.state.progression!.rivals['sunwatch-captain']!.encounters += 1;
+    }
+    this.state.weather = route.weather;
+    this.state.windStrength = route.weather === 'storm' ? 1.45 : 0.92;
+    this.state.windDirection = route.weather === 'storm' ? 0.7 : 0.25;
+    this.state.mode = isCombat ? 'combat' : 'explore';
+    this.state.race.active = false;
+    this.state.paused = false;
+    const objective = route.kind === 'salvage' ? 'Reach the wreck marker; hold within 65 m for 12 seconds to recover cargo' : route.kind === 'storm' ? 'Sail through the central arch to the gate beyond it' : route.kind === 'escort' ? 'Protect the relief ship for 75 seconds; stay within 260 m' : route.kind === 'boss' ? 'Defeat the Captain of Sunwatch and claim the contract' : 'Disable the patrol — target sails, cross its stern, and finish with a broadside';
+    voyage.encounter = { id: `${voyage.id}:leg-${voyage.leg}`, kind: route.kind, title: route.name, objective, targetIds: targets, waypoint: { x: 0, y: 0, z: route.kind === 'storm' ? -560 : -220 }, progress: 0, target: route.kind === 'salvage' ? 12 : route.kind === 'escort' ? 75 : route.kind === 'storm' ? 3 : targets.length, elapsed: 0, reward: route.reward, escortId, completed: false };
+    if (route.kind === 'storm') {
+      const arch = VOYAGE_LANDMARKS.find((landmark) => landmark.id === 'sky-arch')!;
+      voyage.encounter.gates = ['approach', 'arch', 'exit'].map((id, index) => ({
+        id, position: { x: arch.position.x, y: 0, z: arch.position.z + (1 - index) * 140 }, halfWidth: arch.radius * .5,
+      }));
+      voyage.encounter.nextGate = 0;
+      voyage.encounter.previousPosition = cloneVec(player.position);
+      voyage.encounter.waypoint = cloneVec(voyage.encounter.gates[0]!.position);
+    }
+    voyage.phase = 'encounter';
+    voyage.routes = [];
+    voyage.extractionReady = false;
+    this.state.objective = objective;
+    this.resetLogicalWorld(VOYAGE_LANDMARKS);
+    return true;
+  }
+
+  chooseReward(upgradeId: string): boolean {
+    const voyage = this.state.voyage;
+    if (!voyage || voyage.phase !== 'reward' || !voyage.rewardChoices.includes(upgradeId) || !VOYAGE_UPGRADES.some((upgrade) => upgrade.id === upgradeId) || upgradeId !== 'supplies' && voyage.upgrades.includes(upgradeId)) return false;
+    if (upgradeId === 'supplies') {
+      const player = this.findShip(this.state.playerId)!;
+      for (const key of ['hull', 'sails', 'weapons', 'crew'] as const) player.damage[key] = Math.max(0, player.damage[key] - 0.24);
+      for (const side of ['port', 'starboard', 'bow', 'stern'] as const) player.damage.sections[side] = Math.max(0, player.damage.sections[side] - 0.24);
+    } else voyage.upgrades.push(upgradeId);
+    voyage.rewardChoices = [];
+    if (voyage.leg >= voyage.totalLegs) return this.settleVoyage('completed');
+    voyage.leg += 1;
+    voyage.phase = 'route';
+    voyage.routes = createVoyageRoutes(voyage.id, voyage.contractId, voyage.leg);
+    voyage.extractionReady = true;
+    this.state.objective = 'Choose a route, or extract and bank your spoils';
+    return true;
+  }
+
+  extractVoyage(): boolean {
+    const voyage = this.state.voyage;
+    if (!voyage || !voyage.extractionReady || !['route', 'reward'].includes(voyage.phase)) return false;
+    return this.settleVoyage('extracted');
+  }
+
+  buyRefit(refitId: string): boolean {
+    if (this.state.voyage?.phase !== 'harbor') return false;
+    const refit = HARBOR_REFITS.find((entry) => entry.id === refitId);
+    const progression = this.state.progression!;
+    if (!refit || progression.bankedCoins < refit.cost || (progression.refits[refitId] ?? 0) >= refit.maxLevel) return false;
+    progression.bankedCoins -= refit.cost;
+    progression.refits[refitId] = (progression.refits[refitId] ?? 0) + 1;
+    return true;
+  }
+
+  resolveDisabledShip(shipId: string, choice: 'salvage' | 'spare' | 'sink'): boolean {
+    if (!['salvage', 'spare', 'sink'].includes(choice)) return false;
+    const ship = this.findShip(shipId);
+    const player = this.findShip(this.state.playerId);
+    if (!ship || !player || ship.isPlayer || ship.finish?.state !== 'available' || ship.finish.creditedTo !== player.id || distanceSquared(ship.position, player.position) > 240 ** 2) return false;
+    ship.finish.state = choice === 'sink' ? 'sinking' : choice === 'salvage' ? 'salvaged' : 'spared';
+    ship.finish.elapsed = 0;
+    const coins = choice === 'salvage' ? 90 : choice === 'sink' ? 30 : 45;
+    if (this.state.voyage && ['encounter', 'reward'].includes(this.state.voyage.phase)) this.state.voyage.unbankedCoins += coins;
+    else this.state.treasure += Math.floor(coins / 30);
+    if (choice === 'spare') player.special = clamp(player.special + 0.2, 0, 1);
+    return true;
+  }
+
+  /** Save the simulation and its payout ledger together in one storage value. */
+  exportSave(): NavalSave {
+    return structuredClone({ version: 1, seed: this.seed, state: this.state, scenario: this.scenario.scene, runtimes: [...this.runtimes], projectiles: this.projectileSlots, accumulator: this.accumulator, directorTimer: this.directorTimer, reinforcementSerial: this.reinforcementSerial, finishOrder: this.finishOrder, raceCourse: this.raceCourse, authoredIslands: this.authoredIslands });
+  }
+
+  restoreSave(value: unknown): boolean {
+    // Validate and hydrate without touching this instance. Failure is a no-op even if hydration throws.
+    let hydrated: { save: NavalSave; seedNumber: number; scenario: ScenarioPreset; world: LogicalWorld; runtimes: Map<string, ShipRuntime> };
+    try {
+      if (!isNavalSave(value)) return false;
+      const save = structuredClone(value);
+      // Build 11 Moby saves already applied their instantaneous damage. Give an
+      // in-flight legacy phase a visual front without applying those hits again.
+      for (const ship of save.state.ships) {
+        const phase = ship.specialPhase;
+        if (ship.kind === 'moby-dick' && phase && phase.phase !== 'windup' && !phase.pressureWave) {
+          const fraction = clamp(phase.elapsed / phase.duration, 0, 1);
+          phase.name = 'tremor-broadside';
+          phase.duration = phase.phase === 'active' ? MOBY_PRESSURE_DURATION : 1.25;
+          phase.elapsed = fraction * phase.duration;
+          phase.pressureWave = { origin: cloneVec(ship.position), radius: phase.phase === 'active' ? pressureWaveRadius(phase.elapsed) : MOBY_PRESSURE_RADIUS, hitIds: save.state.ships.filter((target) => target.id !== ship.id).map((target) => target.id) };
+        }
+      }
+      const seedNumber = seedHash(save.seed);
+      if (save.state.seedNumber !== seedNumber) return false;
+      const scenario = getScenarioPreset(save.scenario);
+      const world = new LogicalWorld(seedNumber);
+      world.setAuthored(save.authoredIslands);
+      const player = save.state.ships.find((ship) => ship.id === save.state.playerId)!;
+      const logical = world.update(player.position, save.state.progression!.discoveredIds);
+      if (logical) { save.state.islands = logical.islands; save.state.worldFeatures = logical.features; }
+      save.state.projectiles = save.projectiles.filter((slot) => slot.active && !slot.pending).map((slot) => slot.state);
+      hydrated = { save, seedNumber, scenario, world, runtimes: new Map(save.runtimes) };
+    } catch { return false; }
+    const { save } = hydrated;
+    this.seed = save.seed;
+    this.seedNumber = hydrated.seedNumber;
+    this.scenario = hydrated.scenario;
+    this.state = save.state;
+    this.logicalWorld = hydrated.world;
+    this.authoredIslands = save.authoredIslands;
+    this.runtimes.clear();
+    for (const [id, runtime] of hydrated.runtimes) this.runtimes.set(id, runtime);
+    this.projectileSlots.splice(0, this.projectileSlots.length, ...save.projectiles);
+    this.accumulator = save.accumulator;
+    this.directorTimer = save.directorTimer;
+    this.reinforcementSerial = save.reinforcementSerial;
+    this.finishOrder = save.finishOrder;
+    this.raceCourse = save.raceCourse;
+    this.events.length = 0;
+    this.clearActions();
+    return true;
+  }
+
+  private settleVoyage(outcome: 'completed' | 'extracted' | 'lost'): boolean {
+    const voyage = this.state.voyage;
+    const progression = this.state.progression!;
+    if (!voyage || !voyage.id || progression.paidVoyageIds.includes(voyage.id) || voyage.phase === 'complete' || voyage.phase === 'failed') return false;
+    const contract = VOYAGE_CONTRACTS.find((entry) => entry.id === voyage.contractId)!;
+    const coins = outcome === 'lost' ? 0 : voyage.unbankedCoins + (outcome === 'completed' ? contract.reward : 0);
+    progression.paidVoyageIds.push(voyage.id);
+    progression.bankedCoins += coins;
+    if (outcome === 'completed') progression.completedVoyages += 1;
+    if (voyage.encounter?.kind === 'boss') {
+      const rival = progression.rivals['sunwatch-captain'];
+      if (rival) { if (outcome === 'completed') rival.defeated += 1; else rival.escapes += 1; }
+    }
+    voyage.phase = outcome === 'lost' ? 'failed' : 'complete';
+    voyage.result = { coins, bounty: voyage.earnedBounty, outcome };
+    voyage.unbankedCoins = 0;
+    voyage.extractionReady = false;
+    voyage.routes = [];
+    voyage.rewardChoices = [];
+    this.state.objective = outcome === 'lost' ? 'Voyage lost — your banked treasure is safe at Dawn Harbor' : `Voyage ${outcome} — ${coins} coins banked at Dawn Harbor`;
+    this.clearActions();
+    return true;
+  }
+
+  /** Leave the navigable aftermath only when the captain explicitly collects the reward. */
+  collectEncounterReward(): boolean {
+    const voyage = this.state.voyage;
+    const encounter = voyage?.encounter;
+    const player = this.findShip(this.state.playerId);
+    if (!voyage || voyage.phase !== 'encounter' || !encounter?.completed || !player) return false;
+    if (player.surrendered || player.damage.hull >= .98) { this.settleVoyage('lost'); return false; }
+    voyage.unbankedCoins += encounter.reward;
+    voyage.phase = 'reward';
+    voyage.extractionReady = true;
+    const available = VOYAGE_UPGRADES.filter((upgrade) => !voyage.upgrades.includes(upgrade.id));
+    const offset = seedHash(`${voyage.id}:${voyage.leg}`) % Math.max(1, available.length);
+    voyage.rewardChoices = Array.from({ length: Math.min(3, available.length) }, (_, index) => available[(offset + index) % available.length]!.id);
+    if (!voyage.rewardChoices.includes('supplies')) voyage.rewardChoices[voyage.rewardChoices.length - 1] = 'supplies';
+    this.state.objective = 'Spoils collected — choose a refit or extract';
+    this.clearActions();
+    return true;
+  }
+
+  private updateVoyage(dt: number): void {
+    const voyage = this.state.voyage;
+    const encounter = voyage?.encounter;
+    if (!voyage || voyage.phase !== 'encounter' || !encounter) return;
+    const player = this.findShip(this.state.playerId)!;
+    if (player.surrendered || player.damage.hull >= .98) { this.settleVoyage('lost'); return; }
+    encounter.elapsed += dt;
+    if (encounter.completed) return;
+    if (encounter.kind === 'battle' || encounter.kind === 'boss') {
+      encounter.progress = encounter.targetIds.filter((id) => this.findShip(id)?.surrendered).length;
+    } else if (encounter.kind === 'salvage') {
+      if (distanceSquared(player.position, encounter.waypoint) <= 65 ** 2) encounter.progress += dt;
+    } else if (encounter.kind === 'storm') {
+      const previous = encounter.previousPosition!;
+      const gates = encounter.gates!;
+      while ((encounter.nextGate ?? 0) < gates.length) {
+        const gate = gates[encounter.nextGate ?? 0]!;
+        if (previous.z <= gate.position.z || player.position.z > gate.position.z) break;
+        const t = (previous.z - gate.position.z) / (previous.z - player.position.z);
+        const crossingX = previous.x + (player.position.x - previous.x) * t;
+        if (Math.abs(crossingX - gate.position.x) + getShipSpec(player.kind).beam * .5 > gate.halfWidth) break;
+        encounter.nextGate = (encounter.nextGate ?? 0) + 1;
+      }
+      encounter.previousPosition = cloneVec(player.position);
+      encounter.progress = encounter.nextGate ?? 0;
+      const next = gates[Math.min(encounter.progress, gates.length - 1)]!;
+      encounter.waypoint = cloneVec(next.position);
+      this.state.objective = encounter.progress < gates.length ? `Storm gate ${encounter.progress + 1}/${gates.length} — cross ${next.id === 'arch' ? 'the central arch' : next.id} toward north` : 'Storm passage cleared';
+    } else if (encounter.kind === 'escort') {
+      const escort = this.findShip(encounter.escortId!);
+      if (!escort || escort.surrendered) { this.settleVoyage('lost'); return; }
+      if (distanceSquared(player.position, escort.position) <= 260 ** 2) encounter.progress += dt;
+    }
+    if (encounter.progress + 1e-6 < encounter.target) return;
+    encounter.progress = encounter.target;
+    encounter.completed = true;
+    encounter.resolvedAt = encounter.elapsed;
+    // Surviving escort attackers disengage. The captain may navigate, finish targets and watch them sink.
+    for (const ship of this.state.ships) {
+      if (ship.isPlayer || ship.surrendered) continue;
+      ship.targetId = undefined;
+      ship.specialPhase = undefined;
+      const runtime = this.getRuntime(ship);
+      runtime.desiredThrottle = .45;
+      runtime.desiredRudder = .22;
+    }
+    for (const slot of this.projectileSlots) if (slot.pending && slot.state.ownerId !== player.id) { slot.active = false; slot.pending = undefined; }
+    this.state.objective = encounter.kind === 'battle' || encounter.kind === 'boss' ? 'Patrol disabled — approach for salvage, mercy or scuttling; collect spoils when ready' : 'Objective secured — collect spoils when ready';
+  }
+
+  private shipModifiers(ship: ShipState): { speed: number; turning: number; reload: number; damage: number; repair: number; special: number; incoming: number } {
+    const neutral = { speed: 1, turning: 1, reload: 1, damage: 1, repair: 1, special: 1, incoming: 1 };
+    if (!ship.isPlayer || !this.state.voyage) return neutral;
+    const build = VOYAGE_BUILDS.find((entry) => entry.id === this.state.voyage!.buildId)!;
+    const result = { ...neutral, speed: build.speed, turning: build.turning, reload: build.reload, damage: build.damage, repair: build.repair, special: build.special, incoming: build.id === 'guardian' ? 0.82 : 1 };
+    for (const upgrade of this.state.voyage.upgrades) {
+      if (upgrade === 'powder') { result.reload *= 0.8; result.repair *= 0.85; }
+      if (upgrade === 'hull') { result.incoming *= 0.8; result.speed *= 0.92; }
+      if (upgrade === 'sails') { result.speed *= 1.15; result.special *= 1.15; result.damage *= 0.92; }
+      if (upgrade === 'chain' && ship.weapons.ammo !== 'chain') result.reload *= 1.08;
+      if (upgrade === 'medic') { result.repair *= 1.35; result.reload *= 1.1; }
+    }
+    const refits = this.state.progression!.refits;
+    if (refits.rangefinder) { result.damage *= 1.08; result.reload *= 1.04; }
+    if (refits['storm-rig']) { result.speed *= 1.08; result.repair *= 0.94; }
+    if (refits['repair-locker']) { result.repair *= 1.15; result.speed *= 0.96; }
+    return result;
+  }
+
+  private resetLogicalWorld(islands: readonly WorldState['islands'][number][]): void {
+    this.authoredIslands = structuredClone([...islands]);
+    this.logicalWorld.setAuthored(this.authoredIslands);
+    this.syncLogicalWorld();
+  }
+
+  private syncLogicalWorld(): void {
+    const player = this.findShip(this.state.playerId);
+    if (!player) return;
+    const update = this.logicalWorld.update(player.position, this.state.progression?.discoveredIds ?? []);
+    if (update) { this.state.islands = update.islands; this.state.worldFeatures = update.features; }
+  }
+
+  private updateDamageAndSpecial(ship: ShipState, dt: number): void {
+    this.checkDisabled(ship);
+    const finish = ship.finish;
+    if (finish) {
+      finish.elapsed += dt;
+      if (finish.state === 'salvaged' && finish.elapsed > 4) { finish.state = 'sinking'; finish.elapsed = 0; }
+      if (finish.state === 'sinking') {
+        ship.damageStage = 'sinking';
+        if (finish.elapsed >= 12) { finish.state = 'sunk'; ship.damageStage = 'sunk'; }
+      } else if (finish.state === 'sunk') { ship.position.y = -40; ship.damageStage = 'sunk'; }
+      else ship.damageStage = 'disabled';
+    } else ship.damageStage = ship.damage.hull >= 0.66 ? 'critical' : ship.damage.hull >= 0.28 ? 'scarred' : 'intact';
+    const phase = ship.specialPhase;
+    if (!phase) return;
+    if (ship.surrendered) { ship.specialPhase = undefined; return; }
+    phase.elapsed += dt;
+    if (phase.elapsed < phase.duration) return;
+    if (phase.phase === 'windup') {
+      if (ship.surrendered) { ship.specialPhase = undefined; return; }
+      this.fireSpecial(ship);
+      phase.phase = 'active'; phase.elapsed = 0; phase.duration = ship.kind === 'polar-tang' ? 3.2 : ship.kind === 'moby-dick' ? MOBY_PRESSURE_DURATION : 1.2;
+    } else if (phase.phase === 'active') { phase.phase = 'recovery'; phase.elapsed = 0; phase.duration = 1.25; }
+    else if (ship.kind === 'polar-tang' && !this.polarMuzzlesClear(ship)) {
+      // Timed recovery is a minimum. Keep the phase/HUD truthful while the
+      // physical hull finishes rising; the clamped timer stays save-valid.
+      phase.elapsed = phase.duration;
+    }
+    else ship.specialPhase = undefined;
+  }
+
   setWaveSampler(sampler: OceanSampler | undefined): void {
     this.waveSampler = sampler ?? new FallbackWaveSampler();
   }
 
   setPaused(paused: boolean): void {
     this.state.paused = paused;
+    this.accumulator = 0;
+    this.clearActions();
+  }
+
+  clearActions(): void {
+    this.pendingPressed.clear();
+    for (const action of INPUT_ACTIONS) { this.actions.set(action, false); this.edgeLatch.set(action, false); }
+    this.aimSide = undefined;
+    this.aimAdjustment = 0;
+  }
+
+  setAim(side?: 'port' | 'starboard', adjustment = 0): void {
+    this.aimSide = side;
+    this.aimAdjustment = clamp(Number.isFinite(adjustment) ? adjustment : 0, -0.28, 0.28);
   }
 
   setAction(action: InputAction, pressed = true): void {
+    if (pressed && !this.isDown(action)) this.pendingPressed.set(action, this.state.elapsed);
     this.actions.set(action, pressed);
     if (!pressed) this.edgeLatch.set(action, false);
   }
@@ -213,13 +679,17 @@ export class GameSimulation {
         if (value !== undefined) this.setAction(action, value);
       }
     }
-    if (this.justPressed('pause')) this.state.paused = !this.state.paused;
-    if (this.state.paused) return 0;
+    if (this.justPressed('pause')) {
+      this.setPaused(!this.state.paused);
+      this.actions.set('pause', true); this.edgeLatch.set('pause', true);
+    }
+    if (this.state.paused || this.state.voyage && this.state.voyage.phase !== 'encounter') return 0;
     this.accumulator += clamp(deltaSeconds, 0, 0.25) * this.state.timeScale;
     let iterations = 0;
     while (this.accumulator + 1e-9 >= this.fixedStep && iterations < 15) {
       this.tick(this.fixedStep);
-      this.accumulator -= this.fixedStep;
+      // The epsilon can admit a frame just below one tick; do not save its tiny underflow.
+      this.accumulator = Math.max(0, this.accumulator - this.fixedStep);
       iterations += 1;
     }
     if (iterations === 15) this.accumulator = Math.min(this.accumulator, this.fixedStep);
@@ -290,6 +760,7 @@ export class GameSimulation {
         elapsed: 0,
         wrongWay: false,
       },
+      progression: { version: 1, bankedCoins: 0, totalVoyages: 0, completedVoyages: 0, selectedShip: ships[0]!.kind, refits: {}, discoveredIds: [], paidVoyageIds: [], rivals: {} },
       combat: {
         combo: 0,
         comboTimer: 0,
@@ -339,6 +810,9 @@ export class GameSimulation {
       faction: source.faction ?? defaultFactionForShip(source.kind),
       combatRole: source.combatRole ?? defaultCombatRoleForShip(source.kind),
       targetId: undefined,
+      crew: { ...CREW_PRESETS.balanced },
+      crewPreset: 'balanced',
+      damageStage: source.damage && source.damage > 0.66 ? 'critical' : source.damage && source.damage > 0.28 ? 'scarred' : 'intact',
     };
   }
 
@@ -374,10 +848,20 @@ export class GameSimulation {
   }
 
   private tick(dt: number): void {
+    if (this.state.voyage && this.state.voyage.phase !== 'encounter') return;
+    this.syncLogicalWorld();
     this.state.elapsed += dt;
     this.updateCombatClock(dt);
     this.updateEncounterDirector(dt);
     this.updateRaceClock(dt);
+    // Reuse bounded records and capture before integration or collision
+    // separation. Post-collision velocity cannot reconstruct these positions.
+    for (const id of this.tickStartPositions.keys()) if (!this.state.ships.some((ship) => ship.id === id)) this.tickStartPositions.delete(id);
+    for (const ship of this.state.ships) {
+      let point = this.tickStartPositions.get(ship.id);
+      if (!point) { point = { x: 0, z: 0 }; this.tickStartPositions.set(ship.id, point); }
+      point.x = ship.position.x; point.z = ship.position.z;
+    }
     const player = this.findShip(this.state.playerId);
     if (player) {
       this.updatePlayerTarget(player);
@@ -392,16 +876,19 @@ export class GameSimulation {
       runtime.weakPointCooldown = Math.max(0, runtime.weakPointCooldown - dt);
       runtime.hazardCooldown = Math.max(0, runtime.hazardCooldown - dt);
       if (runtime.aggroTimer <= 0) runtime.provokedBy = undefined;
-      if (!ship.isPlayer && !ship.surrendered) this.updateAiIntent(ship, runtime, dt);
+      if (!ship.isPlayer && !ship.surrendered && !this.state.voyage?.encounter?.completed) this.updateAiIntent(ship, runtime, dt);
       this.updateShip(ship, runtime, dt);
       this.updateEnvironmentalHazards(ship, runtime, dt);
+      this.updateDamageAndSpecial(ship, dt);
     }
     this.resolveShipCollisions();
+    for (const ship of this.state.ships) this.updatePressureWave(ship);
     this.updateProjectiles(dt);
     this.updateRaceProgress();
     this.updateDiscoveries();
     this.syncCombatTelemetry();
     this.syncProjectileView();
+    this.updateVoyage(dt);
     if (this.events.length > 256) this.events.splice(0, this.events.length - 256);
   }
 
@@ -413,7 +900,7 @@ export class GameSimulation {
   }
 
   private updateEncounterDirector(dt: number): void {
-    if (this.state.mode === 'race') return;
+    if (this.state.mode === 'race' || this.state.voyage) return;
     this.directorTimer -= dt;
     if (this.directorTimer > 0) return;
     this.directorTimer = 2;
@@ -527,16 +1014,17 @@ export class GameSimulation {
       const throttleDelta = (this.isDown('throttle-up') ? 1 : 0) - (this.isDown('throttle-down') ? 1 : 0);
       ship.throttle = clamp(ship.throttle + throttleDelta * dt * 0.68, -0.25, 1);
     }
-    const rudderTarget = (this.isDown('steer-right') ? 1 : 0) - (this.isDown('steer-left') ? 1 : 0);
+    // With bow = -Z, Three.js positive Y rotation turns toward port. Player right is negative yaw.
+    const rudderTarget = (this.isDown('steer-left') ? 1 : 0) - (this.isDown('steer-right') ? 1 : 0);
     ship.rudder = damp(ship.rudder, rudderTarget, rudderTarget === 0 ? 5.5 : 9, dt);
     ship.brace = damp(ship.brace, this.isDown('brace') ? 1 : 0, 6, dt);
-    ship.repairing = this.isDown('repair') && ship.brace < 0.5;
+    ship.repairing = (this.isDown('repair') || (ship.crew?.repair ?? 0) >= 4) && ship.brace < 0.5;
 
     if (this.justPressed('cycle-ammo')) {
       const index = AMMO_ORDER.indexOf(ship.weapons.ammo);
       ship.weapons.ammo = AMMO_ORDER[(index + 1) % AMMO_ORDER.length];
     }
-    if (!ship.repairing && ship.brace < 0.78) {
+    if (!this.isDown('repair') && ship.brace < 0.78) {
       if (this.justPressed('fire-port')) this.fire(ship, 'port');
       if (this.justPressed('fire-starboard')) this.fire(ship, 'starboard');
       if (this.justPressed('fire-bow')) this.fire(ship, 'bow');
@@ -795,7 +1283,7 @@ export class GameSimulation {
     ship.weapons.portCooldown = Math.max(0, ship.weapons.portCooldown - dt);
     ship.weapons.starboardCooldown = Math.max(0, ship.weapons.starboardCooldown - dt);
     ship.weapons.bowCooldown = Math.max(0, ship.weapons.bowCooldown - dt);
-    ship.special = clamp(ship.special + dt * (0.018 + Math.abs(ship.rudder) * 0.006), 0, 1);
+    ship.special = clamp(ship.special + dt * (0.018 + Math.abs(ship.rudder) * 0.006) * this.shipModifiers(ship).special * (0.4 + (ship.crew?.special ?? 2) * 0.3), 0, 1);
 
     if (!ship.isPlayer) {
       ship.throttle = damp(ship.throttle, runtime.desiredThrottle, 2.3, dt);
@@ -815,9 +1303,11 @@ export class GameSimulation {
     const sailEfficiency = clamp(1 - ship.damage.sails * 0.78, 0.16, 1);
     const hullDrag = 1 + ship.damage.hull * 0.65;
     const braceDrag = 1 - ship.brace * 0.28;
-    const repairDrag = ship.repairing ? 0.72 : 1;
+    const repairDrag = ship.repairing ? 0.86 : 1;
+    const modifiers = this.shipModifiers(ship);
+    const helmEfficiency = 0.79 + (ship.crew?.helm ?? 3) * 0.07;
     const desiredSpeed = ship.throttle >= 0
-      ? spec.maxSpeed * ship.throttle * windDrive * sailEfficiency * braceDrag * repairDrag
+      ? spec.maxSpeed * ship.throttle * windDrive * sailEfficiency * braceDrag * repairDrag * modifiers.speed * helmEfficiency
       : spec.reverseSpeed * ship.throttle;
     const currentX = -Math.sin(this.state.currentDirection) * this.state.currentStrength * 2.2;
     const currentZ = -Math.cos(this.state.currentDirection) * this.state.currentStrength * 2.2;
@@ -838,7 +1328,7 @@ export class GameSimulation {
     const steeringAtSpeed = 0.3 + Math.pow(speedRatio, 0.64) * 0.82;
     const damageSteering = clamp(1 - ship.damage.sails * 0.42 - ship.damage.sections.stern * 0.35, 0.28, 1);
     const turnBoost = hardTurning ? 1.85 * spec.hardTurnGrip : 1;
-    const yawTarget = ship.rudder * spec.turnRate * steeringAtSpeed * damageSteering * turnBoost * (forwardSpeed < 0 ? -0.55 : 1);
+    const yawTarget = ship.rudder * spec.turnRate * steeringAtSpeed * damageSteering * turnBoost * modifiers.turning * helmEfficiency * (forwardSpeed < 0 ? -0.55 : 1);
     runtime.yawVelocity = damp(runtime.yawVelocity, yawTarget, hardTurning ? 7 : 4, dt);
     ship.heading = (ship.heading + runtime.yawVelocity * dt + TAU) % TAU;
     ship.position.x += runtime.velocityX * dt;
@@ -870,7 +1360,9 @@ export class GameSimulation {
       if (point.x < -spec.beam * 0.12) { portHeight += height; portCount += 1; }
       if (point.x > spec.beam * 0.12) { starboardHeight += height; starboardCount += 1; }
     }
-    const waterY = totalHeight / points.length;
+    const dive = polarDiveDepth(ship);
+    const sink = ship.finish?.state === 'sinking' ? Math.min(35, ship.finish.elapsed * 2.9) : ship.finish?.state === 'sunk' ? 40 : 0;
+    const waterY = totalHeight / points.length - dive - sink;
     const buoyancyFrequency = clamp(4.8 - Math.log10(spec.mass) * 0.55, 2.4, 4.2);
     const verticalAcceleration = (waterY - ship.position.y) * buoyancyFrequency * buoyancyFrequency
       - ship.verticalSpeed * buoyancyFrequency * 1.7;
@@ -887,7 +1379,9 @@ export class GameSimulation {
     const heel = -ship.rudder * Math.pow(clamp(Math.abs(ship.speed) / spec.maxSpeed, 0, 1), 1.4)
       * (hardTurning ? 0.27 : 0.14) * (0.75 + spec.mass / 5_000);
     ship.pitch = damp(ship.pitch, pitchTarget, 3.5, dt);
-    ship.roll = damp(ship.roll, waveRoll + heel, hardTurning ? 5.5 : 3.2, dt);
+    const floodList = (ship.damage.sections.port - ship.damage.sections.starboard) * ship.damage.hull * 0.16;
+    const sinkingList = ship.finish?.state === 'sinking' ? Math.min(0.9, ship.finish.elapsed * 0.075) : 0;
+    ship.roll = damp(ship.roll, waveRoll + heel + floodList + sinkingList, hardTurning ? 5.5 : 3.2, dt);
 
     const aboveWater = ship.position.y - waterY > 0.48 + spec.draft * 0.035;
     runtime.airtime = aboveWater ? runtime.airtime + dt : 0;
@@ -899,27 +1393,32 @@ export class GameSimulation {
 
   private updateEnvironmentalHazards(ship: ShipState, runtime: ShipRuntime, dt: number): void {
     if (ship.surrendered) return;
-    for (const island of this.state.islands) {
-      if (island.landmark !== 'needles') continue;
-      const dx = ship.position.x - island.position.x;
-      const dz = ship.position.z - island.position.z;
+    const hullRadius = Math.max(4, getShipSpec(ship.kind).beam * 0.43);
+    for (const feature of this.state.worldFeatures ?? []) {
+      const dx = ship.position.x - feature.x;
+      const dz = ship.position.z - feature.z;
       const distance = Math.hypot(dx, dz);
-      const hazardRadius = island.radius + 24;
-      if (distance >= hazardRadius || distance < 0.001) continue;
-      const pressure = 1 - distance / hazardRadius;
-      ship.damage.hull = clamp(ship.damage.hull + dt * (0.012 + pressure * 0.026), 0, 1);
-      ship.damage.sails = clamp(ship.damage.sails + dt * pressure * 0.009, 0, 1);
-      runtime.velocityX += dx / distance * pressure * dt * 8;
-      runtime.velocityZ += dz / distance * pressure * dt * 8;
+      const contactRadius = feature.radius + hullRadius;
+      if (distance >= contactRadius) continue;
+      const normalX = distance > 0.001 ? dx / distance : 1;
+      const normalZ = distance > 0.001 ? dz / distance : 0;
+      const approach = Math.max(0, -(runtime.velocityX * normalX + runtime.velocityZ * normalZ));
+      if (feature.kind !== 'reef') {
+        ship.position.x = feature.x + normalX * (contactRadius + 0.05);
+        ship.position.z = feature.z + normalZ * (contactRadius + 0.05);
+        runtime.velocityX += normalX * approach * 1.22;
+        runtime.velocityZ += normalZ * approach * 1.22;
+      } else {
+        runtime.velocityX *= Math.exp(-dt * 1.8);
+        runtime.velocityZ *= Math.exp(-dt * 1.8);
+        ship.damage.hull = clamp(ship.damage.hull + dt * 0.008 * this.shipModifiers(ship).incoming, 0, 1);
+      }
       if (runtime.hazardCooldown <= 0) {
         runtime.hazardCooldown = 1.35;
-        this.events.push({
-          type: 'ram',
-          attackerId: `reef:${island.id}`,
-          targetId: ship.id,
-          position: cloneVec(ship.position),
-          force: 4 + pressure * 10,
-        });
+        const severity = feature.kind === 'reef' ? 0.012 : 0.005 + Math.min(0.07, approach * 0.003);
+        ship.damage.hull = clamp(ship.damage.hull + severity * this.shipModifiers(ship).incoming, 0, 1);
+        ship.damage.sections.bow = clamp(ship.damage.sections.bow + severity * 1.4, 0, 1);
+        this.events.push({ type: 'ram', attackerId: `${feature.kind}:${feature.id}`, targetId: ship.id, position: cloneVec(ship.position), force: 3 + approach });
       }
       this.checkDisabled(ship);
     }
@@ -931,7 +1430,7 @@ export class GameSimulation {
       return;
     }
     runtime.repairTimer += dt;
-    const crewEfficiency = clamp(1 - ship.damage.crew * 0.72, 0.2, 1) * (spec.crewStrength / 160);
+    const crewEfficiency = clamp(1 - ship.damage.crew * 0.72, 0.2, 1) * (spec.crewStrength / 160) * ((ship.crew?.repair ?? 2) / 2) * this.shipModifiers(ship).repair;
     ship.damage.hull = clamp(ship.damage.hull - dt * 0.012 * crewEfficiency, 0, 1);
     ship.damage.sails = clamp(ship.damage.sails - dt * 0.018 * crewEfficiency, 0, 1);
     ship.damage.weapons = clamp(ship.damage.weapons - dt * 0.013 * crewEfficiency, 0, 1);
@@ -944,45 +1443,44 @@ export class GameSimulation {
     }
   }
 
+  private polarMuzzlesClear(ship: ShipState): boolean {
+    return (['port', 'starboard', 'bow'] as const).every((side) => this.polarBatteryMuzzlesClear(ship, side));
+  }
+
+  private polarBatteryMuzzlesClear(ship: ShipState, side: 'port' | 'starboard' | 'bow'): boolean {
+    const count = cannonVolleyCount(ship, side);
+    for (let index = 0; index < count; index++) {
+      const muzzle = sampleCannonTrajectory(ship, side, 0, cannonVolleyOffset(index, count)).position;
+      const water = this.waveSampler.sample(muzzle.x, muzzle.z, this.state.elapsed).height;
+      if (!Number.isFinite(water) || !Number.isFinite(muzzle.y) || muzzle.y <= water + .1) return false;
+    }
+    return true;
+  }
+
   private fire(ship: ShipState, side: ShipSide): void {
+    if (!ship.isPlayer && this.state.voyage?.encounter?.completed) return;
+    if (polarWeaponsLocked(ship)) return;
+    if (ship.kind === 'polar-tang' && side !== 'stern' && !this.polarBatteryMuzzlesClear(ship, side)) return;
     const spec = getShipSpec(ship.kind);
     const cooldownKey = side === 'port' ? 'portCooldown' : side === 'starboard' ? 'starboardCooldown' : 'bowCooldown';
     if (side === 'stern' || ship.weapons[cooldownKey] > 0 || ship.surrendered || ship.damage.weapons >= 0.92) return;
-    const cannonCount = side === 'bow' ? spec.bowCannons : spec.broadsideCannons;
-    if (cannonCount <= 0) return;
-    const volleyCount = Math.min(side === 'bow' ? 3 : 6, Math.max(1, Math.ceil(cannonCount * (1 - ship.damage.weapons * 0.72))));
-    const baseCooldown = spec.reloadTime * (1 + ship.damage.weapons * 0.9 + ship.damage.crew * 0.42);
+    const volleyCount = cannonVolleyCount(ship, side);
+    if (volleyCount <= 0) return;
+    const gunsEfficiency = 0.55 + (ship.crew?.guns ?? 3) * 0.15;
+    const baseCooldown = spec.reloadTime * (1 + ship.damage.weapons * 0.9 + ship.damage.crew * 0.42) * this.shipModifiers(ship).reload / gunsEfficiency;
     ship.weapons[cooldownKey] = baseCooldown;
-    const sideSign = side === 'port' ? -1 : 1;
-    const forward = { x: forwardX(ship.heading), z: forwardZ(ship.heading) };
-    const starboard = { x: starboardX(ship.heading), z: starboardZ(ship.heading) };
     const ammo = ship.weapons.ammo;
-    const velocityMultiplier = ammo === 'heavy' ? 0.8 : ammo === 'chain' ? 0.86 : 1;
-    const launchSpeed = spec.projectileSpeed * velocityMultiplier;
+    const lead = ship.isPlayer && side === this.aimSide ? this.aimAdjustment : 0;
+    const spread = ship.isPlayer && this.state.voyage?.buildId === 'precision' ? 0.55 : 1;
     let spawned = 0;
     for (let index = 0; index < volleyCount; index += 1) {
-      const normalized = volleyCount === 1 ? 0 : index / (volleyCount - 1) - 0.5;
-      const directionX = side === 'bow'
-        ? forward.x + starboard.x * normalized * 0.05
-        : starboard.x * sideSign + forward.x * normalized * 0.11;
-      const directionZ = side === 'bow'
-        ? forward.z + starboard.z * normalized * 0.05
-        : starboard.z * sideSign + forward.z * normalized * 0.11;
-      const directionLength = Math.hypot(directionX, directionZ);
-      const along = normalized * spec.length * 0.44;
-      const lateral = side === 'bow' ? 0 : sideSign * spec.beam * 0.48;
       const slot = this.acquireProjectile();
       if (!slot) break;
       slot.active = true;
       slot.state.ownerId = ship.id;
       slot.state.ammo = ammo;
-      slot.state.position.x = ship.position.x + forward.x * (side === 'bow' ? spec.length * 0.48 : along) + starboard.x * lateral;
-      slot.state.position.y = ship.position.y + spec.draft * 0.46 + 1.2;
-      slot.state.position.z = ship.position.z + forward.z * (side === 'bow' ? spec.length * 0.48 : along) + starboard.z * lateral;
-      slot.state.velocity.x = directionX / directionLength * launchSpeed + forward.x * Math.max(0, ship.speed) * 0.65;
-      slot.state.velocity.y = ammo === 'heavy' ? 6.8 : side === 'bow' ? 10.5 : 8.8;
-      slot.state.velocity.z = directionZ / directionLength * launchSpeed + forward.z * Math.max(0, ship.speed) * 0.65;
       slot.state.life = 5.5;
+      slot.pending = { delay: index * 0.075, side, lead, gunOffset: cannonVolleyOffset(index, volleyCount), spread };
       spawned += 1;
     }
     if (spawned > 0) {
@@ -992,21 +1490,17 @@ export class GameSimulation {
         runtime.weakPointTimer = side === 'bow' ? 1.65 : 2.35;
         runtime.weakPointCooldown = 0.8;
       }
-      const eventPosition = cloneVec(ship.position);
-      if (side === 'bow') {
-        eventPosition.x += forward.x * spec.length * 0.48;
-        eventPosition.z += forward.z * spec.length * 0.48;
-      } else {
-        eventPosition.x += starboard.x * sideSign * spec.beam * 0.52;
-        eventPosition.z += starboard.z * sideSign * spec.beam * 0.52;
-      }
-      eventPosition.y += spec.draft * 0.46 + 1.2;
-      this.events.push({ type: 'cannon-fired', shipId: ship.id, side, ammo, position: eventPosition, count: spawned });
+
     }
   }
 
   private activateSpecial(ship: ShipState): void {
-    if (ship.special < 0.999 || ship.surrendered) return;
+    if (ship.special < 0.999 || ship.surrendered || ship.specialPhase) return;
+    ship.special = 0;
+    ship.specialPhase = { phase: 'windup', elapsed: 0, duration: ship.kind === 'moby-dick' ? 1.05 : 0.65, name: getShipSpec(ship.kind).special };
+  }
+
+  private fireSpecial(ship: ShipState): void {
     const spec = getShipSpec(ship.kind);
     const runtime = this.getRuntime(ship);
     const forward = { x: forwardX(ship.heading), z: forwardZ(ship.heading) };
@@ -1024,7 +1518,7 @@ export class GameSimulation {
         runtime.velocityZ += forward.z * 11;
         break;
       case 'tremor-broadside':
-        this.applyAreaDamage(ship, 135, 34, 0.55);
+        ship.specialPhase!.pressureWave = { origin: cloneVec(ship.position), radius: 0, hitIds: [] };
         ship.weapons.portCooldown = 0;
         ship.weapons.starboardCooldown = 0;
         break;
@@ -1076,7 +1570,7 @@ export class GameSimulation {
       if (target.id === source.id || target.surrendered || !this.shipsHostile(source, target)) continue;
       const distance = Math.sqrt(distanceSquared(source.position, target.position));
       if (distance > radius) continue;
-      const falloff = 1 - distance / radius * 0.55;
+      const falloff = (1 - distance / radius * 0.55) * this.shipModifiers(target).incoming;
       const spec = getShipSpec(target.kind);
       target.damage.hull = clamp(target.damage.hull + hullDamage * falloff / spec.hullStrength, 0, 1);
       target.damage.crew = clamp(target.damage.crew + hullDamage * crewMultiplier * falloff / spec.crewStrength, 0, 1);
@@ -1089,9 +1583,54 @@ export class GameSimulation {
     }
   }
 
+  /** Damage crosses the same expanding front exposed in snapshots and rendered by FX. */
+  private updatePressureWave(source: ShipState): void {
+    const phase = source.specialPhase, wave = phase?.pressureWave;
+    if (source.surrendered || !phase || !wave || phase.phase === 'windup') return;
+    const previousRadius = wave.radius;
+    const radius = phase.phase === 'active' ? pressureWaveRadius(phase.elapsed) : MOBY_PRESSURE_RADIUS;
+    if (radius <= previousRadius) return;
+    wave.radius = radius;
+    for (const target of this.state.ships) {
+      if (target.id === source.id || target.surrendered || wave.hitIds.includes(target.id) || !this.shipsHostile(source, target)) continue;
+      const distance = Math.sqrt(distanceSquared(wave.origin, target.position));
+      const runtime = this.getRuntime(target);
+      const previous = this.tickStartPositions.get(target.id) ?? target.position;
+      const previousDistance = Math.hypot(previous.x - wave.origin.x, previous.z - wave.origin.z);
+      // Swept relative crossing lets a moving hull meet the front, while a ship
+      // entering water behind an already-passed wave is not struck retroactively.
+      if (distance > radius || previousDistance < previousRadius - 1e-6) continue;
+      wave.hitIds.push(target.id);
+      const falloff = (1 - distance / MOBY_PRESSURE_RADIUS * .55) * this.shipModifiers(target).incoming * (1 - target.brace * .68);
+      const spec = getShipSpec(target.kind);
+      target.damage.hull = clamp(target.damage.hull + 34 * falloff / spec.hullStrength, 0, 1);
+      target.damage.crew = clamp(target.damage.crew + 34 * .55 * falloff / spec.crewStrength, 0, 1);
+      target.damage.sails = clamp(target.damage.sails + 34 * .65 * falloff / spec.sailStrength, 0, 1);
+      runtime.lastAttackerId = source.id; runtime.provokedBy = source.id; runtime.aggroTimer = 42;
+      this.events.push({ type: 'special-impact', ownerId: source.id, shipId: target.id, name: 'tremor-broadside', position: cloneVec(target.position), radius });
+      this.checkDisabled(target, source.id);
+    }
+  }
+
   private updateProjectiles(dt: number): void {
     for (const slot of this.projectileSlots) {
       if (!slot.active) continue;
+      if (slot.pending) {
+        slot.pending.delay -= dt;
+        if (slot.pending.delay > 1e-6) continue;
+        const owner = this.findShip(slot.state.ownerId);
+        if (!owner || owner.surrendered) { slot.active = false; slot.pending = undefined; continue; }
+        // A volley queued just before diving is cancelled, never deferred to
+        // erupt underwater or unexpectedly fire again after resurfacing.
+        if (polarWeaponsLocked(owner)) { slot.active = false; slot.pending = undefined; continue; }
+        const pending = slot.pending;
+        const launch = sampleCannonTrajectory(owner, pending.side, pending.lead, pending.gunOffset, pending.spread, slot.state.ammo);
+        if (owner.kind === 'polar-tang' && launch.position.y <= this.waveSampler.sample(launch.position.x, launch.position.z, this.state.elapsed).height + .1) { slot.active = false; slot.pending = undefined; continue; }
+        slot.state.position = launch.position;
+        slot.state.velocity = launch.velocity;
+        this.events.push({ type: 'cannon-fired', shipId: owner.id, side: pending.side, ammo: slot.state.ammo, position: cloneVec(launch.position), count: 1 });
+        slot.pending = undefined;
+      }
       const projectile = slot.state;
       projectile.life -= dt;
       projectile.velocity.y -= (projectile.ammo === 'heavy' ? 15 : 12.2) * dt;
@@ -1143,7 +1682,10 @@ export class GameSimulation {
     const runtime = this.getRuntime(ship);
     const weakPoint = runtime.weakPointTimer > 0 && runtime.weakPointSide === side;
     const weakPointMultiplier = weakPoint ? projectile.ammo === 'heavy' ? 1.82 : 1.52 : 1;
-    const braceReduction = 1 - ship.brace * 0.68;
+    const attack = attacker ? this.shipModifiers(attacker) : { damage: 1 };
+    profile.hull *= attack.damage;
+    if (attacker?.isPlayer && projectile.ammo === 'chain' && this.state.voyage?.upgrades.includes('chain')) profile.sails *= 1.45;
+    const braceReduction = (1 - ship.brace * 0.68) * this.shipModifiers(ship).incoming;
     ship.damage.hull = clamp(ship.damage.hull + profile.hull / spec.hullStrength * braceReduction * weakPointMultiplier, 0, 1);
     ship.damage.sails = clamp(ship.damage.sails + profile.sails / spec.sailStrength * braceReduction * weakPointMultiplier, 0, 1);
     ship.damage.weapons = clamp(ship.damage.weapons + profile.weapons / spec.weaponStrength * braceReduction * weakPointMultiplier, 0, 1);
@@ -1170,10 +1712,12 @@ export class GameSimulation {
   private resolveShipCollisions(): void {
     for (let i = 0; i < this.state.ships.length; i += 1) {
       const first = this.state.ships[i];
+      if (first.damageStage === 'sunk') continue;
       const firstRuntime = this.getRuntime(first);
       const firstSpec = getShipSpec(first.kind);
       for (let j = i + 1; j < this.state.ships.length; j += 1) {
         const second = this.state.ships[j];
+        if (second.damageStage === 'sunk') continue;
         const secondRuntime = this.getRuntime(second);
         const secondSpec = getShipSpec(second.kind);
         const dx = second.position.x - first.position.x;
@@ -1198,7 +1742,7 @@ export class GameSimulation {
         const target = attacker === first ? second : first;
         const force = Math.abs(relativeVelocity) * attacker.mass / Math.max(350, target.mass) * (0.6 + Math.max(firstBowAlignment, secondBowAlignment));
         const targetSpec = getShipSpec(target.kind);
-        const reduction = 1 - target.brace * 0.7;
+        const reduction = (1 - target.brace * 0.7) * this.shipModifiers(target).incoming * (attacker.isPlayer && this.state.voyage?.buildId === 'interceptor' ? 1.3 : 1);
         target.damage.hull = clamp(target.damage.hull + force * 0.022 / (targetSpec.hullStrength / 100) * reduction, 0, 1);
         target.damage.sections.bow = clamp(target.damage.sections.bow + force * 0.028 * reduction, 0, 1);
         firstRuntime.velocityX *= 0.62;
@@ -1287,7 +1831,8 @@ export class GameSimulation {
     for (const island of this.state.islands) {
       if (island.discovered || distanceSquared(player.position, island.position) > Math.pow(island.radius + 140, 2)) continue;
       island.discovered = true;
-      this.state.treasure += 1;
+      const discoveries = this.state.progression!.discoveredIds;
+      if (!discoveries.includes(island.id)) { discoveries.push(island.id); this.state.treasure += 1; }
       if (this.state.mode === 'discovery') this.state.objective = `Discovered ${island.id.replaceAll('-', ' ')}`;
     }
   }
@@ -1342,6 +1887,8 @@ export class GameSimulation {
     runtime.disabledEventSent = true;
     if (this.state.combat && !ship.isPlayer) this.state.combat.surrendered += 1;
     const creditedAttackerId = attackerId ?? runtime.lastAttackerId;
+    ship.finish = { state: 'available', elapsed: 0, creditedTo: creditedAttackerId };
+    ship.damageStage = 'disabled';
     const reward = this.grantCombatReward(ship, creditedAttackerId, 0.62);
     this.events.push({
       type: 'ship-disabled',
@@ -1363,6 +1910,8 @@ export class GameSimulation {
     runtime.disabledEventSent = true;
     if (this.state.combat && !ship.isPlayer) this.state.combat.defeated += 1;
     const creditedAttackerId = attackerId ?? runtime.lastAttackerId;
+    ship.finish = { state: 'available', elapsed: 0, creditedTo: creditedAttackerId };
+    ship.damageStage = 'disabled';
     const reward = this.grantCombatReward(ship, creditedAttackerId, 1);
     this.events.push({ type: 'ship-disabled', shipId: ship.id, attackerId: creditedAttackerId, position: cloneVec(ship.position), ...reward });
   }
@@ -1382,6 +1931,10 @@ export class GameSimulation {
     const treasureReward = attacker.id === player.id ? Math.max(1, Math.round(Math.ceil(spec.hullStrength / 190) * scale)) : 0;
     this.state.bounty += bountyReward;
     this.state.treasure += treasureReward;
+    if (this.state.voyage?.phase === 'encounter') {
+      this.state.voyage.unbankedCoins += treasureReward * 35;
+      this.state.voyage.earnedBounty += bountyReward;
+    }
     player.special = clamp(player.special + 0.22 * scale * contribution, 0, 1);
     return { bountyReward, treasureReward };
   }
@@ -1392,7 +1945,7 @@ export class GameSimulation {
 
   private syncProjectileView(): void {
     this.state.projectiles.length = 0;
-    for (const slot of this.projectileSlots) if (slot.active) this.state.projectiles.push(slot.state);
+    for (const slot of this.projectileSlots) if (slot.active && !slot.pending) this.state.projectiles.push(slot.state);
   }
 
   private findShip(id: string): ShipState | undefined {
@@ -1413,6 +1966,12 @@ export class GameSimulation {
   }
 
   private justPressed(action: InputAction): boolean {
+    const pressedAt = this.pendingPressed.get(action);
+    this.pendingPressed.delete(action);
+    if (pressedAt !== undefined && this.state.elapsed - pressedAt <= this.fixedStep * 1.5) {
+      this.edgeLatch.set(action, this.isDown(action));
+      return true;
+    }
     if (!this.isDown(action)) {
       this.edgeLatch.set(action, false);
       return false;

@@ -68,6 +68,83 @@ export interface ShipState {
   faction?: ShipFaction;
   combatRole?: AiCombatRole;
   targetId?: string;
+  crew?: CrewAllocation;
+  crewPreset?: CrewPreset;
+  damageStage?: 'intact' | 'scarred' | 'critical' | 'disabled' | 'sinking' | 'sunk';
+  finish?: { state: 'available' | 'salvaged' | 'spared' | 'sinking' | 'sunk'; elapsed: number; creditedTo?: string };
+  specialPhase?: {
+    phase: 'windup' | 'active' | 'recovery'; elapsed: number; duration: number; name: string;
+    pressureWave?: { origin: Vec3; radius: number; hitIds: string[] };
+  };
+}
+
+export type CrewPreset = 'balanced' | 'gunnery' | 'sailing' | 'repair' | 'special';
+export interface CrewAllocation { helm: number; guns: number; repair: number; special: number }
+export type VoyageBuildId = 'precision' | 'interceptor' | 'guardian';
+export type VoyagePhase = 'harbor' | 'route' | 'encounter' | 'reward' | 'complete' | 'failed';
+export type VoyageEncounterKind = 'battle' | 'salvage' | 'storm' | 'escort' | 'boss';
+export interface VoyageRoute {
+  id: string;
+  name: string;
+  description: string;
+  kind: VoyageEncounterKind;
+  weather: WeatherKind;
+  risk: 'measured' | 'dangerous';
+  reward: number;
+  landmarkId: string;
+}
+export interface VoyageEncounter {
+  id: string;
+  kind: VoyageEncounterKind;
+  title: string;
+  objective: string;
+  targetIds: string[];
+  waypoint: Vec3;
+  progress: number;
+  target: number;
+  elapsed: number;
+  reward: number;
+  escortId?: string;
+  completed: boolean;
+  resolvedAt?: number;
+  /** Ordered forward crossing gates, persisted so a save cannot skip the arch. */
+  gates?: { id: string; position: Vec3; halfWidth: number }[];
+  nextGate?: number;
+  previousPosition?: Vec3;
+}
+export interface VoyageState {
+  id: string;
+  phase: VoyagePhase;
+  contractId: string;
+  buildId: VoyageBuildId;
+  leg: number;
+  totalLegs: number;
+  routes: VoyageRoute[];
+  encounter?: VoyageEncounter;
+  unbankedCoins: number;
+  earnedBounty: number;
+  upgrades: string[];
+  rewardChoices: string[];
+  extractionReady: boolean;
+  result?: { coins: number; bounty: number; outcome: 'completed' | 'extracted' | 'lost' };
+}
+export interface ProgressionState {
+  version: 1;
+  bankedCoins: number;
+  totalVoyages: number;
+  completedVoyages: number;
+  selectedShip: ShipKind;
+  refits: Record<string, number>;
+  discoveredIds: string[];
+  paidVoyageIds: string[];
+  rivals: Record<string, { encounters: number; escapes: number; defeated: number }>;
+}
+export interface WorldCollisionFeature {
+  id: string;
+  x: number;
+  z: number;
+  radius: number;
+  kind: 'shore' | 'stack' | 'reef';
 }
 
 export interface CombatState {
@@ -98,6 +175,8 @@ export interface IslandState {
   palette: number;
   discovered: boolean;
   landmark: 'volcano' | 'arches' | 'palms' | 'fort' | 'needles';
+  name?: string;
+  service?: 'harbor' | 'passage' | 'ambush' | 'fort';
 }
 
 export interface RaceState {
@@ -133,6 +212,9 @@ export interface WorldState {
   race: RaceState;
   /** Optional for bootstrap compatibility; GameSimulation always supplies it. */
   combat?: CombatState;
+  voyage?: VoyageState;
+  progression?: ProgressionState;
+  worldFeatures?: WorldCollisionFeature[];
 }
 
 export type InputAction =
@@ -188,11 +270,15 @@ export interface CruiseDebugBridge {
   getScene(): DebugScene;
   getState(): WorldState;
   getMetrics(): GameMetrics;
+  getAim?(): {side?: "port"|"starboard";adjustment:number;targetId?:string;markerTargetId?:string;impact?:Vec3;guideVisible:boolean};
   selectShip(kind: ShipKind): void;
   action(action: InputAction, pressed?: boolean): void;
   setPaused(paused: boolean): void;
   step(frames?: number): void;
   setCamera(preset: 'chase' | 'broadside' | 'bow' | 'deck' | 'cinematic' | 'overhead'): void;
+  exportSave?(): unknown;
+  restoreSave?(value: unknown): boolean;
+  voyage?(action: 'harbor' | 'start' | 'route' | 'reward' | 'collect' | 'extract' | 'refit' | 'crew' | 'resolve', id?: string, choice?: string): boolean | Promise<boolean>;
 }
 
 declare global {

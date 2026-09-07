@@ -82,7 +82,7 @@ export const SCENARIO_PRESETS: Readonly<Record<DebugScene, ScenarioPreset>> = {
       { id: 'oro-roamer', name: 'Oro Jackson', kind: 'oro-jackson', position: v(-390, -60), heading: -0.65, ai: 'tactical', faction: 'roger', combatRole: 'ranged' },
       { id: 'marine-patrol', name: 'Marine Patrol Galleon', kind: 'navy-galleon', position: v(60, -120), heading: 0.05, ai: 'tactical', faction: 'marine', combatRole: 'ranged' },
     ],
-    islands: [{ id: 'dawn-arch', position: v(-240, -520), radius: 94, height: 76, palette: 2, landmark: 'arches' }], bounty: 30_000_000,
+    islands: [{ id: 'dawn-arch', position: v(-120, -520), radius: 145, height: 220, palette: 2, landmark: 'arches' }], bounty: 30_000_000,
   },
   'storm-sailing': {
     scene: 'storm-sailing', mode: 'explore', weather: 'storm', objective: 'Hold course through the Grand Line squall',
@@ -123,7 +123,7 @@ export const SCENARIO_PRESETS: Readonly<Record<DebugScene, ScenarioPreset>> = {
     rivals: [{ id: 'hunter', kind: 'navy-galleon', position: v(-135, -210), heading: 0.1, ai: 'tactical', faction: 'marine', combatRole: 'ranged', damage: 0.36 }], islands: [], bounty: 66_000_000,
   },
   'island-discovery': {
-    scene: 'island-discovery', mode: 'discovery', weather: 'fog', objective: 'Approach the nameless volcano and record it on the chart',
+    scene: 'island-discovery', mode: 'discovery', weather: 'fog', objective: 'Chart the mistbound coast of Ember Crown',
     windDirection: 0.75, windStrength: 0.68, currentDirection: 0.3, currentStrength: 0.18,
     player: { id: 'player', kind: 'thousand-sunny', position: v(40, 170), heading: 0.11 }, rivals: [],
     islands: [

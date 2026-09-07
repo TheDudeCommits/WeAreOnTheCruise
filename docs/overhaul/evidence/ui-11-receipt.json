@@ -1,0 +1,212 @@
+[
+  {
+    "name": "desktop",
+    "viewport": {
+      "width": 1600,
+      "height": 900
+    },
+    "checks": [
+      {
+        "title": "All nine ship choices shown",
+        "pass": true,
+        "detail": 9
+      },
+      {
+        "title": "Enter selects focused ship without launching",
+        "pass": true
+      },
+      {
+        "title": "Contract button keeps keyboard focus",
+        "pass": true
+      },
+      {
+        "title": "Route enters active simulation",
+        "pass": true
+      },
+      {
+        "title": "Crew menu pauses safely",
+        "pass": true
+      },
+      {
+        "title": "Direct crew order applies",
+        "pass": true
+      },
+      {
+        "title": "Pause freezes simulation",
+        "pass": true
+      },
+      {
+        "title": "Remap saves on device",
+        "pass": true
+      },
+      {
+        "title": "Full voyage restores after reload",
+        "pass": true,
+        "detail": {
+          "before": {
+            "id": "ui-gauntlet-A:1",
+            "phase": "encounter",
+            "crew": "gunnery",
+            "elapsed": 1.4666666666666663
+          },
+          "after": {
+            "id": "ui-gauntlet-A:1",
+            "phase": "encounter",
+            "crew": "gunnery",
+            "elapsed": 3.6333333333333253
+          },
+          "bootSavePresent": true
+        }
+      },
+      {
+        "title": "No JavaScript or shader errors",
+        "pass": true,
+        "detail": []
+      },
+      {
+        "title": "No page-wide horizontal overflow",
+        "pass": true,
+        "detail": {
+          "scrollWidth": 1600,
+          "viewport": 1600,
+          "scripts": [
+            "http://127.0.0.1:4192/assets/index-BvHRruz4.js"
+          ]
+        }
+      }
+    ],
+    "errors": []
+  },
+  {
+    "name": "portrait",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "checks": [
+      {
+        "title": "All nine ship choices shown",
+        "pass": true,
+        "detail": 9
+      },
+      {
+        "title": "Route enters active simulation",
+        "pass": true
+      },
+      {
+        "title": "Crew menu pauses safely",
+        "pass": true
+      },
+      {
+        "title": "Direct crew order applies",
+        "pass": true
+      },
+      {
+        "title": "Pause freezes simulation",
+        "pass": true
+      },
+      {
+        "title": "Full voyage restores after reload",
+        "pass": true,
+        "detail": {
+          "before": {
+            "id": "ui-gauntlet-A:1",
+            "phase": "encounter",
+            "crew": "gunnery",
+            "elapsed": 1.3333333333333335
+          },
+          "after": {
+            "id": "ui-gauntlet-A:1",
+            "phase": "encounter",
+            "crew": "gunnery",
+            "elapsed": 3.4666666666666592
+          },
+          "bootSavePresent": true
+        }
+      },
+      {
+        "title": "No JavaScript or shader errors",
+        "pass": true,
+        "detail": []
+      },
+      {
+        "title": "No page-wide horizontal overflow",
+        "pass": true,
+        "detail": {
+          "scrollWidth": 390,
+          "viewport": 390,
+          "scripts": [
+            "http://127.0.0.1:4192/assets/index-BvHRruz4.js"
+          ]
+        }
+      }
+    ],
+    "errors": []
+  },
+  {
+    "name": "landscape",
+    "viewport": {
+      "width": 844,
+      "height": 390
+    },
+    "checks": [
+      {
+        "title": "All nine ship choices shown",
+        "pass": true,
+        "detail": 9
+      },
+      {
+        "title": "Route enters active simulation",
+        "pass": true
+      },
+      {
+        "title": "Crew menu pauses safely",
+        "pass": true
+      },
+      {
+        "title": "Direct crew order applies",
+        "pass": true
+      },
+      {
+        "title": "Pause freezes simulation",
+        "pass": true
+      },
+      {
+        "title": "Full voyage restores after reload",
+        "pass": true,
+        "detail": {
+          "before": {
+            "id": "ui-gauntlet-A:1",
+            "phase": "encounter",
+            "crew": "gunnery",
+            "elapsed": 1.3666666666666667
+          },
+          "after": {
+            "id": "ui-gauntlet-A:1",
+            "phase": "encounter",
+            "crew": "gunnery",
+            "elapsed": 3.483333333333326
+          },
+          "bootSavePresent": true
+        }
+      },
+      {
+        "title": "No JavaScript or shader errors",
+        "pass": true,
+        "detail": []
+      },
+      {
+        "title": "No page-wide horizontal overflow",
+        "pass": true,
+        "detail": {
+          "scrollWidth": 844,
+          "viewport": 844,
+          "scripts": [
+            "http://127.0.0.1:4192/assets/index-BvHRruz4.js"
+          ]
+        }
+      }
+    ],
+    "errors": []
+  }
+]
