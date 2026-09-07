@@ -145,6 +145,8 @@ try {
       await page.goto(url.href, { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => window.__CRUISE_DEBUG__?.ready, undefined, { timeout: 45000 });
       await page.locator(`[data-ship="${job.kind}"]`).click();
+      await page.waitForFunction(kind=>window.__CRUISE_DEBUG__.getState().ships.find(ship=>ship.isPlayer)?.kind===kind,job.kind);
+      await page.evaluate(()=>window.__CRUISE_DEBUG__.readyAssets());
       const selectedState = await read();
       check('Real vessel selection matches the requested ship', selectedState.player?.kind === job.kind, selectedState.player?.kind);
       check('Fresh selected ship starts with full special charge', selectedState.player.special >= .999 && !selectedState.player.specialPhase, selectedState.player.special);

@@ -4,7 +4,7 @@ A browser naval adventure built with Vite, TypeScript and Three.js, inspired by 
 
 **[Existing live baseline](https://we-are-on-the-cruise.vercel.app)** — this link is not evidence that the current overhaul branch has been deployed. Consult [HANDOVER.md](./HANDOVER.md) for the checkout, release status and latest verification.
 
-This is an unofficial, non-commercial fan project. One Piece and its characters and vessels belong to their respective rights holders. The current hull kits and crew geometry are original fan-work implementations; they are not official licensed game assets. See [ASSET-LICENSES.md](./ASSET-LICENSES.md) for source and acquisition records.
+This is an unofficial, non-commercial fan project. One Piece and its characters and vessels belong to their respective rights holders. The current fleet uses six downloaded Sketchfab ships and four downloaded crew characters with recorded creator licenses. These are community fan models, not official game assets. See [ASSET-LICENSES.md](./ASSET-LICENSES.md) for source and acquisition records.
 
 ## Run locally
 
@@ -25,7 +25,7 @@ The dev and preview servers both use port 4173; run one at a time. Tests cover d
 
 ## Make a voyage
 
-Choose one of nine vessels and launch to Dawn Harbor. Accept **Break the Dawn Blockade**, **The Sunken Payroll**, or **Chart the Tempest**, then choose a crew build: Deadeye Broadside, Storm Interceptor or Ironheart Crew. Each contract has three legs with generated route offers, measured or dangerous water, encounter rewards and a final captain battle.
+Choose one of six vessels and launch to Dawn Harbor. Accept **Break the Dawn Blockade**, **The Sunken Payroll**, or **Chart the Tempest**, then choose a crew build: Deadeye Broadside, Storm Interceptor or Ironheart Crew. Each contract has three legs with generated route offers, measured or dangerous water, encounter rewards and a final captain battle.
 
 Encounters include patrol battles, a 12-second cargo hold, a 75-second escort and three ordered storm gates through the arch. Winning an objective leaves a navigable aftermath. Approach disabled enemies to salvage, spare or scuttle them; available targets remain until a choice is made. Sinking continues over time. Collect the encounter reward explicitly when ready, then choose an upgrade or supplies and continue, or extract to bank the spoils. Losing the ship forfeits unbanked coins. Banked refits, discoveries, selected vessel and rival history persist across voyages.
 
@@ -62,7 +62,7 @@ The Controls & Comfort drawer provides action remapping, camera shake, target fr
 
 ## Ships, scenery and asset provenance
 
-All nine ships are selectable: Thousand Sunny, Going Merry, Moby Dick, Red Force, Oro Jackson, Polar Tang, Queen Mama Chanter, Baratie and Navy Galleon. Eight sailing hull kits are original Blender-authored GLBs, created through Blender MCP and optimized for browser loading. Polar Tang remains procedural. Sails, figureheads, fittings, articulated crew stations and damage presentation are built by the game’s ship factory. This is a hybrid authored/procedural asset pipeline.
+Six downloaded ships are selectable: Thousand Sunny, Going Merry, Moby Dick, Polar Tang, Baratie and Navy Galleon. Blender MCP prepared their existing source geometry and materials; optimized high/low GLBs preserve the source silhouettes and maps. Four downloaded character models provide Luffy, Nami, Sanji and Whitebeard. The factory contains no generated replacement ship path. Other acquired source models remain under review. Current geometry and crew-animation limitations are recorded in the handover.
 
 - Runtime hulls and their hash/size/triangle manifest: `public/assets/ships/`.
 - Original imagegen surface and sky artwork: `public/assets/materials/`.

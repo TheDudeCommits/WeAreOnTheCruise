@@ -2,7 +2,8 @@ import type { ShipState } from '../core/contracts';
 
 export const MOBY_PRESSURE_RADIUS = 135;
 export const MOBY_PRESSURE_DURATION = 1.8;
-export const POLAR_DIVE_DEPTH = 17;
+// The downloaded Polar Tang's periscope reaches 27.2 m above its normalized waterline.
+export const POLAR_DIVE_DEPTH = 34;
 
 export function pressureWaveRadius(elapsed: number): number {
   return MOBY_PRESSURE_RADIUS * Math.max(0, Math.min(1, elapsed / MOBY_PRESSURE_DURATION));

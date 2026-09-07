@@ -1,0 +1,52 @@
+[
+  {
+    "uid": "4b2cb678bf984c018dfa1936bd156c8d",
+    "kind": "going-merry",
+    "yaw": 90,
+    "length": 34,
+    "keel": -4.36,
+    "ratio": 0.65
+  },
+  {
+    "uid": "99986d1c93654c9d8889017435b5fe06",
+    "kind": "thousand-sunny",
+    "yaw": 180,
+    "length": 56,
+    "keel": -9.6,
+    "ratio": 1
+  },
+  {
+    "uid": "92898d5f63ad43589203d5a8dc14aa12",
+    "kind": "navy-galleon",
+    "yaw": 90,
+    "length": 70,
+    "keel": -11.2,
+    "ratio": 0.28
+  },
+  {
+    "uid": "d9be26addfec48019188dd615a930311",
+    "kind": "moby-dick",
+    "yaw": 180,
+    "length": 122,
+    "keel": -18,
+    "style": "moby",
+    "ratio": 1
+  },
+  {
+    "uid": "a7feb48976ce484aa4537e4c7124a9c4",
+    "kind": "polar-tang",
+    "yaw": -90,
+    "length": 52,
+    "keel": -19.4,
+    "ratio": 0.22
+  },
+  {
+    "uid": "015ebe70a76749eeb92f5f39693b8ea5",
+    "kind": "baratie",
+    "yaw": 180,
+    "length": 74,
+    "keel": -12,
+    "style": "baratie",
+    "ratio": 0.24
+  }
+]

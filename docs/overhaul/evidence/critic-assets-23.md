@@ -1,0 +1,32 @@
+# Blind visual acceptance review — in-world-23
+
+**Decision: REJECT against the cinematic-anime target. Overall score: 5/10.**
+
+Scope: inspected only the six PNGs in `in-world-23` and `A-cinematic-anime.png`. This is a still-image assessment; it makes no claims about performance, animation, implementation, or provenance. Scores assess visible art finish against the target, not whether each ship copies the target ship's design. The calm scenes do not need combat effects to qualify.
+
+The six vessels have distinct, recognizable silhouettes, and most major structures appear assembled. The illustrated clouds and saturated blue palette establish a useful anime direction. The remaining gap is substantial: the target integrates sharply resolved materials, lively deck staging, dimensional water and convincing foam into one composition. These renders often read as separately styled ship models placed over the same ocean and island backdrop.
+
+| Criterion | Score | Visible evidence |
+| --- | --- | --- |
+| Completeness | 6/10 | Hulls, sails or superstructures, railings and identifying features are present. Finish is uneven: Baratie's broad empty decks, Moby Dick's low-contrast white mass and Polar Tang's sparse exposed deck feel underdeveloped. |
+| Water contact and wake | 3/10 | Most hulls meet the ocean through a thin bright contour or a very clean edge. Broad ambient foam does not establish ship-specific displacement. Going Merry has isolated soft white puffs beside and ahead of the bow. |
+| Material cohesion | 5/10 | Cloth, wood and metal are distinguishable on the stronger ships, but their texture scale and shading differ markedly. Dark mottled Sunny surfaces, flat Baratie colors, nearly uniform Moby Dick whites and bright smooth Polar Tang yellow do not yet form one controlled material language. |
+| Crew readability | 4/10 | Going Merry clearly presents two figures; Sunny has small, partially obstructed figures; Moby Dick has a small dark figure near the bow rail. No readable crew is apparent on Baratie, Navy Galleon or Polar Tang in these views. |
+| Composition | 6/10 | All six vessels are framed legibly and the UI generally stays clear of their main silhouettes. Repeated centered presentation, sparse surroundings and pale geometric islands lack the target's depth and authored staging. Navy and Moby Dick's dense sail structures obscure much of their decks. |
+
+## Ship observations
+
+- **Thousand Sunny — 6/10, reject.** Strong identifying silhouette, layered hull trim and attractive deck architecture. The bow ornament and sails read clearly, but shaded areas are muddy, crew are very small and the thin waterline provides little sense of the hull pushing through water. The large rear sail screens off useful deck activity.
+- **Going Merry — 6/10, reject.** The most coherent finish in this set: warm wood, cream trim, readable sail emblem and visible crew. The isolated cloudy foam puffs at the bow and below the front hull break the contact illusion; they read as detached effects. Crew poses and deck scale are easier to read here than on the other vessels.
+- **Navy Galleon — 5/10, reject.** Complex, recognizable sail arrangement and a substantial hull. The heavily patterned lower hull, plain gray gun mounts and soft cream sails clash in finish. Overlapping sails dominate the view, hiding the crew and weakening deck readability. The bow underside has a crisp cutout against the water with little displacement cue.
+- **Baratie — 4/10, reject.** A distinctive restaurant silhouette and readable tiered architecture. The large side decks are broad, empty surfaces; the pink bow feature and green hull have very flat shading. There is no readable crew or convincing bow foam. It feels least populated and lacks enough detail hierarchy to support its large footprint.
+- **Moby Dick — 4/10, reject.** Extensive rigging and a dramatic tall silhouette, but the large white bow and white hull details merge into an insufficiently articulated mass. Sail folds and rail details crowd together. Flags read as plain dark rectangles, crew barely register and water contact is too clean for the vessel's apparent scale.
+- **Polar Tang — 5/10, reject.** The yellow hull, round windows and towers are easy to identify, and the color family is internally consistent. Broad hull surfaces are too smooth and uniformly saturated for the target's drawn material finish. No readable crew is apparent. The aft yellow triangular element reads detached at this angle, and the very clean lower hull edge weakens the impression of partial submersion.
+
+## Three highest-priority remaining improvements
+
+1. **Make water contact specific to each hull.** Establish a clear partially submerged waterline, compressed foam at the leading edge, short connected side streaks and a tapering wake behind the vessel. Replace Going Merry's detached puffs and the thin contour-only treatment with foam shapes visibly attached to the hull. Retain clean negative space so ambient ocean foam does not conceal the contact zone. Pass condition: every screenshot immediately reads as a vessel displacing water, with no floating-looking hull or isolated bow-effect blobs.
+2. **Apply one deliberate material and lighting treatment across the fleet.** Use a shared scale for drawn seams, wood grain and cloth detail; controlled shadow bands; restrained edge highlights; and stronger separation at joints and recessed areas. Prioritize articulating Moby Dick's white surfaces, enriching Baratie's flat hull and empty deck surfaces, reducing Sunny's muddy dark material contrast, and harmonizing Navy's hull pattern with its guns. Pass condition: a six-image contact sheet reads as one authored game rather than several unrelated model finishes.
+3. **Stage readable crew and deck focal points for the actual camera.** Give every ship at least a few clearly visible figures with distinct color silhouettes and readable helm, lookout or gun-station poses. Use Baratie's empty decks and Polar Tang's exposed upper platform as clear opportunities; adjust Navy and Moby Dick's view or staging so the sail stack does not conceal all activity. Preserve the visible bow and waterline while introducing more depth through selective, finished background landmarks. Pass condition: occupied stations and the vessel's scale are apparent at the supplied 1600×900 size without zooming.
+
+Acceptance should be reassessed using the same six ship views after those changes. Motion behavior would require separate evidence.

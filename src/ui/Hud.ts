@@ -7,6 +7,7 @@ import type {
   ShipState,
   WorldState,
 } from "../core/contracts";
+import { hasSketchfabShip } from "../content/sketchfabShips";
 import { CREW_PRESETS } from "../content/voyages";
 import { getShipCaptain } from "../content";
 import {
@@ -31,7 +32,7 @@ export interface HudOptions {
   /** Alias for captureMode when an embedding runtime already owns ship selection. */
   skipIntro?: boolean;
   initialShip?: ShipKind;
-  onPreviewShip?: (ship: ShipKind) => void;
+  onPreviewShip?: (ship: ShipKind) => void | Promise<void>;
   onVoyageAction?: (action: VoyageAction) => void | Promise<void>;
   onSettingsChange?: (settings: ControlSettings) => void;
   onAimChange?: (side?: "port" | "starboard") => void;
@@ -99,7 +100,7 @@ const VOYAGE_CHAPTERS: readonly VoyageChapter[] = [
   { scene: "night-encounter", label: "Night Hunt", note: "Dark-water duel" },
 ] as const;
 
-const SHIPS: readonly ShipChoice[] = [
+const ALL_SHIP_CHOICES: readonly ShipChoice[] = [
   {
     kind: "thousand-sunny",
     name: "Thousand Sunny",
@@ -200,6 +201,8 @@ const SHIPS: readonly ShipChoice[] = [
     hull: 86,
   },
 ] as const;
+
+const SHIPS = ALL_SHIP_CHOICES.filter(ship => hasSketchfabShip(ship.kind));
 
 const CARDINALS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"] as const;
 const KNOTS_PER_METRE_PER_SECOND = 1.94384;
@@ -354,11 +357,11 @@ export class Hud {
         ? "Finish or extract your voyage before entering practice."
         : "Practice without voyage rewards";
     }
-    const recoveryNotice = this.host.dataset.saveRecovery === "preserved"
+    const recoveryNotice = this.host.dataset.saveRecoveryReason ?? (this.host.dataset.saveRecovery === "preserved"
       ? "Your previous voyage could not be restored. Its original save is preserved on this device."
       : this.host.dataset.saveRecovery === "protected"
         ? "Your previous voyage could not be restored. Its original save is protected; this new session cannot be saved."
-        : "";
+        : "");
     this.els.saveStatus.hidden = !recoveryNotice && this.host.dataset.save !== "unavailable";
     this.els.saveStatus.textContent = recoveryNotice || "Progress cannot be saved in this browser.";
     this.els.launchRecovery.hidden = !recoveryNotice;
@@ -656,7 +659,7 @@ export class Hud {
             <span>PLAN YOUR VOYAGE</span><small>Enter</small>
           </button>
           <p class="launch-recovery" data-ui="launch-recovery" role="status" hidden></p>
-          <p class="launch-status" data-ui="launch-status" role="status">Nine vessels. Three builds. Your next story.</p>
+          <p class="launch-status" data-ui="launch-status" role="status">${SHIPS.length} vessels. Three builds. Your next story.</p>
         </div>
       </section>
 
@@ -812,7 +815,7 @@ export class Hud {
         <div class="drawer-tip"><b>SEA DOG'S TIP</b><span>Chain shot tears sails. Heavy shot loves a close broadside.</span></div>
         <button class="resume-button" data-action="resume" type="button">RETURN TO THE HELM</button>
         <p class="controller-hint">CONTROLLER · Left stick helm · Bumpers fire · Triggers aim · Start pause</p>
-        <small class="drawer-footer">H or Esc · Open / close this log</small>
+        <small class="drawer-footer">H or Esc · Open / close this log · <a href="/credits.html" target="_blank" rel="noopener">Artist credits</a></small>
       </aside>
     `;
   }
@@ -822,35 +825,11 @@ export class Hud {
       <button class="ship-card" type="button" data-ship="${ship.kind}" data-index="${index}" aria-label="Select ${ship.name}" aria-pressed="false">
         <span class="ship-card-number">${String(index + 1).padStart(2, "0")}</span>
         <span class="ship-silhouette ship-silhouette--${ship.kind}" aria-hidden="true">
-          ${this.shipGlyph(ship.kind)}
+          <img src="/assets/sketchfab/thumbnails/${ship.kind}.jpg" alt="" loading="lazy">
         </span>
         <strong>${ship.name}</strong><small>${ship.epithet}</small>
       </button>
     `;
-  }
-
-  private shipGlyph(kind: ShipKind): string {
-    const accents: Record<ShipKind, string> = {
-      "thousand-sunny":
-        '<circle cx="34" cy="44" r="10"/><path d="M34 34V14M27 20h14M45 54l7-16 5 16"/>',
-      "going-merry":
-        '<path d="M24 48q-8-12 2-20 12 2 9 15M29 28l-6-7M35 46V16M35 19l16 12H35"/>',
-      "moby-dick":
-        '<path d="M16 47q10-23 29-12 8 4 15-3-4 15-20 18M35 36V13M35 16l20 16H35"/>',
-      "red-force":
-        '<path d="M22 47l10-18 9 16 8-8 9 13M39 40V14M39 18l16 15H39"/>',
-      "oro-jackson":
-        '<path d="M17 47l8-18 9 14 10-18 12 23M38 38V12M38 16l18 14H38"/>',
-      "polar-tang":
-        '<path d="M16 45q22-18 45 0l-4 8H20ZM38 35V22h9l6 13M21 45l-7-7"/>',
-      "queen-mama-chanter":
-        '<path d="M17 49l7-22 11 16 9-22 14 29M39 41V11M39 15l20 15H39M23 28l7-10"/>',
-      baratie:
-        '<path d="M14 48h50l-7 7H21ZM24 46V24h27v22M29 24v-9h17v9M55 45l9-14"/>',
-      "navy-galleon":
-        '<path d="M15 48h49l-8 7H23ZM38 44V11M38 16l18 14H38M38 20L23 32h15"/>',
-    };
-    return `<svg viewBox="0 0 80 62" focusable="false"><path class="glyph-hull" d="M8 48Q38 58 72 46L64 58H18Z"/>${accents[kind]}</svg>`;
   }
 
   private statRow(label: string, key: string): string {
@@ -1136,9 +1115,18 @@ export class Hud {
       card.setAttribute("aria-pressed", String(active));
       card.tabIndex = 0;
     });
-    if (announce && this.introOpen) this.options.onPreviewShip?.(selected.kind);
-    if (announce)
-      this.els.launchStatus.textContent = `${selected.name}: ${selected.special}. Ready to launch.`;
+    if (announce && this.introOpen) {
+      const launch = this.element.querySelector<HTMLButtonElement>('[data-action="launch"]');
+      if (launch) launch.disabled = true;
+      this.els.launchStatus.textContent = `Loading ${selected.name}…`;
+      Promise.resolve(this.options.onPreviewShip?.(selected.kind)).then(() => {
+        if (this.selectedShip !== selected.kind) return;
+        if (launch) launch.disabled = false;
+        this.els.launchStatus.textContent = `${selected.name}: ${selected.special}. Ready to launch.`;
+      }).catch(() => {
+        if (this.selectedShip === selected.kind) this.els.launchStatus.textContent = `${selected.name} could not load. Select another ship or reload to retry.`;
+      });
+    }
   }
 
   private capitalize(value: string): string {

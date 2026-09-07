@@ -343,7 +343,7 @@ export class GameSimulation {
     for (let index = 0; index < enemyCount; index += 1) {
       const id = `${voyage.id}:leg-${voyage.leg}:enemy-${index}`;
       const boss = route.kind === 'boss' && index === 0;
-      const kind: ShipKind = boss && (rival?.escapes ?? 0) > 0 ? 'red-force' : index === 0 ? 'navy-galleon' : 'polar-tang';
+      const kind: ShipKind = boss && (rival?.escapes ?? 0) > 0 ? 'navy-galleon' : index === 0 ? 'navy-galleon' : 'polar-tang';
       const enemy = this.createShip({ id, kind, name: boss ? 'Captain of Sunwatch' : index === 0 ? 'Dawn Patrol' : 'Reef Interceptor', position: { x: index === 0 ? -105 : 110, y: 0, z: index === 0 ? -65 : -140 }, heading: index === 0 ? 0.2 : -0.6, faction: hostileFaction, ai: boss ? 'tactical' : index === 0 ? 'tactical' : 'reckless', combatRole: boss && (rival?.escapes ?? 0) > 0 ? 'ranged' : index === 0 ? 'broadside' : 'flanker', damage: boss ? 0 : 0.2 }, false);
       enemy.targetId = player.id;
       enemy.special = boss ? 0.65 : 0.25;

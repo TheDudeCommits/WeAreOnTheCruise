@@ -8,3 +8,6 @@ test-results/
 .vercel
 
 .playwright-cli/
+assets/source/sketchfab/*/
+
+__pycache__/

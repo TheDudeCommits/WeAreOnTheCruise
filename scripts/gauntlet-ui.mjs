@@ -15,7 +15,7 @@ try{for(const [name,viewport] of Object.entries(sizes).filter(([name])=>!request
  const snapshot=async(label)=>{await page.waitForTimeout(350);await page.screenshot({path:resolve(output,`${name}-${label}.png`)});};
  try{
   await page.goto(base+'/?seed=ui-gauntlet-A',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__CRUISE_DEBUG__?.ready);
-  await snapshot('embark');const cards=await page.locator('[data-ship]').count();check('All nine ship choices shown',cards===9,cards);
+  await snapshot('embark');const cards=await page.locator('[data-ship]').count();check('All six downloaded ship choices shown',cards===6,cards);
   const kinds=await page.locator('[data-ship]').evaluateAll(es=>es.map(e=>e.dataset.ship));
   for(const kind of kinds){await page.locator(`[data-ship="${kind}"]`).click();await page.waitForFunction(kind=>window.__CRUISE_DEBUG__.getState().ships.find(s=>s.id==='player')?.kind===kind,kind);}
   await page.locator('[data-ship="thousand-sunny"]').click();

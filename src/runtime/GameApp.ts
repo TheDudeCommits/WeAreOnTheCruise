@@ -27,7 +27,7 @@ import { readySurfaceTextures, disposeSurfaceTextures } from '../render/npr/surf
 import { atmosphereFor } from '../render/world/Atmosphere';
 import type { AppConfig } from './AppConfig';
 import { toPresentationEvents } from './eventAdapter';
-import { createShipMaterialSet } from './shipPresentation';
+import { hasSketchfabShip } from '../content/sketchfabShips';
 
 const CAMERA_PRESETS: readonly CameraPreset[] = ['chase', 'broadside', 'bow', 'deck', 'cinematic', 'overhead'];
 const VOYAGE_SAVE_KEY = 'cruise.voyage.v1';
@@ -71,12 +71,12 @@ export class GameApp {
   private saveTime = 0;
   private saveSignature = '';
   private restored = false;
+  private shipSelectionSerial = 0;
   private saveBlocked = false;
   private hemisphere!: THREE.HemisphereLight;
   private sun!: THREE.DirectionalLight;
   private atmosphereWeather?: WorldState['weather'];
   private get persistentSession():boolean { return !this.options.captureMode && !new URLSearchParams(location.search).has('scene'); }
-  private readonly shipMaterials = new Set<THREE.Material>();
 
   constructor(private readonly root: HTMLElement, private readonly options: AppConfig) {
     this.scene = options.initialScene;
@@ -94,7 +94,12 @@ export class GameApp {
       try { saved = localStorage.getItem(VOYAGE_SAVE_KEY); }
       catch { this.saveBlocked = true; this.root.dataset.save = 'unavailable'; }
       if (saved !== null) {
-        try { this.restored = this.simulation.restoreSave(JSON.parse(saved)); }
+        try {
+          const candidate = JSON.parse(saved);
+          const unsupported = candidate?.state?.ships?.some((ship: {kind:ShipKind}) => !hasSketchfabShip(ship.kind));
+          if (unsupported) this.root.dataset.saveRecoveryReason = 'This voyage uses a vessel whose downloaded model is unavailable. Your original voyage has been preserved.';
+          this.restored = !unsupported && this.simulation.restoreSave(candidate);
+        }
         catch { this.restored = false; }
         if (!this.restored) {
           try {
@@ -118,7 +123,6 @@ export class GameApp {
 
     this.fleet = new ShipFleetView(this.rendererHost.scene, {
       castShadow: this.options.quality !== 'performance',
-      materialFactory: (kind, palette) => createShipMaterialSet(kind, palette, this.shipMaterials),
     });
     this.fx = new NavalFxView(this.rendererHost.scene, { waveSampler: oceanSampler });
     this.raceCourse = new RaceCourseView(this.rendererHost.scene, this.simulation.getRaceCourse(), { waveSampler: oceanSampler });
@@ -132,12 +136,12 @@ export class GameApp {
       skipIntro: this.restored,
       initialShip: this.player()?.kind ?? 'thousand-sunny',
       onLaunch: async (kind) => {
-        this.selectShip(kind);
+        await this.selectShip(kind);
         if(this.persistentSession && !this.simulation.getState().voyage)this.simulation.returnToHarbor();
         this.setCamera(this.simulation.getState().voyage?.phase==='harbor'?'cinematic':'chase');
         this.setPaused(false);
       },
-      onPreviewShip: (kind) => { this.selectShip(kind); this.setCamera('cinematic'); },
+      onPreviewShip: async (kind) => { await this.selectShip(kind); this.setCamera('cinematic'); },
       onVoyageAction: (action) => this.voyageAction(action),
       onSettingsChange: (settings) => this.applyControlSettings(settings),
       onAimChange: (side) => this.input?.setAim(side),
@@ -201,8 +205,6 @@ export class GameApp {
     this.fx.dispose();
     this.fleet.dispose();
     this.world.dispose();
-    for (const material of this.shipMaterials) material.dispose();
-    this.shipMaterials.clear();
     disposeSurfaceTextures();
     this.rendererHost.dispose();
     delete window.__CRUISE_DEBUG__;
@@ -247,6 +249,8 @@ export class GameApp {
       this.atmosphereWeather=state.weather;const p=atmosphereFor(state.weather);
       this.hemisphere.color.setHex(p.horizon);this.hemisphere.intensity=.9*p.exposure;
       this.sun.color.setHex(p.sun);this.sun.intensity=2*p.exposure;
+      this.fleet.setAssetExposure(p.exposure);
+      this.rendererHost.scene.fog = new THREE.Fog(p.horizon, p.fogNear, p.fogFar);
     }
     this.sun.target.position.set(player.position.x, 0, player.position.z);
     this.sun.position.set(player.position.x - 225, 410, player.position.z + 175);
@@ -360,8 +364,13 @@ export class GameApp {
     this.simulation.step(frames[scene] ?? 0);
   }
 
-  private selectShip(kind: ShipKind): void {
+  private async selectShip(kind: ShipKind): Promise<void> {
+    const selection=++this.shipSelectionSerial;
+    await this.fleet.prepare(kind);
+    if(selection!==this.shipSelectionSerial)return;
     this.simulation.selectPlayerShip(kind);
+    if(this.hud)this.renderFrame(1/60,true);
+    await this.fleet?.ready();
     if(this.hud)this.renderFrame(1/60,true);
     this.saveProgress();
   }
@@ -480,6 +489,8 @@ export class GameApp {
       getMetrics: () => ({ ...this.metrics }),
       getAim: () => this.cameraRig.getAimDebug(),
       selectShip: (kind) => this.selectShip(kind),
+      readyAssets: () => this.fleet.ready(),
+      getAssets: () => this.fleet.inspectAssets(),
       action: (action, pressed = true) => this.handleAction(action, pressed),
       setPaused: (paused) => this.setPaused(paused),
       step: (frames = 1) => {

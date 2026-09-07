@@ -271,7 +271,9 @@ export interface CruiseDebugBridge {
   getState(): WorldState;
   getMetrics(): GameMetrics;
   getAim?(): {side?: "port"|"starboard";adjustment:number;targetId?:string;markerTargetId?:string;impact?:Vec3;guideVisible:boolean};
-  selectShip(kind: ShipKind): void;
+  selectShip(kind: ShipKind): void | Promise<void>;
+  readyAssets?(): Promise<void>;
+  getAssets?(): unknown;
   action(action: InputAction, pressed?: boolean): void;
   setPaused(paused: boolean): void;
   step(frames?: number): void;

@@ -1,0 +1,362 @@
+{
+  "ships": [
+    {
+      "kind": "going-merry",
+      "uid": "4b2cb678bf984c018dfa1936bd156c8d",
+      "title": "The Going Merry (One Piece) - Game Ready",
+      "author": "Oliver Edwards",
+      "authorUrl": "https://sketchfab.com/OliverEdwards_3DArt",
+      "source": "https://sketchfab.com/3d-models/the-going-merry-one-piece-game-ready-4b2cb678bf984c018dfa1936bd156c8d",
+      "license": {
+        "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+        "label": "CC Attribution",
+        "fullName": "Creative Commons Attribution",
+        "requirements": "Author must be credited. Commercial use is allowed.",
+        "url": "http://creativecommons.org/licenses/by/4.0/",
+        "slug": "by"
+      },
+      "sourceSha256": "af7e3015079edb527191827dc442a813bf58aa7fc0ac6dc97661466dd5c75486",
+      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression.",
+      "normalization": {
+        "uid": "4b2cb678bf984c018dfa1936bd156c8d",
+        "kind": "going-merry",
+        "yaw": 90,
+        "length": 34,
+        "keel": -4.36,
+        "ratio": 0.65
+      },
+      "variants": [
+        {
+          "detail": "high",
+          "url": "/assets/sketchfab/going-merry.glb",
+          "bytes": 1926420,
+          "sha256": "d57be94d58d5ebda049f6e20b56762d9f24172836dfe628707a3e520155b0b6d",
+          "triangles": 114773,
+          "draws": 4
+        },
+        {
+          "detail": "low",
+          "url": "/assets/sketchfab/going-merry-low.glb",
+          "bytes": 1184308,
+          "sha256": "f0a0b8bb8d75aece00f9f9e6a82716d2a56e35a641d6d1ccc94614a7e178b646",
+          "triangles": 16843,
+          "draws": 4
+        }
+      ]
+    },
+    {
+      "kind": "thousand-sunny",
+      "uid": "99986d1c93654c9d8889017435b5fe06",
+      "title": "One piece Thousand Sunny\ud83c\udf1e",
+      "author": "Miraculousetabug",
+      "authorUrl": "https://sketchfab.com/descendienteslamasmendieta",
+      "source": "https://sketchfab.com/3d-models/one-piece-thousand-sunny-99986d1c93654c9d8889017435b5fe06",
+      "license": {
+        "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+        "label": "CC Attribution",
+        "fullName": "Creative Commons Attribution",
+        "requirements": "Author must be credited. Commercial use is allowed.",
+        "url": "http://creativecommons.org/licenses/by/4.0/",
+        "slug": "by"
+      },
+      "sourceSha256": "2b4e9779d82786ed90c6688c4255d1f60ecb78b2f54b47e9f10c6203241d1c17",
+      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression.",
+      "normalization": {
+        "uid": "99986d1c93654c9d8889017435b5fe06",
+        "kind": "thousand-sunny",
+        "yaw": 180,
+        "length": 56,
+        "keel": -9.6,
+        "ratio": 1
+      },
+      "variants": [
+        {
+          "detail": "high",
+          "url": "/assets/sketchfab/thousand-sunny.glb",
+          "bytes": 891600,
+          "sha256": "b371752aab0aea952686f4bc872bfd5cad347075da4cfb594d230165dffc708f",
+          "triangles": 28064,
+          "draws": 36
+        },
+        {
+          "detail": "low",
+          "url": "/assets/sketchfab/thousand-sunny-low.glb",
+          "bytes": 680792,
+          "sha256": "6eacacac61d960091f5bb9d093295560204bea81cb700a03eacbc66bb8ecfb34",
+          "triangles": 14508,
+          "draws": 36
+        }
+      ]
+    },
+    {
+      "kind": "navy-galleon",
+      "uid": "92898d5f63ad43589203d5a8dc14aa12",
+      "title": "Marine ship From One piece",
+      "author": "Ryanwill679/TrashCG",
+      "authorUrl": "https://sketchfab.com/Ryanwill679",
+      "source": "https://sketchfab.com/3d-models/marine-ship-from-one-piece-92898d5f63ad43589203d5a8dc14aa12",
+      "license": {
+        "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+        "label": "CC Attribution",
+        "fullName": "Creative Commons Attribution",
+        "requirements": "Author must be credited. Commercial use is allowed.",
+        "url": "http://creativecommons.org/licenses/by/4.0/",
+        "slug": "by"
+      },
+      "sourceSha256": "56aaf920808942a32a3b90193120fcfdf216c3dcef56955fcc313942ed81e4c2",
+      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression.",
+      "normalization": {
+        "uid": "92898d5f63ad43589203d5a8dc14aa12",
+        "kind": "navy-galleon",
+        "yaw": 90,
+        "length": 70,
+        "keel": -11.2,
+        "ratio": 0.28
+      },
+      "variants": [
+        {
+          "detail": "high",
+          "url": "/assets/sketchfab/navy-galleon.glb",
+          "bytes": 6202612,
+          "sha256": "b98a02ac3c8f0c6bb85c6d56539f322f4c1932767b5753794346d56f5143a6af",
+          "triangles": 254289,
+          "draws": 7
+        },
+        {
+          "detail": "low",
+          "url": "/assets/sketchfab/navy-galleon-low.glb",
+          "bytes": 4570344,
+          "sha256": "3fb6b305b12fcd729c9daec2f5222d34be5157a1973601a63c87433117ee94bc",
+          "triangles": 157613,
+          "draws": 7
+        }
+      ]
+    },
+    {
+      "kind": "moby-dick",
+      "uid": "d9be26addfec48019188dd615a930311",
+      "title": "Moby Dick Ship",
+      "author": "Tigerar1",
+      "authorUrl": "https://sketchfab.com/allanromanreyes",
+      "source": "https://sketchfab.com/3d-models/moby-dick-ship-d9be26addfec48019188dd615a930311",
+      "license": {
+        "uri": "https://api.sketchfab.com/v3/licenses/b9ddc40b93e34cdca1fc152f39b9f375",
+        "label": "CC Attribution-ShareAlike",
+        "fullName": "Creative Commons Attribution-ShareAlike",
+        "requirements": "Author must be credited. Modified versions must have the same license. Commercial use is allowed.",
+        "url": "http://creativecommons.org/licenses/by-sa/4.0/",
+        "slug": "by-sa"
+      },
+      "sourceSha256": "fe8cc578bee8782ae6002046d85665e354e93e36ef56c3efe9267c6df6559f75",
+      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression.",
+      "normalization": {
+        "uid": "d9be26addfec48019188dd615a930311",
+        "kind": "moby-dick",
+        "yaw": 180,
+        "length": 122,
+        "keel": -18,
+        "style": "moby",
+        "ratio": 1
+      },
+      "variants": [
+        {
+          "detail": "high",
+          "url": "/assets/sketchfab/moby-dick.glb",
+          "bytes": 150808,
+          "sha256": "555b6160d620501dee0eb9bb3ab822bde1db74226c8af7b7871bca3dd56db963",
+          "triangles": 15274,
+          "draws": 1
+        },
+        {
+          "detail": "low",
+          "url": "/assets/sketchfab/moby-dick-low.glb",
+          "bytes": 91064,
+          "sha256": "d218b2d3020783401237db5964d94768b0f474aa820da2cf07aab24f2e7a47d1",
+          "triangles": 7287,
+          "draws": 1
+        }
+      ]
+    },
+    {
+      "kind": "polar-tang",
+      "uid": "a7feb48976ce484aa4537e4c7124a9c4",
+      "title": "Polar Tang",
+      "author": "taem5070",
+      "authorUrl": "https://sketchfab.com/taem5070",
+      "source": "https://sketchfab.com/3d-models/polar-tang-a7feb48976ce484aa4537e4c7124a9c4",
+      "license": {
+        "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+        "label": "CC Attribution",
+        "fullName": "Creative Commons Attribution",
+        "requirements": "Author must be credited. Commercial use is allowed.",
+        "url": "http://creativecommons.org/licenses/by/4.0/",
+        "slug": "by"
+      },
+      "sourceSha256": "22f9c058a15a3a2e459546e7385b023996f153823d7fb706e68908bae1a5b8fe",
+      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression.",
+      "normalization": {
+        "uid": "a7feb48976ce484aa4537e4c7124a9c4",
+        "kind": "polar-tang",
+        "yaw": -90,
+        "length": 52,
+        "keel": -19.4,
+        "ratio": 0.22
+      },
+      "variants": [
+        {
+          "detail": "high",
+          "url": "/assets/sketchfab/polar-tang.glb",
+          "bytes": 2027896,
+          "sha256": "15f2a4f848086a48122d459f593a7906f6acaa818c2774e4f62b30b55e71647c",
+          "triangles": 115672,
+          "draws": 10
+        },
+        {
+          "detail": "low",
+          "url": "/assets/sketchfab/polar-tang-low.glb",
+          "bytes": 1290508,
+          "sha256": "c18c9ab7f590f168b00137f263e7132bab85fa33958490b2268960dcf8eee9b4",
+          "triangles": 14162,
+          "draws": 10
+        }
+      ]
+    },
+    {
+      "kind": "baratie",
+      "uid": "015ebe70a76749eeb92f5f39693b8ea5",
+      "title": "Baratie - One Piece",
+      "author": "Chin Eeyang",
+      "authorUrl": "https://sketchfab.com/chinyang1607",
+      "source": "https://sketchfab.com/3d-models/baratie-one-piece-015ebe70a76749eeb92f5f39693b8ea5",
+      "license": {
+        "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+        "label": "CC Attribution",
+        "fullName": "Creative Commons Attribution",
+        "requirements": "Author must be credited. Commercial use is allowed.",
+        "url": "http://creativecommons.org/licenses/by/4.0/",
+        "slug": "by"
+      },
+      "sourceSha256": "d7bda584e37045db46a03faca7523c5a4800f26f386c1b4c037e6d7214eff0c4",
+      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression.",
+      "normalization": {
+        "uid": "015ebe70a76749eeb92f5f39693b8ea5",
+        "kind": "baratie",
+        "yaw": 180,
+        "length": 74,
+        "keel": -12,
+        "style": "baratie",
+        "ratio": 0.24
+      },
+      "variants": [
+        {
+          "detail": "high",
+          "url": "/assets/sketchfab/baratie.glb",
+          "bytes": 929680,
+          "sha256": "d9116939d304a495112016cf07d72dc2ed8d274fb095f0aa86959f688e17e05a",
+          "triangles": 143185,
+          "draws": 1
+        },
+        {
+          "detail": "low",
+          "url": "/assets/sketchfab/baratie-low.glb",
+          "bytes": 230040,
+          "sha256": "2a9613ddd8c256b6f33751bb7f373d4e34067cb20e437fa5681824d30b6872c5",
+          "triangles": 21687,
+          "draws": 1
+        }
+      ]
+    }
+  ],
+  "crew": [
+    {
+      "id": "luffy",
+      "uid": "44b58336c7344f058a02c6944b7ad843",
+      "height": 2.9,
+      "author": "Ricardo3D",
+      "title": "Luffy - One Piece",
+      "animation": "Idle",
+      "source": "https://sketchfab.com/3d-models/none-44b58336c7344f058a02c6944b7ad843",
+      "authorUrl": "https://sketchfab.com/creadordemu",
+      "license": {
+        "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+        "label": "CC Attribution",
+        "fullName": "Creative Commons Attribution",
+        "requirements": "Author must be credited. Commercial use is allowed.",
+        "url": "http://creativecommons.org/licenses/by/4.0/",
+        "slug": "by"
+      },
+      "sourceSha256": "25bc87830accd0946d23873f605456d6bf8f989501210dc85cb5627818348be9",
+      "url": "/assets/sketchfab/crew/luffy.glb",
+      "bytes": 392728,
+      "sha256": "e542c0cfb222f235320a03a06b6d9d29baae115474d08ac2124f1d973a83a59a",
+      "changes": "Meshopt compression, WebP texture optimization, retained source skeleton and available animation clips; runtime uniform scale and materials."
+    },
+    {
+      "id": "nami",
+      "uid": "182735247cfb45b5853684ac54a6e767",
+      "height": 2.8,
+      "author": "jvmartins",
+      "title": "Nami one piece",
+      "source": "https://sketchfab.com/3d-models/none-182735247cfb45b5853684ac54a6e767",
+      "authorUrl": "https://sketchfab.com/jvmb1208",
+      "license": {
+        "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+        "label": "CC Attribution",
+        "fullName": "Creative Commons Attribution",
+        "requirements": "Author must be credited. Commercial use is allowed.",
+        "url": "http://creativecommons.org/licenses/by/4.0/",
+        "slug": "by"
+      },
+      "sourceSha256": "2669dba3c4b2ee202d9df404c0b40274936e1a57c92f2cbcd15c845bb7d13962",
+      "url": "/assets/sketchfab/crew/nami.glb",
+      "bytes": 122508,
+      "sha256": "07b5608f69d45f0ea2e2c9316e24eb5546f040f3f43b621ba0b6cdd9429503ff",
+      "changes": "Meshopt compression, WebP texture optimization, retained source skeleton and available animation clips; runtime uniform scale and materials."
+    },
+    {
+      "id": "sanji",
+      "uid": "7dfddca8f50c45d7a430b538118d3f9a",
+      "height": 3.0,
+      "author": "Justin Rajan",
+      "title": "Sanji (One Piece)",
+      "animation": "mixamo.com",
+      "source": "https://sketchfab.com/3d-models/none-7dfddca8f50c45d7a430b538118d3f9a",
+      "authorUrl": "https://sketchfab.com/justin.rajan.6619",
+      "license": {
+        "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+        "label": "CC Attribution",
+        "fullName": "Creative Commons Attribution",
+        "requirements": "Author must be credited. Commercial use is allowed.",
+        "url": "http://creativecommons.org/licenses/by/4.0/",
+        "slug": "by"
+      },
+      "sourceSha256": "295258ad77f4ce690d000ee9c7b8e0af2579a8da6b29717dd867450674608ebd",
+      "url": "/assets/sketchfab/crew/sanji.glb",
+      "bytes": 490936,
+      "sha256": "7956b1a284e084ce7669737906a749d915a3cff206926eacb801a065c50e5d23",
+      "changes": "Meshopt compression, WebP texture optimization, retained source skeleton and available animation clips; runtime uniform scale and materials."
+    },
+    {
+      "id": "whitebeard",
+      "uid": "13ebbf108c7949959608b341dbde80d3",
+      "height": 8.0,
+      "author": "VorLucky",
+      "title": "One Piece - WhiteBeard",
+      "source": "https://sketchfab.com/3d-models/none-13ebbf108c7949959608b341dbde80d3",
+      "authorUrl": "https://sketchfab.com/bladeeee",
+      "license": {
+        "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+        "label": "CC Attribution",
+        "fullName": "Creative Commons Attribution",
+        "requirements": "Author must be credited. Commercial use is allowed.",
+        "url": "http://creativecommons.org/licenses/by/4.0/",
+        "slug": "by"
+      },
+      "sourceSha256": "5b34cb328bb29551fd9dc1b5ea10e923680167fe717061e89bd2f3c44664e66d",
+      "url": "/assets/sketchfab/crew/whitebeard.glb",
+      "bytes": 205272,
+      "sha256": "309a2775b1fac78976599385a005d4be6cce9223650d1817cd19faf9436e704e",
+      "changes": "Meshopt compression, WebP texture optimization, retained source skeleton and available animation clips; runtime uniform scale and materials."
+    }
+  ]
+}

@@ -46,7 +46,7 @@ const urlFor = (scene) => {
   return url.href;
 };
 const configuration = {
-  baseURL, output, seed, warmupMs, sampleMs, quality: 'auto', headless: false,
+  baseURL, output, seed, warmupMs, sampleMs, quality: 'auto', headless: false, selectedShip:process.env.CRUISE_PROFILE_SHIP??null,
   initialRendererDpr: 1.5, adaptiveDprAllowed: true, viewports,
   notes: ['Ordinary launch UI is dismissed through real buttons.', 'RAF intervals are uncapped wall-clock samples.',
     'Adaptive DPR is observed, not overridden.', 'Landscape runs on the same desktop CPU/GPU, not a physical mobile device.',
@@ -123,6 +123,11 @@ try {
       await page.goto(record.url, { waitUntil: 'domcontentloaded' });
       await page.bringToFront();
       await page.waitForFunction(() => window.__CRUISE_DEBUG__?.ready === true, null, { timeout: 60_000 });
+      if(process.env.CRUISE_PROFILE_SHIP){
+        await page.locator(`[data-ship="${process.env.CRUISE_PROFILE_SHIP}"]`).click();
+        await page.waitForFunction(kind=>window.__CRUISE_DEBUG__.getState().ships.find(ship=>ship.isPlayer)?.kind===kind,process.env.CRUISE_PROFILE_SHIP);
+        await page.evaluate(()=>window.__CRUISE_DEBUG__.readyAssets());
+      }
       const launch = page.locator('[data-action="launch"]');
       if (await launch.isVisible()) { await launch.click(); record.launchDismissedBy = 'actual launch button'; }
       else record.launchDismissedBy = 'launch overlay was already absent';

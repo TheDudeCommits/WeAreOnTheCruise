@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import sourceWaterlines from '../../content/sketchfabWaterlines.json';
 import type { AmmoKind, ShipState, Vec3, WorldState } from '../../core/contracts';
 import { getShipSpec } from '../../content';
 import type { OceanSampler, SimulationEvent } from '../../simulation';
@@ -26,6 +27,7 @@ interface WakeTrail {
   mesh: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>;
   contactFoam: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>;
   points: THREE.Vector3[];
+  bornAt: number[];
   lastPosition: THREE.Vector3;
   width: number;
   links: boolean[];
@@ -430,7 +432,7 @@ export class NavalFxView {
       } else if (ship.kind === 'polar-tang') {
         const recovery = phase.phase === 'recovery';
         const depth = surface - ship.position.y;
-        const emergence = recovery ? Math.max(0, 1 - Math.abs(depth - 3) / 12) : 0;
+        const emergence = recovery ? Math.max(0, 1 - Math.abs(depth - 9) / 24) : 0;
         const co = Math.cos(ship.heading), si = Math.sin(ship.heading);
         // Only the real hull drives this disturbance. No substitute submarine
         // or above-water silhouette is rendered while the hull is submerged.
@@ -586,7 +588,9 @@ export class NavalFxView {
         this.root.add(wake.mesh, wake.contactFoam);
       }
       const stern = this.sternPosition(ship);
-      if (wake.points[0] && wake.points[0].distanceTo(stern) > 160) { wake.points.length=0; wake.links.length=0; }
+      if (wake.points[0] && wake.points[0].distanceTo(stern) > 160) { wake.points.length=0; wake.bornAt.length=0; wake.links.length=0; }
+      while(wake.bornAt.length && time-wake.bornAt.at(-1)!>12){wake.bornAt.pop();wake.points.pop();}
+      wake.links.length=Math.max(0,wake.points.length-1);
       const surface = this.waveSampler?.sample(ship.position.x, ship.position.z, time).height ?? 0;
       const detached = ship.kind === 'polar-tang' && ship.position.y < surface - 3 || ship.kind === 'thousand-sunny' && ship.specialPhase?.phase === 'active' && ship.specialPhase.elapsed < .6;
       wake.width = getShipSpec(ship.kind).beam * .42;
@@ -609,8 +613,10 @@ export class NavalFxView {
         if (wake.points.length > 0) wake.links.unshift(!wake.detached);
         wake.detached = false;
         wake.points.unshift(stern);
+        wake.bornAt.unshift(time);
         wake.lastPosition.copy(stern);
         if (wake.points.length > this.wakeSegments) wake.points.length = this.wakeSegments;
+        if (wake.bornAt.length > this.wakeSegments) wake.bornAt.length = this.wakeSegments;
         if (wake.links.length >= this.wakeSegments) wake.links.length = this.wakeSegments - 1;
       } else if (!detached && wake.points[0]) {
         wake.points[0].copy(stern);
@@ -642,17 +648,24 @@ export class NavalFxView {
     geometry.setIndex(indices);
     const uv=new Float32Array(this.wakeSegments*4);
     for(let i=0;i<this.wakeSegments;i++){uv[i*4]=0;uv[i*4+1]=i/(this.wakeSegments-1);uv[i*4+2]=1;uv[i*4+3]=i/(this.wakeSegments-1);}
-    geometry.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+    geometry.setAttribute('uv',new THREE.BufferAttribute(uv,2).setUsage(THREE.DynamicDrawUsage));
+    geometry.setAttribute('wakeAge',new THREE.BufferAttribute(new Float32Array(this.wakeSegments*2),1).setUsage(THREE.DynamicDrawUsage));
     geometry.setDrawRange(0, 0);
     const material = new THREE.ShaderMaterial({
       name:'ConnectedWakeFoam',transparent:true,depthWrite:false,side:THREE.DoubleSide,
       uniforms:{uTime:{value:0},uOpacity:{value:.6},uBurst:{value:0},uColor:{value:new THREE.Color(0xfff7e0)}},
-      vertexShader:'varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-      fragmentShader:`uniform float uTime; uniform float uOpacity;uniform float uBurst;uniform vec3 uColor;varying vec2 vUv;
-      void main(){float edge=abs(vUv.x-.5)*2.;float lines=sin(vUv.y*96.-uTime*3.+sin(vUv.x*31.)*2.)*.5+.5;
-      float fringe=smoothstep(.05,.4,edge)*(1.-smoothstep(.82,1.,edge));
-      float alpha=(.1+fringe*(.42+lines*.48))*(1.-smoothstep(.35,1.,vUv.y))*uOpacity;
-      alpha*=mix(1.,smoothstep(.15,.75,lines*(.55+.45*sin(vUv.x*37.+vUv.y*17.))),uBurst);
+      vertexShader:'attribute float wakeAge;varying float vAge;varying vec2 vUv;varying vec2 vSea;void main(){vAge=wakeAge;vUv=uv;vSea=position.xz;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      fragmentShader:`uniform float uTime; uniform float uOpacity;uniform float uBurst;uniform vec3 uColor;varying vec2 vUv;varying vec2 vSea;varying float vAge;
+      float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+      float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
+      void main(){float edge=abs(vUv.x-.5)*2.;
+      float turbulence=noise(vSea*.27+vec2(uTime*.11,-uTime*.16));
+      float detail=noise(vSea*.93+vec2(-uTime*.07,uTime*.12));
+      float fringe=(1.-smoothstep(.5,.96,edge+turbulence*.14))*smoothstep(0.,.055,vUv.y)*(1.-smoothstep(.58,1.,vUv.y));
+      float lace=1.-smoothstep(.035,.18,abs(turbulence+detail*.28-.66));
+      float patches=smoothstep(.53,.82,turbulence)*.3;
+      float alpha=(lace*.72+patches)*fringe*(1.-smoothstep(2.,12.,vAge))*uOpacity;
+      alpha*=mix(1.,smoothstep(.2,.75,detail),uBurst);
       gl_FragColor=vec4(uColor,alpha);
       #include <colorspace_fragment>
       }`,
@@ -682,6 +695,7 @@ export class NavalFxView {
       mesh,
       contactFoam,
       points: [],
+      bornAt: [],
       lastPosition: new THREE.Vector3(Number.POSITIVE_INFINITY, 0, 0),
       width: spec.beam * 0.42,
       links: [],
@@ -691,13 +705,15 @@ export class NavalFxView {
 
   private updateWakeGeometry(wake: WakeTrail, ship: ShipState, time: number): void {
     const spec=getShipSpec(ship.kind),speed=Math.min(1,Math.abs(ship.speed)/Math.max(1,ship.maxSpeed));
+    const contour=(sourceWaterlines as Partial<Record<string,number[][]>>)[ship.kind];
     const foamPositions=wake.contactFoam.geometry.getAttribute('position') as THREE.BufferAttribute;
     const co=Math.cos(ship.heading),si=Math.sin(ship.heading);
     for(let i=0;i<=32;i++){
       const a=i/32*Math.PI*2,ax=Math.sin(a),az=Math.cos(a);
       for(let edge=0;edge<2;edge++){
         const width=-.20+edge*(.8+speed*1.3);
-        const lx=ax*(spec.beam*.445+width),lz=az*(spec.length*.475+width);
+        const point=contour?.[i%32];
+        const lx=(point?.[0]??ax*spec.beam*.445)+ax*width,lz=(point?.[1]??az*spec.length*.475)+az*width;
         const x=ship.position.x+lx*co+lz*si,z=ship.position.z-lx*si+lz*co;
         const y=this.waveSampler?.sample(x,z,time).height??ship.position.y;
         foamPositions.setXYZ(i*2+edge,x,y+.15,z);
@@ -709,6 +725,8 @@ export class NavalFxView {
     (wake.contactFoam.material.uniforms.uColor!.value as THREE.Color).copy(wake.mesh.material.uniforms.uColor!.value);
     wake.contactFoam.visible=ship.finish?.state!=='sunk';
     const positions = wake.mesh.geometry.getAttribute('position') as THREE.BufferAttribute;
+    const uv=wake.mesh.geometry.getAttribute('uv') as THREE.BufferAttribute;
+    const ages=wake.mesh.geometry.getAttribute('wakeAge') as THREE.BufferAttribute;
     const count = wake.points.length;
     for (let index = 0; index < count; index += 1) {
       const point = wake.points[index];
@@ -721,11 +739,16 @@ export class NavalFxView {
       const fadeNarrow = 1 - Math.pow(index / Math.max(1, count), 2) * 0.45;
       const sideX = -dz / length * spread * fadeNarrow;
       const sideZ = dx / length * spread * fadeNarrow;
-      const waveY = this.waveSampler?.sample(point.x, point.z, time).height ?? point.y;
-      positions.setXYZ(index * 2, point.x + sideX, waveY + 0.12, point.z + sideZ);
-      positions.setXYZ(index * 2 + 1, point.x - sideX, waveY + 0.12, point.z - sideZ);
+      for(let edge=0;edge<2;edge++){
+        const sign=edge===0?1:-1,x=point.x+sideX*sign,z=point.z+sideZ*sign;
+        const waveY=this.waveSampler?.sample(x,z,time).height??point.y;
+        positions.setXYZ(index*2+edge,x,waveY+.10,z);
+        uv.setXY(index*2+edge,edge,index/Math.max(1,count-1));
+        ages.setX(index*2+edge,Math.max(0,time-wake.bornAt[index]));
+      }
     }
     positions.needsUpdate = true;
+    uv.needsUpdate=true;ages.needsUpdate=true;
     const indices = wake.mesh.geometry.getIndex()!;
     let indexCount = 0;
     for (let index = 0; index < count - 1; index++) {
@@ -736,7 +759,7 @@ export class NavalFxView {
     indices.needsUpdate = true;
     wake.mesh.geometry.setDrawRange(0, indexCount);
     wake.mesh.material.uniforms.uOpacity!.value = 0.35 + Math.min(0.65, Math.abs(ship.speed) / Math.max(1, ship.maxSpeed) * 0.7);
-    wake.mesh.visible = Math.abs(ship.speed) > 0.8 && count > 1;
+    wake.mesh.visible = count > 1;
   }
 
   private sternPosition(ship: ShipState): THREE.Vector3 {

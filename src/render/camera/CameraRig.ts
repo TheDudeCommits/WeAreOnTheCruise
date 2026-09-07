@@ -20,6 +20,10 @@ const OFFSETS: Record<CameraPreset, THREE.Vector3> = {
   cinematic: new THREE.Vector3(-48, 24, -50),
   overhead: new THREE.Vector3(0, 150, 62),
 };
+// Heights measured from the normalized downloaded assets, above the still waterline.
+const SOURCE_HEIGHTS:Partial<Record<ShipState['kind'],number>>={
+  'going-merry':22,'thousand-sunny':40,'navy-galleon':63,'moby-dick':106,'polar-tang':28,'baratie':73,
+};
 
 export class CameraRig {
   private preset: CameraPreset = "chase";
@@ -130,6 +134,11 @@ export class CameraRig {
         ? 1
         : THREE.MathUtils.clamp(Math.sqrt(ship.mass / 860), 0.75, 2.15);
     this.offset.copy(base).multiplyScalar(scale);
+    const sourceHeight=SOURCE_HEIGHTS[ship.kind];
+    if(this.preset==='cinematic'&&sourceHeight){
+      const radius=Math.max(getShipSpec(ship.kind).length*1.16,sourceHeight*1.24,ship.kind==='baratie'?150:0);
+      this.offset.set(-radius*.69,sourceHeight*.63+8,-radius*.72);
+    }
     if (this.preset === "deck")
       this.offset.y += getShipSpec(ship.kind).draft * 0.38;
     const referenceSpecial = !this.aim.side && this.aimAssist && this.pointerId === null
@@ -207,7 +216,7 @@ export class CameraRig {
         ? 5.4 + getShipSpec(ship.kind).draft * 0.38
         : this.preset === "overhead"
           ? 0
-          : this.preset === "cinematic" ? 17 : 11;
+          : this.preset === "cinematic" ? (sourceHeight??40)*.4 : 11;
     this.lookAt
       .set(ship.position.x, ship.position.y + lookHeight, ship.position.z)
       .addScaledVector(forward, lookDistance);
