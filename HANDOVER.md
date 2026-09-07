@@ -40,7 +40,7 @@ This remains an unofficial fan project. Music and audio are procedural; bespoke 
 
 ## Asset acquisition is blocked
 
-The two requested Sketchfab searches were cataloged through the official public API: **72 pages, 1,676 unique records, 28 relevant ship/vehicle candidates plus one figurehead**. Principal crew candidates are also tagged. Actual model downloads require authentication: the official download endpoint returns HTTP 401, and the connected Blender Sketchfab integration is disabled. **Downloaded model files: zero.** Hunyuan3D and Hyper3D integrations were also checked and are disabled.
+The two requested Sketchfab searches were cataloged through the official public API: **72 pages, 1,676 unique records, 28 relevant ship/vehicle candidates plus one figurehead**. Principal crew candidates are also tagged. The earlier official download request returned HTTP 401, and Blender previously reported Sketchfab disabled. The latest status check failed because the Blender connection closed, so current connection and authentication status are unverified. **Zero Sketchfab models or bytes have been downloaded.** Hunyuan3D and Hyper3D integrations also previously reported disabled.
 
 The user has already been asked to enable Sketchfab in the Blender MCP panel or unlock the Mac and sign in. No answer was available during these passes. Do not repeat the question unnecessarily. Once enabled, use the official downloader, retain each asset's creator/license/source, inspect geometry, normalize units/pivots, retopologize and LOD, restyle materials, and verify performance. Never extract the viewer's protected delivery assets.
 
