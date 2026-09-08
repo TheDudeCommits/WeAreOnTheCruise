@@ -62,7 +62,7 @@ const ROUGH_CIRCUIT: readonly Vec3[] = [
 ];
 
 const raceRivals = (): readonly ScenarioShip[] => [
-  { id: 'rival-red', kind: 'red-force', position: v(-30, 70), heading: 0, ai: 'tactical' },
+  { id: 'rival-sunny', kind: 'thousand-sunny', position: v(-30, 70), heading: 0, ai: 'tactical' },
   { id: 'rival-merry', kind: 'going-merry', position: v(30, 82), heading: 0, ai: 'reckless' },
   { id: 'rival-polar', kind: 'polar-tang', position: v(90, 72), heading: 0, ai: 'racer' },
 ];
@@ -74,15 +74,12 @@ export const SCENARIO_PRESETS: Readonly<Record<DebugScene, ScenarioPreset>> = {
     player: { id: 'player', kind: 'thousand-sunny', position: v(0, 0), heading: 0, faction: 'straw-hat' },
     rivals: [
       { id: 'merry-escort', name: 'Going Merry', kind: 'going-merry', position: v(-85, -135), heading: 0.1, ai: 'tactical', faction: 'straw-hat', combatRole: 'escort' },
-      { id: 'red-force-roamer', name: 'Red Force', kind: 'red-force', position: v(260, -210), heading: 0.65, ai: 'tactical', faction: 'red-hair', combatRole: 'broadside' },
       { id: 'moby-roamer', name: 'Moby Dick', kind: 'moby-dick', position: v(-380, -300), heading: -0.25, ai: 'aggressive', faction: 'whitebeard', combatRole: 'rammer' },
       { id: 'polar-roamer', name: 'Polar Tang', kind: 'polar-tang', position: v(180, -310), heading: 0.15, ai: 'reckless', faction: 'heart', combatRole: 'flanker' },
-      { id: 'mama-roamer', name: 'Queen Mama Chanter', kind: 'queen-mama-chanter', position: v(-240, -265), heading: 0.8, ai: 'aggressive', faction: 'big-mom', combatRole: 'rammer' },
       { id: 'baratie-route', name: 'Baratie', kind: 'baratie', position: v(360, -40), heading: -1.1, ai: 'tactical', faction: 'merchant', combatRole: 'flee' },
-      { id: 'oro-roamer', name: 'Oro Jackson', kind: 'oro-jackson', position: v(-390, -60), heading: -0.65, ai: 'tactical', faction: 'roger', combatRole: 'ranged' },
       { id: 'marine-patrol', name: 'Marine Patrol Galleon', kind: 'navy-galleon', position: v(60, -120), heading: 0.05, ai: 'tactical', faction: 'marine', combatRole: 'ranged' },
     ],
-    islands: [{ id: 'dawn-arch', position: v(-240, -520), radius: 94, height: 76, palette: 2, landmark: 'arches' }], bounty: 30_000_000,
+    islands: [{ id: 'dawn-arch', position: v(-120, -520), radius: 145, height: 220, palette: 2, landmark: 'arches' }], bounty: 30_000_000,
   },
   'storm-sailing': {
     scene: 'storm-sailing', mode: 'explore', weather: 'storm', objective: 'Hold course through the Grand Line squall',
@@ -109,7 +106,7 @@ export const SCENARIO_PRESETS: Readonly<Record<DebugScene, ScenarioPreset>> = {
   'fleet-battle': {
     scene: 'fleet-battle', mode: 'combat', weather: 'swell', objective: 'Break the Marine formation',
     windDirection: 1.1, windStrength: 1.1, currentDirection: -0.35, currentStrength: 0.35,
-    player: { id: 'player', kind: 'red-force', position: v(0, 80), heading: 0 },
+    player: { id: 'player', kind: 'thousand-sunny', position: v(0, 80), heading: 0 },
     rivals: [
       { id: 'marine-vanguard', kind: 'navy-galleon', position: v(-85, -80), heading: 0.15, ai: 'aggressive', faction: 'marine', combatRole: 'rammer' },
       { id: 'marine-line', kind: 'navy-galleon', position: v(0, -130), heading: -0.1, ai: 'tactical', faction: 'marine', combatRole: 'broadside' },
@@ -123,7 +120,7 @@ export const SCENARIO_PRESETS: Readonly<Record<DebugScene, ScenarioPreset>> = {
     rivals: [{ id: 'hunter', kind: 'navy-galleon', position: v(-135, -210), heading: 0.1, ai: 'tactical', faction: 'marine', combatRole: 'ranged', damage: 0.36 }], islands: [], bounty: 66_000_000,
   },
   'island-discovery': {
-    scene: 'island-discovery', mode: 'discovery', weather: 'fog', objective: 'Approach the nameless volcano and record it on the chart',
+    scene: 'island-discovery', mode: 'discovery', weather: 'fog', objective: 'Chart the mistbound coast of Ember Crown',
     windDirection: 0.75, windStrength: 0.68, currentDirection: 0.3, currentStrength: 0.18,
     player: { id: 'player', kind: 'thousand-sunny', position: v(40, 170), heading: 0.11 }, rivals: [],
     islands: [
@@ -154,11 +151,11 @@ export const SCENARIO_PRESETS: Readonly<Record<DebugScene, ScenarioPreset>> = {
   'night-encounter': {
     scene: 'night-encounter', mode: 'combat', weather: 'night', objective: 'Identify the lanterns closing through the dark',
     windDirection: -2, windStrength: 0.9, currentDirection: 1.45, currentStrength: 0.34,
-    player: { id: 'player', kind: 'oro-jackson', position: v(0, 35), heading: 0 },
+    player: { id: 'player', kind: 'going-merry', position: v(0, 35), heading: 0 },
     rivals: [
-      { id: 'night-mama', kind: 'queen-mama-chanter', position: v(-112, -145), heading: 0.15, ai: 'aggressive' },
+      { id: 'night-moby', kind: 'moby-dick', position: v(-112, -145), heading: 0.15, ai: 'aggressive' },
       { id: 'night-escort', kind: 'navy-galleon', position: v(90, -180), heading: -0.3, ai: 'tactical' },
-      { id: 'night-raider', kind: 'red-force', position: v(-205, -35), heading: 1.1, ai: 'reckless' },
+      { id: 'night-raider', kind: 'thousand-sunny', position: v(-205, -35), heading: 1.1, ai: 'reckless' },
     ], islands: [], bounty: 556_400_000, timeOfDay: 0.92,
   },
   'perf-fleet': {
@@ -172,7 +169,7 @@ export const SCENARIO_PRESETS: Readonly<Record<DebugScene, ScenarioPreset>> = {
       { id: 'perf-4', kind: 'navy-galleon', position: v(90, -195), heading: 0, ai: 'reckless' },
       { id: 'perf-5', kind: 'navy-galleon', position: v(180, -150), heading: 0, ai: 'aggressive' },
       { id: 'perf-6', kind: 'polar-tang', position: v(-245, -20), heading: 1.1, ai: 'reckless', faction: 'marine', combatRole: 'flanker' },
-      { id: 'perf-7', kind: 'red-force', position: v(245, -20), heading: -1.1, ai: 'aggressive', faction: 'marine', combatRole: 'rammer' },
+      { id: 'perf-7', kind: 'thousand-sunny', position: v(245, -20), heading: -1.1, ai: 'aggressive', faction: 'marine', combatRole: 'rammer' },
     ], islands: [], bounty: 1_500_000_000,
   },
 };

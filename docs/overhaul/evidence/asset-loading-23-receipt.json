@@ -1,0 +1,99 @@
+{
+  "checks": [
+    {
+      "name": "A failed model keeps launch disabled",
+      "pass": true
+    },
+    {
+      "name": "A failed model does not replace the existing vessel",
+      "pass": true,
+      "detail": "thousand-sunny"
+    },
+    {
+      "name": "Failed download retries successfully without a reload",
+      "pass": true
+    },
+    {
+      "name": "A slower previous selection cannot replace the latest selected ship",
+      "pass": true,
+      "detail": "going-merry"
+    },
+    {
+      "name": "Latest selected ship remains launchable",
+      "pass": true
+    },
+    {
+      "name": "Every visible model identifies an actual ready Sketchfab source",
+      "pass": true,
+      "detail": [
+        {
+          "id": "player",
+          "kind": "going-merry",
+          "source": "sketchfab",
+          "status": "ready",
+          "meshes": 26,
+          "crew": [
+            {
+              "name": "crew:luffy",
+              "sourceUid": "44b58336c7344f058a02c6944b7ad843",
+              "contact": [
+                0,
+                3.2526874478497003,
+                -7
+              ],
+              "visible": true
+            },
+            {
+              "name": "crew:nami",
+              "sourceUid": "182735247cfb45b5853684ac54a6e767",
+              "contact": [
+                -3,
+                3.2526874478496994,
+                -8
+              ],
+              "visible": true
+            },
+            {
+              "name": "crew:sanji",
+              "sourceUid": "7dfddca8f50c45d7a430b538118d3f9a",
+              "contact": [
+                2,
+                3.0242498966649762,
+                4
+              ],
+              "visible": true
+            }
+          ],
+          "bounds": {
+            "min": [
+              -9.895181845282746,
+              -4.359313335061295,
+              -17
+            ],
+            "max": [
+              9.895182798957062,
+              22.023802448038783,
+              17
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "No unhandled JavaScript errors",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "name": "Only the deliberate HTTP error was logged",
+      "pass": true,
+      "detail": [
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+      ]
+    }
+  ],
+  "pageErrors": [],
+  "expectedNetworkErrors": [
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+  ]
+}

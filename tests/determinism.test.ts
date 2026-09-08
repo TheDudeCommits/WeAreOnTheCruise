@@ -34,7 +34,7 @@ describe('deterministic naval runtime', () => {
     const initial = simulation.getState();
     expect(initial.ships.length).toBeGreaterThanOrEqual(6);
     expect(initial.ships.length).toBeLessThanOrEqual(10);
-    expect(new Set(initial.ships.map((ship) => ship.kind)).size).toBe(9);
+    expect(new Set(initial.ships.map((ship) => ship.kind)).size).toBe(6);
     expect(new Set(initial.ships.map((ship) => ship.faction)).size).toBeGreaterThanOrEqual(5);
     expect(initial.ships.find((ship) => ship.isPlayer)?.targetId).toBe('marine-patrol');
 

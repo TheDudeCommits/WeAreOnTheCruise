@@ -6,3 +6,8 @@ test-results/
 *.tsbuildinfo
 .DS_Store
 .vercel
+
+.playwright-cli/
+assets/source/sketchfab/*/
+
+__pycache__/

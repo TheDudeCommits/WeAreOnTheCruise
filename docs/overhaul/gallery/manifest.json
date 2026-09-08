@@ -1,0 +1,346 @@
+{
+  "generatedAt": "2026-09-07T12:25:16.209Z",
+  "captureSet": "output/overhaul-gauntlet/pass-15",
+  "validation": {
+    "testCount": 168,
+    "aimPassed": 92,
+    "aimTotal": 92,
+    "extractionCount": 2,
+    "nodeVoyageWins": 5,
+    "nodeVoyageRuns": 6,
+    "nodeEscortLosses": 1,
+    "fullVoyageAttached": true,
+    "fullVoyageVerified": true,
+    "specials": {
+      "verified": true,
+      "passedRuns": 3,
+      "totalRuns": 3,
+      "passedChecks": 165,
+      "totalChecks": 165,
+      "unresolvedRuns": []
+    },
+    "specialPerformance": {
+      "validRuns": 6,
+      "totalRuns": 6,
+      "fpsMin": 59.98154414026454,
+      "fpsMax": 60.00061381702114,
+      "activeFpsMin": 59.9984210941817,
+      "activeFpsMax": 60.09330275954768,
+      "maxFrameMs": 18.80000000000109,
+      "over25Frames": 0,
+      "over50Frames": 0,
+      "hardware": "Apple M4"
+    },
+    "performance": {
+      "fpsMin": 59.99200106652447,
+      "fpsMax": 60.008258628268486,
+      "maxFrameMs": 18.80000000000291,
+      "over50Frames": 0,
+      "validRuns": 10,
+      "totalRuns": 10,
+      "hardware": "Apple M4"
+    }
+  },
+  "inputSets": {
+    "ui": "output/overhaul-gauntlet/ui-15",
+    "aim": "output/overhaul-gauntlet/aim-15",
+    "progression": "output/overhaul-gauntlet/progression-15",
+    "performance": "output/overhaul-gauntlet/performance-15",
+    "specials": "output/overhaul-gauntlet/specials-15",
+    "specialPerformance": "output/overhaul-gauntlet/special-performance-15"
+  },
+  "status": "Visual parity not achieved",
+  "assetIntake": {
+    "catalogEntries": 1676,
+    "relevantShipCandidates": 28,
+    "downloadedModels": 0,
+    "downloadStatus": "Blocked by Sketchfab authentication",
+    "currentAssets": "Original Blender-authored hulls and procedural crew"
+  },
+  "images": [
+    {
+      "url": "media/01-01-target.png",
+      "kind": "imagegen-concept",
+      "source": "docs/art-direction/concepts/01-embark-at-dawn.png",
+      "bytes": 2713013,
+      "sha256": "00df2fbc6cb8c390cafd77f34a8e40e6977216b8e506badbab806c2bd61bcad5"
+    },
+    {
+      "url": "media/02-01-engine.png",
+      "kind": "engine-capture",
+      "source": "output/overhaul-gauntlet/ui-15/desktop-embark.png",
+      "bytes": 1372085,
+      "sha256": "367190d695d4f06c49b3121f531bed6789a654b27b9de9ddd5deddda84620ddc"
+    },
+    {
+      "url": "media/03-02-target.png",
+      "kind": "imagegen-concept",
+      "source": "docs/art-direction/concepts/02-the-hero-ship.png",
+      "bytes": 2695974,
+      "sha256": "fc3d2527b2c8a10b9c4f97fa122bf83a660b60e4d0495353d31ef191502675f7"
+    },
+    {
+      "url": "media/04-02-engine.png",
+      "kind": "engine-capture",
+      "source": "output/overhaul-gauntlet/pass-15/hero-ship.png",
+      "bytes": 1432983,
+      "sha256": "4cf23259ec5ad4c41a4b778c71b25ea9cd75476fda5ca5e0e110ac450e235568"
+    },
+    {
+      "url": "media/05-03-target.png",
+      "kind": "imagegen-concept",
+      "source": "docs/art-direction/concepts/03-living-sea.png",
+      "bytes": 2673969,
+      "sha256": "a23eb4fd23ae45793e503ab14b4632a854a733586bfd10b36addeb7de969a92c"
+    },
+    {
+      "url": "media/06-03-engine.png",
+      "kind": "engine-capture",
+      "source": "output/overhaul-gauntlet/pass-15/calm-sailing.png",
+      "bytes": 1524212,
+      "sha256": "158823196587e54fb922bcbd4aec782ec927a908c4e7fed99dd5c65e9c7364b9"
+    },
+    {
+      "url": "media/07-04-target.png",
+      "kind": "imagegen-concept",
+      "source": "docs/art-direction/concepts/04-broadside-combat.png",
+      "bytes": 2812050,
+      "sha256": "df5b44d9936a43dfc41cb84c292b7016c2bdd47a06007152a01068b8d59e09c9"
+    },
+    {
+      "url": "media/08-04-engine.png",
+      "kind": "engine-capture",
+      "source": "output/overhaul-gauntlet/pass-15/sunny-broadside.png",
+      "bytes": 1655631,
+      "sha256": "2d0a997ff154a5a65721ca9b95dc8086d0c0dd2dcdd120d8aa98e61c97f0fa60"
+    },
+    {
+      "url": "media/09-05-target.png",
+      "kind": "imagegen-concept",
+      "source": "docs/art-direction/concepts/05-damage-and-defeat.png",
+      "bytes": 2930403,
+      "sha256": "b5d952f8acee2e0f989efbc76bcf051d6df78dd12ed172acf7455ea70a662f5c"
+    },
+    {
+      "url": "media/10-05-engine.png",
+      "kind": "engine-capture",
+      "source": "output/overhaul-gauntlet/pass-15/damaged-ship.png",
+      "bytes": 846543,
+      "sha256": "bde6f2d1337f664e85745da3885287876973ca1bb38544e1d88e9606694039b8"
+    },
+    {
+      "url": "media/11-06-target.png",
+      "kind": "imagegen-concept",
+      "source": "docs/art-direction/concepts/06-crew-at-work.png",
+      "bytes": 2827163,
+      "sha256": "842c5229eac0adf49654b6000738a2b4087a559eb66f258e099e3e679cfa20c5"
+    },
+    {
+      "url": "media/12-06-engine.png",
+      "kind": "engine-capture",
+      "source": "output/overhaul-gauntlet/pass-15/crew-repairs.png",
+      "bytes": 939567,
+      "sha256": "f6ffa4a1dc32a27756676bce89dc2abc9cf83b749be19c1bc2349d66cefa61b4"
+    },
+    {
+      "url": "media/13-07-target.png",
+      "kind": "imagegen-concept",
+      "source": "docs/art-direction/concepts/09-ship-specials.png",
+      "bytes": 2827824,
+      "sha256": "6a8eae12c0dc7855c2e12ae5e7a61c6c46eafb99f2cb13d893b018ebf5b95254"
+    },
+    {
+      "url": "media/14-07-engine.png",
+      "kind": "engine-capture",
+      "source": "output/overhaul-gauntlet/specials-15/moby-dick-wave-cinematic.png",
+      "bytes": 1711374,
+      "sha256": "53903323c9fea27eb6521644bd4687f97a22a7c170095996d8f7050eafdb69cd"
+    },
+    {
+      "url": "media/15-08-target.png",
+      "kind": "imagegen-concept",
+      "source": "docs/art-direction/concepts/07-arch-passage.png",
+      "bytes": 2919229,
+      "sha256": "4e5a9853d830373e776443927fae978a1873bd20edca95e11e8fcb2f0081ccef"
+    },
+    {
+      "url": "media/16-08-engine.png",
+      "kind": "engine-capture",
+      "source": "output/overhaul-gauntlet/pass-15/island-discovery.png",
+      "bytes": 1065827,
+      "sha256": "722713e374c0dc46d8432feac69f6789381605b81285383f799c29297748b78b"
+    },
+    {
+      "url": "media/17-09-target.png",
+      "kind": "imagegen-concept",
+      "source": "docs/art-direction/concepts/08-the-next-voyage.png",
+      "bytes": 2638825,
+      "sha256": "15f54946ddc691bf3f4b5f3ed05d4aff9c35039cecb86697784a276e5fffb601"
+    },
+    {
+      "url": "media/18-09-engine.png",
+      "kind": "engine-capture",
+      "source": "output/overhaul-gauntlet/progression-15/run-1-extracted.png",
+      "bytes": 1288576,
+      "sha256": "ce9615bb2d3fd188d19f31f99c390607c6e62f5a51075a0782f525a85cc07964"
+    },
+    {
+      "url": "media/19-moby-dick-wave-expanded.png",
+      "kind": "engine-evidence",
+      "source": "output/overhaul-gauntlet/specials-15/moby-dick-wave-expanded.png",
+      "bytes": 2198028,
+      "sha256": "ede6abf9caeabf58a98a404b93b30533fc801052c9f235fa7801ddeb28cb835f"
+    },
+    {
+      "url": "media/20-thousand-sunny-active.png",
+      "kind": "engine-evidence",
+      "source": "output/overhaul-gauntlet/specials-15/thousand-sunny-active.png",
+      "bytes": 1529862,
+      "sha256": "93dcf07a34ebd9c0e654e11e05bcecef062935da2c46827ce9a90eca478d9306"
+    },
+    {
+      "url": "media/21-polar-tang-active.png",
+      "kind": "engine-evidence",
+      "source": "output/overhaul-gauntlet/specials-15/polar-tang-active.png",
+      "bytes": 1226312,
+      "sha256": "af9086b0adaf07a9138fd32da465f8bce2fbd00c315707f9ef20a3af00497c9f"
+    },
+    {
+      "url": "media/22-landscape-port-multitouch-reload.png",
+      "kind": "engine-evidence",
+      "source": "output/overhaul-gauntlet/aim-15/landscape-port-multitouch-reload.png",
+      "bytes": 424689,
+      "sha256": "dc3e767b8a90f0a2c237f5fa05c0913c8e0c7c0081fb917b163df886606b0239"
+    },
+    {
+      "url": "media/23-portrait-embark.png",
+      "kind": "engine-evidence",
+      "source": "output/overhaul-gauntlet/ui-15/portrait-embark.png",
+      "bytes": 245877,
+      "sha256": "eb8b8f63a330a89f0de0c0f915e82070c6144fbbec6fe05528ae1c22fb6813b4"
+    },
+    {
+      "url": "media/24-refit-purchased.png",
+      "kind": "engine-evidence",
+      "source": "output/overhaul-gauntlet/progression-15/refit-purchased.png",
+      "bytes": 1211529,
+      "sha256": "a151159e847e7a3ff629022647426d1ef4cdd3b5bd7e9b9f0e2ff66690338f06"
+    },
+    {
+      "url": "media/25-storm-sailing.png",
+      "kind": "engine-evidence",
+      "source": "output/overhaul-gauntlet/pass-15/storm-sailing.png",
+      "bytes": 1392329,
+      "sha256": "95bfc04d5f5a65682913fc27a962ed5f917ee3a6ee8f829d0fb345a50515d88c"
+    },
+    {
+      "url": "media/26-04-contract-completed.png",
+      "kind": "engine-evidence",
+      "source": "output/overhaul-gauntlet/full-voyage-15/04-contract-completed.png",
+      "bytes": 1362726,
+      "sha256": "228d1287d2973def5878a0e2516088443b764a2a917e41fb77da27b53cffed2a"
+    }
+  ],
+  "evidence": [
+    {
+      "label": "Implementation review",
+      "url": "evidence/implementation-review.md",
+      "source": "docs/overhaul/IMPLEMENTATION-REVIEW.md"
+    },
+    {
+      "label": "Section concept brief",
+      "url": "evidence/section-concepts.md",
+      "source": "docs/art-direction/SECTION-CONCEPTS.md"
+    },
+    {
+      "label": "Aim receipts",
+      "url": "evidence/aim-receipt.json",
+      "source": "output/overhaul-gauntlet/aim-15/receipt.json"
+    },
+    {
+      "label": "Progression receipts",
+      "url": "evidence/progression-receipt.json",
+      "source": "output/overhaul-gauntlet/progression-15/receipt.json"
+    },
+    {
+      "label": "UI receipts",
+      "url": "evidence/ui-receipt.json",
+      "source": "output/overhaul-gauntlet/ui-15/receipt.json"
+    },
+    {
+      "label": "Special phase and weapon receipts",
+      "url": "evidence/specials-receipt.json",
+      "source": "output/overhaul-gauntlet/specials-15/receipt.json"
+    },
+    {
+      "label": "Special real-RAF performance",
+      "url": "evidence/special-performance-summary.json",
+      "source": "output/overhaul-gauntlet/special-performance-15/summary.json"
+    },
+    {
+      "label": "Original approved scope",
+      "url": "evidence/approved-scope.md",
+      "source": "docs/overhaul/APPROVED-SCOPE.md"
+    },
+    {
+      "label": "Historical special defects, build 12",
+      "url": "evidence/critic-specials-code-12.md",
+      "source": "docs/overhaul/critics/critic-specials-code-12.md"
+    },
+    {
+      "label": "Special source closure, build 13",
+      "url": "evidence/critic-specials-code-13-final.md",
+      "source": "docs/overhaul/critics/critic-specials-code-13-final.md"
+    },
+    {
+      "label": "Rejected special visuals, build 13",
+      "url": "evidence/critic-specials-visual-13.md",
+      "source": "docs/overhaul/critics/critic-specials-visual-13.md"
+    },
+    {
+      "label": "Special source review, build 14",
+      "url": "evidence/critic-specials-code-14.md",
+      "source": "docs/overhaul/critics/critic-specials-code-14.md"
+    },
+    {
+      "label": "Final interface critique, build 15",
+      "url": "evidence/critic-interface-15.md",
+      "source": "docs/overhaul/critics/critic-interface-15.md"
+    },
+    {
+      "label": "HUD shelter and label follow-up, build 15",
+      "url": "evidence/critic-specials-code-15.md",
+      "source": "docs/overhaul/critics/critic-specials-code-15.md"
+    },
+    {
+      "label": "Special visual review, build 14",
+      "url": "evidence/critic-visual-14-specials.md",
+      "source": "docs/overhaul/critics/critic-visual-14-specials.md"
+    },
+    {
+      "label": "Historical special performance, build 13",
+      "url": "evidence/special-performance-13-summary.json",
+      "source": "docs/overhaul/evidence/special-performance-13-summary.json"
+    },
+    {
+      "label": "Scripted three-leg results",
+      "url": "evidence/full-voyage-probe.results.json",
+      "source": "output/overhaul-gauntlet/full-voyage-probe.results.json"
+    },
+    {
+      "label": "Scripted three-leg report",
+      "url": "evidence/full-voyage-probe.report.md",
+      "source": "output/overhaul-gauntlet/full-voyage-probe.report.md"
+    },
+    {
+      "label": "Browser full-voyage receipt",
+      "url": "evidence/browser-full-voyage-receipt.json",
+      "source": "output/overhaul-gauntlet/full-voyage-15/receipt.json"
+    },
+    {
+      "label": "Performance summary",
+      "url": "evidence/performance-summary.json",
+      "source": "output/overhaul-gauntlet/performance-15/summary.json"
+    }
+  ]
+}

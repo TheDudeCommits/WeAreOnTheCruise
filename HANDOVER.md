@@ -1,231 +1,54 @@
-# We Are On The Cruise — Project Handover
+# We Are On The Cruise — handover
 
-Last updated: 2026-09-06
+Updated 2026-09-07. Actual checkout: `/Users/amir/Projects/WeAreOnTheCruise`; `/Users/amir/Codex-ThreeJS` is unrelated. Remote: https://github.com/TheDudeCommits/WeAreOnTheCruise. Branch: `codex/cinematic-anime-overhaul`, based on `codex/vertical-slice` at `ba33a1760fddebb084764a612e4ee52589337c3d`.
 
-Repository: <https://github.com/TheDudeCommits/WeAreOnTheCruise>
+## Current direction and correction
 
-Production: <https://we-are-on-the-cruise.vercel.app>
+The user chose **A: cinematic anime** and requested all eight [overhaul packages](docs/overhaul/APPROVED-SCOPE.md), actual downloaded Sketchfab vehicles and crew, Blender MCP preparation, imagegen concepts, blind visual critics and 40–60 FPS. They explicitly rejected generated replacement ships. **Do not reintroduce those fallbacks or describe the current game as AAA/target-A accepted.**
 
-Working branch: `codex/vertical-slice`
+The current candidate replaces the entire generated-ship factory with six complete downloaded models: Thousand Sunny, Going Merry, Marine ship, Moby Dick, Polar Tang and Baratie. Four downloaded characters supply Luffy, Nami, Sanji and Whitebeard. The Sunny/Merry each show three characters, Moby one, Baratie one; Navy/Polar have no exterior characters yet. Original source geometry/UVs are normalized, styled and optimized rather than replaced. Public high/low GLBs and crew total 21.4 MB. The old `public/assets/ships/` files and hull loader are deleted.
 
-## Start here
+Authentication succeeded using the user's supplied credential. **Do not ask for the key again or put it in any repo file/report.** There are 241 official archives / 2,065,915,868 bytes locally, including 30 of 32 tagged vehicles. Repeated provider HTTP 429 responses stopped the remaining queue. There are 51 pending and eight rate-limited catalog candidates. Acquired does not mean integrated: only six ships/four characters are runtime-ready. See [asset provenance](ASSET-LICENSES.md), [catalog](assets/source/sketchfab/catalog.json) and [runtime manifest](public/assets/sketchfab/manifest.json).
 
-This repository contains a playable, zero-asset, cel-shaded naval adventure vertical slice built with Vite, TypeScript, and Three.js. The current implementation baseline is commit `e7c3dcc` (`Build iconic crews and living naval combat`); this handover is committed immediately after that baseline. Run `git log -1 --oneline` after cloning to see the exact handover commit.
+Read [current implementation review](docs/overhaul/IMPLEMENTATION-REVIEW.md) for builds 22/23 evidence, limitations and the next art work. [Release record](docs/overhaul/RELEASE.md) is authoritative for the exact Preview and commit. Production at https://we-are-on-the-cruise.vercel.app remains separate; do not infer a promotion from a local build or READY Preview.
 
-The default experience is a living open sea populated by nine recognizable procedural ships. Captains and principal crew are visible on deck, pirate and Marine factions choose targets dynamically, and ships fight the player and one another. The project is an unofficial, non-commercial fan work and includes no copied anime models, textures, music, or logos.
+## Runtime
 
-## Resume in a new session
+Vite, TypeScript and Three.js, with an authoritative fixed-step simulation and DOM HUD. `npm ci`, `npm test`, `npm run build`, `npm run dev`.
 
-```bash
-git clone https://github.com/TheDudeCommits/WeAreOnTheCruise.git
-cd WeAreOnTheCruise
-git switch codex/vertical-slice
-npm install
-npm test
-npm run dev
-```
+- Entry: six actual-asset ship choices, real source thumbnails, async preloading before selection/launch, visible load errors, keyboard/touch controls, remapping, pause-safe menus, contracts/builds/routes and reload continuity.
+- Presentation: full source models with high/low LODs, retained maps, toon lighting, per-instance damage tint and weather exposure. Downloaded character skeletons and available animations are retained; deck placement raycasts the actual source mesh. Source crew are currently idle/combat poses, not a complete station-work animation system. The old procedural sail tear, mast break and gun-recoil geometry is not applied to these source models.
+- Ocean/world: shared CPU/GPU Gerstner waves, sampled hull contact, derived source waterline contours, wakes/bow spray, weather profiles and generated original sky/wood/limestone textures. Dawn Harbor, Sky Arch, Razor Reef and Sunwatch Fort share authoritative shore/collision data. Their environment art remains below the target.
+- Combat: side-aware target/lead, shared trajectory equations, staggered gun queues, per-gun events, independent battery state, pooled impacts, authoritative damage and disabled/sinking states. Cannon anchors remain simulation transforms; aligning every muzzle to the sculpted source cannon still needs work.
+- Crew gameplay: ten hands and five presets alter helm, reload, repair and special charge. Moving hands preserves reload work. This tactical pool is separate from the four integrated visual character assets.
+- Specials: Sunny committed stern jets; Polar physical dive now targets 34 m to clear the downloaded model’s 27.2 m periscope, with guns locked until physical surfacing clears their sampled mounts; Moby pressure front advances to 135 m and damages actual crossings once. Their target art is generated concept work; engine captures remain separate.
+- Replay: three contracts, three legs, two route choices per leg, five encounter types, three builds, six temporary upgrades, three harbor refits, extraction risk, banked coins and rivals. The old build-15 full-voyage proof remains historical evidence; current asset replacement needs longer play acceptance.
 
-Open <http://localhost:4173>. The repository uses the `codex/vertical-slice` branch; `main` is still the initial repository state and does not contain the game slice.
+## Save and coordinate contracts
 
-Before making changes, read:
+Forward is `(-sin(heading), 0, -cos(heading))`; positive heading turns port/left. Keep `LogicalWorld` authoritative for visible/collidable coast. Simulation owns hits, damage, route gates, rewards, wave hit ledgers and saveable state; presentation consumes it. Preserve bounded entities/effects and avoid per-frame material construction or full-scene traversal.
 
-1. `README.md` for controls, feature scope, capture scenes, and performance strategy.
-2. `ARCHITECTURE.md` for the fixed-step simulation and presentation boundaries.
-3. This file for the current state and next-session priorities.
+`cruise.voyage.v1` stores a full voyage and progression atomically; `cruise.controls.v1` stores controls. Invalid saved bytes are preserved under the recovery key before a fresh autosave. If recovery storage fails, protect the primary save. **A legacy voyage containing an unavailable Red Force/Oro Jackson/Queen Mama Chanter is preserved as rejected data and starts at a fresh harbor; it cannot currently resume.** Do not silently substitute another named ship. Historical simulation types still include those three for data compatibility.
 
-If browser automation or Playwright is used, close the browser immediately after verification, per the project-level user instruction.
+Polar recovery may hold beyond its nominal timer while buoyancy finishes. Do not clear it by elapsed time alone. Moby front origin/radius/hit IDs remain authoritative and persistent. Capture mode, debug selection and accelerated `step()` are staging tools, never FPS or ordinary human-play evidence.
 
-## Current playable scope
+## Tools and verification
 
-- Nine selectable procedural ships: Thousand Sunny, Going Merry, Moby Dick, Red Force, Oro Jackson, Polar Tang, Queen Mama Chanter, Baratie, and Garp's Navy galleon.
-- Distinct hulls, sail plans, figureheads, superstructures, palettes, scale, handling, weapon layouts, and recognizable silhouette landmarks.
-- Named captains and principal crew represented by lightweight procedural character rigs at authored deck stations.
-- Multi-faction open-sea encounters with pirates, Marines, retaliation, target locks, pursuit leashes, and AI-versus-AI combat.
-- Combat roles including broadside, ranged, rammer, flanker, escort, and retreat behavior.
-- Round, chain, heavy, and explosive ammunition; independent broadsides; bow weapons; bracing; repair assignments; surrender; weak-point timing; combos; specials; reinforcements; and reward attribution.
-- Exploration, combat, race, storm, island-discovery, night, damage, crew, and performance scenarios.
-- Deterministic 60 Hz simulation, deterministic world streaming, shared CPU/GPU Gerstner waves, cel materials, ink outlines, procedural Web Audio, adaptive HUD, capture tooling, and runtime profiling.
+The user requires every automated browser closed immediately after use. Browser harnesses use `finally`. Preserve unrelated Blender scenes (including the quarry and another task's Podracing content); do not save the complete authenticated Blender scene. Coordinate any sustained GPU/Blender window with concurrent work before measuring performance.
 
-## Recent implementation
+- `scripts/gauntlet-sketchfab.mjs`: six source-model captures, mesh/source readiness and actual downloaded crew deck contacts.
+- `scripts/gauntlet-ui.mjs`: actual six-choice selection, launch, contracts/routes, crew, pause, remap and reload at desktop and phone viewports.
+- `scripts/gauntlet-specials.mjs`: actual selection/launch/key inputs, deterministic phase screenshots and physical surfacing/weapon checks.
+- `scripts/profile-gauntlet.mjs`: headed Chromium, 5 s warm-up and 15 s real RAF per case; records GPU, script hash, DPR, long frames and actual simulation advance.
+- `scripts/profile-specials.mjs`: real-RAF special profiles with phase distributions.
+- Existing aim/progression/full-voyage scripts preserve real input and earned-reward rules. Historical passes do not automatically verify the new assets.
 
-The latest gameplay pass completed four requested areas:
+Run `npm test`, `npm run build`, `git diff --check`, then focused browser checks on an immutable copy of `dist/`. Do not overwrite an evidence server's build. Apple M4 phone viewport emulation is not physical mobile acceptance. Keep the exact current receipts and candid independent critic verdict in the implementation review.
 
-### Anime-readable ships
+## Remaining work
 
-- `src/render/ships/ShipGeometryFactory.ts` contains the procedural construction for all nine ships.
-- `src/content/shipSpecs.ts` defines ship dimensions, handling, weapons, palette, and silhouette metadata.
-- The Sunny includes a lion figurehead, lawn, paw anchors, Soldier Dock details, and Coup de Burst nozzles.
-- The Merry has a sheep figurehead, compact caravel profile, and mikan trees.
-- The Moby Dick has a massive integrated whale hull, fins, and four-mast silhouette.
-- The Red Force has a continuous integrated dragon/griffin prow, Viking shields, palms, and four masts.
-- The remaining ships use equally distinct submarine, cake, restaurant, dog-galleon, and pirate-flagship construction recipes.
-
-### Captains and crews
-
-- `src/content/crewSpecs.ts` is the canonical roster and visual-spec file.
-- Crews include the Straw Hats, Whitebeard commanders, Red Hair officers, Roger Pirates, Heart Pirates, Big Mom officers, Baratie staff, and Garp's Marine group.
-- Ship rendering consumes the roster to place named figures on deck at high and medium LODs.
-
-### Living fleet simulation
-
-- `src/simulation/factions.ts` defines faction relationships.
-- `src/simulation/GameSimulation.ts` owns target selection, retaliation, combat roles, reinforcements, surrender, rewards, collisions, and damage outcomes.
-- `src/content/scenarios.ts` places all nine ship kinds across eight factions in the default open sea.
-- The player target is selected from active hostiles with threat priority and hysteresis; allied ships are not treated as enemies solely because they are in combat mode.
-- Projectile and disabled events preserve attacker identity so AI-versus-AI action is not incorrectly presented as player damage or reward.
-
-### Combat presentation
-
-- `src/render/fx/NavalFxView.ts` renders cannonballs, smoke trails, muzzle flashes, impacts, water splashes, ram effects, specials, and persistent damage smoke.
-- `src/runtime/eventAdapter.ts` converts authoritative events into correctly attributed presentation events.
-- `src/ui/Hud.ts` and `src/ui/presentation.ts` show captain cards, intentions, weak-point windows, threat pips, hit chains, reload state, critical hits, surrender, and disabled states.
-- `src/audio/AudioDirector.ts` adds directional broadsides, impacts, reload feedback, warnings, and combat layers.
-- `src/runtime/GameApp.ts` coordinates camera shake, hit stop, scenario capture staging, faction selection, and presentation adapters.
-
-## Architecture guardrails
-
-- The serializable fixed-step simulation is authoritative. Do not put damage, rewards, racing progress, spawning, or saveable discoveries in Three.js or DOM code.
-- Rendering, HUD, audio, and FX consume snapshots/events and must not mutate gameplay state.
-- Keep seeded scenario and world generation deterministic. New randomness must use the project PRNG, never `Math.random()` in authoritative systems.
-- Add ship gameplay data to content specs and ship visuals to the geometry factory; do not create nine unrelated runtime systems.
-- Preserve bounded entity, projectile, effect, and chunk counts.
-- Extend deterministic tests whenever target selection, rewards, damage, factions, or scenario composition changes.
-
-The main flow is:
-
-```text
-input actions
-    -> fixed-step GameSimulation
-    -> serializable snapshots and attributed events
-    -> Three.js views + DOM HUD + Web Audio
-```
-
-## Important files
-
-| Path | Responsibility |
-| --- | --- |
-| `src/core/contracts.ts` | Shared serializable IDs, commands, snapshots, and events |
-| `src/simulation/GameSimulation.ts` | Authoritative ship, AI, combat, racing, and scenario simulation |
-| `src/simulation/factions.ts` | Diplomacy and hostility rules |
-| `src/content/shipSpecs.ts` | Ship statistics and procedural blueprint data |
-| `src/content/crewSpecs.ts` | Named captains, crews, colors, builds, accessories, and stations |
-| `src/content/scenarios.ts` | Deterministic gameplay and capture scenarios |
-| `src/render/ships/ShipGeometryFactory.ts` | Procedural ship and crew geometry |
-| `src/render/fx/NavalFxView.ts` | Naval combat effects |
-| `src/runtime/GameApp.ts` | Main runtime orchestration and debug bridge |
-| `src/runtime/eventAdapter.ts` | Simulation-to-presentation event attribution |
-| `src/ui/Hud.ts` | Runtime HUD and captain/combat presentation |
-| `src/audio/AudioDirector.ts` | Procedural ambience, music, and feedback |
-| `tests/determinism.test.ts` | Deterministic simulation and attribution coverage |
-| `scripts/capture.mjs` | Seeded scenario screenshots and receipts |
-| `scripts/capture-ships.mjs` | Nine-ship identity gallery capture |
-| `scripts/profile.mjs` | High-load renderer/runtime profile |
-
-## Controls
-
-| Action | Input |
-| --- | --- |
-| Raise/lower sail | `W` / `S` |
-| Steer | `A` / `D` |
-| Hard turn | `Shift` |
-| Fire port/starboard | `Q` / `E` |
-| Fire bow weapon | `F` |
-| Cycle ammunition | `X` |
-| Brace | `Space` |
-| Repair | `R` |
-| Special | `C` |
-| Camera presets | `1`–`6` |
-| Pause/help | `Esc` / `H` |
-| Mute | `M` |
-
-## Verification baseline
-
-The last completed gameplay pass was verified with:
-
-- `npm test`: 8/8 tests passing.
-- `npm run build`: passing.
-- `npx tsc --noEmit --incremental false`: passing.
-- `git diff --check`: clean.
-- Deterministic capture receipts: no warnings.
-- Keyboard and faction-selection playtests: no browser errors.
-- Visual review of the nine-ship contact sheet: pass.
-- Performance scenario: 60.057 FPS, 16.7 ms p50, 18.5 ms p95, 18.7 ms p99, one long frame, eight entities, and 25 active chunks on the tested Apple-silicon configuration.
-
-Re-run the core checks before publishing new work:
-
-```bash
-npm test
-npm run build
-npm run profile
-```
-
-For deterministic visual QA, run a dev server in one terminal and the capture scripts in another:
-
-```bash
-npm run dev
-npm run capture
-npm run capture:ships
-```
-
-The checked evidence is written under `output/`, including:
-
-- `output/ship-gallery/all-ships-contact-sheet.png`
-- `output/captures-final/fleet-battle.png`
-- `output/captures-final/sunny-broadside.png`
-- `output/captures-final/calm-sailing.png`
-- `output/perf/perf-fleet.json`
-
-Generated output may be ignored by Git; regenerate it when visual or performance behavior changes.
-
-## Deployment
-
-The Git remote is:
-
-```text
-origin  https://github.com/TheDudeCommits/WeAreOnTheCruise.git
-```
-
-The project is linked to Vercel and the stable production alias is:
-
-```text
-https://we-are-on-the-cruise.vercel.app
-```
-
-After tests and build pass, deploy the current checkout with:
-
-```bash
-npx vercel deploy --prod -y
-```
-
-Do not fetch or `curl` the deployed URL as a post-deploy check; use the deployment command's ready state and returned production alias. If a later task explicitly requests browser verification, close the browser as soon as the verification is finished.
-
-## Known limitations
-
-- This is a polished browser vertical slice, not a seamless authored open-world campaign.
-- Ship and character likenesses are stylized procedural approximations, not imported anime assets.
-- Boarding resolution, island interiors, persistent progression/save migration, accessibility remapping, crew choreography, finishing sequences, and weather variety remain production opportunities.
-- The largest production JavaScript chunk is above Vite's default 500 kB warning threshold; this is currently a warning, not a build failure. Route-level or subsystem code splitting is a sensible future optimization.
-- High-DPR capture mode is intentionally heavier than the normal adaptive-performance runtime.
-- `main` has not yet been merged with `codex/vertical-slice`.
-
-## Recommended next session
-
-1. Pull and confirm `codex/vertical-slice` is clean, then run tests and build.
-2. Decide whether to merge the vertical slice into `main` or continue feature work on a new `codex/` branch.
-3. Turn the current scenario menu into a light campaign flow: ports, voyage contracts, persistent bounty/reputation, encounter spawning, and saved discoveries.
-4. Add authored ship-specific special sequences and clearer telegraphs for enemy specials.
-5. Deepen crew gameplay with station assignment, visible reactions, injuries, and boarding preparation while keeping the simulation authoritative.
-6. Expand island interaction and port services without weakening deterministic world generation.
-7. Add accessibility settings and remappable controls.
-8. Split heavy rendering/content modules if bundle size or startup profiling shows a material benefit.
-
-## Definition of done for future changes
-
-A future slice should not be handed off until:
-
-- Authoritative behavior has deterministic test coverage.
-- `npm test` and `npm run build` pass.
-- Representative scenarios have been captured and visually inspected.
-- The performance profile remains bounded and warnings are explained.
-- Browser automation has been closed after use.
-- The branch is clean, committed, pushed, and the production deployment reports `READY` when production deployment was requested.
+1. Resume missing official downloads only after provider cooldown, finish geometry review and use additional appropriate vehicles as explicit named variants/encounters. Do not call the 241 archives all ships or all integrated assets.
+2. Unify source material finish, animated sail/damage/cannon structure and working crew. Preserve actual downloaded geometry; no invented replacement vessels.
+3. Replace the conspicuous straight wake ribbon with dissipating curved turbulence and stronger bow/side water displacement; improve coast art and controlled anime light/shadow.
+4. Match source geometry to gameplay envelopes, especially Baratie’s unfolded approximately 124 m wide platforms versus its legacy 34 m beam, and real source cannon locations. This is a known physical/visual mismatch.
+5. Continue blind visual gauntlets until target-A acceptance; do not turn a passing performance measurement into art acceptance. Physical mobile/controller/audio/long-session testing and final Production promotion remain open.

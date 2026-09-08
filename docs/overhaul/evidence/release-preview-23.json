@@ -1,0 +1,30 @@
+{
+  "verifiedAt": "2026-09-07T15:01:54.202927+00:00",
+  "method": "Vercel deployment metadata and build logs; deployed page not fetched or browser-tested.",
+  "preview": {
+    "id": "dpl_2EbBeyjdVAQinFYyqLEE8Uhpqgxe",
+    "url": "https://we-are-on-the-cruise-f2af4qn0n-amirs-projects-d9680079.vercel.app",
+    "state": "READY",
+    "target": null,
+    "commit": "a851c37f98b1091aa3cee3f90d66034ac89753c1",
+    "branch": "codex/cinematic-anime-overhaul",
+    "buildCompleted": true,
+    "javascript": "index-JOAubjRr.js",
+    "css": "index-mwMK32qf.css",
+    "localEvidence": "build-23-manifest.json"
+  },
+  "production": {
+    "alias": "https://we-are-on-the-cruise.vercel.app",
+    "id": "dpl_4fb3pkBU9F8VTkBDgF8crGNk2HPg",
+    "state": "READY",
+    "target": "production",
+    "commit": "ba33a1760fddebb084764a612e4ee52589337c3d",
+    "promoted": false
+  },
+  "acceptance": {
+    "downloadedShipsAndCrewIntegrated": true,
+    "allRequestedAssetsIntegrated": false,
+    "targetAVisualParity": false,
+    "physicalMobileAcceptance": false
+  }
+}
