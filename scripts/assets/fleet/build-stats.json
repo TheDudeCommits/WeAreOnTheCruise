@@ -1,0 +1,170 @@
+{
+  "man-o-war": {
+    "file": "/assets/fleet/man-o-war.glb",
+    "bytes": 994620,
+    "sha256": "155732e8640af548fd1b1eae42c9b81c85920d2b7881dc932f94e9b2a868942e",
+    "sourceSha256": "598184016ed347593a9fb6fbd503ba0157b7a3c434d92aafc651c86e7d328839",
+    "tris": 23519,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 1024,
+    "size": [
+      17.65,
+      41.87,
+      50
+    ],
+    "min": [
+      -8.83,
+      -4.2,
+      -25
+    ],
+    "max": [
+      8.83,
+      37.67,
+      25
+    ],
+    "clips": [],
+    "built": "2026-09-23"
+  },
+  "mortar-barge": {
+    "file": "/assets/fleet/mortar-barge.glb",
+    "bytes": 680240,
+    "sha256": "6c411ae8fd1da2c7821124445c59a7a139bbd4ab7d470c8eebe18566f0eb8341",
+    "sourceSha256": "bc61a3fc1b11e162a365db72837677e0347219174a971c06797e4d325327b2e8",
+    "tris": 19578,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 1024,
+    "size": [
+      11.87,
+      13.47,
+      24
+    ],
+    "min": [
+      -5.93,
+      -1.6,
+      -12
+    ],
+    "max": [
+      5.93,
+      11.87,
+      12
+    ],
+    "clips": [],
+    "built": "2026-09-23"
+  },
+  "dreadnought": {
+    "file": "/assets/fleet/dreadnought.glb",
+    "bytes": 1980332,
+    "sha256": "3add7c7e2fd0b9d2fcec6653583c99b65855a3a29bf87e532c0f70f507b66350",
+    "sourceSha256": "6423f6ba3d05f24f59ceacf77ac0bef6b4f24795a0d985f8a630ef459fd02c8d",
+    "tris": 48999,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 2048,
+    "size": [
+      34.76,
+      46.13,
+      90
+    ],
+    "min": [
+      -17.38,
+      -6.5,
+      -45
+    ],
+    "max": [
+      17.38,
+      39.63,
+      45
+    ],
+    "clips": [],
+    "built": "2026-09-23"
+  },
+  "sovereign": {
+    "file": "/assets/fleet/sovereign.glb",
+    "bytes": 2746284,
+    "sha256": "e6846fb4147212947860e191dd735e794efed65cfb6dc38148ca3429146ecfc3",
+    "sourceSha256": "f1fd1f6ff834606eb5f711d37e187aae85c867432725824facace908304ad419",
+    "tris": 51386,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 2048,
+    "size": [
+      45.36,
+      96.49,
+      120
+    ],
+    "min": [
+      -22.68,
+      -8.5,
+      -60
+    ],
+    "max": [
+      22.68,
+      87.99,
+      60
+    ],
+    "clips": [],
+    "built": "2026-09-23"
+  },
+  "fort": {
+    "file": "/assets/fleet/fort.glb",
+    "bytes": 612012,
+    "sha256": "7756836c0549967c19fce4011be3e2efa198e58fb096f8b1a576c4db596b7156",
+    "sourceSha256": "e8b024c616b89d6e4efc839766b8aeb53f1b6f4a0b2f175f7add129cae7d2338",
+    "tris": 19599,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 1024,
+    "size": [
+      18.97,
+      20.37,
+      20
+    ],
+    "min": [
+      -9.48,
+      -1.2,
+      -10
+    ],
+    "max": [
+      9.48,
+      19.17,
+      10
+    ],
+    "clips": [],
+    "built": "2026-09-23"
+  },
+  "tidewyrm-head": {
+    "file": "/assets/fleet/tidewyrm-head.glb",
+    "bytes": 1349868,
+    "sha256": "0de6d9a01616395819c054a143f03d2a83cd1ad741b26c46f066764fa1792e80",
+    "sourceSha256": "64238c352843274556f1c7e0d2304aa3df5f35b5d6745b498f438d77f055a8dc",
+    "tris": 29400,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 2048,
+    "size": [
+      7.11,
+      18,
+      17.18
+    ],
+    "min": [
+      -3.55,
+      0,
+      -8.59
+    ],
+    "max": [
+      3.55,
+      18,
+      8.59
+    ],
+    "clips": [],
+    "built": "2026-09-23"
+  }
+}
