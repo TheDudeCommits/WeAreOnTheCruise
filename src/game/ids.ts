@@ -57,7 +57,9 @@ export type ProjectileKind =
 
 export type HazardKind =
   | 'fire-patch' | 'barrel' | 'powder-keg' | 'mine' | 'whirlpool' | 'storm-cloud'
-  | 'shockwave' | 'wave-front' | 'lightning-strike' | 'burning-wreck';
+  | 'shockwave' | 'wave-front' | 'lightning-strike' | 'burning-wreck'
+  /** Player summons (Escort Skiffs weapon): positions are updated by the sim; SHIPS renders them as small boats. */
+  | 'escort-skiff';
 
 export type StatusKind = 'burning' | 'slowed' | 'stunned' | 'hooked' | 'submerged' | 'shielded' | 'invulnerable' | 'airborne' | 'frenzy';
 

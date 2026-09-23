@@ -448,6 +448,10 @@ export interface CardOffer {
   amount?: number;
 }
 
+/**
+ * 'levelup': `offers` holds the cards; chooseCard(i) applies one.
+ * 'chest': a chest was opened; `offers` holds the rewards ALREADY APPLIED (for the reveal UI); chooseCard(0) resumes.
+ */
 export type RunStatus = 'running' | 'levelup' | 'chest' | 'paused' | 'dead' | 'victory';
 
 export interface RunStats {
