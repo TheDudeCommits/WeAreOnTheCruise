@@ -19,6 +19,7 @@ export type SimulationEvent =
   | { type: 'water-impact'; projectileId: number; ammo: AmmoKind; position: Vec3 }
   | { type: 'ram'; attackerId: string; targetId: string; position: Vec3; force: number }
   | { type: 'special'; shipId: string; name: string; position: Vec3 }
+  | { type: 'special-impact'; shipId: string; ownerId: string; name: string; position: Vec3; radius: number }
   | { type: 'repair'; shipId: string; position: Vec3 }
   | { type: 'checkpoint'; shipId: string; checkpoint: number; lap: number }
   | { type: 'race-finished'; shipId: string; placement: number; elapsed: number }

@@ -1,0 +1,31 @@
+{
+  "verifiedAt": "2026-09-23T14:55:12.528717+00:00",
+  "method": "Vercel get_deployment metadata; no deployed page fetch/browser.",
+  "preview": {
+    "id": "dpl_FiD7tYKMUYDMSqCEEWCMrESN9Eqb",
+    "url": "https://we-are-on-the-cruise-gwuw0wm4v-amirs-projects-d9680079.vercel.app",
+    "state": "READY",
+    "commit": "48629623fbc89ef8e4d3dddfcb0fd41dc78b44e6",
+    "target": null
+  },
+  "localValidation": {
+    "tests": 163,
+    "files": 9,
+    "build": "passed",
+    "diffCheck": "passed",
+    "publicGlbHashes": "16/16 match",
+    "archiveCount": 241,
+    "archiveBytes": 2065915868
+  },
+  "limitations": [
+    "Build-log connector returned tool unavailable.",
+    "Gameplay, critic and FPS evidence dates to September 7.",
+    "Visual target remains rejected at 5/10."
+  ],
+  "production": {
+    "id": "dpl_4fb3pkBU9F8VTkBDgF8crGNk2HPg",
+    "commit": "ba33a1760fddebb084764a612e4ee52589337c3d",
+    "state": "READY",
+    "promoted": false
+  }
+}

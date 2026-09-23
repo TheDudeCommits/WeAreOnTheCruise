@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { ShipPalette } from '../content';
 import type { ShipKind } from '../core/contracts';
 import { attachInvertedHullOutline, createDoubleSidedCelMaterial, setOutlineViewport } from '../render/npr';
+import { surfaceTexture } from '../render/npr/surfaceTextures';
 import type { ProceduralShipModel, ShipMaterialSet } from '../render/ships';
 
 export function createShipMaterialSet(
@@ -9,15 +10,19 @@ export function createShipMaterialSet(
   palette: ShipPalette,
   owned: Set<THREE.Material>,
 ): ShipMaterialSet {
-  const cel = (color: number, rimColor = 0xa9f4ff, shadowTint = 0x3a4267): THREE.Material => {
+  const cel = (color: number, rimColor = 0xa9f4ff, shadowTint = 0x7e819d, surface?: 'wood' | 'cloth'): THREE.Material => {
     const material = createDoubleSidedCelMaterial({
       color,
+      surfaceMap: surface === 'wood' ? surfaceTexture('painted-timber') : undefined,
+      surfaceScale: .28,
+      surfaceStrength: .24,
+      cloth: surface === 'cloth',
       shadowTint,
-      highlightTint: 0xffefb0,
+      highlightTint: 0xfff0d6,
       rimColor,
-      rimStrength: 0.34,
-      rimThreshold: 0.62,
-      specularThreshold: 0.91,
+      rimStrength: 0.12,
+      rimThreshold: 0.88,
+      specularThreshold: 0.99,
       bandThresholds: [0.31, 0.56, 0.8],
       horizonColor: 0x75c8db,
       fogNear: 650,
@@ -35,11 +40,11 @@ export function createShipMaterialSet(
     0.29,
   );
   return {
-    hull: cel(readableHull),
-    hullDark: cel(readableHullDark, 0x6d9bc0, 0x626980),
-    cabin: cel(cabinColor, 0x8fc7db, 0x7a758a),
+    hull: cel(readableHull, 0xffedc4, 0x7e819d, 'wood'),
+    hullDark: cel(readableHullDark, 0x6d9bc0, 0x626980, 'wood'),
+    cabin: cel(cabinColor, 0x8fc7db, 0x7a758a, 'wood'),
     trim: cel(palette.trim, 0xfff0a8),
-    sail: cel(palette.sail, 0xffffff),
+    sail: cel(palette.sail, 0xffffff, 0x7e819d, 'cloth'),
     accent: cel(palette.accent, 0xffd682),
     metal: cel(palette.metal, 0x92dbed),
     glass: cel(0x63c9dc, 0xd8ffff, 0x537d9b),

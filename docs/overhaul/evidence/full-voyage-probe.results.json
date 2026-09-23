@@ -1,0 +1,614 @@
+{
+  "policy": "sheltered routes; repair crew; continuous public helm commands; range/heading-guided aimed broadsides with visible target velocity lead; repair during reload; special in 110m; supplies between every leg; no mutable-state fixtures; 600 simulated seconds per leg maximum",
+  "wallSeconds": 0.776020208,
+  "results": [
+    {
+      "ship": "moby-dick",
+      "build": "guardian",
+      "contract": "lost-cargo",
+      "seed": "full-voyage-01",
+      "won": true,
+      "terminal": "complete",
+      "result": {
+        "coins": 1175,
+        "bounty": 3870000,
+        "outcome": "completed"
+      },
+      "bank": 1175,
+      "completedVoyages": 1,
+      "paidIds": [
+        "full-voyage-01:1"
+      ],
+      "saves": 19,
+      "actions": {
+        "crew:repair": 3,
+        "clearActions": 22,
+        "steer-left:up": 18,
+        "steer-right:up": 19,
+        "throttle-up:down": 8,
+        "throttle-down:up": 21,
+        "repair:up": 19,
+        "throttle-up:up": 20,
+        "throttle-down:down": 6,
+        "collect": 3,
+        "supplies": 3,
+        "steer-left:down": 4,
+        "brace:up": 10,
+        "steer-right:down": 23,
+        "fire-bow:down": 2,
+        "fire-bow:up": 2,
+        "special:down": 1,
+        "special:up": 1,
+        "fire-starboard:down": 7,
+        "fire-starboard:up": 7,
+        "repair:down": 8,
+        "finish:salvage": 1
+      },
+      "eventCounts": {
+        "repair": 359,
+        "cannon-fired": 140,
+        "water-impact": 71,
+        "projectile-impact": 66,
+        "special": 4,
+        "ship-disabled": 1
+      },
+      "legs": [
+        {
+          "leg": 1,
+          "route": "leg-1-sheltered",
+          "kind": "salvage",
+          "weather": "calm",
+          "frames": 3383,
+          "elapsed": 56.383333333331414,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 12,
+          "target": 12,
+          "hullDamage": 0,
+          "crewDamage": 0,
+          "enemies": []
+        },
+        {
+          "leg": 2,
+          "route": "leg-2-sheltered",
+          "kind": "storm",
+          "weather": "storm",
+          "frames": 3876,
+          "elapsed": 64.59999999999762,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 3,
+          "target": 3,
+          "hullDamage": 0,
+          "crewDamage": 0,
+          "enemies": []
+        },
+        {
+          "leg": 3,
+          "route": "leg-3-sheltered",
+          "kind": "boss",
+          "weather": "calm",
+          "frames": 17940,
+          "elapsed": 299.00000000005673,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 1,
+          "target": 1,
+          "hullDamage": 0,
+          "crewDamage": 0.8274545454545451,
+          "enemies": [
+            {
+              "id": "full-voyage-01:1:leg-3:enemy-0",
+              "hullDamage": 0.9772471014268374,
+              "surrendered": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ship": "oro-jackson",
+      "build": "guardian",
+      "contract": "lost-cargo",
+      "seed": "full-voyage-02",
+      "won": true,
+      "terminal": "complete",
+      "result": {
+        "coins": 1210,
+        "bounty": 6240000,
+        "outcome": "completed"
+      },
+      "bank": 1210,
+      "completedVoyages": 1,
+      "paidIds": [
+        "full-voyage-02:1"
+      ],
+      "saves": 10,
+      "actions": {
+        "crew:repair": 3,
+        "clearActions": 13,
+        "steer-left:up": 7,
+        "steer-right:up": 33,
+        "throttle-up:down": 3,
+        "throttle-down:up": 8,
+        "repair:up": 9,
+        "throttle-up:up": 6,
+        "throttle-down:down": 2,
+        "collect": 3,
+        "supplies": 3,
+        "steer-left:down": 2,
+        "brace:up": 2,
+        "steer-right:down": 27,
+        "fire-bow:down": 1,
+        "fire-bow:up": 1,
+        "special:down": 3,
+        "special:up": 3,
+        "repair:down": 5,
+        "fire-starboard:down": 3,
+        "fire-starboard:up": 3,
+        "finish:salvage": 1
+      },
+      "eventCounts": {
+        "repair": 105,
+        "cannon-fired": 86,
+        "water-impact": 41,
+        "special": 4,
+        "projectile-impact": 33,
+        "ship-disabled": 1
+      },
+      "legs": [
+        {
+          "leg": 1,
+          "route": "leg-1-sheltered",
+          "kind": "salvage",
+          "weather": "calm",
+          "frames": 2627,
+          "elapsed": 43.78333333333213,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 12,
+          "target": 12,
+          "hullDamage": 0,
+          "crewDamage": 0,
+          "enemies": []
+        },
+        {
+          "leg": 2,
+          "route": "leg-2-sheltered",
+          "kind": "storm",
+          "weather": "storm",
+          "frames": 2762,
+          "elapsed": 46.033333333332,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 3,
+          "target": 3,
+          "hullDamage": 0,
+          "crewDamage": 0,
+          "enemies": []
+        },
+        {
+          "leg": 3,
+          "route": "leg-3-sheltered",
+          "kind": "boss",
+          "weather": "calm",
+          "frames": 2608,
+          "elapsed": 43.46666666666548,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 1,
+          "target": 1,
+          "hullDamage": 0,
+          "crewDamage": 0.23428571428571426,
+          "enemies": [
+            {
+              "id": "full-voyage-02:1:leg-3:enemy-0",
+              "hullDamage": 0.9963745724744983,
+              "surrendered": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ship": "navy-galleon",
+      "build": "guardian",
+      "contract": "tempest-chart",
+      "seed": "full-voyage-03",
+      "won": true,
+      "terminal": "complete",
+      "result": {
+        "coins": 1315,
+        "bounty": 3870000,
+        "outcome": "completed"
+      },
+      "bank": 1315,
+      "completedVoyages": 1,
+      "paidIds": [
+        "full-voyage-03:1"
+      ],
+      "saves": 10,
+      "actions": {
+        "crew:repair": 3,
+        "clearActions": 13,
+        "steer-left:up": 7,
+        "steer-right:up": 25,
+        "throttle-up:down": 3,
+        "throttle-down:up": 7,
+        "repair:up": 9,
+        "throttle-up:up": 6,
+        "collect": 3,
+        "supplies": 3,
+        "steer-left:down": 2,
+        "brace:up": 2,
+        "steer-right:down": 21,
+        "throttle-down:down": 1,
+        "fire-bow:down": 1,
+        "fire-bow:up": 1,
+        "special:down": 2,
+        "special:up": 2,
+        "repair:down": 6,
+        "fire-starboard:down": 2,
+        "fire-starboard:up": 2,
+        "finish:salvage": 1
+      },
+      "eventCounts": {
+        "repair": 112,
+        "cannon-fired": 60,
+        "water-impact": 26,
+        "special": 3,
+        "projectile-impact": 26,
+        "ship-disabled": 1
+      },
+      "legs": [
+        {
+          "leg": 1,
+          "route": "leg-1-sheltered",
+          "kind": "storm",
+          "weather": "storm",
+          "frames": 3166,
+          "elapsed": 52.76666666666495,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 3,
+          "target": 3,
+          "hullDamage": 0,
+          "crewDamage": 0,
+          "enemies": []
+        },
+        {
+          "leg": 2,
+          "route": "leg-2-sheltered",
+          "kind": "storm",
+          "weather": "storm",
+          "frames": 3166,
+          "elapsed": 52.76666666666495,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 3,
+          "target": 3,
+          "hullDamage": 0,
+          "crewDamage": 0,
+          "enemies": []
+        },
+        {
+          "leg": 3,
+          "route": "leg-3-sheltered",
+          "kind": "boss",
+          "weather": "calm",
+          "frames": 2114,
+          "elapsed": 35.23333333333262,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 1,
+          "target": 1,
+          "hullDamage": 0.2977144189685639,
+          "crewDamage": 0.28114285714285714,
+          "enemies": [
+            {
+              "id": "full-voyage-03:1:leg-3:enemy-0",
+              "hullDamage": 0.9567609505966019,
+              "surrendered": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ship": "moby-dick",
+      "build": "guardian",
+      "contract": "tempest-chart",
+      "seed": "full-voyage-04",
+      "won": true,
+      "terminal": "complete",
+      "result": {
+        "coins": 1350,
+        "bounty": 6240000,
+        "outcome": "completed"
+      },
+      "bank": 1350,
+      "completedVoyages": 1,
+      "paidIds": [
+        "full-voyage-04:1"
+      ],
+      "saves": 15,
+      "actions": {
+        "crew:repair": 3,
+        "clearActions": 18,
+        "steer-left:up": 13,
+        "steer-right:up": 19,
+        "throttle-up:down": 5,
+        "throttle-down:up": 14,
+        "repair:up": 15,
+        "throttle-up:up": 13,
+        "collect": 3,
+        "supplies": 3,
+        "steer-left:down": 3,
+        "brace:up": 5,
+        "steer-right:down": 17,
+        "throttle-down:down": 3,
+        "fire-bow:down": 1,
+        "fire-bow:up": 1,
+        "special:down": 1,
+        "special:up": 1,
+        "fire-starboard:down": 6,
+        "fire-starboard:up": 6,
+        "repair:down": 7,
+        "finish:salvage": 1
+      },
+      "eventCounts": {
+        "repair": 221,
+        "cannon-fired": 110,
+        "water-impact": 48,
+        "projectile-impact": 59,
+        "special": 3,
+        "ship-disabled": 1
+      },
+      "legs": [
+        {
+          "leg": 1,
+          "route": "leg-1-sheltered",
+          "kind": "storm",
+          "weather": "storm",
+          "frames": 3876,
+          "elapsed": 64.59999999999762,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 3,
+          "target": 3,
+          "hullDamage": 0,
+          "crewDamage": 0,
+          "enemies": []
+        },
+        {
+          "leg": 2,
+          "route": "leg-2-sheltered",
+          "kind": "storm",
+          "weather": "storm",
+          "frames": 3876,
+          "elapsed": 64.59999999999762,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 3,
+          "target": 3,
+          "hullDamage": 0,
+          "crewDamage": 0,
+          "enemies": []
+        },
+        {
+          "leg": 3,
+          "route": "leg-3-sheltered",
+          "kind": "boss",
+          "weather": "calm",
+          "frames": 8974,
+          "elapsed": 149.56666666667783,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 1,
+          "target": 1,
+          "hullDamage": 0.36330927549230585,
+          "crewDamage": 0.8833636363636359,
+          "enemies": [
+            {
+              "id": "full-voyage-04:1:leg-3:enemy-0",
+              "hullDamage": 0.9925026666865038,
+              "surrendered": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ship": "queen-mama-chanter",
+      "build": "guardian",
+      "contract": "lost-cargo",
+      "seed": "full-voyage-05",
+      "won": false,
+      "terminal": "failed",
+      "result": {
+        "coins": 0,
+        "bounty": 0,
+        "outcome": "lost"
+      },
+      "bank": 0,
+      "completedVoyages": 0,
+      "paidIds": [
+        "full-voyage-05:1"
+      ],
+      "saves": 4,
+      "actions": {
+        "crew:repair": 2,
+        "clearActions": 6,
+        "steer-left:up": 4,
+        "steer-right:up": 14,
+        "throttle-up:down": 2,
+        "throttle-down:up": 5,
+        "repair:up": 4,
+        "throttle-up:up": 3,
+        "throttle-down:down": 2,
+        "collect": 1,
+        "supplies": 1,
+        "steer-left:down": 2,
+        "brace:up": 1,
+        "steer-right:down": 12,
+        "fire-bow:down": 1,
+        "fire-bow:up": 1,
+        "special:down": 1,
+        "special:up": 1,
+        "fire-starboard:down": 1,
+        "fire-starboard:up": 1,
+        "repair:down": 1
+      },
+      "eventCounts": {
+        "repair": 62,
+        "cannon-fired": 20,
+        "projectile-impact": 17,
+        "water-impact": 3,
+        "special": 1,
+        "ship-disabled": 1
+      },
+      "legs": [
+        {
+          "leg": 1,
+          "route": "leg-1-sheltered",
+          "kind": "salvage",
+          "weather": "calm",
+          "frames": 3192,
+          "elapsed": 53.19999999999826,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 12,
+          "target": 12,
+          "hullDamage": 0,
+          "crewDamage": 0,
+          "enemies": []
+        },
+        {
+          "leg": 2,
+          "route": "leg-2-sheltered",
+          "kind": "escort",
+          "weather": "swell",
+          "frames": 1573,
+          "elapsed": 26.21666666666646,
+          "phase": "failed",
+          "completed": false,
+          "progress": 26.199999999999793,
+          "target": 75,
+          "hullDamage": 0.01842573309075521,
+          "crewDamage": 0.12410810810810811,
+          "enemies": [
+            {
+              "id": "full-voyage-05:1:leg-2:enemy-0",
+              "hullDamage": 0.4045930619013269,
+              "surrendered": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ship": "oro-jackson",
+      "build": "precision",
+      "contract": "tempest-chart",
+      "seed": "full-voyage-06",
+      "won": true,
+      "terminal": "complete",
+      "result": {
+        "coins": 1350,
+        "bounty": 6240000,
+        "outcome": "completed"
+      },
+      "bank": 1350,
+      "completedVoyages": 1,
+      "paidIds": [
+        "full-voyage-06:1"
+      ],
+      "saves": 10,
+      "actions": {
+        "crew:repair": 3,
+        "clearActions": 13,
+        "steer-left:up": 8,
+        "steer-right:up": 29,
+        "throttle-up:down": 4,
+        "throttle-down:up": 8,
+        "repair:up": 11,
+        "throttle-up:up": 7,
+        "collect": 3,
+        "supplies": 3,
+        "steer-left:down": 3,
+        "brace:up": 2,
+        "steer-right:down": 26,
+        "throttle-down:down": 2,
+        "fire-bow:down": 2,
+        "fire-bow:up": 2,
+        "fire-starboard:down": 3,
+        "fire-starboard:up": 3,
+        "repair:down": 5,
+        "special:down": 2,
+        "special:up": 2,
+        "finish:salvage": 1
+      },
+      "eventCounts": {
+        "repair": 127,
+        "cannon-fired": 102,
+        "water-impact": 56,
+        "projectile-impact": 36,
+        "special": 3,
+        "ship-disabled": 1
+      },
+      "legs": [
+        {
+          "leg": 1,
+          "route": "leg-1-sheltered",
+          "kind": "storm",
+          "weather": "storm",
+          "frames": 2666,
+          "elapsed": 44.433333333332094,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 3,
+          "target": 3,
+          "hullDamage": 0,
+          "crewDamage": 0,
+          "enemies": []
+        },
+        {
+          "leg": 2,
+          "route": "leg-2-sheltered",
+          "kind": "storm",
+          "weather": "storm",
+          "frames": 2666,
+          "elapsed": 44.433333333332094,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 3,
+          "target": 3,
+          "hullDamage": 0,
+          "crewDamage": 0,
+          "enemies": []
+        },
+        {
+          "leg": 3,
+          "route": "leg-3-sheltered",
+          "kind": "boss",
+          "weather": "swell",
+          "frames": 3455,
+          "elapsed": 57.583333333331346,
+          "phase": "encounter",
+          "completed": true,
+          "progress": 1,
+          "target": 1,
+          "hullDamage": 0.07894023914634235,
+          "crewDamage": 0.3,
+          "enemies": [
+            {
+              "id": "full-voyage-06:1:leg-3:enemy-0",
+              "hullDamage": 1,
+              "surrendered": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

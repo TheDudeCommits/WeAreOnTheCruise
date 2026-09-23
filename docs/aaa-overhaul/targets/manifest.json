@@ -1,0 +1,31 @@
+{
+  "purpose": "Art-direction targets for the AAA overhaul. Each target is a GENERATED paint-over of a real engine frame (or a feature concept that uses one as its reference). They are goals for the renderer, not engine captures, and must never be presented as in-game evidence.",
+  "generatedAt": "2026-09-23",
+  "tool": "Higgsfield MCP (image edit with a reference image)",
+  "plates": {
+    "note": "Plates are unedited real-time engine frames from branch codex/cinematic-anime-overhaul @ 1a11e13, captured at 1600x900 with ?hud=0&seed=audit-0923&scene=<scene> after launching through the real UI and sailing with keyboard input. Not capture mode. Originals live in output/aaa-audit-2026-09-23/plates-selected/ (gitignored); the left half of each compare/*.jpg shows the plate.",
+    "p1-hero-sailing": { "scene": "calm-sailing", "camera": "cinematic", "ship": "thousand-sunny" },
+    "p2-arch-world": { "scene": "calm-sailing", "camera": "chase", "ship": "thousand-sunny" },
+    "p3-broadside": { "scene": "fleet-battle", "camera": "broadside", "ship": "thousand-sunny" },
+    "p4-night": { "scene": "night-encounter", "camera": "chase", "ship": "going-merry" },
+    "p5-storm": { "scene": "storm-sailing", "camera": "broadside", "ship": "thousand-sunny" },
+    "p6-discovery": { "scene": "island-discovery", "camera": "chase", "ship": "thousand-sunny" },
+    "p7-combat-hud": { "scene": "fleet-battle", "camera": "chase", "ship": "thousand-sunny" },
+    "p8-title": { "scene": "title / ship select (HUD visible)", "camera": "launch", "ship": "thousand-sunny" }
+  },
+  "targets": [
+    { "id": "t1-hero-sailing", "plate": "p1-hero-sailing", "kind": "paint-over", "requestedModel": "nano_banana_pro", "servedModel": "nano_banana_2", "jobId": "4ba29bf3-c0f4-466d-b774-ebc8cdd8370b", "brief": "Same camera and ship; unified cel/ink finish, bow wave, hull-hugging foam, V wake, calmer stylized ocean, lush islands." },
+    { "id": "t2-arch-world", "plate": "p2-arch-world", "kind": "paint-over", "requestedModel": "nano_banana_pro", "servedModel": "nano_banana_2", "jobId": "dfd9187d-5505-45ac-951d-63e403863468", "brief": "Authored world art: sandstone sea arch with waterfalls, Marine fortress, terraced port town, shore foam, shallow-water colour, curved wake." },
+    { "id": "t3-broadside", "plate": "p3-broadside", "kind": "paint-over", "requestedModel": "nano_banana_pro", "servedModel": "nano_banana_2", "jobId": "d5dde5d0-fd05-4a95-96b5-468cd8d7a755", "brief": "Peak broadside moment: staggered muzzle flashes, inked cel smoke, glowing shot trails, water columns, splinters, fire." },
+    { "id": "t4-night", "plate": "p4-night", "kind": "paint-over", "requestedModel": "nano_banana_pro", "servedModel": "nano_banana_2", "jobId": "3362c2a9-7a00-40cc-aea4-b2a3078d7c76", "brief": "True moonlit night: moon path, lanterns, fort torches and searchlight, bioluminescent wake." },
+    { "id": "t5-storm", "plate": "p5-storm", "kind": "paint-over", "requestedModel": "nano_banana_pro", "servedModel": "nano_banana_2", "jobId": "28cd3d65-01cb-45cf-8b59-0222db3e0766", "brief": "Grand Line storm: lightning, rain sheets, wave larger than the ship, spray over the bow, god rays." },
+    { "id": "t6-discovery", "plate": "p6-discovery", "kind": "paint-over", "requestedModel": "nano_banana_pro", "servedModel": "nano_banana_2", "jobId": "501193ad-5c82-451e-9877-584327bfd68e", "brief": "Island discovery reveal: colossal landmark island emerging from mist, sea stacks, sunbeams." },
+    { "id": "t7-combat-hud", "plate": "p7-combat-hud", "kind": "UI mock-up over plate", "requestedModel": "gpt_image_2_5", "servedModel": "gpt_image_2_5", "jobId": "2ebd50e6-09e0-46f6-88c0-b82d7a23b8f0", "brief": "Minimal combat HUD: ship ring with battery arcs, firing wedge on the water, enemy nameplates, minimap, bounty chip, special gauge, hit marker. Enemy names in the mock-up are placeholders." },
+    { "id": "t8-title", "plate": "p8-title", "kind": "UI mock-up over plate", "requestedModel": "gpt_image_2_5", "servedModel": "gpt_image_2_5", "jobId": "a1e94e46-18dd-4f52-a6d6-a52e97725fe5", "brief": "Console-grade front end: brush logo, wanted-poster ship cards, chunky stats, SET SAIL with controller prompts, living harbor." },
+    { "id": "t9-sea-king", "plate": "p1-hero-sailing", "kind": "feature concept (reference ship only)", "requestedModel": "nano_banana_pro", "servedModel": "nano_banana_2", "jobId": "5dc538f0-0800-4a45-83ad-9661af61e30c", "brief": "Sea King boss breach beside the Sunny." },
+    { "id": "t10-coup-de-burst", "plate": "p1-hero-sailing", "kind": "feature concept (reference ship only)", "requestedModel": "nano_banana_pro", "servedModel": "nano_banana_2", "jobId": "014d5242-3a9c-40f9-b147-c3f8df056339", "brief": "Special-move spectacle: airborne launch, ring shockwave, speed lines." },
+    { "id": "t11-sinking", "plate": "p3-broadside", "kind": "feature concept (reference ships only)", "requestedModel": "nano_banana_pro", "servedModel": "nano_banana_2", "jobId": "a03316a3-08c6-40dc-9403-29c35b1440f4", "brief": "Finishing blow: galleon snaps and sinks, fire, sailors overboard, whirl of foam, floating loot." },
+    { "id": "t12-boarding", "plate": "p3-broadside", "kind": "feature concept (reference ships only)", "requestedModel": "nano_banana_pro", "servedModel": "nano_banana_2", "jobId": "ff35b87c-a8b9-4030-bd8b-a8e2c991edcd", "brief": "Boarding action across grappling lines. Illustrative; not an achievable in-engine camera target." }
+  ],
+  "cost": "12 generations, about 26 Higgsfield credits (2 per 2K edit, 2.75 per GPT Image 2.5 high 2K)."
+}

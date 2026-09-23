@@ -1,10 +1,12 @@
 import { Group, type Camera, type Scene } from 'three';
-import type { IslandState, Vec3, WeatherKind } from '../../core/contracts';
+import type { IslandState, Vec3, WeatherKind, WorldCollisionFeature } from '../../core/contracts';
 import type { WaveSample } from '../../core/waves';
 import { InfiniteOcean } from '../ocean/InfiniteOcean';
 import { setOutlineViewport } from '../npr/invertedHull';
 import { ChunkVisuals } from './ChunkVisuals';
 import { ProceduralSky } from './ProceduralSky';
+import { CelMaterial } from '../npr/celMaterial';
+import { atmosphereFor } from './Atmosphere';
 
 export interface WorldRendererOptions {
   seedNumber?: number;
@@ -22,6 +24,7 @@ export interface WorldRendererFrame {
   currentStrength?: number;
   /** Deterministic debug/scenario islands supplied by simulation state. */
   islands?: readonly IslandState[];
+  features?: readonly WorldCollisionFeature[];
 }
 
 /** Cohesive view adapter for ocean, atmosphere and the 5x5 streamed world. */
@@ -48,7 +51,10 @@ export class WorldRenderer {
       this.scenarioIslandsReference = frame.islands;
       this.chunks.setScenarioIslands(frame.islands);
     }
+    this.chunks.setFeatures(frame.features ?? []);
+    CelMaterial.applyAtmosphere(atmosphereFor(frame.weather ?? 'calm'));
     this.ocean.update({
+      shores: frame.features,
       time: frame.time,
       focus: frame.focus,
       weather: frame.weather,
@@ -58,7 +64,7 @@ export class WorldRenderer {
       currentStrength: frame.currentStrength,
     });
     this.sky.update(frame.time, frame.focus, frame.weather ?? 'calm');
-    this.chunks.update(frame.focus);
+    this.chunks.update(frame.focus, frame.time, frame.weather ?? 'calm');
   }
 
   setScenarioIslands(islands: readonly IslandState[]): void {

@@ -1,0 +1,50 @@
+# Fresh visual critique — pass 10
+
+Scope: independently inspected all eight PNG concepts in `docs/art-direction/concepts`, all nine scene PNGs in `pass-10`, desktop/portrait/landscape embark and route screens, portrait contracts/crew/settings, portrait/landscape helm, desktop port aim, and portrait/landscape port/starboard touch aim and selected multitouch reload images in `aim-10`. I did not read implementation source, prior critiques, handover, or JSON receipts. No browser was used.
+
+## Verdict
+
+**Concept proximity: 4/10. I would not accept this evidence as meeting the requested cinematic anime spectacle.** It is a recognizable, colorful naval game presentation, with an effective illustrated sky and more convincing water than the land or ships. However, the target art promises materially richer vessels, human action, inhabited environments, scale, and battle drama. The current evidence reads as clean low-poly models placed under a highly finished painted sky. That mismatch is conspicuous even before inspecting details.
+
+These scores are subjective visual judgments, not functionality or performance measurements:
+
+| Dimension | Score | Visible basis |
+| --- | --- | --- |
+| Sky and sea proximity | 6/10 | Strong blue/cream palette and readable swell; sea lacks the concepts' large curling wave shapes, energetic hull spray, and layered foam composition. |
+| Hero vessel proximity | 4/10 | Recognizable figurehead, cream/red sails and multilevel silhouette; broad flat materials, simplified mascot, sparse fittings and minimal surface history. |
+| Environment proximity | 2/10 | Pale faceted islands and a basic arch; no comparable inhabited cliff city, lush stratification, waterfalls, or harbor density in gameplay captures. |
+| Crew and repair spectacle | 3/10 | Crew exist and repairs have smoke and a readable status; small toy-like bodies and sparse props do not convey the concepts' detailed coordinated labor. |
+| Active combat spectacle | 3/10 | Ships and shot traces are present; the supplied broadside frame lacks a powerful readable volley/impact composition. |
+| Desktop interface clarity | 7/10 | Restrained edge HUD, good primary actions and readable modal copy; secondary text is very small. |
+| Phone aim readability | 4/10 | Reachable-looking control grid and clear battery states, but overlapping messages and a very small unobstructed combat view. |
+| Entry presentation | 6/10 | Clear vessel selection and primary action; functional polish exceeds the scene's visual richness. |
+
+## Concrete visible findings
+
+1. **The world assets are the largest art-direction gap.** `pass-10/island-discovery.png` presents a huge pale faceted wall occupying the destination view. It does not visually communicate the objective's “nameless volcano,” nor the concepts' inviting, richly layered discovery landscape. `calm-sailing.png` has a recognizable arch, but its bare angular construction is far from concept 07's monumental inhabited limestone passage. `ui-10/desktop-embark.png` adds a few harbor buildings, yet neither their density nor their detail approaches concepts 01 and 08. This needs richer art and staging, not another HUD adjustment.
+
+2. **Hero-ship scale is adequate, finish is not.** `pass-10/hero-ship.png` gives the vessel a useful three-quarter view and clear identity. But the exposed broad wooden surfaces, simple windows and fittings, faceted figurehead, straight thin rigging, and simplistic crew make its complexity much lower than concepts 02 and 03. The very small bow-water interaction makes the hull feel lightly laid on the water rather than pushing through it. A yellow/cream shape below the forward hull also reads as a detached object in this view; its purpose is unclear from the image.
+
+3. **The broadside frame undersells battle and makes target association uncertain.** In `pass-10/sunny-broadside.png`, the player is relatively small and center-right, one enemy overlaps behind it, and another is well left. The target information sits far upper-right without a strong visible attachment to the selected vessel. Thin dark cannonballs and pale streaks do little to connect shooter, flight, impact, and consequence. Concept 04 makes all four relationships immediately legible through silhouette separation, large muzzle effects, smoke trails, and impact spray. A still can miss a transient effect, so this is a failure of the submitted spectacle evidence rather than proof that effects never occur.
+
+4. **Damage is legible mainly as a state, not a dramatic event.** `damaged-ship.png` has visibly torn sails, a low hull bar and ragged dark pieces along the hull, which are useful damage cues. But the boat is distant in a foggy, low-contrast composition, with little visible broken structure, fire, debris or listing. `crew-repairs.png` is closer and shows smoke plus a repair label, but there is still a large bare deck and no visually rich repair site. Concept 05's sinking enemy and sea debris are not demonstrated by these captures. Do not equate the damaged player image with proof of a defeat sequence.
+
+5. **Crew close-up exposes the fidelity gap.** `crew-closeup.png` shows distinct costumes and some silhouette variation, but many bodies face away or fall into dark flat shapes; hands, tools, expressions and workstations are hard to read. `crew-repairs.png` has a more purposeful pose, yet concept 06 shows multiple unmistakable simultaneous jobs with carried ammunition, wheel operation, damaged timber and tools. These images do not reach that specificity. They cannot establish animation quality or continuous crew behavior.
+
+6. **Weather variants are readable, but staging remains ordinary.** `storm-sailing.png` clearly changes wave intensity, sky value and rain; the subject remains safely centered with a bare island directly ahead. `night-encounter.png` remains navigable, but uniformly visible, simply shaded ships and pale land dominate; the objective's lanterns do not become a strong focal cue. These are credible mood variants, not yet cinematic set pieces. No FPS, motion smoothness, storm dynamics, audio, or camera shake can be judged from these stills.
+
+7. **Portrait aim has an actual visible overlay collision.** In both `aim-10/portrait-port-touch-aim.png` and `portrait-starboard-touch-aim.png`, the lookout message panel overlaps the lower portion of the aim-instruction panel and obscures its flight-information line. The same stacking issue persists in `portrait-port-multitouch-reload.png`. This is a reproducible-looking layout defect in the supplied evidence, independent of whether touch input works.
+
+8. **Phone aim devotes too much of the useful field to interface.** At 390×844, the target status, offscreen arrow, aim instructions, lookout toast, steering pad, ten action buttons, three battery status cards, ship stats and crew strip compete at once. In the portrait port frame the actual target is outside the frame; in starboard only a narrow slice appears at the left. Offscreen arrows are helpful, and this does not prove the camera is broken, but the submitted aim views give very little visual basis for judging a shot. At 844×390, targets are visible, yet the large center hint, bottom toast and right button/status stacks leave a narrow band for battle. The compass and ship/speed status occupy the upper center, the most valuable horizon space.
+
+9. **Touch labels and keyboard hints add avoidable uncertainty.** The phone interface shows `HARD`, `AIM L`, `AIM R`, `STBD`, plus keyboard chips such as `Q`, `F`, `E`, `X`, `C`, `J` and `T`. The pause instructions explain these, but the live HUD requires that prior learning. `HARD` is especially unclear on its own. The port/starboard battery cards repeat information already represented by the neighboring firing controls. This is an interface design concern; button hit areas and successful simultaneous touch handling are not established by images.
+
+10. **Entry is clearer than combat, with weaker phone spectacle.** Desktop entry has strong title hierarchy, nine differentiated vessel choices and a clear yellow “Plan your voyage” action. Portrait keeps these choices readable, but they cover the sail and most of the ship; the bottom third becomes a dark largely empty gradient. Landscape removes the title and reduces the vessel to a background behind a nearly full-width selection/configuration interface. Both formats favor configuration over a compelling first view of the ship. The route/contract cards are readable and honest about risk/reward, but text-only rectangles are substantially less evocative than concept 08's illustrated voyage chart.
+
+11. **Small typography and transparency deserve another pass.** Desktop gameplay uses extremely small key hints and secondary HUD text. In `sunny-broadside.png` and `portrait-helm.png`, bright foam shows through the ship-status/control backgrounds and competes with fine text. Most main labels remain readable, but this is inconsistent contrast. The captured landscape route modal is scrolled such that its close control is mostly out of view; that image alone does not prove the control cannot be reached, but the header/close placement should stay visible on short screens.
+
+## What this evidence does and does not establish
+
+The stills establish that distinct entry, voyage, crew, settings, aiming, reload, damage and weather presentations exist. They show useful battery readiness/reload labels and coherent explanatory copy. They do **not** independently prove touch correctness, damage/repair rules, hits, save restoration, accessibility, runtime performance or animation quality. File names containing “multitouch” or “reload” are not verification of the input sequence.
+
+The next acceptance pass should prioritize richer ships/land/crew, a well-composed battle and defeat sequence, and phone aim HUD reduction. Fix the actual portrait toast/aim overlap first. Preserve the strong daylight palette and clear primary actions, but do not present those strengths as concept parity.

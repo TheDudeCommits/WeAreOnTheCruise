@@ -1,0 +1,1423 @@
+{
+  "propagation": {
+    "hits": [
+      {
+        "frame": 127,
+        "elapsed": 2.116666666666664,
+        "type": "special-impact",
+        "ownerId": "player",
+        "shipId": "marine-vanguard",
+        "name": "tremor-broadside",
+        "position": {
+          "x": 80,
+          "y": 0,
+          "z": 0
+        },
+        "radius": 80.00000000000009
+      },
+      {
+        "frame": 164,
+        "elapsed": 2.7333333333333285,
+        "type": "special-impact",
+        "ownerId": "player",
+        "shipId": "marine-line",
+        "name": "tremor-broadside",
+        "position": {
+          "x": 125,
+          "y": 0,
+          "z": 0
+        },
+        "radius": 126.24999999999991
+      }
+    ],
+    "timeline": [
+      {
+        "frame": 2,
+        "phase": "windup",
+        "t": 0.03333333333333333
+      },
+      {
+        "frame": 17,
+        "phase": "windup",
+        "t": 0.2833333333333333
+      },
+      {
+        "frame": 32,
+        "phase": "windup",
+        "t": 0.5333333333333333
+      },
+      {
+        "frame": 47,
+        "phase": "windup",
+        "t": 0.7833333333333341
+      },
+      {
+        "frame": 62,
+        "phase": "windup",
+        "t": 1.0333333333333345
+      },
+      {
+        "frame": 77,
+        "phase": "active",
+        "t": 0.2333333333333333,
+        "r": 17.5
+      },
+      {
+        "frame": 92,
+        "phase": "active",
+        "t": 0.4833333333333333,
+        "r": 36.24999999999999
+      },
+      {
+        "frame": 107,
+        "phase": "active",
+        "t": 0.733333333333334,
+        "r": 55.00000000000004
+      },
+      {
+        "frame": 122,
+        "phase": "active",
+        "t": 0.9833333333333347,
+        "r": 73.7500000000001
+      },
+      {
+        "frame": 137,
+        "phase": "active",
+        "t": 1.2333333333333338,
+        "r": 92.50000000000004
+      },
+      {
+        "frame": 152,
+        "phase": "active",
+        "t": 1.483333333333333,
+        "r": 111.24999999999997
+      },
+      {
+        "frame": 167,
+        "phase": "active",
+        "t": 1.733333333333332,
+        "r": 129.99999999999991
+      },
+      {
+        "frame": 182,
+        "phase": "recovery",
+        "t": 0.16666666666666666,
+        "r": 135
+      },
+      {
+        "frame": 197,
+        "phase": "recovery",
+        "t": 0.41666666666666663,
+        "r": 135
+      },
+      {
+        "frame": 212,
+        "phase": "recovery",
+        "t": 0.6666666666666671,
+        "r": 135
+      },
+      {
+        "frame": 227,
+        "phase": "recovery",
+        "t": 0.9166666666666679,
+        "r": 135
+      },
+      {
+        "frame": 242,
+        "phase": "recovery",
+        "t": 1.1666666666666674,
+        "r": 135
+      }
+    ],
+    "restoreIdentical": true
+  },
+  "legacy": {
+    "restoreAccepted": true,
+    "noNewDamage": true
+  },
+  "actualLegacyDuration": {
+    "originalAccepted": true,
+    "accepted": true,
+    "migratedValid": true,
+    "immediateRerestore": true,
+    "migratedPhase": {
+      "phase": "active",
+      "elapsed": 0.45,
+      "duration": 1.8,
+      "name": "tremor-broadside",
+      "pressureWave": {
+        "origin": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "radius": 33.75,
+        "hitIds": [
+          "marine-vanguard",
+          "marine-line"
+        ]
+      }
+    }
+  },
+  "brace": {
+    "damage": [
+      0.11753086419753087,
+      0.03760987654320987
+    ],
+    "ratio": 0.31999999999999995
+  },
+  "polar": {
+    "minY": -17.06367839343076,
+    "finalY": 0.032379694772634936,
+    "shotEvents": [
+      {
+        "frame": 2,
+        "phase": "windup",
+        "phaseElapsed": 0.03333333333333333,
+        "y": 0,
+        "type": "cannon-fired",
+        "shipId": "player",
+        "side": "port",
+        "ammo": "round",
+        "position": {
+          "x": -7.199999999999999,
+          "y": 3.96,
+          "z": 11.44
+        },
+        "count": 1
+      },
+      {
+        "frame": 2,
+        "phase": "windup",
+        "phaseElapsed": 0.03333333333333333,
+        "y": 0,
+        "type": "cannon-fired",
+        "shipId": "player",
+        "side": "bow",
+        "ammo": "round",
+        "position": {
+          "x": 0,
+          "y": 3.96,
+          "z": -24.96
+        },
+        "count": 1
+      },
+      {
+        "frame": 6,
+        "phase": "windup",
+        "phaseElapsed": 0.09999999999999999,
+        "y": 0,
+        "type": "cannon-fired",
+        "shipId": "player",
+        "side": "port",
+        "ammo": "round",
+        "position": {
+          "x": -7.199999999999999,
+          "y": 3.96,
+          "z": 0
+        },
+        "count": 1
+      },
+      {
+        "frame": 6,
+        "phase": "windup",
+        "phaseElapsed": 0.09999999999999999,
+        "y": 0,
+        "type": "cannon-fired",
+        "shipId": "player",
+        "side": "bow",
+        "ammo": "round",
+        "position": {
+          "x": 0,
+          "y": 3.96,
+          "z": -24.96
+        },
+        "count": 1
+      },
+      {
+        "frame": 10,
+        "phase": "windup",
+        "phaseElapsed": 0.16666666666666666,
+        "y": 0,
+        "type": "cannon-fired",
+        "shipId": "player",
+        "side": "port",
+        "ammo": "round",
+        "position": {
+          "x": -7.199999999999999,
+          "y": 3.96,
+          "z": -11.44
+        },
+        "count": 1
+      },
+      {
+        "frame": 10,
+        "phase": "windup",
+        "phaseElapsed": 0.16666666666666666,
+        "y": 0,
+        "type": "cannon-fired",
+        "shipId": "player",
+        "side": "bow",
+        "ammo": "round",
+        "position": {
+          "x": 0,
+          "y": 3.96,
+          "z": -24.96
+        },
+        "count": 1
+      },
+      {
+        "frame": 324,
+        "y": -3.3875989366551997,
+        "type": "cannon-fired",
+        "shipId": "player",
+        "side": "port",
+        "ammo": "round",
+        "position": {
+          "x": -7.199999999999999,
+          "y": 0.5724010633448002,
+          "z": -46.67153828275245
+        },
+        "count": 1
+      },
+      {
+        "frame": 324,
+        "y": -3.3875989366551997,
+        "type": "cannon-fired",
+        "shipId": "player",
+        "side": "bow",
+        "ammo": "round",
+        "position": {
+          "x": 0,
+          "y": 0.5724010633448002,
+          "z": -83.07153828275244
+        },
+        "count": 1
+      },
+      {
+        "frame": 328,
+        "y": -2.780407926628747,
+        "type": "cannon-fired",
+        "shipId": "player",
+        "side": "port",
+        "ammo": "round",
+        "position": {
+          "x": -7.199999999999999,
+          "y": 1.179592073371253,
+          "z": -58.50162472344949
+        },
+        "count": 1
+      },
+      {
+        "frame": 328,
+        "y": -2.780407926628747,
+        "type": "cannon-fired",
+        "shipId": "player",
+        "side": "bow",
+        "ammo": "round",
+        "position": {
+          "x": 0,
+          "y": 1.179592073371253,
+          "z": -83.46162472344949
+        },
+        "count": 1
+      },
+      {
+        "frame": 332,
+        "y": -2.256080219475494,
+        "type": "cannon-fired",
+        "shipId": "player",
+        "side": "port",
+        "ammo": "round",
+        "position": {
+          "x": -7.199999999999999,
+          "y": 1.7039197805245059,
+          "z": -70.32457943840434
+        },
+        "count": 1
+      },
+      {
+        "frame": 332,
+        "y": -2.256080219475494,
+        "type": "cannon-fired",
+        "shipId": "player",
+        "side": "bow",
+        "ammo": "round",
+        "position": {
+          "x": 0,
+          "y": 1.7039197805245059,
+          "z": -83.84457943840434
+        },
+        "count": 1
+      }
+    ],
+    "track": [
+      {
+        "frame": 2,
+        "phase": "windup",
+        "t": 0.03333333333333333,
+        "y": 0,
+        "target": 0,
+        "locked": false,
+        "muzzle": 3.96
+      },
+      {
+        "frame": 17,
+        "phase": "windup",
+        "t": 0.2833333333333333,
+        "y": 0,
+        "target": 0,
+        "locked": false,
+        "muzzle": 3.96
+      },
+      {
+        "frame": 32,
+        "phase": "windup",
+        "t": 0.5333333333333333,
+        "y": 0,
+        "target": 0,
+        "locked": false,
+        "muzzle": 3.96
+      },
+      {
+        "frame": 47,
+        "phase": "active",
+        "t": 0.13333333333333333,
+        "y": -0.05081900532605253,
+        "target": 3.5929482294365696,
+        "locked": true,
+        "muzzle": 3.9091809946739473
+      },
+      {
+        "frame": 62,
+        "phase": "active",
+        "t": 0.3833333333333333,
+        "y": -1.9475404189447345,
+        "target": 15.991210689427424,
+        "locked": true,
+        "muzzle": 2.0124595810552655
+      },
+      {
+        "frame": 77,
+        "phase": "active",
+        "t": 0.6333333333333336,
+        "y": -6.8051036536169045,
+        "target": 17,
+        "locked": true,
+        "muzzle": -2.8451036536169045
+      },
+      {
+        "frame": 92,
+        "phase": "active",
+        "t": 0.8833333333333344,
+        "y": -11.361091303938398,
+        "target": 17,
+        "locked": true,
+        "muzzle": -7.401091303938398
+      },
+      {
+        "frame": 107,
+        "phase": "active",
+        "t": 1.1333333333333342,
+        "y": -14.345461597809454,
+        "target": 17,
+        "locked": true,
+        "muzzle": -10.385461597809453
+      },
+      {
+        "frame": 122,
+        "phase": "active",
+        "t": 1.3833333333333333,
+        "y": -15.958716635770557,
+        "target": 17,
+        "locked": true,
+        "muzzle": -11.998716635770556
+      },
+      {
+        "frame": 137,
+        "phase": "active",
+        "t": 1.6333333333333324,
+        "y": -16.701368841516153,
+        "target": 17,
+        "locked": true,
+        "muzzle": -12.741368841516152
+      },
+      {
+        "frame": 152,
+        "phase": "active",
+        "t": 1.8833333333333315,
+        "y": -16.983832951243002,
+        "target": 17,
+        "locked": true,
+        "muzzle": -13.023832951243001
+      },
+      {
+        "frame": 167,
+        "phase": "active",
+        "t": 2.1333333333333306,
+        "y": -17.059241047610588,
+        "target": 17,
+        "locked": true,
+        "muzzle": -13.099241047610587
+      },
+      {
+        "frame": 182,
+        "phase": "active",
+        "t": 2.3833333333333298,
+        "y": -17.05847781300384,
+        "target": 17,
+        "locked": true,
+        "muzzle": -13.09847781300384
+      },
+      {
+        "frame": 197,
+        "phase": "active",
+        "t": 2.633333333333329,
+        "y": -17.039063668793535,
+        "target": 17,
+        "locked": true,
+        "muzzle": -13.079063668793534
+      },
+      {
+        "frame": 212,
+        "phase": "active",
+        "t": 2.883333333333328,
+        "y": -17.021403779045787,
+        "target": 17,
+        "locked": true,
+        "muzzle": -13.061403779045786
+      },
+      {
+        "frame": 227,
+        "phase": "active",
+        "t": 3.133333333333327,
+        "y": -17.009984944771933,
+        "target": 17,
+        "locked": true,
+        "muzzle": -13.049984944771932
+      },
+      {
+        "frame": 242,
+        "phase": "recovery",
+        "t": 0.16666666666666666,
+        "y": -16.987106559438498,
+        "target": 16.173925925925925,
+        "locked": true,
+        "muzzle": -13.027106559438497
+      },
+      {
+        "frame": 257,
+        "phase": "recovery",
+        "t": 0.41666666666666663,
+        "y": -16.542251505162685,
+        "target": 12.592592592592592,
+        "locked": true,
+        "muzzle": -12.582251505162684
+      },
+      {
+        "frame": 272,
+        "phase": "recovery",
+        "t": 0.6666666666666671,
+        "y": -14.92585673433086,
+        "target": 7.651259259259252,
+        "locked": true,
+        "muzzle": -10.96585673433086
+      },
+      {
+        "frame": 287,
+        "phase": "recovery",
+        "t": 0.9166666666666679,
+        "y": -11.952335287246878,
+        "target": 2.981925925925908,
+        "locked": true,
+        "muzzle": -7.9923352872468785
+      },
+      {
+        "frame": 302,
+        "phase": "recovery",
+        "t": 1.1666666666666674,
+        "y": -8.17322431001998,
+        "target": 0.21659259259258845,
+        "locked": true,
+        "muzzle": -4.213224310019981
+      },
+      {
+        "frame": 317,
+        "phase": "recovery",
+        "t": 1.25,
+        "y": -4.659484767333992,
+        "target": 0,
+        "locked": true,
+        "muzzle": -0.6994847673339919
+      },
+      {
+        "frame": 332,
+        "y": -2.256080219475494,
+        "target": 0,
+        "locked": false,
+        "muzzle": 1.7039197805245059
+      },
+      {
+        "frame": 347,
+        "y": -0.9179854086322177,
+        "target": 0,
+        "locked": false,
+        "muzzle": 3.0420145913677823
+      },
+      {
+        "frame": 362,
+        "y": -0.2841484418198243,
+        "target": 0,
+        "locked": false,
+        "muzzle": 3.6758515581801756
+      },
+      {
+        "frame": 377,
+        "y": -0.03344793875278539,
+        "target": 0,
+        "locked": false,
+        "muzzle": 3.9265520612472145
+      },
+      {
+        "frame": 392,
+        "y": 0.039759198471419205,
+        "target": 0,
+        "locked": false,
+        "muzzle": 3.9997591984714194
+      },
+      {
+        "frame": 407,
+        "y": 0.0448545121538073,
+        "target": 0,
+        "locked": false,
+        "muzzle": 4.004854512153807
+      }
+    ]
+  },
+  "polarTransitionQueue": {
+    "queued": 2,
+    "phase": {
+      "phase": "active",
+      "elapsed": 0.2333333333333333,
+      "duration": 3.2,
+      "name": "submerge-dash"
+    },
+    "pendingAfter": 0,
+    "events": []
+  },
+  "collisionCrossing": {
+    "firstTick": {
+      "before": 75.1,
+      "after": 74.84222765088317,
+      "radius": 76.25,
+      "hitIds": [
+        "marine-vanguard"
+      ],
+      "damage": 0.1211946948880716,
+      "otherDamage": 0
+    },
+    "finalHitIds": [
+      "marine-vanguard",
+      "marine-line"
+    ],
+    "events": [
+      {
+        "type": "special-impact",
+        "ownerId": "player",
+        "shipId": "marine-vanguard",
+        "name": "tremor-broadside",
+        "position": {
+          "x": 74.84222765088317,
+          "y": 0,
+          "z": 0
+        },
+        "radius": 76.25
+      },
+      {
+        "type": "special-impact",
+        "ownerId": "player",
+        "shipId": "marine-line",
+        "name": "tremor-broadside",
+        "position": {
+          "x": 93.58456856586467,
+          "y": 0,
+          "z": 0
+        },
+        "radius": 94.99999999999993
+      }
+    ]
+  },
+  "shortDurationSave": {
+    "accepted": false,
+    "damage": 0
+  },
+  "legacyRoundTrips": [
+    {
+      "phaseName": "active",
+      "canonical": {
+        "phase": "active",
+        "elapsed": 0.45,
+        "duration": 1.8,
+        "name": "tremor-broadside",
+        "pressureWave": {
+          "origin": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "radius": 33.75,
+          "hitIds": [
+            "marine-vanguard",
+            "marine-line"
+          ]
+        }
+      },
+      "cycles": 240,
+      "noAddedDamage": true
+    },
+    {
+      "phaseName": "recovery",
+      "canonical": {
+        "phase": "recovery",
+        "elapsed": 0.3125,
+        "duration": 1.25,
+        "name": "tremor-broadside",
+        "pressureWave": {
+          "origin": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "radius": 135,
+          "hitIds": [
+            "marine-vanguard",
+            "marine-line"
+          ]
+        }
+      },
+      "cycles": 240,
+      "noAddedDamage": true
+    }
+  ],
+  "polarRelease": [
+    {
+      "slope": 0,
+      "releaseFrame": 322,
+      "heldFrames": 15,
+      "heldCompared": 15,
+      "releaseY": -3.7235763118986798,
+      "mounts": [
+        {
+          "side": "port",
+          "offset": -0.5,
+          "aboveWater": 0.2364236881013202
+        },
+        {
+          "side": "port",
+          "offset": 0,
+          "aboveWater": 0.2364236881013202
+        },
+        {
+          "side": "port",
+          "offset": 0.5,
+          "aboveWater": 0.2364236881013202
+        },
+        {
+          "side": "starboard",
+          "offset": -0.5,
+          "aboveWater": 0.2364236881013202
+        },
+        {
+          "side": "starboard",
+          "offset": 0,
+          "aboveWater": 0.2364236881013202
+        },
+        {
+          "side": "starboard",
+          "offset": 0.5,
+          "aboveWater": 0.2364236881013202
+        },
+        {
+          "side": "bow",
+          "offset": -0.5,
+          "aboveWater": 0.2364236881013202
+        },
+        {
+          "side": "bow",
+          "offset": 0,
+          "aboveWater": 0.2364236881013202
+        },
+        {
+          "side": "bow",
+          "offset": 0.5,
+          "aboveWater": 0.2364236881013202
+        }
+      ],
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": -7.199999999999999,
+            "y": 0.4071471557093713,
+            "z": -46.57288683035767
+          },
+          "count": 1
+        }
+      ],
+      "later": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": -7.199999999999999,
+            "y": 1.0357539893798848,
+            "z": -58.40477685874488
+          },
+          "count": 1
+        },
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": -7.199999999999999,
+            "y": 1.5803135954334264,
+            "z": -70.22950218743487
+          },
+          "count": 1
+        }
+      ],
+      "flightRestoreIdentical": true
+    },
+    {
+      "slope": 0.12,
+      "releaseFrame": 329,
+      "heldFrames": 22,
+      "heldCompared": 22,
+      "releaseY": -9.493284481129024,
+      "mounts": [
+        {
+          "side": "port",
+          "offset": -0.5,
+          "aboveWater": 0.12567874292908154
+        },
+        {
+          "side": "port",
+          "offset": 0,
+          "aboveWater": 1.4984787429290813
+        },
+        {
+          "side": "port",
+          "offset": 0.5,
+          "aboveWater": 2.871278742929081
+        },
+        {
+          "side": "starboard",
+          "offset": -0.5,
+          "aboveWater": 0.12567874292908154
+        },
+        {
+          "side": "starboard",
+          "offset": 0,
+          "aboveWater": 1.4984787429290813
+        },
+        {
+          "side": "starboard",
+          "offset": 0.5,
+          "aboveWater": 2.871278742929081
+        },
+        {
+          "side": "bow",
+          "offset": -0.5,
+          "aboveWater": 4.493678742929082
+        },
+        {
+          "side": "bow",
+          "offset": 0,
+          "aboveWater": 4.493678742929082
+        },
+        {
+          "side": "bow",
+          "offset": 0.5,
+          "aboveWater": 4.493678742929082
+        }
+      ],
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": -7.199999999999999,
+            "y": -5.413111469662636,
+            "z": -47.25398534118197
+          },
+          "count": 1
+        }
+      ],
+      "later": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": -7.199999999999999,
+            "y": -4.980997448810158,
+            "z": -59.07342323774445
+          },
+          "count": 1
+        },
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": -7.199999999999999,
+            "y": -4.621608320590265,
+            "z": -70.8859240897646
+          },
+          "count": 1
+        }
+      ],
+      "flightRestoreIdentical": true
+    }
+  ],
+  "polarFallbackWaveRelease": [
+    {
+      "setup": 0,
+      "releaseFrame": 328,
+      "heading": 0,
+      "minMountClearance": 0.1512265627178937,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": -7.199999999999999,
+            "y": 1.4289727603466398,
+            "z": -47.15802686715088
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 1,
+      "releaseFrame": 324,
+      "heading": 0.7853981633974483,
+      "minMountClearance": 0.24276444613102843,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": -38.16236610188165,
+            "y": 1.3906697444375062,
+            "z": -27.98002845279538
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 2,
+      "releaseFrame": 322,
+      "heading": 1.5707963267948966,
+      "minMountClearance": 0.17432696576160533,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": -46.57288683035767,
+            "y": 1.5919691004018772,
+            "z": 7.199999999999997
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 3,
+      "releaseFrame": 323,
+      "heading": 2.356194490192344,
+      "minMountClearance": 0.25062763404231514,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": -27.910592383598743,
+            "y": 0.20167740670829248,
+            "z": 38.092930032684976
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 4,
+      "releaseFrame": 324,
+      "heading": 3.141592653589793,
+      "minMountClearance": 0.15436915861392464,
+      "mounts": [
+        {
+          "side": "port",
+          "offset": -0.5,
+          "aboveWater": 0.15436915861392464
+        },
+        {
+          "side": "port",
+          "offset": 0,
+          "aboveWater": 0.4835896774872046
+        },
+        {
+          "side": "port",
+          "offset": 0.5,
+          "aboveWater": 0.7037428094881566
+        },
+        {
+          "side": "starboard",
+          "offset": -0.5,
+          "aboveWater": 0.5189391908931585
+        },
+        {
+          "side": "starboard",
+          "offset": 0,
+          "aboveWater": 0.9838467508745776
+        },
+        {
+          "side": "starboard",
+          "offset": 0.5,
+          "aboveWater": 1.216784650237587
+        },
+        {
+          "side": "bow",
+          "offset": -0.5,
+          "aboveWater": 0.9345932591175268
+        },
+        {
+          "side": "bow",
+          "offset": 0,
+          "aboveWater": 0.9345932591175268
+        },
+        {
+          "side": "bow",
+          "offset": 0.5,
+          "aboveWater": 0.9345932591175268
+        }
+      ],
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 7.199999999999994,
+            "y": -0.2224946794078475,
+            "z": 46.769735713528235
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 5,
+      "releaseFrame": 326,
+      "heading": 3.9269908169872423,
+      "minMountClearance": 0.16772724097353264,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 38.30028101827475,
+            "y": 0.6554574258760764,
+            "z": 28.11794336918844
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 6,
+      "releaseFrame": 326,
+      "heading": 4.71238898038469,
+      "minMountClearance": 0.18886986454670873,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 46.964776858744884,
+            "y": 0.5869038541072951,
+            "z": -7.19999999999999
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 7,
+      "releaseFrame": 323,
+      "heading": 5.497787143782137,
+      "minMountClearance": 0.16248169407030577,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 27.910592383598757,
+            "y": -0.3059406539023817,
+            "z": -38.092930032684976
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 8,
+      "releaseFrame": 325,
+      "heading": 0,
+      "minMountClearance": 0.12267391434466268,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 72.8,
+            "y": 0.1421158808723253,
+            "z": -46.867481212219694
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 9,
+      "releaseFrame": 326,
+      "heading": 0.7853981633974483,
+      "minMountClearance": 0.2142514118099994,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 41.699718981725354,
+            "y": 0.1913589511643865,
+            "z": -28.117943369188467
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 10,
+      "releaseFrame": 325,
+      "heading": 1.5707963267948966,
+      "minMountClearance": 0.17888353056689382,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 33.132518787780256,
+            "y": 0.33374934799539435,
+            "z": 7.199999999999997
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 11,
+      "releaseFrame": 326,
+      "heading": 2.356194490192344,
+      "minMountClearance": 0.23532317750688042,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 51.88205663081157,
+            "y": 0.6415189659599863,
+            "z": 38.30028101827472
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 12,
+      "releaseFrame": 326,
+      "heading": 3.141592653589793,
+      "minMountClearance": 0.20942054959913103,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 87.2,
+            "y": 1.9731608665001086,
+            "z": 46.964776858744884
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 13,
+      "releaseFrame": 325,
+      "heading": 3.9269908169872423,
+      "minMountClearance": 0.22424974223412475,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 118.23148260683679,
+            "y": 1.8123612782871978,
+            "z": 28.04914495775055
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 14,
+      "releaseFrame": 323,
+      "heading": 4.71238898038469,
+      "minMountClearance": 0.2157968620453301,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 126.6715382827526,
+            "y": 0.9368540328630024,
+            "z": -7.19999999999999
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 15,
+      "releaseFrame": 328,
+      "heading": 5.497787143782137,
+      "minMountClearance": 0.2285300309959557,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 108.25459176059667,
+            "y": 1.919758056495425,
+            "z": -38.436929409682946
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 16,
+      "releaseFrame": 324,
+      "heading": 0,
+      "minMountClearance": 0.2007753935562988,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 152.8,
+            "y": 1.675342891538631,
+            "z": -46.769735713528235
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 17,
+      "releaseFrame": 327,
+      "heading": 0.7853981633974483,
+      "minMountClearance": 0.23832161721425194,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 121.63123719984917,
+            "y": 1.8069436755025645,
+            "z": -28.186425151064526
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 18,
+      "releaseFrame": 325,
+      "heading": 1.5707963267948966,
+      "minMountClearance": 0.2159072600427962,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 113.13251878778034,
+            "y": 0.7185429516902766,
+            "z": 7.199999999999997
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 19,
+      "releaseFrame": 325,
+      "heading": 2.356194490192344,
+      "minMountClearance": 0.17823247372649198,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 131.95085504224937,
+            "y": 1.9641747637002989,
+            "z": 38.23148260683682
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 20,
+      "releaseFrame": 320,
+      "heading": 3.141592653589793,
+      "minMountClearance": 0.16437427021263734,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 167.2,
+            "y": 0.28638752523097466,
+            "z": 46.3742134542223
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 21,
+      "releaseFrame": 325,
+      "heading": 3.9269908169872423,
+      "minMountClearance": 0.16333562681297698,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 198.2314826068368,
+            "y": -0.143430120749513,
+            "z": 28.04914495775055
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 22,
+      "releaseFrame": 325,
+      "heading": 4.71238898038469,
+      "minMountClearance": 0.11502214669516636,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 206.86748121221976,
+            "y": 0.19227797801725055,
+            "z": -7.19999999999999
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "setup": 23,
+      "releaseFrame": 321,
+      "heading": 5.497787143782137,
+      "minMountClearance": 0.19352774696264252,
+      "immediate": [
+        {
+          "type": "cannon-fired",
+          "shipId": "player",
+          "side": "port",
+          "ammo": "round",
+          "position": {
+            "x": 187.7707556355531,
+            "y": 1.0925723654254949,
+            "z": -37.95309328463931
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

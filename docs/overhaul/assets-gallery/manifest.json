@@ -1,0 +1,48 @@
+{
+  "build": "23",
+  "images": [
+    {
+      "kind": "thousand-sunny",
+      "sourceUid": "99986d1c93654c9d8889017435b5fe06",
+      "imageSha256": "aa6491efce2373cf6d0ab5a92972a26d4f106cf75d597382e76f9ec579bd3d39",
+      "engineCapture": true,
+      "edited": false
+    },
+    {
+      "kind": "going-merry",
+      "sourceUid": "4b2cb678bf984c018dfa1936bd156c8d",
+      "imageSha256": "e72abc167b4f12092248949da2703dfc1cd1a5aca1bbd4308462c4b6142d9c6d",
+      "engineCapture": true,
+      "edited": false
+    },
+    {
+      "kind": "navy-galleon",
+      "sourceUid": "92898d5f63ad43589203d5a8dc14aa12",
+      "imageSha256": "fc57165279829d4fff6be4fd19aff233da767c1b9fabb7ea766b7265701ff864",
+      "engineCapture": true,
+      "edited": false
+    },
+    {
+      "kind": "moby-dick",
+      "sourceUid": "d9be26addfec48019188dd615a930311",
+      "imageSha256": "ed98239513f9d37479a36bd5be371467eed5f13e10e166d55480340514f4b1fc",
+      "engineCapture": true,
+      "edited": false
+    },
+    {
+      "kind": "polar-tang",
+      "sourceUid": "a7feb48976ce484aa4537e4c7124a9c4",
+      "imageSha256": "8f0a7b9cc7a275084cb289350cada2067fd162a92ce62d9518a6093f70b59543",
+      "engineCapture": true,
+      "edited": false
+    },
+    {
+      "kind": "baratie",
+      "sourceUid": "015ebe70a76749eeb92f5f39693b8ea5",
+      "imageSha256": "dae9f0a9baf86d5ca166a6078ebc15dadb5f09a3832805cf85962fa04cd52efd",
+      "engineCapture": true,
+      "edited": false
+    }
+  ],
+  "note": "Unedited engine screenshots. Stills do not establish performance or hidden geometry."
+}

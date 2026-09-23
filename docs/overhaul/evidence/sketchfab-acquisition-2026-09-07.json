@@ -1,0 +1,46 @@
+{
+  "recordedAt": "2026-09-07T14:54:50.438402+00:00",
+  "searchSnapshotUniqueRecords": 1678,
+  "statusCounts": {
+    "downloaded": 241,
+    "excluded": 1378,
+    "pending-download": 51,
+    "rate-limited": 8
+  },
+  "categoryCounts": {
+    "vehicle-candidate": 32,
+    "excluded-unrelated-search-result": 1378,
+    "crew-candidate": 266,
+    "environment-candidate": 1,
+    "ship-component-candidate": 1
+  },
+  "vehicleStatusCounts": {
+    "downloaded": 30,
+    "pending-download": 1,
+    "rate-limited": 1
+  },
+  "downloadedArchiveBytes": 2065915868,
+  "officialAuthenticatedDownloadsSucceeded": true,
+  "currentBlocker": "Persistent official HTTP 429; queue stopped after cooldowns.",
+  "integratedShipUids": [
+    "4b2cb678bf984c018dfa1936bd156c8d",
+    "99986d1c93654c9d8889017435b5fe06",
+    "92898d5f63ad43589203d5a8dc14aa12",
+    "d9be26addfec48019188dd615a930311",
+    "a7feb48976ce484aa4537e4c7124a9c4",
+    "015ebe70a76749eeb92f5f39693b8ea5"
+  ],
+  "integratedCrewUids": [
+    "44b58336c7344f058a02c6944b7ad843",
+    "182735247cfb45b5853684ac54a6e767",
+    "7dfddca8f50c45d7a430b538118d3f9a",
+    "13ebbf108c7949959608b341dbde80d3"
+  ],
+  "runtimeModelBytes": 21387516,
+  "limitations": [
+    "Candidate categories are not a completed geometry review.",
+    "Most acquired archives remain intake only.",
+    "No generated replacement ship is used.",
+    "No source archive or credential is published."
+  ]
+}

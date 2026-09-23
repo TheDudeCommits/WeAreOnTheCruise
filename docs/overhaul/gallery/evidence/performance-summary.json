@@ -1,0 +1,3483 @@
+{
+  "configuration": {
+    "baseURL": "http://127.0.0.1:4196",
+    "output": "/Users/amir/Projects/WeAreOnTheCruise/output/overhaul-gauntlet/performance-15",
+    "seed": "sustained-gauntlet-A",
+    "warmupMs": 5000,
+    "sampleMs": 15000,
+    "quality": "auto",
+    "headless": false,
+    "initialRendererDpr": 1.5,
+    "adaptiveDprAllowed": true,
+    "viewports": {
+      "desktop": {
+        "width": 1920,
+        "height": 1080,
+        "deviceScaleFactor": 2,
+        "hasTouch": false
+      },
+      "landscape": {
+        "width": 844,
+        "height": 390,
+        "deviceScaleFactor": 2,
+        "hasTouch": true
+      }
+    },
+    "notes": [
+      "Ordinary launch UI is dismissed through real buttons.",
+      "RAF intervals are uncapped wall-clock samples.",
+      "Adaptive DPR is observed, not overridden.",
+      "Landscape runs on the same desktop CPU/GPU, not a physical mobile device.",
+      "Screenshots occur after sampling; screenshot work is outside the measured interval."
+    ],
+    "jobs": [
+      {
+        "viewport": "desktop",
+        "scene": "calm-sailing",
+        "camera": "chase",
+        "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=calm-sailing"
+      },
+      {
+        "viewport": "desktop",
+        "scene": "perf-fleet",
+        "camera": "overhead",
+        "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=perf-fleet"
+      },
+      {
+        "viewport": "desktop",
+        "scene": "sunny-broadside",
+        "camera": "broadside",
+        "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=sunny-broadside"
+      },
+      {
+        "viewport": "desktop",
+        "scene": "storm-sailing",
+        "camera": "chase",
+        "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=storm-sailing"
+      },
+      {
+        "viewport": "desktop",
+        "scene": "island-discovery",
+        "camera": "chase",
+        "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=island-discovery"
+      },
+      {
+        "viewport": "landscape",
+        "scene": "calm-sailing",
+        "camera": "chase",
+        "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=calm-sailing"
+      },
+      {
+        "viewport": "landscape",
+        "scene": "perf-fleet",
+        "camera": "overhead",
+        "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=perf-fleet"
+      },
+      {
+        "viewport": "landscape",
+        "scene": "sunny-broadside",
+        "camera": "broadside",
+        "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=sunny-broadside"
+      },
+      {
+        "viewport": "landscape",
+        "scene": "storm-sailing",
+        "camera": "chase",
+        "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=storm-sailing"
+      },
+      {
+        "viewport": "landscape",
+        "scene": "island-discovery",
+        "camera": "chase",
+        "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=island-discovery"
+      }
+    ]
+  },
+  "machine": {
+    "platform": "darwin",
+    "osType": "Darwin",
+    "release": "25.6.0",
+    "version": "Darwin Kernel Version 25.6.0: Fri Jul 31 19:11:03 PDT 2026; root:xnu-12377.161.14~5/RELEASE_ARM64_T8132",
+    "architecture": "arm64",
+    "cpuModels": [
+      "Apple M4"
+    ],
+    "logicalCpuCount": 10,
+    "reportedCpuMhz": [
+      2400
+    ],
+    "totalMemoryBytes": 25769803776,
+    "nodeVersion": "v24.19.0"
+  },
+  "completedAt": "2026-09-07T12:20:41.377Z",
+  "records": [
+    {
+      "viewport": "desktop",
+      "scene": "calm-sailing",
+      "camera": "chase",
+      "name": "desktop-calm-sailing",
+      "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=calm-sailing",
+      "requestedViewport": {
+        "width": 1920,
+        "height": 1080,
+        "deviceScaleFactor": 2,
+        "hasTouch": false
+      },
+      "browserVersion": "151.0.7922.34",
+      "startedAt": "2026-09-07T12:17:06.428Z",
+      "errors": [],
+      "consoleMessages": [
+        {
+          "type": "warning",
+          "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        },
+        {
+          "type": "warning",
+          "text": "THREE.WebGLRenderer: Texture marked for update but no image data found.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        }
+      ],
+      "failedRequests": [],
+      "scripts": [
+        {
+          "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+          "status": 200,
+          "contentType": "text/javascript",
+          "etag": "W/\"992604-1788783204931\"",
+          "bytes": 992604,
+          "sha256": "c272af8449aa22f9267f2fc14621bdf56a102529c2177e2254e60b2b103f554b"
+        }
+      ],
+      "launchDismissedBy": "actual launch button",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "hardwareConcurrency": 10,
+        "deviceMemoryGiB": 16,
+        "devicePixelRatio": 2,
+        "quality": "auto",
+        "initialCanvas": {
+          "width": 2880,
+          "height": 1620,
+          "cssWidth": 1920,
+          "cssHeight": 1080,
+          "renderDpr": 1.5
+        },
+        "webgl": {
+          "vendor": "WebKit",
+          "renderer": "WebKit WebGL",
+          "unmaskedVendor": "Google Inc. (Apple)",
+          "unmaskedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "shadingLanguage": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+          "contextAttributes": {
+            "alpha": true,
+            "antialias": true,
+            "depth": true,
+            "desynchronized": false,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "high-performance",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": false,
+            "stencil": false,
+            "xrCompatible": false
+          }
+        }
+      },
+      "frameTimes": {
+        "samples": 901,
+        "measuredMs": 15014.6,
+        "averageFps": 60.008258628268486,
+        "meanFrameMs": 16.664372918978913,
+        "p50FrameMs": 16.69999999999891,
+        "p95FrameMs": 18.600000000002183,
+        "p99FrameMs": 18.700000000000728,
+        "maxFrameMs": 18.799999999999272,
+        "overBudget": {
+          "25ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "33.4ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "50ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "100ms": {
+            "count": 0,
+            "percent": 0
+          }
+        }
+      },
+      "activity": {
+        "simulationSecondsAdvanced": 15.000000000000146,
+        "wallSecondsMeasured": 15.0146,
+        "simulationToWallRatio": 0.9990276131232364,
+        "shipsWithChangedPosition": [
+          "player",
+          "merry-escort",
+          "red-force-roamer",
+          "moby-roamer",
+          "polar-roamer",
+          "mama-roamer",
+          "baratie-route",
+          "oro-roamer",
+          "marine-patrol"
+        ]
+      },
+      "validMeasurement": true,
+      "frameBudget": {
+        "averageAtLeast40Fps": true,
+        "p95AtMost25Ms": true
+      },
+      "screenshot": {
+        "file": "desktop-calm-sailing.png",
+        "before": {
+          "elapsed": 20.2166666666668,
+          "capturedAt": "2026-09-07T12:17:27.470Z"
+        },
+        "after": {
+          "elapsed": 20.500000000000117,
+          "capturedAt": "2026-09-07T12:17:28.643Z"
+        }
+      },
+      "loadedScriptElements": [
+        "http://127.0.0.1:4196/assets/index-CPH4y5aV.js"
+      ],
+      "buildDigest": "8ffe36acbadd2faa8001f412b5e0fd25b9807429c8734dfc1e5211b06d872371",
+      "finishedAt": "2026-09-07T12:17:28.649Z",
+      "sample": {
+        "firstRafMs": 5860.6,
+        "lastRafMs": 20875.2,
+        "before": {
+          "scene": "calm-sailing",
+          "elapsed": 5.2166666666666535,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "explore",
+          "weather": "calm",
+          "playerId": "player",
+          "shipCount": 9,
+          "projectileCount": 1,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": 0.16612099700226773,
+                "y": -0.7586165858897096,
+                "z": -24.719537890650965
+              },
+              "heading": 0,
+              "speed": 8.274488077919958,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "merry-escort",
+              "kind": "going-merry",
+              "position": {
+                "x": -69.85000848814205,
+                "y": -2.1941122347089173,
+                "z": -168.54195419785765
+              },
+              "heading": 4.398072020400258,
+              "speed": 6.358288115020191,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "red-force-roamer",
+              "kind": "red-force",
+              "position": {
+                "x": 245.02517717100466,
+                "y": -1.4565350426318648,
+                "z": -226.90471944516784
+              },
+              "heading": 1.1606512448629394,
+              "speed": 0.3126862686062236,
+              "hullDamage": 0.030889328037814606,
+              "surrendered": false
+            },
+            {
+              "id": "moby-roamer",
+              "kind": "moby-dick",
+              "position": {
+                "x": -373.1992728585148,
+                "y": 0.46895080478250223,
+                "z": -317.1526518861495
+              },
+              "heading": 5.520261731665208,
+              "speed": 6.072819315763697,
+              "hullDamage": 0.21046153846153845,
+              "surrendered": false
+            },
+            {
+              "id": "polar-roamer",
+              "kind": "polar-tang",
+              "position": {
+                "x": 167.32932702009893,
+                "y": -0.4187777627565515,
+                "z": -372.4679953380316
+              },
+              "heading": 1.7751865955951676,
+              "speed": 9.559270741115062,
+              "hullDamage": 0.005,
+              "surrendered": false
+            },
+            {
+              "id": "mama-roamer",
+              "kind": "queen-mama-chanter",
+              "position": {
+                "x": -257.53920953401865,
+                "y": 0.9664516415219007,
+                "z": -278.9449349704858
+              },
+              "heading": 1.1575069287741835,
+              "speed": 7.820408945378301,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "baratie-route",
+              "kind": "baratie",
+              "position": {
+                "x": 377.2721327281585,
+                "y": 0.1658339961173777,
+                "z": -45.30788825067593
+              },
+              "heading": 4.424247375615117,
+              "speed": 5.631606864497111,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "oro-roamer",
+              "kind": "oro-jackson",
+              "position": {
+                "x": -369.71452680545434,
+                "y": -0.8002677846718977,
+                "z": -83.73793917902145
+              },
+              "heading": 5.494651080946067,
+              "speed": 10.896147067407878,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "marine-patrol",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 62.38152359182136,
+                "y": -1.322335422334599,
+                "z": -134.6389298005477
+              },
+              "heading": 5.500247118547822,
+              "speed": 4.381869861097856,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 2880,
+            "height": 1620,
+            "cssWidth": 1920,
+            "cssHeight": 1080,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 623,
+            "triangles": 641554,
+            "geometries": 625,
+            "textures": 9,
+            "entities": 10,
+            "chunks": 25
+          }
+        },
+        "after": {
+          "scene": "calm-sailing",
+          "elapsed": 20.2166666666668,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "explore",
+          "weather": "calm",
+          "playerId": "player",
+          "shipCount": 9,
+          "projectileCount": 1,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": 1.3842428429205194,
+                "y": 0.1842072275800336,
+                "z": -205.981447396256
+              },
+              "heading": 0,
+              "speed": 13.804521045467876,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "merry-escort",
+              "kind": "going-merry",
+              "position": {
+                "x": 72.50958327315551,
+                "y": 1.1552113742889676,
+                "z": -285.4757401111558
+              },
+              "heading": 5.256363445915532,
+              "speed": 12.151437898703467,
+              "hullDamage": 0.01607709394642321,
+              "surrendered": false
+            },
+            {
+              "id": "red-force-roamer",
+              "kind": "red-force",
+              "position": {
+                "x": 238.2834486321017,
+                "y": 0.9989467344953266,
+                "z": -297.8518518377036
+              },
+              "heading": 1.2595639829815095,
+              "speed": 6.112543703580439,
+              "hullDamage": 0.09835158400398997,
+              "surrendered": false
+            },
+            {
+              "id": "moby-roamer",
+              "kind": "moby-dick",
+              "position": {
+                "x": -282.7536689543636,
+                "y": -0.7725786149169467,
+                "z": -388.9516324142085
+              },
+              "heading": 4.007130595266492,
+              "speed": 2.530011455535179,
+              "hullDamage": 1,
+              "surrendered": true,
+              "finish": "available"
+            },
+            {
+              "id": "polar-roamer",
+              "kind": "polar-tang",
+              "position": {
+                "x": -45.0244539347029,
+                "y": -0.6631014635285287,
+                "z": -279.7320985344685
+              },
+              "heading": 3.1340495095480563,
+              "speed": 16.728474379239856,
+              "hullDamage": 0.005,
+              "surrendered": false
+            },
+            {
+              "id": "mama-roamer",
+              "kind": "queen-mama-chanter",
+              "position": {
+                "x": -421.5809913940406,
+                "y": -1.0209588173455473,
+                "z": -362.64045789845915
+              },
+              "heading": 1.9672943503380669,
+              "speed": 9.57542213262719,
+              "hullDamage": 0.4220797716552275,
+              "surrendered": false
+            },
+            {
+              "id": "baratie-route",
+              "kind": "baratie",
+              "position": {
+                "x": 437.96921973417517,
+                "y": 0.7397371810215175,
+                "z": -2.547608932263253
+              },
+              "heading": 2.0255999959773057,
+              "speed": 3.1731582701558967,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "oro-roamer",
+              "kind": "oro-jackson",
+              "position": {
+                "x": -209.31379315396035,
+                "y": -0.8900861454053016,
+                "z": -219.90825174292667
+              },
+              "heading": 0.2207147207385729,
+              "speed": 9.955311065453124,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "marine-patrol",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 72.61375454451706,
+                "y": -0.8707894960614679,
+                "z": -151.83813197231717
+              },
+              "heading": 4.863214949304535,
+              "speed": -0.02787155190802967,
+              "hullDamage": 0.22027668565762934,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 2880,
+            "height": 1620,
+            "cssWidth": 1920,
+            "cssHeight": 1080,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 822,
+            "triangles": 718256,
+            "geometries": 764,
+            "textures": 11,
+            "entities": 10,
+            "chunks": 25
+          }
+        },
+        "canvasChanges": [],
+        "visibilityChanges": []
+      }
+    },
+    {
+      "viewport": "desktop",
+      "scene": "perf-fleet",
+      "camera": "overhead",
+      "name": "desktop-perf-fleet",
+      "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=perf-fleet",
+      "requestedViewport": {
+        "width": 1920,
+        "height": 1080,
+        "deviceScaleFactor": 2,
+        "hasTouch": false
+      },
+      "browserVersion": "151.0.7922.34",
+      "startedAt": "2026-09-07T12:17:28.650Z",
+      "errors": [],
+      "consoleMessages": [
+        {
+          "type": "warning",
+          "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        }
+      ],
+      "failedRequests": [],
+      "scripts": [
+        {
+          "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+          "status": 200,
+          "contentType": "text/javascript",
+          "etag": "W/\"992604-1788783204931\"",
+          "bytes": 992604,
+          "sha256": "c272af8449aa22f9267f2fc14621bdf56a102529c2177e2254e60b2b103f554b"
+        }
+      ],
+      "launchDismissedBy": "actual launch button",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "hardwareConcurrency": 10,
+        "deviceMemoryGiB": 16,
+        "devicePixelRatio": 2,
+        "quality": "auto",
+        "initialCanvas": {
+          "width": 2880,
+          "height": 1620,
+          "cssWidth": 1920,
+          "cssHeight": 1080,
+          "renderDpr": 1.5
+        },
+        "webgl": {
+          "vendor": "WebKit",
+          "renderer": "WebKit WebGL",
+          "unmaskedVendor": "Google Inc. (Apple)",
+          "unmaskedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "shadingLanguage": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+          "contextAttributes": {
+            "alpha": true,
+            "antialias": true,
+            "depth": true,
+            "desynchronized": false,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "high-performance",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": false,
+            "stencil": false,
+            "xrCompatible": false
+          }
+        }
+      },
+      "frameTimes": {
+        "samples": 900,
+        "measuredMs": 15000,
+        "averageFps": 60,
+        "meanFrameMs": 16.666666666666668,
+        "p50FrameMs": 16.69999999999891,
+        "p95FrameMs": 18.699999999999818,
+        "p99FrameMs": 18.700000000000728,
+        "maxFrameMs": 18.80000000000109,
+        "overBudget": {
+          "25ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "33.4ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "50ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "100ms": {
+            "count": 0,
+            "percent": 0
+          }
+        }
+      },
+      "activity": {
+        "simulationSecondsAdvanced": 15.000000000000153,
+        "wallSecondsMeasured": 15,
+        "simulationToWallRatio": 1.0000000000000102,
+        "shipsWithChangedPosition": [
+          "player",
+          "perf-1",
+          "perf-2",
+          "perf-3",
+          "perf-4",
+          "perf-5",
+          "perf-6",
+          "perf-7"
+        ]
+      },
+      "validMeasurement": true,
+      "frameBudget": {
+        "averageAtLeast40Fps": true,
+        "p95AtMost25Ms": true
+      },
+      "screenshot": {
+        "file": "desktop-perf-fleet.png",
+        "before": {
+          "elapsed": 20.10000000000014,
+          "capturedAt": "2026-09-07T12:17:49.449Z"
+        },
+        "after": {
+          "elapsed": 20.41666666666679,
+          "capturedAt": "2026-09-07T12:17:50.827Z"
+        }
+      },
+      "loadedScriptElements": [
+        "http://127.0.0.1:4196/assets/index-CPH4y5aV.js"
+      ],
+      "buildDigest": "8ffe36acbadd2faa8001f412b5e0fd25b9807429c8734dfc1e5211b06d872371",
+      "finishedAt": "2026-09-07T12:17:50.832Z",
+      "sample": {
+        "firstRafMs": 5700,
+        "lastRafMs": 20700,
+        "before": {
+          "scene": "perf-fleet",
+          "elapsed": 5.099999999999987,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "combat",
+          "weather": "swell",
+          "playerId": "player",
+          "shipCount": 8,
+          "projectileCount": 0,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "moby-dick",
+              "position": {
+                "x": 0.4571527312512326,
+                "y": -2.0790313579326862,
+                "z": 78.69594476919838
+              },
+              "heading": 0,
+              "speed": 4.0830755612052085,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-1",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -173.43714909180557,
+                "y": 1.546937185460752,
+                "z": -175.981727348476
+              },
+              "heading": 5.338465917358381,
+              "speed": 8.020404621074544,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-2",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -83.11387015077035,
+                "y": -2.551068264746168,
+                "z": -221.02157827578844
+              },
+              "heading": 5.321570159042658,
+              "speed": 8.002349952532018,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-3",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 6.996302033144702,
+                "y": 3.194304830828782,
+                "z": -246.03391625443632
+              },
+              "heading": 5.315942068943922,
+              "speed": 7.9964196713092965,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-4",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 76.80899785498924,
+                "y": -2.8450851310691636,
+                "z": -205.05750793884076
+              },
+              "heading": 5.562138887632557,
+              "speed": 1.6343555663766414,
+              "hullDamage": 0.024183746712406886,
+              "surrendered": false
+            },
+            {
+              "id": "perf-5",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 177.12718078102478,
+                "y": 1.1861733058351784,
+                "z": -164.852103514694
+              },
+              "heading": 0.7307251231059135,
+              "speed": 0.6632258447795968,
+              "hullDamage": 0.028976787226358963,
+              "surrendered": false
+            },
+            {
+              "id": "perf-6",
+              "kind": "polar-tang",
+              "position": {
+                "x": -290.21187121290916,
+                "y": -2.9072376412902097,
+                "z": -23.664386713347596
+              },
+              "heading": 2.7176733152593044,
+              "speed": 9.352982585217807,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-7",
+              "kind": "red-force",
+              "position": {
+                "x": 265.18172899147766,
+                "y": 3.2117968112356716,
+                "z": -39.54651086466768
+              },
+              "heading": 6.2088918895709835,
+              "speed": 9.13820954552398,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 2880,
+            "height": 1620,
+            "cssWidth": 1920,
+            "cssHeight": 1080,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 257,
+            "triangles": 494164,
+            "geometries": 407,
+            "textures": 7,
+            "entities": 8,
+            "chunks": 25
+          }
+        },
+        "after": {
+          "scene": "perf-fleet",
+          "elapsed": 20.10000000000014,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "combat",
+          "weather": "swell",
+          "playerId": "player",
+          "shipCount": 8,
+          "projectileCount": 0,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "moby-dick",
+              "position": {
+                "x": 4.762231630869836,
+                "y": 0.2368817424257783,
+                "z": -27.756114526282065
+              },
+              "heading": 0,
+              "speed": 8.95849515344102,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-1",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -56.49379902669396,
+                "y": -3.1546633111947457,
+                "z": -184.55421385437998
+              },
+              "heading": 3.268900182937209,
+              "speed": 9.197621709119408,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-2",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 25.10135611940981,
+                "y": 1.6647858092931367,
+                "z": -225.2439626882179
+              },
+              "heading": 2.761420737560929,
+              "speed": 7.439085039780892,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-3",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 64.90689037265159,
+                "y": 2.546936080324213,
+                "z": -277.37600186011633
+              },
+              "heading": 2.797979851648954,
+              "speed": 5.984042836387319,
+              "hullDamage": 0.05339886343651855,
+              "surrendered": false
+            },
+            {
+              "id": "perf-4",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 62.94194478786112,
+                "y": 2.6990920636918005,
+                "z": -243.27535045507884
+              },
+              "heading": 4.841540172648946,
+              "speed": 0.003664598797532337,
+              "hullDamage": 0.08781800405787452,
+              "surrendered": false
+            },
+            {
+              "id": "perf-5",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 122.70540419044048,
+                "y": -2.1862032128223667,
+                "z": -155.58033746697717
+              },
+              "heading": 2.1984365264031016,
+              "speed": 1.1394469585004563,
+              "hullDamage": 0.19909021922844758,
+              "surrendered": false
+            },
+            {
+              "id": "perf-6",
+              "kind": "polar-tang",
+              "position": {
+                "x": -217.78595776759153,
+                "y": 2.543147448666998,
+                "z": 86.19497523573294
+              },
+              "heading": 4.2899745733707455,
+              "speed": 17.872041710426444,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-7",
+              "kind": "red-force",
+              "position": {
+                "x": 163.5087028362371,
+                "y": 3.301409405382215,
+                "z": -142.38568739847074
+              },
+              "heading": 2.3248530049606657,
+              "speed": 13.571112289095504,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 2880,
+            "height": 1620,
+            "cssWidth": 1920,
+            "cssHeight": 1080,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 291,
+            "triangles": 502986,
+            "geometries": 407,
+            "textures": 7,
+            "entities": 8,
+            "chunks": 25
+          }
+        },
+        "canvasChanges": [],
+        "visibilityChanges": []
+      }
+    },
+    {
+      "viewport": "desktop",
+      "scene": "sunny-broadside",
+      "camera": "broadside",
+      "name": "desktop-sunny-broadside",
+      "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=sunny-broadside",
+      "requestedViewport": {
+        "width": 1920,
+        "height": 1080,
+        "deviceScaleFactor": 2,
+        "hasTouch": false
+      },
+      "browserVersion": "151.0.7922.34",
+      "startedAt": "2026-09-07T12:17:50.832Z",
+      "errors": [],
+      "consoleMessages": [
+        {
+          "type": "warning",
+          "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        },
+        {
+          "type": "warning",
+          "text": "THREE.WebGLRenderer: Texture marked for update but no image data found.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        },
+        {
+          "type": "warning",
+          "text": "THREE.WebGLRenderer: Texture marked for update but no image data found.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        }
+      ],
+      "failedRequests": [],
+      "scripts": [
+        {
+          "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+          "status": 200,
+          "contentType": "text/javascript",
+          "etag": "W/\"992604-1788783204931\"",
+          "bytes": 992604,
+          "sha256": "c272af8449aa22f9267f2fc14621bdf56a102529c2177e2254e60b2b103f554b"
+        }
+      ],
+      "launchDismissedBy": "actual launch button",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "hardwareConcurrency": 10,
+        "deviceMemoryGiB": 16,
+        "devicePixelRatio": 2,
+        "quality": "auto",
+        "initialCanvas": {
+          "width": 2880,
+          "height": 1620,
+          "cssWidth": 1920,
+          "cssHeight": 1080,
+          "renderDpr": 1.5
+        },
+        "webgl": {
+          "vendor": "WebKit",
+          "renderer": "WebKit WebGL",
+          "unmaskedVendor": "Google Inc. (Apple)",
+          "unmaskedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "shadingLanguage": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+          "contextAttributes": {
+            "alpha": true,
+            "antialias": true,
+            "depth": true,
+            "desynchronized": false,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "high-performance",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": false,
+            "stencil": false,
+            "xrCompatible": false
+          }
+        }
+      },
+      "frameTimes": {
+        "samples": 901,
+        "measuredMs": 15016.699999999999,
+        "averageFps": 59.99986681494603,
+        "meanFrameMs": 16.66670366259711,
+        "p50FrameMs": 16.699999999999818,
+        "p95FrameMs": 18.69999999999891,
+        "p99FrameMs": 18.700000000000728,
+        "maxFrameMs": 18.800000000000182,
+        "overBudget": {
+          "25ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "33.4ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "50ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "100ms": {
+            "count": 0,
+            "percent": 0
+          }
+        }
+      },
+      "activity": {
+        "simulationSecondsAdvanced": 14.633333333333507,
+        "wallSecondsMeasured": 15.016699999999998,
+        "simulationToWallRatio": 0.9744706449042405,
+        "shipsWithChangedPosition": [
+          "player",
+          "marine-alpha",
+          "marine-beta",
+          "marine-gamma"
+        ]
+      },
+      "validMeasurement": true,
+      "frameBudget": {
+        "averageAtLeast40Fps": true,
+        "p95AtMost25Ms": true
+      },
+      "screenshot": {
+        "file": "desktop-sunny-broadside.png",
+        "before": {
+          "elapsed": 19.75000000000016,
+          "capturedAt": "2026-09-07T12:18:11.601Z"
+        },
+        "after": {
+          "elapsed": 19.95000000000015,
+          "capturedAt": "2026-09-07T12:18:12.723Z"
+        }
+      },
+      "loadedScriptElements": [
+        "http://127.0.0.1:4196/assets/index-CPH4y5aV.js"
+      ],
+      "buildDigest": "8ffe36acbadd2faa8001f412b5e0fd25b9807429c8734dfc1e5211b06d872371",
+      "finishedAt": "2026-09-07T12:18:12.732Z",
+      "sample": {
+        "firstRafMs": 5648.1,
+        "lastRafMs": 20664.8,
+        "before": {
+          "scene": "sunny-broadside",
+          "elapsed": 5.116666666666654,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "combat",
+          "weather": "swell",
+          "playerId": "player",
+          "shipCount": 4,
+          "projectileCount": 6,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": -19.863676296816113,
+                "y": 0.6504982816985124,
+                "z": -0.9967893089115255
+              },
+              "heading": 1.5707963267948966,
+              "speed": 6.7944246173892004,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "marine-alpha",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -74.94027338431472,
+                "y": 1.2707025603742303,
+                "z": -20.496015636495745
+              },
+              "heading": 0.9421889453829468,
+              "speed": 3.6943101992642884,
+              "hullDamage": 0.6784586249830562,
+              "surrendered": false
+            },
+            {
+              "id": "marine-beta",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -118.54906288018822,
+                "y": -2.261965659761805,
+                "z": 25.08640828638017
+              },
+              "heading": 5.636124035698806,
+              "speed": 9.278176235033749,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "marine-gamma",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -155.01126473790472,
+                "y": 0.9870248811703946,
+                "z": -76.94903239652082
+              },
+              "heading": 3.277690733796554,
+              "speed": 6.266889277467898,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 2880,
+            "height": 1620,
+            "cssWidth": 1920,
+            "cssHeight": 1080,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 479,
+            "triangles": 637036,
+            "geometries": 756,
+            "textures": 7,
+            "entities": 10,
+            "chunks": 25
+          }
+        },
+        "after": {
+          "scene": "sunny-broadside",
+          "elapsed": 19.75000000000016,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "combat",
+          "weather": "swell",
+          "playerId": "player",
+          "shipCount": 4,
+          "projectileCount": 0,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": -95.44564402771316,
+                "y": -2.5598743108912454,
+                "z": 2.855075019113607
+              },
+              "heading": 1.5707963267948966,
+              "speed": 0.8309229595966261,
+              "hullDamage": 1,
+              "surrendered": true,
+              "finish": "available"
+            },
+            {
+              "id": "marine-alpha",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -86.48146500790075,
+                "y": -2.1603246864045538,
+                "z": -41.54270141910986
+              },
+              "heading": 6.023745762544607,
+              "speed": 0.6092074144924676,
+              "hullDamage": 1,
+              "surrendered": true,
+              "finish": "available"
+            },
+            {
+              "id": "marine-beta",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -88.50999599018168,
+                "y": -1.7695183507827876,
+                "z": -17.125397605413713
+              },
+              "heading": 3.845548316548893,
+              "speed": 2.610058454317758,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "marine-gamma",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -125.4622665589216,
+                "y": -1.238711728749948,
+                "z": 62.06005197666863
+              },
+              "heading": 1.8082969377965075,
+              "speed": 3.722644282383281,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 2880,
+            "height": 1620,
+            "cssWidth": 1920,
+            "cssHeight": 1080,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 748,
+            "triangles": 692018,
+            "geometries": 904,
+            "textures": 7,
+            "entities": 4,
+            "chunks": 25
+          }
+        },
+        "canvasChanges": [],
+        "visibilityChanges": []
+      }
+    },
+    {
+      "viewport": "desktop",
+      "scene": "storm-sailing",
+      "camera": "chase",
+      "name": "desktop-storm-sailing",
+      "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=storm-sailing",
+      "requestedViewport": {
+        "width": 1920,
+        "height": 1080,
+        "deviceScaleFactor": 2,
+        "hasTouch": false
+      },
+      "browserVersion": "151.0.7922.34",
+      "startedAt": "2026-09-07T12:18:12.732Z",
+      "errors": [],
+      "consoleMessages": [
+        {
+          "type": "warning",
+          "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        },
+        {
+          "type": "warning",
+          "text": "THREE.WebGLRenderer: Texture marked for update but no image data found.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        }
+      ],
+      "failedRequests": [],
+      "scripts": [
+        {
+          "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+          "status": 200,
+          "contentType": "text/javascript",
+          "etag": "W/\"992604-1788783204931\"",
+          "bytes": 992604,
+          "sha256": "c272af8449aa22f9267f2fc14621bdf56a102529c2177e2254e60b2b103f554b"
+        }
+      ],
+      "launchDismissedBy": "actual launch button",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "hardwareConcurrency": 10,
+        "deviceMemoryGiB": 16,
+        "devicePixelRatio": 2,
+        "quality": "auto",
+        "initialCanvas": {
+          "width": 2880,
+          "height": 1620,
+          "cssWidth": 1920,
+          "cssHeight": 1080,
+          "renderDpr": 1.5
+        },
+        "webgl": {
+          "vendor": "WebKit",
+          "renderer": "WebKit WebGL",
+          "unmaskedVendor": "Google Inc. (Apple)",
+          "unmaskedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "shadingLanguage": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+          "contextAttributes": {
+            "alpha": true,
+            "antialias": true,
+            "depth": true,
+            "desynchronized": false,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "high-performance",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": false,
+            "stencil": false,
+            "xrCompatible": false
+          }
+        }
+      },
+      "frameTimes": {
+        "samples": 900,
+        "measuredMs": 15000,
+        "averageFps": 60,
+        "meanFrameMs": 16.666666666666668,
+        "p50FrameMs": 16.699999999999818,
+        "p95FrameMs": 18.69999999999891,
+        "p99FrameMs": 18.700000000000728,
+        "maxFrameMs": 18.799999999999272,
+        "overBudget": {
+          "25ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "33.4ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "50ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "100ms": {
+            "count": 0,
+            "percent": 0
+          }
+        }
+      },
+      "activity": {
+        "simulationSecondsAdvanced": 15.000000000000153,
+        "wallSecondsMeasured": 15,
+        "simulationToWallRatio": 1.0000000000000102,
+        "shipsWithChangedPosition": [
+          "player"
+        ]
+      },
+      "validMeasurement": true,
+      "frameBudget": {
+        "averageAtLeast40Fps": true,
+        "p95AtMost25Ms": true
+      },
+      "screenshot": {
+        "file": "desktop-storm-sailing.png",
+        "before": {
+          "elapsed": 20.083333333333474,
+          "capturedAt": "2026-09-07T12:18:33.368Z"
+        },
+        "after": {
+          "elapsed": 20.30000000000013,
+          "capturedAt": "2026-09-07T12:18:34.379Z"
+        }
+      },
+      "loadedScriptElements": [
+        "http://127.0.0.1:4196/assets/index-CPH4y5aV.js"
+      ],
+      "buildDigest": "8ffe36acbadd2faa8001f412b5e0fd25b9807429c8734dfc1e5211b06d872371",
+      "finishedAt": "2026-09-07T12:18:34.384Z",
+      "sample": {
+        "firstRafMs": 5541.3,
+        "lastRafMs": 20541.3,
+        "before": {
+          "scene": "storm-sailing",
+          "elapsed": 5.083333333333321,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "explore",
+          "weather": "storm",
+          "playerId": "player",
+          "shipCount": 1,
+          "projectileCount": 0,
+          "islandCount": 7,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": 7.674900818921612,
+                "y": -2.7302880570316264,
+                "z": -14.87022551184887
+              },
+              "heading": 5.663185307179585,
+              "speed": 5.7065320123002,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 2880,
+            "height": 1620,
+            "cssWidth": 1920,
+            "cssHeight": 1080,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 371,
+            "triangles": 524066,
+            "geometries": 218,
+            "textures": 6,
+            "entities": 1,
+            "chunks": 25
+          }
+        },
+        "after": {
+          "scene": "storm-sailing",
+          "elapsed": 20.083333333333474,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "explore",
+          "weather": "storm",
+          "playerId": "player",
+          "shipCount": 1,
+          "projectileCount": 0,
+          "islandCount": 7,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": 66.32066887809738,
+                "y": -4.64018505531804,
+                "z": -128.49720479547986
+              },
+              "heading": 5.663185307179585,
+              "speed": 9.669935395958351,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 2880,
+            "height": 1620,
+            "cssWidth": 1920,
+            "cssHeight": 1080,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 371,
+            "triangles": 524366,
+            "geometries": 218,
+            "textures": 6,
+            "entities": 1,
+            "chunks": 25
+          }
+        },
+        "canvasChanges": [],
+        "visibilityChanges": []
+      }
+    },
+    {
+      "viewport": "desktop",
+      "scene": "island-discovery",
+      "camera": "chase",
+      "name": "desktop-island-discovery",
+      "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=island-discovery",
+      "requestedViewport": {
+        "width": 1920,
+        "height": 1080,
+        "deviceScaleFactor": 2,
+        "hasTouch": false
+      },
+      "browserVersion": "151.0.7922.34",
+      "startedAt": "2026-09-07T12:18:34.392Z",
+      "errors": [],
+      "consoleMessages": [
+        {
+          "type": "warning",
+          "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        },
+        {
+          "type": "warning",
+          "text": "THREE.WebGLRenderer: Texture marked for update but no image data found.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        }
+      ],
+      "failedRequests": [],
+      "scripts": [
+        {
+          "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+          "status": 200,
+          "contentType": "text/javascript",
+          "etag": "W/\"992604-1788783204931\"",
+          "bytes": 992604,
+          "sha256": "c272af8449aa22f9267f2fc14621bdf56a102529c2177e2254e60b2b103f554b"
+        }
+      ],
+      "launchDismissedBy": "actual launch button",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "hardwareConcurrency": 10,
+        "deviceMemoryGiB": 16,
+        "devicePixelRatio": 2,
+        "quality": "auto",
+        "initialCanvas": {
+          "width": 2880,
+          "height": 1620,
+          "cssWidth": 1920,
+          "cssHeight": 1080,
+          "renderDpr": 1.5
+        },
+        "webgl": {
+          "vendor": "WebKit",
+          "renderer": "WebKit WebGL",
+          "unmaskedVendor": "Google Inc. (Apple)",
+          "unmaskedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "shadingLanguage": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+          "contextAttributes": {
+            "alpha": true,
+            "antialias": true,
+            "depth": true,
+            "desynchronized": false,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "high-performance",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": false,
+            "stencil": false,
+            "xrCompatible": false
+          }
+        }
+      },
+      "frameTimes": {
+        "samples": 900,
+        "measuredMs": 15000.099999999999,
+        "averageFps": 59.999600002666654,
+        "meanFrameMs": 16.666777777777778,
+        "p50FrameMs": 16.69999999999891,
+        "p95FrameMs": 18.69999999999891,
+        "p99FrameMs": 18.700000000000728,
+        "maxFrameMs": 18.799999999999272,
+        "overBudget": {
+          "25ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "33.4ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "50ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "100ms": {
+            "count": 0,
+            "percent": 0
+          }
+        }
+      },
+      "activity": {
+        "simulationSecondsAdvanced": 15.000000000000153,
+        "wallSecondsMeasured": 15.000099999999998,
+        "simulationToWallRatio": 0.9999933333777878,
+        "shipsWithChangedPosition": [
+          "player"
+        ]
+      },
+      "validMeasurement": true,
+      "frameBudget": {
+        "averageAtLeast40Fps": true,
+        "p95AtMost25Ms": true
+      },
+      "screenshot": {
+        "file": "desktop-island-discovery.png",
+        "before": {
+          "elapsed": 20.116666666666806,
+          "capturedAt": "2026-09-07T12:18:55.115Z"
+        },
+        "after": {
+          "elapsed": 20.36666666666679,
+          "capturedAt": "2026-09-07T12:18:56.026Z"
+        }
+      },
+      "loadedScriptElements": [
+        "http://127.0.0.1:4196/assets/index-CPH4y5aV.js"
+      ],
+      "buildDigest": "8ffe36acbadd2faa8001f412b5e0fd25b9807429c8734dfc1e5211b06d872371",
+      "finishedAt": "2026-09-07T12:18:56.036Z",
+      "sample": {
+        "firstRafMs": 5637.2,
+        "lastRafMs": 20637.3,
+        "before": {
+          "scene": "island-discovery",
+          "elapsed": 5.116666666666654,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "discovery",
+          "weather": "fog",
+          "playerId": "player",
+          "shipCount": 1,
+          "projectileCount": 0,
+          "islandCount": 9,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": 37.348567184388166,
+                "y": 1.442231908029963,
+                "z": 147.13113246086235
+              },
+              "heading": 0.11000000000000032,
+              "speed": 7.874642119119633,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 2880,
+            "height": 1620,
+            "cssWidth": 1920,
+            "cssHeight": 1080,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 371,
+            "triangles": 553766,
+            "geometries": 218,
+            "textures": 6,
+            "entities": 1,
+            "chunks": 25
+          }
+        },
+        "after": {
+          "scene": "island-discovery",
+          "elapsed": 20.116666666666806,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "discovery",
+          "weather": "fog",
+          "playerId": "player",
+          "shipCount": 1,
+          "projectileCount": 0,
+          "islandCount": 9,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": 17.298269395354247,
+                "y": -1.0037545307738815,
+                "z": -25.804648358411878
+              },
+              "heading": 0.11000000000000032,
+              "speed": 13.291203489309964,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 2880,
+            "height": 1620,
+            "cssWidth": 1920,
+            "cssHeight": 1080,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 371,
+            "triangles": 553942,
+            "geometries": 218,
+            "textures": 6,
+            "entities": 1,
+            "chunks": 25
+          }
+        },
+        "canvasChanges": [],
+        "visibilityChanges": []
+      }
+    },
+    {
+      "viewport": "landscape",
+      "scene": "calm-sailing",
+      "camera": "chase",
+      "name": "landscape-calm-sailing",
+      "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=calm-sailing",
+      "requestedViewport": {
+        "width": 844,
+        "height": 390,
+        "deviceScaleFactor": 2,
+        "hasTouch": true
+      },
+      "browserVersion": "151.0.7922.34",
+      "startedAt": "2026-09-07T12:18:56.037Z",
+      "errors": [],
+      "consoleMessages": [
+        {
+          "type": "warning",
+          "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        },
+        {
+          "type": "warning",
+          "text": "THREE.WebGLRenderer: Texture marked for update but no image data found.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        }
+      ],
+      "failedRequests": [],
+      "scripts": [
+        {
+          "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+          "status": 200,
+          "contentType": "text/javascript",
+          "etag": "W/\"992604-1788783204931\"",
+          "bytes": 992604,
+          "sha256": "c272af8449aa22f9267f2fc14621bdf56a102529c2177e2254e60b2b103f554b"
+        }
+      ],
+      "launchDismissedBy": "actual launch button",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "hardwareConcurrency": 10,
+        "deviceMemoryGiB": 16,
+        "devicePixelRatio": 2,
+        "quality": "auto",
+        "initialCanvas": {
+          "width": 1266,
+          "height": 585,
+          "cssWidth": 844,
+          "cssHeight": 390,
+          "renderDpr": 1.5
+        },
+        "webgl": {
+          "vendor": "WebKit",
+          "renderer": "WebKit WebGL",
+          "unmaskedVendor": "Google Inc. (Apple)",
+          "unmaskedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "shadingLanguage": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+          "contextAttributes": {
+            "alpha": true,
+            "antialias": true,
+            "depth": true,
+            "desynchronized": false,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "high-performance",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": false,
+            "stencil": false,
+            "xrCompatible": false
+          }
+        }
+      },
+      "frameTimes": {
+        "samples": 900,
+        "measuredMs": 15001.999999999998,
+        "averageFps": 59.99200106652447,
+        "meanFrameMs": 16.668888888888887,
+        "p50FrameMs": 16.69999999999891,
+        "p95FrameMs": 18.69999999999709,
+        "p99FrameMs": 18.700000000000728,
+        "maxFrameMs": 18.800000000000182,
+        "overBudget": {
+          "25ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "33.4ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "50ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "100ms": {
+            "count": 0,
+            "percent": 0
+          }
+        }
+      },
+      "activity": {
+        "simulationSecondsAdvanced": 15.000000000000153,
+        "wallSecondsMeasured": 15.001999999999999,
+        "simulationToWallRatio": 0.9998666844420846,
+        "shipsWithChangedPosition": [
+          "player",
+          "merry-escort",
+          "red-force-roamer",
+          "moby-roamer",
+          "polar-roamer",
+          "mama-roamer",
+          "baratie-route",
+          "oro-roamer",
+          "marine-patrol"
+        ]
+      },
+      "validMeasurement": true,
+      "frameBudget": {
+        "averageAtLeast40Fps": true,
+        "p95AtMost25Ms": true
+      },
+      "screenshot": {
+        "file": "landscape-calm-sailing.png",
+        "before": {
+          "elapsed": 20.13333333333347,
+          "capturedAt": "2026-09-07T12:19:16.993Z"
+        },
+        "after": {
+          "elapsed": 20.25000000000013,
+          "capturedAt": "2026-09-07T12:19:17.286Z"
+        }
+      },
+      "loadedScriptElements": [
+        "http://127.0.0.1:4196/assets/index-CPH4y5aV.js"
+      ],
+      "buildDigest": "8ffe36acbadd2faa8001f412b5e0fd25b9807429c8734dfc1e5211b06d872371",
+      "finishedAt": "2026-09-07T12:19:17.290Z",
+      "sample": {
+        "firstRafMs": 5844.1,
+        "lastRafMs": 20846.1,
+        "before": {
+          "scene": "calm-sailing",
+          "elapsed": 5.116666666666654,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "explore",
+          "weather": "calm",
+          "playerId": "player",
+          "shipCount": 9,
+          "projectileCount": 0,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": 0.16058845726593338,
+                "y": -0.8257047399782775,
+                "z": -23.89627154797435
+              },
+              "heading": 0,
+              "speed": 8.17378481421379,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "merry-escort",
+              "kind": "going-merry",
+              "position": {
+                "x": -70.7072308960945,
+                "y": -2.363166963990608,
+                "z": -167.91577961945362
+              },
+              "heading": 4.426411584813277,
+              "speed": 6.357057357022914,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "red-force-roamer",
+              "kind": "red-force",
+              "position": {
+                "x": 244.9339562480752,
+                "y": -1.4522311519334936,
+                "z": -226.64392394057012
+              },
+              "heading": 1.160511072089096,
+              "speed": 0.05015267254260969,
+              "hullDamage": 0.030889328037814606,
+              "surrendered": false
+            },
+            {
+              "id": "moby-roamer",
+              "kind": "moby-dick",
+              "position": {
+                "x": -373.48400132837935,
+                "y": 0.4122684372681836,
+                "z": -316.5899255502513
+              },
+              "heading": 5.532836612379381,
+              "speed": 6.013706120876564,
+              "hullDamage": 0.21046153846153845,
+              "surrendered": false
+            },
+            {
+              "id": "polar-roamer",
+              "kind": "polar-tang",
+              "position": {
+                "x": 168.45920949411635,
+                "y": -0.26668187573423885,
+                "z": -371.6519257028878
+              },
+              "heading": 1.7488111325689086,
+              "speed": 9.570896086511041,
+              "hullDamage": 0.005,
+              "surrendered": false
+            },
+            {
+              "id": "mama-roamer",
+              "kind": "queen-mama-chanter",
+              "position": {
+                "x": -256.8846435795205,
+                "y": 0.9776396760356921,
+                "z": -278.5025442670485
+              },
+              "heading": 1.1535797253900872,
+              "speed": 7.7100170854391195,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "baratie-route",
+              "kind": "baratie",
+              "position": {
+                "x": 376.66299249679656,
+                "y": 0.18394112215695488,
+                "z": -45.21876336086747
+              },
+              "heading": 4.443101554454259,
+              "speed": 5.591415571514619,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "oro-roamer",
+              "kind": "oro-jackson",
+              "position": {
+                "x": -370.44569951607457,
+                "y": -0.7324925068342926,
+                "z": -82.93673167586901
+              },
+              "heading": 5.493298928800101,
+              "speed": 10.745496623300408,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "marine-patrol",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 62.221496220905614,
+                "y": -1.3713670204581387,
+                "z": -134.1851613556601
+              },
+              "heading": 5.5199486823741495,
+              "speed": 4.349906948718235,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 1266,
+            "height": 585,
+            "cssWidth": 844,
+            "cssHeight": 390,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 626,
+            "triangles": 640758,
+            "geometries": 655,
+            "textures": 10,
+            "entities": 9,
+            "chunks": 25
+          }
+        },
+        "after": {
+          "scene": "calm-sailing",
+          "elapsed": 20.116666666666806,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "explore",
+          "weather": "calm",
+          "playerId": "player",
+          "shipCount": 9,
+          "projectileCount": 0,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": 1.3749682336286542,
+                "y": 0.39681583270456344,
+                "z": -204.60134457994488
+              },
+              "heading": 0,
+              "speed": 13.796111061323106,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "merry-escort",
+              "kind": "going-merry",
+              "position": {
+                "x": 72.0476287692886,
+                "y": 1.0951666751093228,
+                "z": -283.9258167105527
+              },
+              "heading": 5.313970346921188,
+              "speed": 12.580648046926822,
+              "hullDamage": 0.01607709394642321,
+              "surrendered": false
+            },
+            {
+              "id": "red-force-roamer",
+              "kind": "red-force",
+              "position": {
+                "x": 238.6292889906636,
+                "y": 0.9372097843694306,
+                "z": -297.06389324829365
+              },
+              "heading": 1.2590718836752322,
+              "speed": 6.209573135344456,
+              "hullDamage": 0.09835158400398997,
+              "surrendered": false
+            },
+            {
+              "id": "moby-roamer",
+              "kind": "moby-dick",
+              "position": {
+                "x": -283.29476237524176,
+                "y": -0.8140716117557316,
+                "z": -388.7073347894745
+              },
+              "heading": 4.011047546343153,
+              "speed": 2.575175812641681,
+              "hullDamage": 1,
+              "surrendered": true,
+              "finish": "available"
+            },
+            {
+              "id": "polar-roamer",
+              "kind": "polar-tang",
+              "position": {
+                "x": -44.25149425283748,
+                "y": -0.7846597718075428,
+                "z": -281.39460679569953
+              },
+              "heading": 3.1214335965892523,
+              "speed": 16.75215842520682,
+              "hullDamage": 0.005,
+              "surrendered": false
+            },
+            {
+              "id": "mama-roamer",
+              "kind": "queen-mama-chanter",
+              "position": {
+                "x": -420.3967131057195,
+                "y": -0.865489636815945,
+                "z": -362.2853547282914
+              },
+              "heading": 1.9532251596501204,
+              "speed": 9.674490923513064,
+              "hullDamage": 0.4220797716552275,
+              "surrendered": false
+            },
+            {
+              "id": "baratie-route",
+              "kind": "baratie",
+              "position": {
+                "x": 438.0923136313269,
+                "y": 0.708456752488399,
+                "z": -3.0104486169271403
+              },
+              "heading": 2.0363725806893314,
+              "speed": 3.145669875134747,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "oro-roamer",
+              "kind": "oro-jackson",
+              "position": {
+                "x": -210.30968208714373,
+                "y": -0.9406184637227145,
+                "z": -218.67856926098568
+              },
+              "heading": 0.19176920127846397,
+              "speed": 10.125599610946749,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "marine-patrol",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 72.61718930586244,
+                "y": -0.969572273939006,
+                "z": -151.8340836063125
+              },
+              "heading": 4.862371959917603,
+              "speed": -0.027933182273836156,
+              "hullDamage": 0.21947668565762926,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 1266,
+            "height": 585,
+            "cssWidth": 844,
+            "cssHeight": 390,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 913,
+            "triangles": 743466,
+            "geometries": 818,
+            "textures": 13,
+            "entities": 9,
+            "chunks": 25
+          }
+        },
+        "canvasChanges": [],
+        "visibilityChanges": []
+      }
+    },
+    {
+      "viewport": "landscape",
+      "scene": "perf-fleet",
+      "camera": "overhead",
+      "name": "landscape-perf-fleet",
+      "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=perf-fleet",
+      "requestedViewport": {
+        "width": 844,
+        "height": 390,
+        "deviceScaleFactor": 2,
+        "hasTouch": true
+      },
+      "browserVersion": "151.0.7922.34",
+      "startedAt": "2026-09-07T12:19:17.291Z",
+      "errors": [],
+      "consoleMessages": [
+        {
+          "type": "warning",
+          "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        }
+      ],
+      "failedRequests": [],
+      "scripts": [
+        {
+          "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+          "status": 200,
+          "contentType": "text/javascript",
+          "etag": "W/\"992604-1788783204931\"",
+          "bytes": 992604,
+          "sha256": "c272af8449aa22f9267f2fc14621bdf56a102529c2177e2254e60b2b103f554b"
+        }
+      ],
+      "launchDismissedBy": "actual launch button",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "hardwareConcurrency": 10,
+        "deviceMemoryGiB": 16,
+        "devicePixelRatio": 2,
+        "quality": "auto",
+        "initialCanvas": {
+          "width": 1266,
+          "height": 585,
+          "cssWidth": 844,
+          "cssHeight": 390,
+          "renderDpr": 1.5
+        },
+        "webgl": {
+          "vendor": "WebKit",
+          "renderer": "WebKit WebGL",
+          "unmaskedVendor": "Google Inc. (Apple)",
+          "unmaskedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "shadingLanguage": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+          "contextAttributes": {
+            "alpha": true,
+            "antialias": true,
+            "depth": true,
+            "desynchronized": false,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "high-performance",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": false,
+            "stencil": false,
+            "xrCompatible": false
+          }
+        }
+      },
+      "frameTimes": {
+        "samples": 900,
+        "measuredMs": 14999.999999999998,
+        "averageFps": 60.00000000000001,
+        "meanFrameMs": 16.666666666666664,
+        "p50FrameMs": 16.69999999999891,
+        "p95FrameMs": 18.69999999999891,
+        "p99FrameMs": 18.700000000000728,
+        "maxFrameMs": 18.80000000000291,
+        "overBudget": {
+          "25ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "33.4ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "50ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "100ms": {
+            "count": 0,
+            "percent": 0
+          }
+        }
+      },
+      "activity": {
+        "simulationSecondsAdvanced": 15.000000000000153,
+        "wallSecondsMeasured": 14.999999999999998,
+        "simulationToWallRatio": 1.0000000000000102,
+        "shipsWithChangedPosition": [
+          "player",
+          "perf-1",
+          "perf-2",
+          "perf-3",
+          "perf-4",
+          "perf-5",
+          "perf-6",
+          "perf-7"
+        ]
+      },
+      "validMeasurement": true,
+      "frameBudget": {
+        "averageAtLeast40Fps": true,
+        "p95AtMost25Ms": true
+      },
+      "screenshot": {
+        "file": "landscape-perf-fleet.png",
+        "before": {
+          "elapsed": 20.10000000000014,
+          "capturedAt": "2026-09-07T12:19:38.267Z"
+        },
+        "after": {
+          "elapsed": 20.2166666666668,
+          "capturedAt": "2026-09-07T12:19:38.518Z"
+        }
+      },
+      "loadedScriptElements": [
+        "http://127.0.0.1:4196/assets/index-CPH4y5aV.js"
+      ],
+      "buildDigest": "8ffe36acbadd2faa8001f412b5e0fd25b9807429c8734dfc1e5211b06d872371",
+      "finishedAt": "2026-09-07T12:19:38.522Z",
+      "sample": {
+        "firstRafMs": 5852.8,
+        "lastRafMs": 20852.8,
+        "before": {
+          "scene": "perf-fleet",
+          "elapsed": 5.099999999999987,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "combat",
+          "weather": "swell",
+          "playerId": "player",
+          "shipCount": 8,
+          "projectileCount": 0,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "moby-dick",
+              "position": {
+                "x": 0.4571527312512326,
+                "y": -2.0790313579326862,
+                "z": 78.69594476919838
+              },
+              "heading": 0,
+              "speed": 4.0830755612052085,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-1",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -173.43714909180557,
+                "y": 1.546937185460752,
+                "z": -175.981727348476
+              },
+              "heading": 5.338465917358381,
+              "speed": 8.020404621074544,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-2",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -83.11387015077035,
+                "y": -2.551068264746168,
+                "z": -221.02157827578844
+              },
+              "heading": 5.321570159042658,
+              "speed": 8.002349952532018,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-3",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 6.996302033144702,
+                "y": 3.194304830828782,
+                "z": -246.03391625443632
+              },
+              "heading": 5.315942068943922,
+              "speed": 7.9964196713092965,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-4",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 76.80899785498924,
+                "y": -2.8450851310691636,
+                "z": -205.05750793884076
+              },
+              "heading": 5.562138887632557,
+              "speed": 1.6343555663766414,
+              "hullDamage": 0.024183746712406886,
+              "surrendered": false
+            },
+            {
+              "id": "perf-5",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 177.12718078102478,
+                "y": 1.1861733058351784,
+                "z": -164.852103514694
+              },
+              "heading": 0.7307251231059135,
+              "speed": 0.6632258447795968,
+              "hullDamage": 0.028976787226358963,
+              "surrendered": false
+            },
+            {
+              "id": "perf-6",
+              "kind": "polar-tang",
+              "position": {
+                "x": -290.21187121290916,
+                "y": -2.9072376412902097,
+                "z": -23.664386713347596
+              },
+              "heading": 2.7176733152593044,
+              "speed": 9.352982585217807,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-7",
+              "kind": "red-force",
+              "position": {
+                "x": 265.18172899147766,
+                "y": 3.2117968112356716,
+                "z": -39.54651086466768
+              },
+              "heading": 6.2088918895709835,
+              "speed": 9.13820954552398,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 1266,
+            "height": 585,
+            "cssWidth": 844,
+            "cssHeight": 390,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 257,
+            "triangles": 492842,
+            "geometries": 407,
+            "textures": 7,
+            "entities": 8,
+            "chunks": 25
+          }
+        },
+        "after": {
+          "scene": "perf-fleet",
+          "elapsed": 20.10000000000014,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "combat",
+          "weather": "swell",
+          "playerId": "player",
+          "shipCount": 8,
+          "projectileCount": 0,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "moby-dick",
+              "position": {
+                "x": 4.762231630869836,
+                "y": 0.2368817424257783,
+                "z": -27.756114526282065
+              },
+              "heading": 0,
+              "speed": 8.95849515344102,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-1",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -56.49379902669396,
+                "y": -3.1546633111947457,
+                "z": -184.55421385437998
+              },
+              "heading": 3.268900182937209,
+              "speed": 9.197621709119408,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-2",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 25.10135611940981,
+                "y": 1.6647858092931367,
+                "z": -225.2439626882179
+              },
+              "heading": 2.761420737560929,
+              "speed": 7.439085039780892,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-3",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 64.90689037265159,
+                "y": 2.546936080324213,
+                "z": -277.37600186011633
+              },
+              "heading": 2.797979851648954,
+              "speed": 5.984042836387319,
+              "hullDamage": 0.05339886343651855,
+              "surrendered": false
+            },
+            {
+              "id": "perf-4",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 62.94194478786112,
+                "y": 2.6990920636918005,
+                "z": -243.27535045507884
+              },
+              "heading": 4.841540172648946,
+              "speed": 0.003664598797532337,
+              "hullDamage": 0.08781800405787452,
+              "surrendered": false
+            },
+            {
+              "id": "perf-5",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 122.70540419044048,
+                "y": -2.1862032128223667,
+                "z": -155.58033746697717
+              },
+              "heading": 2.1984365264031016,
+              "speed": 1.1394469585004563,
+              "hullDamage": 0.19909021922844758,
+              "surrendered": false
+            },
+            {
+              "id": "perf-6",
+              "kind": "polar-tang",
+              "position": {
+                "x": -217.78595776759153,
+                "y": 2.543147448666998,
+                "z": 86.19497523573294
+              },
+              "heading": 4.2899745733707455,
+              "speed": 17.872041710426444,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "perf-7",
+              "kind": "red-force",
+              "position": {
+                "x": 163.5087028362371,
+                "y": 3.301409405382215,
+                "z": -142.38568739847074
+              },
+              "heading": 2.3248530049606657,
+              "speed": 13.571112289095504,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 1266,
+            "height": 585,
+            "cssWidth": 844,
+            "cssHeight": 390,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 291,
+            "triangles": 503586,
+            "geometries": 407,
+            "textures": 7,
+            "entities": 8,
+            "chunks": 25
+          }
+        },
+        "canvasChanges": [],
+        "visibilityChanges": []
+      }
+    },
+    {
+      "viewport": "landscape",
+      "scene": "sunny-broadside",
+      "camera": "broadside",
+      "name": "landscape-sunny-broadside",
+      "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=sunny-broadside",
+      "requestedViewport": {
+        "width": 844,
+        "height": 390,
+        "deviceScaleFactor": 2,
+        "hasTouch": true
+      },
+      "browserVersion": "151.0.7922.34",
+      "startedAt": "2026-09-07T12:19:38.523Z",
+      "errors": [],
+      "consoleMessages": [
+        {
+          "type": "warning",
+          "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        },
+        {
+          "type": "warning",
+          "text": "THREE.WebGLRenderer: Texture marked for update but no image data found.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        },
+        {
+          "type": "warning",
+          "text": "THREE.WebGLRenderer: Texture marked for update but no image data found.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        }
+      ],
+      "failedRequests": [],
+      "scripts": [
+        {
+          "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+          "status": 200,
+          "contentType": "text/javascript",
+          "etag": "W/\"992604-1788783204931\"",
+          "bytes": 992604,
+          "sha256": "c272af8449aa22f9267f2fc14621bdf56a102529c2177e2254e60b2b103f554b"
+        }
+      ],
+      "launchDismissedBy": "actual launch button",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "hardwareConcurrency": 10,
+        "deviceMemoryGiB": 16,
+        "devicePixelRatio": 2,
+        "quality": "auto",
+        "initialCanvas": {
+          "width": 1266,
+          "height": 585,
+          "cssWidth": 844,
+          "cssHeight": 390,
+          "renderDpr": 1.5
+        },
+        "webgl": {
+          "vendor": "WebKit",
+          "renderer": "WebKit WebGL",
+          "unmaskedVendor": "Google Inc. (Apple)",
+          "unmaskedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "shadingLanguage": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+          "contextAttributes": {
+            "alpha": true,
+            "antialias": true,
+            "depth": true,
+            "desynchronized": false,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "high-performance",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": false,
+            "stencil": false,
+            "xrCompatible": false
+          }
+        }
+      },
+      "frameTimes": {
+        "samples": 900,
+        "measuredMs": 15001.9,
+        "averageFps": 59.99240096254474,
+        "meanFrameMs": 16.668777777777777,
+        "p50FrameMs": 16.69999999999891,
+        "p95FrameMs": 18.600000000000364,
+        "p99FrameMs": 18.700000000000728,
+        "maxFrameMs": 18.799999999999272,
+        "overBudget": {
+          "25ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "33.4ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "50ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "100ms": {
+            "count": 0,
+            "percent": 0
+          }
+        }
+      },
+      "activity": {
+        "simulationSecondsAdvanced": 14.600000000000176,
+        "wallSecondsMeasured": 15.0019,
+        "simulationToWallRatio": 0.973210060059071,
+        "shipsWithChangedPosition": [
+          "player",
+          "marine-alpha",
+          "marine-beta",
+          "marine-gamma"
+        ]
+      },
+      "validMeasurement": true,
+      "frameBudget": {
+        "averageAtLeast40Fps": true,
+        "p95AtMost25Ms": true
+      },
+      "screenshot": {
+        "file": "landscape-sunny-broadside.png",
+        "before": {
+          "elapsed": 19.71666666666683,
+          "capturedAt": "2026-09-07T12:19:59.315Z"
+        },
+        "after": {
+          "elapsed": 19.83333333333349,
+          "capturedAt": "2026-09-07T12:19:59.549Z"
+        }
+      },
+      "loadedScriptElements": [
+        "http://127.0.0.1:4196/assets/index-CPH4y5aV.js"
+      ],
+      "buildDigest": "8ffe36acbadd2faa8001f412b5e0fd25b9807429c8734dfc1e5211b06d872371",
+      "finishedAt": "2026-09-07T12:19:59.553Z",
+      "sample": {
+        "firstRafMs": 5699.6,
+        "lastRafMs": 20701.5,
+        "before": {
+          "scene": "sunny-broadside",
+          "elapsed": 5.116666666666654,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "combat",
+          "weather": "swell",
+          "playerId": "player",
+          "shipCount": 4,
+          "projectileCount": 6,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": -19.863676296816113,
+                "y": 0.6504982816985124,
+                "z": -0.9967893089115255
+              },
+              "heading": 1.5707963267948966,
+              "speed": 6.7944246173892004,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "marine-alpha",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -74.94027338431472,
+                "y": 1.2707025603742303,
+                "z": -20.496015636495745
+              },
+              "heading": 0.9421889453829468,
+              "speed": 3.6943101992642884,
+              "hullDamage": 0.6784586249830562,
+              "surrendered": false
+            },
+            {
+              "id": "marine-beta",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -118.54906288018822,
+                "y": -2.261965659761805,
+                "z": 25.08640828638017
+              },
+              "heading": 5.636124035698806,
+              "speed": 9.278176235033749,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "marine-gamma",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -155.01126473790472,
+                "y": 0.9870248811703946,
+                "z": -76.94903239652082
+              },
+              "heading": 3.277690733796554,
+              "speed": 6.266889277467898,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 1266,
+            "height": 585,
+            "cssWidth": 844,
+            "cssHeight": 390,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 479,
+            "triangles": 637278,
+            "geometries": 756,
+            "textures": 7,
+            "entities": 10,
+            "chunks": 25
+          }
+        },
+        "after": {
+          "scene": "sunny-broadside",
+          "elapsed": 19.71666666666683,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "combat",
+          "weather": "swell",
+          "playerId": "player",
+          "shipCount": 4,
+          "projectileCount": 0,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": -95.4129335515417,
+                "y": -2.507574332571968,
+                "z": 2.8549810353038523
+              },
+              "heading": 1.5707963267948966,
+              "speed": 0.8346768760268232,
+              "hullDamage": 1,
+              "surrendered": true,
+              "finish": "available"
+            },
+            {
+              "id": "marine-alpha",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -86.47540840943789,
+                "y": -2.1321338649735333,
+                "z": -41.52010546996107
+              },
+              "heading": 6.025850530133553,
+              "speed": 0.608899661992606,
+              "hullDamage": 1,
+              "surrendered": true,
+              "finish": "available"
+            },
+            {
+              "id": "marine-beta",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -88.59268009450437,
+                "y": -1.7412210751104522,
+                "z": -17.165174877719664
+              },
+              "heading": 3.8478020246070184,
+              "speed": 2.601231514464217,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "marine-gamma",
+              "kind": "navy-galleon",
+              "position": {
+                "x": -125.40232924851391,
+                "y": -1.2132095445954358,
+                "z": 61.78477978635276
+              },
+              "heading": 1.8146643845222066,
+              "speed": 3.7395408827392607,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 1266,
+            "height": 585,
+            "cssWidth": 844,
+            "cssHeight": 390,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 748,
+            "triangles": 692978,
+            "geometries": 904,
+            "textures": 7,
+            "entities": 4,
+            "chunks": 25
+          }
+        },
+        "canvasChanges": [],
+        "visibilityChanges": []
+      }
+    },
+    {
+      "viewport": "landscape",
+      "scene": "storm-sailing",
+      "camera": "chase",
+      "name": "landscape-storm-sailing",
+      "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=storm-sailing",
+      "requestedViewport": {
+        "width": 844,
+        "height": 390,
+        "deviceScaleFactor": 2,
+        "hasTouch": true
+      },
+      "browserVersion": "151.0.7922.34",
+      "startedAt": "2026-09-07T12:19:59.554Z",
+      "errors": [],
+      "consoleMessages": [
+        {
+          "type": "warning",
+          "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        },
+        {
+          "type": "warning",
+          "text": "THREE.WebGLRenderer: Texture marked for update but no image data found.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        }
+      ],
+      "failedRequests": [],
+      "scripts": [
+        {
+          "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+          "status": 200,
+          "contentType": "text/javascript",
+          "etag": "W/\"992604-1788783204931\"",
+          "bytes": 992604,
+          "sha256": "c272af8449aa22f9267f2fc14621bdf56a102529c2177e2254e60b2b103f554b"
+        }
+      ],
+      "launchDismissedBy": "actual launch button",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "hardwareConcurrency": 10,
+        "deviceMemoryGiB": 16,
+        "devicePixelRatio": 2,
+        "quality": "auto",
+        "initialCanvas": {
+          "width": 1266,
+          "height": 585,
+          "cssWidth": 844,
+          "cssHeight": 390,
+          "renderDpr": 1.5
+        },
+        "webgl": {
+          "vendor": "WebKit",
+          "renderer": "WebKit WebGL",
+          "unmaskedVendor": "Google Inc. (Apple)",
+          "unmaskedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "shadingLanguage": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+          "contextAttributes": {
+            "alpha": true,
+            "antialias": true,
+            "depth": true,
+            "desynchronized": false,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "high-performance",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": false,
+            "stencil": false,
+            "xrCompatible": false
+          }
+        }
+      },
+      "frameTimes": {
+        "samples": 901,
+        "measuredMs": 15014.800000000001,
+        "averageFps": 60.00745930681727,
+        "meanFrameMs": 16.6645948945616,
+        "p50FrameMs": 16.69999999999891,
+        "p95FrameMs": 18.69999999999891,
+        "p99FrameMs": 18.700000000000728,
+        "maxFrameMs": 18.800000000000182,
+        "overBudget": {
+          "25ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "33.4ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "50ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "100ms": {
+            "count": 0,
+            "percent": 0
+          }
+        }
+      },
+      "activity": {
+        "simulationSecondsAdvanced": 15.016666666666818,
+        "wallSecondsMeasured": 15.014800000000001,
+        "simulationToWallRatio": 1.000124321780298,
+        "shipsWithChangedPosition": [
+          "player"
+        ]
+      },
+      "validMeasurement": true,
+      "frameBudget": {
+        "averageAtLeast40Fps": true,
+        "p95AtMost25Ms": true
+      },
+      "screenshot": {
+        "file": "landscape-storm-sailing.png",
+        "before": {
+          "elapsed": 20.10000000000014,
+          "capturedAt": "2026-09-07T12:20:20.252Z"
+        },
+        "after": {
+          "elapsed": 20.200000000000134,
+          "capturedAt": "2026-09-07T12:20:20.469Z"
+        }
+      },
+      "loadedScriptElements": [
+        "http://127.0.0.1:4196/assets/index-CPH4y5aV.js"
+      ],
+      "buildDigest": "8ffe36acbadd2faa8001f412b5e0fd25b9807429c8734dfc1e5211b06d872371",
+      "finishedAt": "2026-09-07T12:20:20.473Z",
+      "sample": {
+        "firstRafMs": 5584.6,
+        "lastRafMs": 20599.4,
+        "before": {
+          "scene": "storm-sailing",
+          "elapsed": 5.083333333333321,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "explore",
+          "weather": "storm",
+          "playerId": "player",
+          "shipCount": 1,
+          "projectileCount": 0,
+          "islandCount": 7,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": 7.674900818921612,
+                "y": -2.7302880570316264,
+                "z": -14.87022551184887
+              },
+              "heading": 5.663185307179585,
+              "speed": 5.7065320123002,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 1266,
+            "height": 585,
+            "cssWidth": 844,
+            "cssHeight": 390,
+            "renderDpr": 1.5,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 371,
+            "triangles": 524066,
+            "geometries": 218,
+            "textures": 6,
+            "entities": 1,
+            "chunks": 25
+          }
+        },
+        "after": {
+          "scene": "storm-sailing",
+          "elapsed": 20.10000000000014,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "explore",
+          "weather": "storm",
+          "playerId": "player",
+          "shipCount": 1,
+          "projectileCount": 0,
+          "islandCount": 7,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": 66.39536163314146,
+                "y": -4.617003086668071,
+                "z": -128.6419230319512
+              },
+              "heading": 5.663185307179585,
+              "speed": 9.670930312093722,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 1139,
+            "height": 526,
+            "cssWidth": 844,
+            "cssHeight": 390,
+            "renderDpr": 1.349526066350711,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 371,
+            "triangles": 524366,
+            "geometries": 218,
+            "textures": 6,
+            "entities": 1,
+            "chunks": 25
+          }
+        },
+        "canvasChanges": [
+          {
+            "atMs": 6566.799999999999,
+            "width": 1139,
+            "height": 526,
+            "cssWidth": 844,
+            "cssHeight": 390,
+            "renderDpr": 1.349526066350711,
+            "deviceDpr": 2
+          }
+        ],
+        "visibilityChanges": []
+      }
+    },
+    {
+      "viewport": "landscape",
+      "scene": "island-discovery",
+      "camera": "chase",
+      "name": "landscape-island-discovery",
+      "url": "http://127.0.0.1:4196/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=island-discovery",
+      "requestedViewport": {
+        "width": 844,
+        "height": 390,
+        "deviceScaleFactor": 2,
+        "hasTouch": true
+      },
+      "browserVersion": "151.0.7922.34",
+      "startedAt": "2026-09-07T12:20:20.476Z",
+      "errors": [],
+      "consoleMessages": [
+        {
+          "type": "warning",
+          "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        },
+        {
+          "type": "warning",
+          "text": "THREE.WebGLRenderer: Texture marked for update but no image data found.",
+          "location": {
+            "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+            "line": 0,
+            "column": 2102,
+            "lineNumber": 0,
+            "columnNumber": 2102
+          }
+        }
+      ],
+      "failedRequests": [],
+      "scripts": [
+        {
+          "url": "http://127.0.0.1:4196/assets/index-CPH4y5aV.js",
+          "status": 200,
+          "contentType": "text/javascript",
+          "etag": "W/\"992604-1788783204931\"",
+          "bytes": 992604,
+          "sha256": "c272af8449aa22f9267f2fc14621bdf56a102529c2177e2254e60b2b103f554b"
+        }
+      ],
+      "launchDismissedBy": "actual launch button",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "hardwareConcurrency": 10,
+        "deviceMemoryGiB": 16,
+        "devicePixelRatio": 2,
+        "quality": "auto",
+        "initialCanvas": {
+          "width": 1266,
+          "height": 585,
+          "cssWidth": 844,
+          "cssHeight": 390,
+          "renderDpr": 1.5
+        },
+        "webgl": {
+          "vendor": "WebKit",
+          "renderer": "WebKit WebGL",
+          "unmaskedVendor": "Google Inc. (Apple)",
+          "unmaskedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "shadingLanguage": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+          "contextAttributes": {
+            "alpha": true,
+            "antialias": true,
+            "depth": true,
+            "desynchronized": false,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "high-performance",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": false,
+            "stencil": false,
+            "xrCompatible": false
+          }
+        }
+      },
+      "frameTimes": {
+        "samples": 900,
+        "measuredMs": 15000,
+        "averageFps": 60,
+        "meanFrameMs": 16.666666666666668,
+        "p50FrameMs": 16.699999999999818,
+        "p95FrameMs": 18.69999999999891,
+        "p99FrameMs": 18.700000000000728,
+        "maxFrameMs": 18.80000000000109,
+        "overBudget": {
+          "25ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "33.4ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "50ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "100ms": {
+            "count": 0,
+            "percent": 0
+          }
+        }
+      },
+      "activity": {
+        "simulationSecondsAdvanced": 15.000000000000153,
+        "wallSecondsMeasured": 15,
+        "simulationToWallRatio": 1.0000000000000102,
+        "shipsWithChangedPosition": [
+          "player"
+        ]
+      },
+      "validMeasurement": true,
+      "frameBudget": {
+        "averageAtLeast40Fps": true,
+        "p95AtMost25Ms": true
+      },
+      "screenshot": {
+        "file": "landscape-island-discovery.png",
+        "before": {
+          "elapsed": 20.083333333333474,
+          "capturedAt": "2026-09-07T12:20:41.101Z"
+        },
+        "after": {
+          "elapsed": 20.166666666666803,
+          "capturedAt": "2026-09-07T12:20:41.301Z"
+        }
+      },
+      "loadedScriptElements": [
+        "http://127.0.0.1:4196/assets/index-CPH4y5aV.js"
+      ],
+      "buildDigest": "8ffe36acbadd2faa8001f412b5e0fd25b9807429c8734dfc1e5211b06d872371",
+      "finishedAt": "2026-09-07T12:20:41.305Z",
+      "sample": {
+        "firstRafMs": 5540.3,
+        "lastRafMs": 20540.3,
+        "before": {
+          "scene": "island-discovery",
+          "elapsed": 5.083333333333321,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "discovery",
+          "weather": "fog",
+          "playerId": "player",
+          "shipCount": 1,
+          "projectileCount": 0,
+          "islandCount": 9,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": 37.378766839808705,
+                "y": 1.4448543550359843,
+                "z": 147.39160744460452
+              },
+              "heading": 0.11000000000000032,
+              "speed": 7.841944379975558,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 1139,
+            "height": 526,
+            "cssWidth": 844,
+            "cssHeight": 390,
+            "renderDpr": 1.349526066350711,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 371,
+            "triangles": 554006,
+            "geometries": 218,
+            "textures": 6,
+            "entities": 1,
+            "chunks": 25
+          }
+        },
+        "after": {
+          "scene": "island-discovery",
+          "elapsed": 20.083333333333474,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "discovery",
+          "weather": "fog",
+          "playerId": "player",
+          "shipCount": 1,
+          "projectileCount": 0,
+          "islandCount": 9,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "thousand-sunny",
+              "position": {
+                "x": 17.34929211844027,
+                "y": -1.0766550219018105,
+                "z": -25.364572378032495
+              },
+              "heading": 0.11000000000000032,
+              "speed": 13.288472818449348,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 1139,
+            "height": 526,
+            "cssWidth": 844,
+            "cssHeight": 390,
+            "renderDpr": 1.349526066350711,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 371,
+            "triangles": 553942,
+            "geometries": 218,
+            "textures": 6,
+            "entities": 1,
+            "chunks": 25
+          }
+        },
+        "canvasChanges": [],
+        "visibilityChanges": []
+      }
+    }
+  ]
+}

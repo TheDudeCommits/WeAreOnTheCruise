@@ -1,0 +1,41 @@
+{
+  "verifiedAt": "2026-09-07T12:30:43Z",
+  "method": "Vercel deployment metadata and build logs; GitHub PR metadata",
+  "repository": "https://github.com/TheDudeCommits/WeAreOnTheCruise",
+  "implementationCommit": "96416050240934ec52df66009fb8be9a748efabf",
+  "branch": "codex/cinematic-anime-overhaul",
+  "pullRequest": {
+    "url": "https://github.com/TheDudeCommits/WeAreOnTheCruise/pull/1",
+    "base": "codex/vertical-slice",
+    "isDraft": true,
+    "state": "OPEN"
+  },
+  "preview": {
+    "id": "dpl_9ZDSPvGkULeuvan5iJEApzeCdgjB",
+    "url": "https://we-are-on-the-cruise-dgbgx79w5-amirs-projects-d9680079.vercel.app",
+    "state": "READY",
+    "target": null,
+    "source": "git",
+    "commit": "96416050240934ec52df66009fb8be9a748efabf",
+    "buildCommandSucceeded": "tsc -b && vite build",
+    "emittedJavascript": "assets/index-CPH4y5aV.js",
+    "emittedStylesheet": "assets/index-B70r0Hc4.css",
+    "deployedPageFetched": false,
+    "deployedBrowserQa": false
+  },
+  "production": {
+    "alias": "https://we-are-on-the-cruise.vercel.app",
+    "id": "dpl_4fb3pkBU9F8VTkBDgF8crGNk2HPg",
+    "commit": "ba33a1760fddebb084764a612e4ee52589337c3d",
+    "state": "READY",
+    "target": "production",
+    "unchanged": true
+  },
+  "localEvidence": "build-pass-15-manifest.json",
+  "limitations": [
+    "Local QA and performance results do not establish deployed browser acceptance.",
+    "Phone viewport profiles used the desktop Apple M4 GPU.",
+    "Visual concept parity remains unaccepted.",
+    "Zero Sketchfab models or bytes were downloaded; authenticated access remains unresolved."
+  ]
+}

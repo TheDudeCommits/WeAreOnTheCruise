@@ -30,6 +30,10 @@ export function toPresentationEvents(event: SimulationEvent, state: WorldState):
     }
     case 'water-impact':
       return [{ type: 'impact', severity: 0.3, material: 'water' }];
+    case 'special-impact':
+      return event.ownerId === state.playerId || event.shipId === state.playerId
+        ? [{ type: 'impact', targetId: event.shipId, sourceId: event.ownerId, severity: .72, material: 'hull', incoming: event.shipId === state.playerId }]
+        : [];
     case 'ram': {
       if (event.attackerId !== state.playerId && event.targetId !== state.playerId) return [];
       return [{

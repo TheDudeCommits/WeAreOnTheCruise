@@ -1,0 +1,790 @@
+{
+  "configuration": {
+    "baseURL": "http://127.0.0.1:4200",
+    "output": "/Users/amir/Projects/WeAreOnTheCruise/output/asset-gauntlet/performance-23-baratie",
+    "seed": "sustained-gauntlet-A",
+    "warmupMs": 5000,
+    "sampleMs": 15000,
+    "quality": "auto",
+    "headless": false,
+    "selectedShip": "baratie",
+    "initialRendererDpr": 1.5,
+    "adaptiveDprAllowed": true,
+    "viewports": {
+      "desktop": {
+        "width": 1920,
+        "height": 1080,
+        "deviceScaleFactor": 2,
+        "hasTouch": false
+      },
+      "landscape": {
+        "width": 844,
+        "height": 390,
+        "deviceScaleFactor": 2,
+        "hasTouch": true
+      }
+    },
+    "notes": [
+      "Ordinary launch UI is dismissed through real buttons.",
+      "RAF intervals are uncapped wall-clock samples.",
+      "Adaptive DPR is observed, not overridden.",
+      "Landscape runs on the same desktop CPU/GPU, not a physical mobile device.",
+      "Screenshots occur after sampling; screenshot work is outside the measured interval."
+    ],
+    "jobs": [
+      {
+        "viewport": "desktop",
+        "scene": "calm-sailing",
+        "camera": "chase",
+        "url": "http://127.0.0.1:4200/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=calm-sailing"
+      },
+      {
+        "viewport": "landscape",
+        "scene": "calm-sailing",
+        "camera": "chase",
+        "url": "http://127.0.0.1:4200/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=calm-sailing"
+      }
+    ]
+  },
+  "machine": {
+    "platform": "darwin",
+    "osType": "Darwin",
+    "release": "25.6.0",
+    "version": "Darwin Kernel Version 25.6.0: Fri Jul 31 19:11:03 PDT 2026; root:xnu-12377.161.14~5/RELEASE_ARM64_T8132",
+    "architecture": "arm64",
+    "cpuModels": [
+      "Apple M4"
+    ],
+    "logicalCpuCount": 10,
+    "reportedCpuMhz": [
+      2400
+    ],
+    "totalMemoryBytes": 25769803776,
+    "nodeVersion": "v24.19.0"
+  },
+  "completedAt": "2026-09-07T14:55:54.928Z",
+  "records": [
+    {
+      "viewport": "desktop",
+      "scene": "calm-sailing",
+      "camera": "chase",
+      "name": "desktop-calm-sailing",
+      "url": "http://127.0.0.1:4200/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=calm-sailing",
+      "requestedViewport": {
+        "width": 1920,
+        "height": 1080,
+        "deviceScaleFactor": 2,
+        "hasTouch": false
+      },
+      "browserVersion": "151.0.7922.34",
+      "startedAt": "2026-09-07T14:55:11.104Z",
+      "errors": [],
+      "consoleMessages": [
+        {
+          "type": "warning",
+          "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+          "location": {
+            "url": "http://127.0.0.1:4200/assets/index-JOAubjRr.js",
+            "line": 0,
+            "column": 2126,
+            "lineNumber": 0,
+            "columnNumber": 2126
+          }
+        }
+      ],
+      "failedRequests": [],
+      "scripts": [
+        {
+          "url": "http://127.0.0.1:4200/assets/index-JOAubjRr.js",
+          "status": 200,
+          "contentType": "text/javascript",
+          "bytes": 993271,
+          "sha256": "924789466680202c34cfdbe0b943410088e828690c009bdfdd25145c3906be86"
+        }
+      ],
+      "launchDismissedBy": "actual launch button",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "hardwareConcurrency": 10,
+        "deviceMemoryGiB": 16,
+        "devicePixelRatio": 2,
+        "quality": "auto",
+        "initialCanvas": {
+          "width": 2880,
+          "height": 1620,
+          "cssWidth": 1920,
+          "cssHeight": 1080,
+          "renderDpr": 1.5
+        },
+        "webgl": {
+          "vendor": "WebKit",
+          "renderer": "WebKit WebGL",
+          "unmaskedVendor": "Google Inc. (Apple)",
+          "unmaskedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "shadingLanguage": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+          "contextAttributes": {
+            "alpha": true,
+            "antialias": true,
+            "depth": true,
+            "desynchronized": false,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "high-performance",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": false,
+            "stencil": false,
+            "xrCompatible": false
+          }
+        }
+      },
+      "frameTimes": {
+        "samples": 900,
+        "measuredMs": 15000.000000000002,
+        "averageFps": 59.99999999999999,
+        "meanFrameMs": 16.666666666666668,
+        "p50FrameMs": 16.69999999999891,
+        "p95FrameMs": 18.600000000000364,
+        "p99FrameMs": 18.700000000000728,
+        "maxFrameMs": 18.799999999999272,
+        "overBudget": {
+          "25ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "33.4ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "50ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "100ms": {
+            "count": 0,
+            "percent": 0
+          }
+        }
+      },
+      "activity": {
+        "simulationSecondsAdvanced": 15.000000000000155,
+        "wallSecondsMeasured": 15.000000000000002,
+        "simulationToWallRatio": 1.0000000000000102,
+        "shipsWithChangedPosition": [
+          "player",
+          "merry-escort",
+          "moby-roamer",
+          "polar-roamer",
+          "baratie-route",
+          "marine-patrol"
+        ]
+      },
+      "validMeasurement": true,
+      "frameBudget": {
+        "averageAtLeast40Fps": true,
+        "p95AtMost25Ms": true
+      },
+      "screenshot": {
+        "file": "desktop-calm-sailing.png",
+        "before": {
+          "elapsed": 20.06666666666681,
+          "capturedAt": "2026-09-07T14:55:32.358Z"
+        },
+        "after": {
+          "elapsed": 20.283333333333463,
+          "capturedAt": "2026-09-07T14:55:33.531Z"
+        }
+      },
+      "loadedScriptElements": [
+        "http://127.0.0.1:4200/assets/index-JOAubjRr.js"
+      ],
+      "buildDigest": "32ef57ca8a5ef142d47d86ce35e6708465d7f248f85624b2dca0413b14618d50",
+      "finishedAt": "2026-09-07T14:55:33.541Z",
+      "sample": {
+        "firstRafMs": 6115.4,
+        "lastRafMs": 21115.4,
+        "before": {
+          "scene": "calm-sailing",
+          "elapsed": 5.066666666666654,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "explore",
+          "weather": "calm",
+          "playerId": "player",
+          "shipCount": 6,
+          "projectileCount": 10,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "baratie",
+              "position": {
+                "x": 0.1302448704157929,
+                "y": -1.358754549349874,
+                "z": -11.627152366976084
+              },
+              "heading": 0,
+              "speed": 4.128160867736408,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "merry-escort",
+              "kind": "going-merry",
+              "position": {
+                "x": -70.62536195324356,
+                "y": -2.252753030925527,
+                "z": -169.00883059037398
+              },
+              "heading": 4.442505254487218,
+              "speed": 5.575091999080376,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "moby-roamer",
+              "kind": "moby-dick",
+              "position": {
+                "x": -375.6523729722836,
+                "y": 0.5603381486922827,
+                "z": -311.52950631574475
+              },
+              "heading": 5.5766851321369195,
+              "speed": 4.2347299407324215,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "polar-roamer",
+              "kind": "polar-tang",
+              "position": {
+                "x": 169.0155239635241,
+                "y": -0.19645702590878017,
+                "z": -371.23611506145215
+              },
+              "heading": 1.7346533940311595,
+              "speed": 9.585761946786358,
+              "hullDamage": 0.005,
+              "surrendered": false
+            },
+            {
+              "id": "baratie-route",
+              "kind": "baratie",
+              "position": {
+                "x": 371.40676975804803,
+                "y": 0.15014389006504344,
+                "z": -44.07594578309023
+              },
+              "heading": 4.5169513392445015,
+              "speed": 3.7831620725461326,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "marine-patrol",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 59.126809127714445,
+                "y": -1.6130957908005912,
+                "z": -142.2348373725981
+              },
+              "heading": 5.929608619830235,
+              "speed": 6.455719373085491,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 2592,
+            "height": 1458,
+            "cssWidth": 1920,
+            "cssHeight": 1080,
+            "renderDpr": 1.35,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 67,
+            "triangles": 870690,
+            "geometries": 110,
+            "textures": 149,
+            "entities": 16,
+            "chunks": 25
+          }
+        },
+        "after": {
+          "scene": "calm-sailing",
+          "elapsed": 20.06666666666681,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "explore",
+          "weather": "calm",
+          "playerId": "player",
+          "shipCount": 6,
+          "projectileCount": 3,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "baratie",
+              "position": {
+                "x": 1.2426079591744792,
+                "y": 2.0103880377911145,
+                "z": -110.92945179042528
+              },
+              "heading": 0,
+              "speed": 7.944417943369001,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "merry-escort",
+              "kind": "going-merry",
+              "position": {
+                "x": 35.59006114567194,
+                "y": 0.8249244785958387,
+                "z": -300.3248125731747
+              },
+              "heading": 5.597933634477737,
+              "speed": 13.42447731677964,
+              "hullDamage": 0.12353348325600093,
+              "surrendered": false
+            },
+            {
+              "id": "moby-roamer",
+              "kind": "moby-dick",
+              "position": {
+                "x": -300.18913259831726,
+                "y": -0.9015786797644372,
+                "z": -359.18869089365467
+              },
+              "heading": 3.746182069213697,
+              "speed": 3.8061513862518113,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "polar-roamer",
+              "kind": "polar-tang",
+              "position": {
+                "x": -43.74208098562391,
+                "y": -0.7711635368371073,
+                "z": -284.1314386365742
+              },
+              "heading": 3.1906373890244684,
+              "speed": 15.239093439979685,
+              "hullDamage": 0.155,
+              "surrendered": false
+            },
+            {
+              "id": "baratie-route",
+              "kind": "baratie",
+              "position": {
+                "x": 421.4943551049962,
+                "y": 1.2468945776593738,
+                "z": -6.062365923501196
+              },
+              "heading": 2.1236078663418994,
+              "speed": 3.2175875832571053,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "marine-patrol",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 73.20207473573225,
+                "y": -1.0735984959647398,
+                "z": -201.72653577474424
+              },
+              "heading": 5.317964080790087,
+              "speed": 1.1073807470630628,
+              "hullDamage": 0.09207494983359511,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 2592,
+            "height": 1458,
+            "cssWidth": 1920,
+            "cssHeight": 1080,
+            "renderDpr": 1.35,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 71,
+            "triangles": 880741,
+            "geometries": 110,
+            "textures": 149,
+            "entities": 9,
+            "chunks": 25
+          }
+        },
+        "canvasChanges": [],
+        "visibilityChanges": []
+      }
+    },
+    {
+      "viewport": "landscape",
+      "scene": "calm-sailing",
+      "camera": "chase",
+      "name": "landscape-calm-sailing",
+      "url": "http://127.0.0.1:4200/?quality=auto&hud=1&seed=sustained-gauntlet-A&scene=calm-sailing",
+      "requestedViewport": {
+        "width": 844,
+        "height": 390,
+        "deviceScaleFactor": 2,
+        "hasTouch": true
+      },
+      "browserVersion": "151.0.7922.34",
+      "startedAt": "2026-09-07T14:55:33.542Z",
+      "errors": [],
+      "consoleMessages": [
+        {
+          "type": "warning",
+          "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+          "location": {
+            "url": "http://127.0.0.1:4200/assets/index-JOAubjRr.js",
+            "line": 0,
+            "column": 2126,
+            "lineNumber": 0,
+            "columnNumber": 2126
+          }
+        }
+      ],
+      "failedRequests": [],
+      "scripts": [
+        {
+          "url": "http://127.0.0.1:4200/assets/index-JOAubjRr.js",
+          "status": 200,
+          "contentType": "text/javascript",
+          "bytes": 993271,
+          "sha256": "924789466680202c34cfdbe0b943410088e828690c009bdfdd25145c3906be86"
+        }
+      ],
+      "launchDismissedBy": "actual launch button",
+      "browser": {
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "hardwareConcurrency": 10,
+        "deviceMemoryGiB": 16,
+        "devicePixelRatio": 2,
+        "quality": "auto",
+        "initialCanvas": {
+          "width": 1266,
+          "height": 585,
+          "cssWidth": 844,
+          "cssHeight": 390,
+          "renderDpr": 1.5
+        },
+        "webgl": {
+          "vendor": "WebKit",
+          "renderer": "WebKit WebGL",
+          "unmaskedVendor": "Google Inc. (Apple)",
+          "unmaskedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "shadingLanguage": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+          "contextAttributes": {
+            "alpha": true,
+            "antialias": true,
+            "depth": true,
+            "desynchronized": false,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "high-performance",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": false,
+            "stencil": false,
+            "xrCompatible": false
+          }
+        }
+      },
+      "frameTimes": {
+        "samples": 901,
+        "measuredMs": 15016.6,
+        "averageFps": 60.000266371881786,
+        "meanFrameMs": 16.66659267480577,
+        "p50FrameMs": 16.699999999999818,
+        "p95FrameMs": 18.699999999999818,
+        "p99FrameMs": 18.700000000000728,
+        "maxFrameMs": 18.80000000000109,
+        "overBudget": {
+          "25ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "33.4ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "50ms": {
+            "count": 0,
+            "percent": 0
+          },
+          "100ms": {
+            "count": 0,
+            "percent": 0
+          }
+        }
+      },
+      "activity": {
+        "simulationSecondsAdvanced": 15.016666666666822,
+        "wallSecondsMeasured": 15.0166,
+        "simulationToWallRatio": 1.0000044395313734,
+        "shipsWithChangedPosition": [
+          "player",
+          "merry-escort",
+          "moby-roamer",
+          "polar-roamer",
+          "baratie-route",
+          "marine-patrol"
+        ]
+      },
+      "validMeasurement": true,
+      "frameBudget": {
+        "averageAtLeast40Fps": true,
+        "p95AtMost25Ms": true
+      },
+      "screenshot": {
+        "file": "landscape-calm-sailing.png",
+        "before": {
+          "elapsed": 20.050000000000143,
+          "capturedAt": "2026-09-07T14:55:54.612Z"
+        },
+        "after": {
+          "elapsed": 20.166666666666803,
+          "capturedAt": "2026-09-07T14:55:54.851Z"
+        }
+      },
+      "loadedScriptElements": [
+        "http://127.0.0.1:4200/assets/index-JOAubjRr.js"
+      ],
+      "buildDigest": "32ef57ca8a5ef142d47d86ce35e6708465d7f248f85624b2dca0413b14618d50",
+      "finishedAt": "2026-09-07T14:55:54.855Z",
+      "sample": {
+        "firstRafMs": 5953.4,
+        "lastRafMs": 20970,
+        "before": {
+          "scene": "calm-sailing",
+          "elapsed": 5.033333333333321,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "explore",
+          "weather": "calm",
+          "playerId": "player",
+          "shipCount": 6,
+          "projectileCount": 8,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "baratie",
+              "position": {
+                "x": 0.12870524082233312,
+                "y": -1.3808419477804663,
+                "z": -11.489707354249566
+              },
+              "heading": 0,
+              "speed": 4.1088981504624105,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "merry-escort",
+              "kind": "going-merry",
+              "position": {
+                "x": -70.88020313729406,
+                "y": -2.3083936435118626,
+                "z": -168.77813171193972
+              },
+              "heading": 4.451492564366612,
+              "speed": 5.602070663719958,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "moby-roamer",
+              "kind": "moby-dick",
+              "position": {
+                "x": -375.7156397854298,
+                "y": 0.549537365125529,
+                "z": -311.39825541220637
+              },
+              "heading": 5.58053010760918,
+              "speed": 4.21722726800648,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "polar-roamer",
+              "kind": "polar-tang",
+              "position": {
+                "x": 169.38313419772908,
+                "y": -0.15171099518422254,
+                "z": -370.9561157789098
+              },
+              "heading": 1.723945382858382,
+              "speed": 9.606688902340926,
+              "hullDamage": 0.005,
+              "surrendered": false
+            },
+            {
+              "id": "baratie-route",
+              "kind": "baratie",
+              "position": {
+                "x": 371.2729326314231,
+                "y": 0.17105458437429333,
+                "z": -44.0477064978324
+              },
+              "heading": 4.522432648653162,
+              "speed": 3.773458541199131,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "marine-patrol",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 59.123623966449465,
+                "y": -1.617295506010385,
+                "z": -142.0070876962693
+              },
+              "heading": 5.937118675974208,
+              "speed": 6.455285365104424,
+              "hullDamage": 0,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 1139,
+            "height": 526,
+            "cssWidth": 844,
+            "cssHeight": 390,
+            "renderDpr": 1.349526066350711,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 67,
+            "triangles": 870500,
+            "geometries": 110,
+            "textures": 149,
+            "entities": 14,
+            "chunks": 25
+          }
+        },
+        "after": {
+          "scene": "calm-sailing",
+          "elapsed": 20.050000000000143,
+          "paused": false,
+          "timeScale": 1,
+          "visibility": "visible",
+          "mode": "explore",
+          "weather": "calm",
+          "playerId": "player",
+          "shipCount": 6,
+          "projectileCount": 3,
+          "islandCount": 8,
+          "ships": [
+            {
+              "id": "player",
+              "kind": "baratie",
+              "position": {
+                "x": 1.2411247647044645,
+                "y": 2.006111489565691,
+                "z": -110.79704482470245
+              },
+              "heading": 0,
+              "speed": 7.943036997307371,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "merry-escort",
+              "kind": "going-merry",
+              "position": {
+                "x": 35.50107904657959,
+                "y": 0.853230036663508,
+                "z": -300.1088081350365
+              },
+              "heading": 5.60065683532703,
+              "speed": 13.43444774592459,
+              "hullDamage": 0.12353348325600093,
+              "surrendered": false
+            },
+            {
+              "id": "moby-roamer",
+              "kind": "moby-dick",
+              "position": {
+                "x": -300.29478801416144,
+                "y": -0.9049662365450817,
+                "z": -359.19260375059105
+              },
+              "heading": 3.7480664839101667,
+              "speed": 3.8089417528265406,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "polar-roamer",
+              "kind": "polar-tang",
+              "position": {
+                "x": -43.60933634460807,
+                "y": -0.7943629511275095,
+                "z": -284.39181971411017
+              },
+              "heading": 3.1877078190405435,
+              "speed": 15.253622623117604,
+              "hullDamage": 0.155,
+              "surrendered": false
+            },
+            {
+              "id": "baratie-route",
+              "kind": "baratie",
+              "position": {
+                "x": 421.50840009850214,
+                "y": 1.2449000565723771,
+                "z": -6.141493141383378
+              },
+              "heading": 2.125697019009479,
+              "speed": 3.2145165681064687,
+              "hullDamage": 0,
+              "surrendered": false
+            },
+            {
+              "id": "marine-patrol",
+              "kind": "navy-galleon",
+              "position": {
+                "x": 73.19424515671817,
+                "y": -1.0854687911605698,
+                "z": -201.7054470669329
+              },
+              "heading": 5.3191008810935525,
+              "speed": 1.0974537281842036,
+              "hullDamage": 0.09207494983359511,
+              "surrendered": false
+            }
+          ],
+          "canvas": {
+            "width": 1139,
+            "height": 526,
+            "cssWidth": 844,
+            "cssHeight": 390,
+            "renderDpr": 1.349526066350711,
+            "deviceDpr": 2
+          },
+          "renderCounters": {
+            "drawCalls": 71,
+            "triangles": 880013,
+            "geometries": 110,
+            "textures": 149,
+            "entities": 9,
+            "chunks": 25
+          }
+        },
+        "canvasChanges": [],
+        "visibilityChanges": []
+      }
+    }
+  ]
+}
