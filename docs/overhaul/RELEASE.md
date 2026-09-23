@@ -1,5 +1,13 @@
 # Release record
 
+## September 23 release refresh
+
+The branch was clean at `06edb5b499276b1b37a41ada38cff228b9902dbb`, already matching GitHub. The current handover update is being pushed as a new documentation commit and deployed through the existing Vercel Git integration. Runtime code/assets remain implementation `a851c37`. Fresh checks: 163 tests, TypeScript/Vite build, diff check, and every public GLB hash pass. The 241 local source archives are still present.
+
+Latest moving Preview alias: https://we-are-on-the-cruise-git-codex-c-9ea501-amirs-projects-d9680079.vercel.app. Resolve its exact deployment and commit via Vercel metadata; the releasing session records the immutable result. No new browser/FPS/visual acceptance run is claimed. Production was freshly re-resolved and remains the baseline deployment below.
+
+## September 7 verified runtime release
+
 Current branch: `codex/cinematic-anime-overhaul`, base `codex/vertical-slice` at `ba33a1760fddebb084764a612e4ee52589337c3d`. Draft [PR #1](https://github.com/TheDudeCommits/WeAreOnTheCruise/pull/1).
 
 Verified [downloaded-fleet Preview](https://we-are-on-the-cruise-f2af4qn0n-amirs-projects-d9680079.vercel.app): **READY**, deployment `dpl_2EbBeyjdVAQinFYyqLEE8Uhpqgxe`, implementation commit `a851c37f98b1091aa3cee3f90d66034ac89753c1`, target Preview (`null` in Vercel metadata). Verified 2026-09-07 at approximately 15:01 UTC through deployment metadata and successful build logs. Vercel emitted `index-JOAubjRr.js` and `index-mwMK32qf.css`, matching the local immutable build 23 filenames. The deployed page was not fetched or browser-tested; gameplay and performance evidence refer to the local immutable build. [Verification receipt](evidence/release-preview-23.json).
