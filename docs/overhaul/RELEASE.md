@@ -2,9 +2,9 @@
 
 ## September 23 release refresh
 
-The branch was clean at `06edb5b499276b1b37a41ada38cff228b9902dbb`, already matching GitHub. The current handover update is being pushed as a new documentation commit and deployed through the existing Vercel Git integration. Runtime code/assets remain implementation `a851c37`. Fresh checks: 163 tests, TypeScript/Vite build, diff check, and every public GLB hash pass. The 241 local source archives are still present.
+The branch was clean at `06edb5b499276b1b37a41ada38cff228b9902dbb`, already matching GitHub. The refreshed handover was pushed as `48629623fbc89ef8e4d3dddfcb0fd41dc78b44e6` and deployed through the existing Vercel Git integration. Verified immutable [September 23 Preview](https://we-are-on-the-cruise-gwuw0wm4v-amirs-projects-d9680079.vercel.app): **READY**, deployment `dpl_FiD7tYKMUYDMSqCEEWCMrESN9Eqb`, target Preview. The following documentation-only commit records this result. Runtime code/assets remain implementation `a851c37`. Fresh checks: 163 tests, TypeScript/Vite build, diff check, and every public GLB hash pass. The 241 local source archives are still present.
 
-Latest moving Preview alias: https://we-are-on-the-cruise-git-codex-c-9ea501-amirs-projects-d9680079.vercel.app. Resolve its exact deployment and commit via Vercel metadata; the releasing session records the immutable result. No new browser/FPS/visual acceptance run is claimed. Production was freshly re-resolved and remains the baseline deployment below.
+Latest moving Preview alias: https://we-are-on-the-cruise-git-codex-c-9ea501-amirs-projects-d9680079.vercel.app. Vercel metadata confirmed the immutable deployment and commit above. The build-log connector was unavailable in this session; no deployed build-log or browser inspection is claimed. [Release receipt](evidence/release-preview-2026-09-23.json). No new browser/FPS/visual acceptance run is claimed. Production was freshly re-resolved and remains the baseline deployment below.
 
 ## September 7 verified runtime release
 
