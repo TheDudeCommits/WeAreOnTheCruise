@@ -1,0 +1,81 @@
+{
+  "note": "Cell order (row-major) of the Higgsfield icon sheets -> icon ids (public/assets/icons/<id>.png). extra-* cells are spare pickups/props icons.",
+  "sheets": {
+    "icons-a": [
+      "broadside",
+      "bow-chaser",
+      "stern-mortar",
+      "swivel-guns",
+      "fire-barrels",
+      "harpoon",
+      "rocket-rack",
+      "storm-rod",
+      "tide-mines",
+      "iron-ram",
+      "escort-skiffs",
+      "maelstrom-charm",
+      "ironwood-hull",
+      "cloudsilk-sails",
+      "powder-monkeys",
+      "master-gunner"
+    ],
+    "icons-b": [
+      "long-barrels",
+      "salvage-nets",
+      "lucky-doubloon",
+      "shipwright",
+      "figurehead-fury",
+      "weather-eye",
+      "drill-master",
+      "deep-stores",
+      "second-wind",
+      "lionburst",
+      "deep-dive",
+      "chefs-banquet",
+      "signal-flare",
+      "seaquake",
+      "ramming-speed",
+      "sunfire-barrage"
+    ],
+    "icons-c": [
+      "torpedo-swarm",
+      "kitchen-inferno",
+      "admirals-judgment",
+      "tidal-colossus",
+      "hull",
+      "sails",
+      "powder",
+      "gunnery",
+      "salvage",
+      "fortune",
+      "wisdom",
+      "charts",
+      "banish",
+      "xp-copper",
+      "xp-silver",
+      "xp-gold"
+    ],
+    "icons-d": [
+      "doubloon",
+      "repair",
+      "compass",
+      "powder-keg",
+      "chest",
+      "brace",
+      "boost",
+      "heal",
+      "bounty",
+      "coins",
+      "chest-open",
+      "helm",
+      "anchor",
+      "lantern",
+      "admiralty-flag",
+      "cutlasses"
+    ]
+  },
+  "keepHoles": [],
+  "forceHoles": [
+    "storm-rod"
+  ]
+}
