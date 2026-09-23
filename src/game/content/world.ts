@@ -13,31 +13,36 @@ export const SEAS: Readonly<Record<SeaId, SeaDef>> = {
     id: 'stormwrack-reach', name: 'Stormwrack Reach',
     description: 'Rogue waves, lightning and a sky the colour of gunmetal.',
     duration: 900, bosses: [{ at: 300, boss: 'iron-warden' }, { at: 600, boss: 'tidewyrm' }, { at: 900, boss: 'sovereign' }],
-    startHour: 15, hoursPerRun: 8, weather: [{ at: 0, weather: 'breezy' }, { at: 180, weather: 'storm' }, { at: 540, weather: 'breezy' }, { at: 660, weather: 'storm' }],
-    enemyFactions: ['admiralty', 'corsair', 'deep'], difficulty: 1.35,
-    unlock: { kind: 'achievement', achievement: 'survive-10', text: 'Survive 10 minutes' },
+    startHour: 15, hoursPerRun: 8, weather: [{ at: 0, weather: 'breezy' }, { at: 150, weather: 'storm' }, { at: 480, weather: 'breezy' }, { at: 630, weather: 'storm' }],
+    enemyFactions: ['admiralty', 'corsair', 'deep'], difficulty: 1.3,
+    unlock: { kind: 'achievement', achievement: 'survive-10', text: 'Survive 10:00 on any sea' },
   },
   'the-gloam': {
     id: 'the-gloam', name: 'The Gloam',
     description: 'Fog, moonlight and ships that should have sunk long ago.',
     duration: 900, bosses: [{ at: 300, boss: 'iron-warden' }, { at: 600, boss: 'tidewyrm' }, { at: 900, boss: 'sovereign' }],
     startHour: 20, hoursPerRun: 8, weather: [{ at: 0, weather: 'fog' }, { at: 360, weather: 'clear' }, { at: 600, weather: 'fog' }],
-    enemyFactions: ['wraith', 'corsair', 'admiralty', 'deep'], difficulty: 1.7,
-    unlock: { kind: 'achievement', achievement: 'win-run', text: 'Win a run' },
+    enemyFactions: ['wraith', 'corsair', 'admiralty', 'deep'], difficulty: 1.55,
+    unlock: { kind: 'achievement', achievement: 'win-run', text: 'Win a run (defeat the Sovereign)' },
   },
 };
 
-const costs = (base: number, max: number, growth = 1.55) => Array.from({ length: max }, (_, i) => Math.round(base * growth ** i / 5) * 5);
+/** Rising doubloon costs, rounded to 5. */
+const costs = (base: number, max: number, growth = 1.6) => Array.from({ length: max }, (_, i) => Math.round((base * growth ** i) / 5) * 5);
 
+/**
+ * Harbor upgrades. A decent run banks ~150–400 doubloons (see content/rewards.ts ECONOMY), so the first ranks
+ * are affordable after one run and the long tails need many.
+ */
 export const META_UPGRADES: Readonly<Record<MetaUpgradeId, MetaUpgradeDef>> = {
-  hull: { id: 'hull', name: 'Hull Plating', description: '+6% max hull per rank.', maxRank: 8, costs: costs(60, 8), perRank: { maxHp: 0.06 } },
-  sails: { id: 'sails', name: 'Better Sails', description: '+4% speed per rank.', maxRank: 5, costs: costs(80, 5), perRank: { speed: 0.04 } },
-  powder: { id: 'powder', name: 'Fine Powder', description: '+5% damage per rank.', maxRank: 8, costs: costs(80, 8), perRank: { damage: 0.05 } },
-  gunnery: { id: 'gunnery', name: 'Gunnery Drills', description: '4% faster reloads per rank.', maxRank: 5, costs: costs(100, 5), perRank: { cooldown: 0.04 } },
-  salvage: { id: 'salvage', name: 'Salvage Hooks', description: '+10% pickup radius per rank.', maxRank: 5, costs: costs(50, 5), perRank: { pickupRadius: 0.1 } },
-  fortune: { id: 'fortune', name: 'Fortune', description: '+1 luck and +8% doubloons per rank.', maxRank: 5, costs: costs(90, 5), perRank: { luck: 1, doubloonGain: 0.08 } },
-  wisdom: { id: 'wisdom', name: "Navigator's Wisdom", description: '+5% experience per rank.', maxRank: 5, costs: costs(90, 5), perRank: { xpGain: 0.05 } },
-  'second-wind': { id: 'second-wind', name: 'Second Wind', description: 'Revive once per run per rank.', maxRank: 2, costs: [600, 1800], perRank: { revives: 1 } },
-  charts: { id: 'charts', name: 'Sea Charts', description: '+1 reroll per run per rank.', maxRank: 5, costs: costs(120, 5), perRank: {} },
-  banish: { id: 'banish', name: 'Black Spot', description: '+1 banish per run per rank.', maxRank: 3, costs: costs(200, 3), perRank: {} },
+  hull: { id: 'hull', name: 'Hull Plating', description: '+6% max hull per rank.', maxRank: 8, costs: costs(40, 8), perRank: { maxHp: 0.06 } },
+  sails: { id: 'sails', name: 'Better Sails', description: '+4% speed per rank.', maxRank: 5, costs: costs(50, 5), perRank: { speed: 0.04 } },
+  powder: { id: 'powder', name: 'Fine Powder', description: '+5% damage per rank.', maxRank: 8, costs: costs(60, 8), perRank: { damage: 0.05 } },
+  gunnery: { id: 'gunnery', name: 'Gunnery Drills', description: '4% faster weapon reloads per rank.', maxRank: 5, costs: costs(80, 5), perRank: { cooldown: 0.04 } },
+  salvage: { id: 'salvage', name: 'Salvage Hooks', description: '+10% treasure pickup radius per rank.', maxRank: 5, costs: costs(30, 5), perRank: { pickupRadius: 0.1 } },
+  fortune: { id: 'fortune', name: 'Fortune', description: '+1 luck and +8% doubloons per rank.', maxRank: 5, costs: costs(70, 5), perRank: { luck: 1, doubloonGain: 0.08 } },
+  wisdom: { id: 'wisdom', name: "Navigator's Wisdom", description: '+5% experience per rank.', maxRank: 5, costs: costs(60, 5), perRank: { xpGain: 0.05 } },
+  'second-wind': { id: 'second-wind', name: 'Second Wind', description: 'Revive once per run per rank (half hull, 3 s invulnerable).', maxRank: 2, costs: [400, 1200], perRank: { revives: 1 } },
+  charts: { id: 'charts', name: 'Sea Charts', description: '+1 card reroll per run per rank.', maxRank: 5, costs: costs(50, 5), perRank: {} },
+  banish: { id: 'banish', name: 'Black Spot', description: '+1 card banish per run per rank.', maxRank: 3, costs: costs(120, 3, 2), perRank: {} },
 };

@@ -25,14 +25,14 @@ export const SHIPS: Readonly<Record<ShipId, ShipDef>> = {
     description: 'A yellow submersible that fights from below. Fragile on the surface, deadly when it rises.',
     modelKey: 'polar-tang', length: 44, beam: 13, hp: 200, armor: 1, maxSpeed: 26, accel: 7, turnRate: 0.85, mass: 520,
     broadsideGuns: 3, pickupRadius: 32, special: 'deep-dive', ultimate: 'torpedo-swarm', startingWeapon: 'broadside',
-    unlock: { kind: 'doubloons', cost: 600 }, accent: 0xffd23a,
+    unlock: { kind: 'doubloons', cost: 450 }, accent: 0xffd23a,
   },
   'grand-galley': {
     id: 'grand-galley', name: 'Grand Galley', epithet: 'The Floating Feast',
     description: 'A restaurant fortress with gun decks on its wide wings. Slow, stubborn and generous.',
     modelKey: 'baratie', length: 56, beam: 30, hp: 320, armor: 3, maxSpeed: 19, accel: 4.2, turnRate: 0.55, mass: 1400,
     broadsideGuns: 5, pickupRadius: 38, special: 'chefs-banquet', ultimate: 'kitchen-inferno', startingWeapon: 'broadside',
-    unlock: { kind: 'doubloons', cost: 1500 }, accent: 0xe9745b,
+    unlock: { kind: 'doubloons', cost: 1100 }, accent: 0xe9745b,
   },
   seawarden: {
     id: 'seawarden', name: 'Seawarden', epithet: 'The Captured Warship',
@@ -46,6 +46,6 @@ export const SHIPS: Readonly<Record<ShipId, ShipDef>> = {
     description: 'A whale-bowed titan with a broadside like a landslide. Turns like an island.',
     modelKey: 'moby-dick', length: 84, beam: 24, hp: 420, armor: 4, maxSpeed: 20, accel: 3.6, turnRate: 0.42, mass: 2600,
     broadsideGuns: 7, pickupRadius: 40, special: 'seaquake', ultimate: 'tidal-colossus', startingWeapon: 'broadside',
-    unlock: { kind: 'achievement', achievement: 'win-run', text: 'Win a run on any sea' }, accent: 0xe8eef2,
+    unlock: { kind: 'achievement', achievement: 'win-run', text: 'Win a run (defeat the Sovereign)' }, accent: 0xe8eef2,
   },
 };
