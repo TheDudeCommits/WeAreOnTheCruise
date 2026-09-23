@@ -2,6 +2,34 @@
 
 Updated 2026-09-23. Actual checkout: `/Users/amir/Projects/WeAreOnTheCruise`; `/Users/amir/Codex-ThreeJS` is unrelated. Remote: https://github.com/TheDudeCommits/WeAreOnTheCruise. Branch: `codex/cinematic-anime-overhaul`, based on `codex/vertical-slice` at `ba33a1760fddebb084764a612e4ee52589337c3d`.
 
+## September 23 AAA audit and overhaul plan (read first)
+
+A second September 23 session audited the running game and wrote [docs/aaa-overhaul/AAA-OVERHAUL-PLAN.md](docs/aaa-overhaul/AAA-OVERHAUL-PLAN.md). No gameplay or runtime code changed. The plan contains:
+
+- the current-state verdict, with fresh real-time engine frames (`docs/aaa-overhaul/current/`);
+- the "Grand Line Cel" style rules;
+- 12 **generated** paint-over targets of real engine plates (`targets/`, `compare/`, [provenance](docs/aaa-overhaul/targets/manifest.json)), which are goals, never evidence;
+- ordered render, gameplay, UI, audio, asset and tech work lists;
+- a phased roadmap, starting with Phase 0 quick wins and then the "One Perfect Battle" vertical slice;
+- five decisions awaiting the user.
+
+Four code audits with file:line evidence are in `docs/aaa-overhaul/audits/`.
+
+**Key new facts:**
+- Ink outlines are dead code.
+- There is no post-processing or tone mapping.
+- Camera shake reaches the screen at about 6%.
+- The AI never leads its shots.
+- Voyages field at most two hostile ships.
+- Bounty resets every voyage.
+- **Three of the four in-game characters show indicators of extraction from Bandai Namco games** (Luffy `44b58336`, Nami `18273524`, Whitebeard `13ebbf10`). Replace them first.
+
+**Audit tooling notes:**
+- `?hud=0` gives clean plates.
+- Launch practice scenes through `[data-action="launch"]`.
+- The audit's play driver and raw captures live outside the repo (`output/aaa-audit-2026-09-23/`, gitignored).
+- Higgsfield image edits of 2K plates cost 2 credits (about 157 credits remain). Meshy has 1,285 credits; confirm every Meshy spend with the user.
+
 ## Session continuation and release
 
 Start in the checkout above, then run `git status --short` and `git log -3 --oneline`. The last gameplay/asset implementation is `a851c37f98b1091aa3cee3f90d66034ac89753c1`; subsequent commits contain documentation/release records. This September 23 session found no uncommitted gameplay changes and refreshed the handover before pushing and deploying the branch again.
