@@ -9,12 +9,8 @@ import type { Faction, HeroModelKey } from '../../game/ids';
 import type { BossState, EnemyState } from '../../game/types';
 import type { FrameContext, RenderHostHandles, RenderSystem, ShipAnchor, ShipServices } from '../frame';
 import { SketchfabShipAssets } from '../loaders/SketchfabShipAssets';
+import { HeroShip } from './hero/HeroShip';
 import { createToonMaterial, markInk } from '../materials/toon';
-
-/** Lengths the downloaded GLBs were normalized to during intake (metres). */
-const SOURCE_LENGTH: Record<HeroModelKey, number> = {
-  'going-merry': 34, 'thousand-sunny': 56, 'polar-tang': 52, baratie: 74, 'navy-galleon': 70, 'moby-dick': 122,
-};
 
 const FACTION_COLORS: Record<Faction, { hull: number; sail: number }> = {
   player: { hull: 0x7b4a2a, sail: 0xf2e6c8 },
@@ -30,8 +26,8 @@ export class ShipSystem implements RenderSystem, ShipServices {
   readonly name = 'ships';
   private scene!: THREE.Scene;
   private readonly assets = new SketchfabShipAssets();
-  private readonly hero = new THREE.Group();
-  private heroKey: HeroModelKey | null = null;
+  private readonly heroShip = new HeroShip(this.assets);
+  private readonly hero = this.heroShip.root;
   private heroLength = 34;
   private readonly visuals = new Map<number, Visual>();
   private readonly pool = new Map<string, THREE.Group[]>();
@@ -49,15 +45,9 @@ export class ShipSystem implements RenderSystem, ShipServices {
 
   async preload(key: HeroModelKey): Promise<void> { await this.assets.prepare(key); }
 
-  private setHero(key: HeroModelKey, length: number): void {
-    if (this.heroKey === key) return;
-    this.heroKey = key;
+  private setHero(key: HeroModelKey, length: number, accent: number): void {
     this.heroLength = length;
-    this.hero.clear();
-    const holder = new THREE.Group();
-    holder.scale.setScalar(length / SOURCE_LENGTH[key]);
-    this.hero.add(holder);
-    void this.assets.mount(key, 'high', holder, () => this.heroKey === key, true, (instance) => markInk(instance));
+    this.heroShip.setModel(key, length, accent);
   }
 
   update(ctx: FrameContext): void {
@@ -66,13 +56,13 @@ export class ShipSystem implements RenderSystem, ShipServices {
     const run = ctx.run;
     const shipId = run?.shipId ?? (ctx.menuShip as keyof typeof SHIPS | null) ?? 'dawn-ram';
     const def = SHIPS[shipId as keyof typeof SHIPS] ?? SHIPS['dawn-ram'];
-    this.setHero(def.modelKey, def.length);
-    const px = run ? run.player.x : ctx.focus.x, pz = run ? run.player.z : ctx.focus.z;
-    const heading = run ? run.player.heading : ctx.focus.heading;
-    this.hero.visible = !run || run.player.alive || run.status === 'dead';
-    this.hero.position.set(px, oceanY(px, pz) - (run?.player.submerged ?? 0) * 18 + (run?.player.airborne ?? 0) * 26, pz);
-    this.hero.rotation.set(0, heading, 0);
-    this.hero.rotateZ(run?.player.roll ?? 0);
+    this.setHero(def.modelKey, def.length, def.accent);
+    const p = run?.player;
+    this.heroShip.update(ctx.dt, ctx.time, {
+      x: p ? p.x : ctx.focus.x, z: p ? p.z : ctx.focus.z, heading: p ? p.heading : ctx.focus.heading, speed: p ? p.speed : 0,
+      roll: p?.roll ?? 0, airborne: p?.airborne ?? 0, submerged: p?.submerged ?? 0, invulnerable: p?.invulnerable ?? 0,
+      sinceHit: p?.sinceHit ?? 99, hpFraction: p ? p.hp / Math.max(1, p.maxHp) : 1, alive: p?.alive ?? true,
+    }, p ? { tier: p.tier, weapons: p.weapons } : { tier: 0, weapons: [] }, ctx.atmosphere.night, ctx.services.ocean);
 
     // Enemies and bosses.
     this.seen.clear();

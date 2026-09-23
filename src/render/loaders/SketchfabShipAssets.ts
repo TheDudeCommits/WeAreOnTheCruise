@@ -1,9 +1,18 @@
+/**
+ * Downloaded hero ship models (SHIPS-owned). Loads `/assets/sketchfab/<key>.glb`, converts every material to the
+ * shared toon model with `toonifyObject`, and bakes the Baratie/Moby source paint into vertex colours so the look
+ * never depends on shader injection.
+ *
+ * Texture budget: only the high-detail file is loaded for gameplay (the player ship is always close to the camera).
+ * `detail: 'low'` is still supported for tools, and it never loads its own images: a GLTFLoader plugin hands every
+ * texture slot a shared placeholder and the materials are then re-pointed at the already-loaded high textures,
+ * so both detail levels share one copy of every image.
+ */
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { GLTFLoader, type GLTFLoaderPlugin, type GLTFParser } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import type { HeroModelKey } from '../../game/ids';
-
-type ShipKind = HeroModelKey;
+import { toonifyObject } from '../materials/toon';
 
 /** Provenance of the six downloaded hero models (kept for now; renamed in game). See ASSET-LICENSES.md. */
 export const HERO_MODEL_SOURCES: Readonly<Record<HeroModelKey, { uid: string; author: string; license: string }>> = {
@@ -14,160 +23,250 @@ export const HERO_MODEL_SOURCES: Readonly<Record<HeroModelKey, { uid: string; au
   'baratie': { uid: '015ebe70a76749eeb92f5f39693b8ea5', author: 'Chin Eeyang', license: 'CC-BY-4.0' },
   'polar-tang': { uid: 'a7feb48976ce484aa4537e4c7124a9c4', author: 'taem5070', license: 'CC-BY-4.0' },
 };
-const SKETCHFAB_SHIPS = HERO_MODEL_SOURCES;
 
-/** Downloaded hero ship models (SHIPS-owned). UV artwork, silhouettes and hierarchy survive intake. */
+/** Lengths the downloaded GLBs were normalized to during intake (metres, bow toward −Z, waterline at y = 0). */
+export const HERO_SOURCE_LENGTH: Readonly<Record<HeroModelKey, number>> = {
+  'going-merry': 34, 'thousand-sunny': 56, 'polar-tang': 52, baratie: 74, 'navy-galleon': 70, 'moby-dick': 122,
+};
+
+export type HeroDetail = 'high' | 'low';
+
+/** A loaded, toonified hero model in its normalized source space (never added to a scene; clone it). */
+export interface HeroTemplate {
+  readonly kind: HeroModelKey;
+  readonly detail: HeroDetail;
+  readonly scene: THREE.Group;
+  readonly materials: readonly THREE.Material[];
+  readonly triangles: number;
+}
+
+const PLACEHOLDER = new THREE.Texture();
+
+/**
+ * GLTFLoader plugin: every texture slot resolves to one shared placeholder, so images are never fetched or decoded.
+ * Texture extensions (EXT_texture_webp…) are stripped before the root loads, which routes every texture request to
+ * the parser's own loadTexture, overridden here.
+ */
+const skipTextures = (parser: GLTFParser): GLTFLoaderPlugin => ({
+  name: 'CRUISE_skip_textures',
+  beforeRoot: () => {
+    const json = parser.json as { textures?: { extensions?: unknown }[] };
+    for (const texture of json.textures ?? []) delete texture.extensions;
+    (parser as unknown as { loadTexture: () => Promise<THREE.Texture> }).loadTexture = () => Promise.resolve(PLACEHOLDER);
+    return null;
+  },
+} as GLTFLoaderPlugin);
+
 export class SketchfabShipAssets {
   private readonly loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-  private readonly pending = new Map<string, Promise<THREE.Group>>();
-  private readonly sources = new Set<THREE.Group>();
-  private readonly loaded = new Set<string>();
+  private readonly lowLoader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).register(skipTextures);
+  private readonly pending = new Map<string, Promise<HeroTemplate>>();
+  private readonly templates = new Set<HeroTemplate>();
   private readonly textures = new Set<THREE.Texture>();
-  private readonly gradient = new THREE.DataTexture(new Uint8Array([100, 163, 218, 255]), 4, 1, THREE.RedFormat);
   private disposed = false;
-  private readonly fill = { value: .38 };
-  readonly status = new Map<ShipKind, 'loading' | 'ready' | 'error'>();
+  readonly status = new Map<HeroModelKey, 'loading' | 'ready' | 'error'>();
 
-  constructor() {
-    this.gradient.minFilter = this.gradient.magFilter = THREE.NearestFilter;
-    this.gradient.generateMipmaps = false;
-    this.gradient.needsUpdate = true;
-  }
-
-  private load(kind: ShipKind, detail: 'high' | 'low'): Promise<THREE.Group> {
+  /** Loads (once) and returns the toonified template for a hero model. */
+  load(kind: HeroModelKey, detail: HeroDetail = 'high'): Promise<HeroTemplate> {
     const key = `${kind}:${detail}`;
     const existing = this.pending.get(key);
     if (existing) return existing;
-    this.status.set(kind, 'loading');
-    const promise = this.loader.loadAsync(`/assets/sketchfab/${kind}${detail === 'low' ? '-low' : ''}.glb`).then(gltf => {
-      const converted = new Map<THREE.Material, THREE.MeshToonMaterial>();
-      gltf.scene.traverse(object => {
-        if (!(object instanceof THREE.Mesh)) return;
-        const convert = (material: THREE.Material): THREE.MeshToonMaterial => {
-          const cached = converted.get(material);
-          if (cached) return cached;
-          const source = material as THREE.MeshStandardMaterial;
-          for (const value of Object.values(source)) if (value instanceof THREE.Texture) this.textures.add(value);
-          const toon = new THREE.MeshToonMaterial({
-            name: `Sketchfab:${material.name}`,
-            color: source.color ?? 0xffffff, map: source.map ?? null,
-            normalMap: source.normalMap ?? null, normalScale: source.normalScale?.clone().multiplyScalar(.42),
-            aoMap: source.aoMap ?? null, aoMapIntensity: .45,
-            emissive: source.emissive ?? 0x000000, emissiveMap: source.emissiveMap ?? null,
-            emissiveIntensity: Math.min(.15, source.emissiveIntensity ?? 0),
-            gradientMap: this.gradient, vertexColors: source.vertexColors,
-            side: THREE.DoubleSide, transparent: source.transparent,
-            opacity: source.opacity, alphaTest: source.alphaTest,
-          });
-          converted.set(material, toon);
-          toon.onBeforeCompile = shader => {
-            shader.uniforms.uCruiseAssetFill = this.fill;
-            shader.fragmentShader = 'uniform float uCruiseAssetFill;\n' + shader.fragmentShader;
-            shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', 'outgoingLight += diffuseColor.rgb * vec3(.93,.96,1.0) * uCruiseAssetFill;\n#include <opaque_fragment>');
-          };
-          toon.customProgramCacheKey = () => 'cruise-source-toon-01';
-          material.dispose();
-          return toon;
-        };
-        object.material = Array.isArray(object.material) ? object.material.map(convert) : convert(object.material);
-        object.receiveShadow = true;
-        object.userData.assetSource = SKETCHFAB_SHIPS[kind]!.uid;
-      });
-      this.sources.add(gltf.scene);
-      if (this.disposed) { this.release(gltf.scene); return gltf.scene; }
-      // A vessel is ready only when both detail variants have loaded.
-      this.loaded.add(key);
-      if (['high','low'].every(level=>this.loaded.has(`${kind}:${level}`))) this.status.set(kind, 'ready');
-      return gltf.scene;
-    }).catch(error => {
+    if (detail === 'high') this.status.set(kind, 'loading');
+    const promise = (detail === 'high' ? this.loadHigh(kind) : this.loadLow(kind)).then((template) => {
+      if (this.disposed) { this.release(template); return template; }
+      this.templates.add(template);
+      if (detail === 'high') this.status.set(kind, 'ready');
+      return template;
+    }).catch((error: unknown) => {
       this.pending.delete(key);
-      this.status.set(kind, 'error');
-      throw new Error(`The downloaded ${kind} model could not load. No substitute ship was created.`, { cause: error });
+      if (detail === 'high') this.status.set(kind, 'error');
+      throw new Error(`The downloaded ${kind} model could not load.`, { cause: error });
     });
     this.pending.set(key, promise);
     return promise;
   }
 
-  async mount(kind: ShipKind, detail: 'high' | 'low', target: THREE.Group, alive: () => boolean, castShadow: boolean, configure?: (instance:THREE.Group)=>void): Promise<void> {
-    const source = await this.load(kind, detail);
-    if (this.disposed || !alive()) return;
-    const instance = source.clone(true);
-    instance.name = `sketchfab-ship:${kind}`;
-    instance.userData.source = SKETCHFAB_SHIPS[kind];
-    instance.traverse(object => { if (object instanceof THREE.Mesh) object.castShadow = castShadow; });
-    configure?.(instance);
-    target.add(instance);
-    target.userData.assetReady = true;
-  }
-
-  async prepare(kind:ShipKind): Promise<void> { await Promise.all([this.load(kind,'high'),this.load(kind,'low')]); }
+  /** Game preload: the player ship only ever needs the high-detail file. */
+  async prepare(kind: HeroModelKey): Promise<void> { await this.load(kind, 'high'); }
 
   async ready(): Promise<void> { await Promise.all(this.pending.values()); }
-  setExposure(exposure: number): void { this.fill.value = .38 * exposure; }
 
-  /** Localized weathering stays on source UV surfaces; each vessel owns its damage state. */
-  bindDamage(instance:THREE.Group,kind:ShipKind):{ uniform:{value:THREE.Vector4};inverse:{value:THREE.Matrix4};dispose:()=>void } {
-    const uniform={value:new THREE.Vector4()};
-    const inverse={value:new THREE.Matrix4()};
-    const materials=new Map<THREE.Material,THREE.Material>();
-    instance.traverse(object=>{
-      if(!(object instanceof THREE.Mesh))return;
-      const convert=(source:THREE.Material)=>{
-        if(materials.has(source))return materials.get(source)!;
-        const material=source.clone();
-        material.onBeforeCompile=(shader,renderer)=>{
-          source.onBeforeCompile(shader,renderer);
-          shader.uniforms.uCruiseDamage=uniform;
-          shader.uniforms.uCruiseHullInverse=inverse;
-          shader.vertexShader='varying vec3 vCruiseHullPosition;uniform mat4 uCruiseHullInverse;\n'+shader.vertexShader;
-          shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvCruiseHullPosition = (uCruiseHullInverse * modelMatrix * vec4(position,1.)).xyz;');
-          shader.fragmentShader='varying vec3 vCruiseHullPosition;uniform vec4 uCruiseDamage;\n'+shader.fragmentShader;
-          const sourcePaint=kind==='baratie'?`
-            vec3 p=vCruiseHullPosition;
-            vec3 localNormal=normalize(cross(dFdx(p),dFdy(p)));
-            bool floorFace=abs(localNormal.y)>.65;
-            vec3 paint=vec3(.68,.43,.19);
-            if(p.y<10.)paint=vec3(.025,.16,.09);
-            else if(abs(p.x)>20.)paint=floorFace?vec3(.3,.13,.045):vec3(.87,.77,.55);
-            else if(p.y<32.)paint=floorFace?(p.y>26.?vec3(.39,.045,.035):vec3(.3,.13,.045)):vec3(.68,.43,.19);
-            else paint=abs(localNormal.z)>.62?vec3(.88,.78,.59):vec3(.12,.042,.02);
-            if(p.z< -23.&&p.y>10.&&p.y<24.&&abs(p.x)<13.)paint=vec3(.73,.2,.27);
-            diffuseColor.rgb=paint;
-          `:kind==='moby-dick'?`
-            if(vCruiseHullPosition.z< -27.&&vCruiseHullPosition.y> -7.&&vCruiseHullPosition.y<24.)diffuseColor.rgb=vec3(.72,.78,.8);
-          `:'';
-          shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
-            ${sourcePaint}
-            float sideDamage=vCruiseHullPosition.x<0.0?uCruiseDamage.z:uCruiseDamage.w;
-            float damage=max(uCruiseDamage.x*.72,sideDamage);
-            float mottling=sin(vCruiseHullPosition.x*1.3+sin(vCruiseHullPosition.z*.48))*sin(vCruiseHullPosition.y*1.1+vCruiseHullPosition.z*.73);
-            float scorch=smoothstep(1.05-damage*1.4,1.15-damage*.65,mottling)*damage;
-            float body=1.-smoothstep(10.,19.,vCruiseHullPosition.y);
-            diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.22,.16,.12),scorch*body);
-            diffuseColor.rgb*=1.-uCruiseDamage.y*.22*(1.-body);
-          `);
-        };
-        material.customProgramCacheKey=()=>source.customProgramCacheKey()+'-source-damage-02-'+kind;
-        materials.set(source,material);return material;
-      };
-      object.material=Array.isArray(object.material)?object.material.map(convert):convert(object.material);
+  /** A new instance of the model sharing geometry and textures with the template (materials are per instance). */
+  instantiate(template: HeroTemplate): { root: THREE.Group; materials: THREE.Material[] } {
+    const root = template.scene.clone(true);
+    root.name = `hero-model:${template.kind}`;
+    root.userData.source = HERO_MODEL_SOURCES[template.kind];
+    // Per-instance materials (the hit flash writes emissive); textures and shader programs stay shared.
+    const copies = new Map<THREE.Material, THREE.Material>();
+    root.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      const copy = (m: THREE.Material) => { let c = copies.get(m); if (!c) { c = m.clone(); copies.set(m, c); } return c; };
+      object.material = Array.isArray(object.material) ? object.material.map(copy) : copy(object.material);
     });
-    return {uniform,inverse,dispose:()=>{for(const material of materials.values())material.dispose();}};
+    return { root, materials: [...copies.values()] };
   }
 
-  private release(source: THREE.Group): void {
-    source.traverse(object => {
-      if (!(object instanceof THREE.Mesh)) return;
-      object.geometry.dispose();
-      for (const material of Array.isArray(object.material) ? object.material : [object.material]) material.dispose();
+  private async loadHigh(kind: HeroModelKey): Promise<HeroTemplate> {
+    const gltf = await this.loader.loadAsync(`/assets/sketchfab/${kind}.glb`);
+    return this.finish(kind, 'high', gltf.scene);
+  }
+
+  private async loadLow(kind: HeroModelKey): Promise<HeroTemplate> {
+    const [high, gltf] = await Promise.all([this.load(kind, 'high'), this.lowLoader.loadAsync(`/assets/sketchfab/${kind}-low.glb`)]);
+    // Re-point placeholder texture slots at the high-detail toon materials' textures (by source material name).
+    const highByName = new Map<string, THREE.MeshStandardMaterial>();
+    const highList: THREE.MeshStandardMaterial[] = [];
+    for (const m of high.materials) {
+      const name = (m.userData.sourceName as string | undefined) ?? m.name;
+      if (!highByName.has(name)) { highByName.set(name, m as THREE.MeshStandardMaterial); highList.push(m as THREE.MeshStandardMaterial); }
+    }
+    let index = 0;
+    gltf.scene.traverse((o) => {
+      if (!(o instanceof THREE.Mesh)) return;
+      for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+        const std = m as THREE.MeshStandardMaterial;
+        const match = highByName.get(m.name) ?? highList[index % Math.max(1, highList.length)];
+        index++;
+        for (const slot of ['map', 'normalMap', 'aoMap', 'emissiveMap', 'roughnessMap', 'metalnessMap', 'alphaMap'] as const) {
+          if (std[slot] === PLACEHOLDER) std[slot] = ((match as unknown as Record<string, THREE.Texture | null | undefined>)?.[slot]) ?? null;
+        }
+      }
     });
+    return this.finish(kind, 'low', gltf.scene);
+  }
+
+  private finish(kind: HeroModelKey, detail: HeroDetail, scene: THREE.Group): HeroTemplate {
+    scene.updateMatrixWorld(true);
+    if (kind === 'baratie' || kind === 'moby-dick') bakeSourcePaint(scene, kind);
+    let triangles = 0;
+    const sources = new Set<THREE.Material>();
+    scene.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      const geometry = object.geometry as THREE.BufferGeometry;
+      triangles += (geometry.index ? geometry.index.count : geometry.attributes.position!.count) / 3;
+      for (const m of Array.isArray(object.material) ? object.material : [object.material]) {
+        sources.add(m);
+        for (const value of Object.values(m)) if (value instanceof THREE.Texture && value !== PLACEHOLDER) this.textures.add(value);
+      }
+    });
+    toonifyObject(scene, { keepMaps: true, normalScale: 0.15, rim: 0.35, tintable: true, doubleSided: true });
+    const materials = new Set<THREE.Material>();
+    const names = new Map<THREE.Material, string>();
+    scene.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      object.castShadow = true;
+      object.receiveShadow = true;
+      object.userData.assetSource = HERO_MODEL_SOURCES[kind].uid;
+      for (const m of Array.isArray(object.material) ? object.material : [object.material]) {
+        materials.add(m);
+        if (!names.has(m)) names.set(m, m.name.replace(/^toon:/, ''));
+      }
+    });
+    for (const [m, name] of names) m.userData.sourceName = name;
+    // Source materials are replaced; their textures live on in the toon materials.
+    for (const m of sources) if (!materials.has(m)) m.dispose();
+    return { kind, detail, scene, materials: [...materials], triangles: Math.round(triangles) };
+  }
+
+  private release(template: HeroTemplate): void {
+    template.scene.traverse((object) => { if (object instanceof THREE.Mesh) object.geometry.dispose(); });
+    for (const m of template.materials) m.dispose();
   }
 
   dispose(): void {
     this.disposed = true;
-    for (const source of this.sources) this.release(source);
+    for (const template of this.templates) this.release(template);
     for (const texture of this.textures) texture.dispose();
-    this.gradient.dispose();
-    this.sources.clear(); this.textures.clear(); this.pending.clear(); this.loaded.clear();
+    this.templates.clear(); this.textures.clear(); this.pending.clear();
   }
+}
+
+// ───────────────────────── Source paint (Baratie / Moby) ─────────────────────────
+
+const paintColor = new THREE.Color();
+
+/**
+ * The Baratie and Moby files ship a 32×4 palette strip instead of real UV artwork. The previous renderer painted
+ * them in a fragment shader from hull-local position; the same rules are baked into vertex colours here (hull-local =
+ * normalized model space) and the palette map is dropped, so the toon material shades the paint directly.
+ */
+function bakeSourcePaint(scene: THREE.Group, kind: 'baratie' | 'moby-dick'): void {
+  const palette = kind === 'moby-dick' ? readPalette(scene) : null;
+  const p = new THREE.Vector3();
+  const n = new THREE.Vector3();
+  const normalMatrix = new THREE.Matrix3();
+  scene.traverse((object) => {
+    if (!(object instanceof THREE.Mesh)) return;
+    const geometry = object.geometry as THREE.BufferGeometry;
+    const position = geometry.attributes.position as THREE.BufferAttribute;
+    const normal = geometry.attributes.normal as THREE.BufferAttribute | undefined;
+    const uv = geometry.attributes.uv as THREE.BufferAttribute | undefined;
+    normalMatrix.getNormalMatrix(object.matrixWorld);
+    const colors = new Uint8Array(position.count * 3);
+    for (let i = 0; i < position.count; i++) {
+      p.fromBufferAttribute(position, i).applyMatrix4(object.matrixWorld);
+      if (normal) n.fromBufferAttribute(normal, i).applyMatrix3(normalMatrix).normalize(); else n.set(0, 1, 0);
+      if (kind === 'baratie') baratiePaint(p, n, paintColor);
+      else {
+        if (palette && uv) palette.sample(uv.getX(i), uv.getY(i), paintColor); else paintColor.setRGB(0.85, 0.87, 0.88);
+        if (p.z < -27 && p.y > -7 && p.y < 24) paintColor.setRGB(0.72, 0.78, 0.8);
+      }
+      // Vertex colours are linear (normalized 8-bit is plenty for these flat paint fields).
+      colors[i * 3] = Math.round(THREE.MathUtils.clamp(paintColor.r, 0, 1) * 255);
+      colors[i * 3 + 1] = Math.round(THREE.MathUtils.clamp(paintColor.g, 0, 1) * 255);
+      colors[i * 3 + 2] = Math.round(THREE.MathUtils.clamp(paintColor.b, 0, 1) * 255);
+    }
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3, true));
+    for (const m of Array.isArray(object.material) ? object.material : [object.material]) {
+      const std = m as THREE.MeshStandardMaterial;
+      std.vertexColors = true;
+      std.map = null;
+      std.color?.setRGB(1, 1, 1);
+    }
+  });
+}
+
+/** The previous shader's Baratie rules, evaluated per vertex (linear colours, as in the old shader). */
+function baratiePaint(p: THREE.Vector3, n: THREE.Vector3, out: THREE.Color): void {
+  const floorFace = Math.abs(n.y) > 0.65;
+  out.setRGB(0.68, 0.43, 0.19);
+  if (p.y < 10) out.setRGB(0.025, 0.16, 0.09);
+  else if (Math.abs(p.x) > 20) { if (floorFace) out.setRGB(0.3, 0.13, 0.045); else out.setRGB(0.87, 0.77, 0.55); }
+  else if (p.y < 32) {
+    if (floorFace) { if (p.y > 26) out.setRGB(0.39, 0.045, 0.035); else out.setRGB(0.3, 0.13, 0.045); }
+    else out.setRGB(0.68, 0.43, 0.19);
+  } else if (Math.abs(n.z) > 0.62) out.setRGB(0.88, 0.78, 0.59);
+  else out.setRGB(0.12, 0.042, 0.02);
+  if (p.z < -23 && p.y > 10 && p.y < 24 && Math.abs(p.x) < 13) out.setRGB(0.73, 0.2, 0.27);
+}
+
+interface PaletteSampler { sample(u: number, v: number, out: THREE.Color): void }
+
+/** Reads the palette strip of a single-material model into a CPU sampler (sRGB → linear). */
+function readPalette(scene: THREE.Group): PaletteSampler | null {
+  let map: THREE.Texture | null = null;
+  scene.traverse((o) => {
+    if (map || !(o instanceof THREE.Mesh)) return;
+    const m = (Array.isArray(o.material) ? o.material[0] : o.material) as THREE.MeshStandardMaterial;
+    map = m.map ?? null;
+  });
+  const texture = map as THREE.Texture | null;
+  const image = texture?.image as (CanvasImageSource & { width: number; height: number }) | undefined;
+  if (!texture || !image || !image.width || typeof document === 'undefined') return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = image.width; canvas.height = image.height;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  if (!context) return null;
+  context.drawImage(image, 0, 0);
+  const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+  const flipY = texture.flipY;
+  return {
+    sample(u, v, out) {
+      const x = THREE.MathUtils.clamp(Math.floor((u - Math.floor(u)) * canvas.width), 0, canvas.width - 1);
+      const vv = v - Math.floor(v);
+      const y = THREE.MathUtils.clamp(Math.floor((flipY ? 1 - vv : vv) * canvas.height), 0, canvas.height - 1);
+      const k = (y * canvas.width + x) * 4;
+      out.setRGB(data[k]! / 255, data[k + 1]! / 255, data[k + 2]! / 255, THREE.SRGBColorSpace);
+    },
+  };
 }

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ships lab — We Are On The Cruise</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #0b2238; color: #f3ead2; font: 13px/1.4 system-ui, sans-serif; overflow: hidden; }
+      #lab-root { position: fixed; inset: 0; }
+      #lab-panel { position: fixed; top: 10px; left: 10px; z-index: 10; background: rgba(6, 22, 38, 0.86); border: 1px solid #2c4f6e; border-radius: 8px; padding: 10px 12px; max-width: 360px; max-height: calc(100vh - 40px); overflow: auto; }
+      #lab-panel h1 { font-size: 14px; margin: 0 0 6px; color: #ffd272; }
+      #lab-panel label { display: inline-flex; align-items: center; gap: 4px; margin: 2px 8px 2px 0; white-space: nowrap; }
+      #lab-panel .row { margin: 6px 0; }
+      #lab-panel button { background: #ffd272; color: #06283f; border: 0; border-radius: 4px; padding: 4px 8px; margin: 2px 4px 2px 0; cursor: pointer; font-weight: 600; }
+      #lab-panel button.off { background: #35546e; color: #d6e4ee; }
+      #lab-stats { position: fixed; right: 10px; top: 10px; z-index: 10; background: rgba(6, 22, 38, 0.8); padding: 6px 10px; border-radius: 6px; font: 12px ui-monospace, monospace; white-space: pre; }
+      .lab-label { position: absolute; transform: translate(-50%, -100%); color: #fff6dc; font: 600 12px system-ui; text-shadow: 0 1px 2px #000, 0 0 6px #000; pointer-events: none; white-space: nowrap; }
+      body.clean #lab-panel, body.clean #lab-stats { display: none; }
+    </style>
+  </head>
+  <body>
+    <div id="lab-root"></div>
+    <div id="lab-panel"></div>
+    <div id="lab-stats"></div>
+    <script type="module" src="/src/render/ships/lab/shipsLab.ts"></script>
+  </body>
+</html>
