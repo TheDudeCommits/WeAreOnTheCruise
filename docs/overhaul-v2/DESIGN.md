@@ -165,3 +165,37 @@ Rules for every agent: stay inside your file set; do not edit another area's fil
 ## 8. Evidence
 
 Engine captures go to `output/` (gitignored) or `docs/overhaul-v2/evidence/`; generated images never masquerade as engine frames. Browsers opened by scripts close in `finally`.
+
+## 9. Asset contract (ASSETS produces, SHIPS/FX/UI/WORLD consume)
+
+**Fleet manifest** — `public/assets/fleet/manifest.json`:
+
+```json
+{
+  "version": 1,
+  "models": {
+    "<modelKey>": {
+      "file": "/assets/fleet/<modelKey>.glb",
+      "length": 28,
+      "tris": 12000,
+      "materials": 3,
+      "role": "enemy | boss | prop | pickup | crew | nature",
+      "source": { "kind": "sketchfab | meshy | cc0-kit | procedural", "uid": "...", "author": "...", "title": "...", "license": "CC-BY-4.0 | CC0-1.0 | Meshy (owner-generated)", "url": "..." },
+      "clips": ["idle"],
+      "notes": "..."
+    }
+  }
+}
+```
+
+Normalization for every GLB: **bow/forward toward −Z, +Y up, origin at the waterline centre (ships) or ground centre (props/crew), uniform scale so the hull length equals `length` metres** (props/crew: real-world metres). Meshopt + WebP, textures ≤1024² (hero-sized bosses ≤2048²), ≤ 25k tris per enemy class, ≤ 60k per boss, ≤ 6k per crew figure. Materials are plain glTF PBR with albedo maps; the runtime converts them with `toonifyObject`.
+
+Model keys used by content (`src/game/content/enemies.ts`): enemies `skiff`, `sloop`, `brig`, `fireship`, `mortar-barge`, `frigate`, `man-o-war`, `corsair-brig`, `corsair-galleon`, `wraith`, `wyrmling`, `fort`; bosses `dreadnought`, `tidewyrm`, `sovereign`. SHIPS may render any key procedurally when the manifest lacks it (serpents/wyrmlings are expected to be procedural bodies, optionally with a GLB head `tidewyrm-head`). Prop keys SHIPS/FX look for: `cannon`, `mortar`, `rocket-rack`, `swivel-gun`, `harpoon-gun`, `storm-rod`, `barrel`, `powder-keg`, `mine`, `chest`, `crate`, `lantern`, `flag`, `anchor`; crew keys `sailor-a`, `sailor-b`, `sailor-c`, `admiralty-sailor`, `corsair`; nature keys `palm-a`, `palm-b`, `rock-a`, `rock-b`, `bush`, `hut`, `dock`, `tower`.
+
+**Icons** — `public/assets/icons/<id>.png` (256×256, transparent) for every WeaponId, PassiveId, SpecialId, UltimateId, MetaUpgradeId, pickup kind and `broadside|brace|boost|heal|doubloon|bounty`. UI falls back to text glyphs when a file is missing.
+
+**Ledger** — every third-party or generated file is recorded in `ASSET-LICENSES.md` and `public/credits.html` (author, source URL, licence, changes). No franchise names in titles/filenames we author. CC-BY-NC/ND and "Standard" licences are not used. Files that show signs of being extracted from commercial games are not used.
+
+## 10. Fan-out logistics
+
+Each agent works in its own git worktree (`/tmp/cruise-wt-<name>`, branch `ovh/<name>`, `node_modules` symlinked) and its own dev-server port (4181–4190). Commit early and often on your branch; the lead merges branches into `claude/naval-survivor-overhaul`. You may `git merge` another agent's branch into yours to test against their work, but never edit their files. Headed Chromium is fine for checks; close it in `finally`. Blender (port 9876) is shared with other projects: prefer Node tooling (`@gltf-transform/cli`, Meshy remesh) and never save or clear the user's Blender scene.
