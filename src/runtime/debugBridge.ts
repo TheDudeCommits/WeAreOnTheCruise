@@ -13,6 +13,8 @@ export interface CruiseBridge {
   goHarbor(): void;
   startRun(ship?: ShipId, sea?: SeaId): void;
   summary(): unknown;
+  /** Nearest live enemies/bosses to the player (for QA bots). */
+  nearest(count?: number): { id: number; defId: string; x: number; z: number; hp: number; boss: boolean }[];
   press(action: SimAction): void;
   steer(value: number): void;
   aim(x: number, z: number): void;
@@ -62,6 +64,17 @@ export function installDebugBridge(app: GameApp): void {
         offers: s.offers?.map((o) => o.title) ?? null, stats: { kills: s.stats.kills, bounty: s.stats.bounty, doubloons: s.stats.doubloons },
         weather: { weather: s.sea.weather, hour: +s.sea.timeOfDay.toFixed(2) },
       };
+    },
+    nearest: (count = 6) => {
+      const s = sim()?.state;
+      if (!s) return [];
+      const p = s.player;
+      const list = [
+        ...s.enemies.filter((e) => e.life === 'alive').map((e) => ({ id: e.id, defId: e.defId as string, x: e.x, z: e.z, hp: e.hp, boss: false })),
+        ...s.bosses.filter((b) => b.life === 'alive').map((b) => ({ id: b.id, defId: b.defId as string, x: b.x, z: b.z, hp: b.hp, boss: true })),
+      ];
+      list.sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z));
+      return list.slice(0, count);
     },
     press: (action) => sim()?.press(action),
     steer: (value) => sim()?.setInput({ steer: value }),
