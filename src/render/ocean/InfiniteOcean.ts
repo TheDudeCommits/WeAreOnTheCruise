@@ -10,14 +10,25 @@ import {
   Vector3,
   type ColorRepresentation,
 } from 'three';
-import type { Vec3, WeatherKind, WorldCollisionFeature } from '../../core/contracts';
+/** Legacy ocean kept as the OCEAN agent's starting point. Local types replace the removed v1 contracts. */
+type Vec3 = { x: number; y: number; z: number };
+export type WeatherKind = 'calm' | 'swell' | 'storm' | 'fog' | 'maelstrom' | 'night';
+export interface WorldCollisionFeature { kind: string; x: number; z: number; radius: number }
 import {
   DEFAULT_GERSTNER_WAVES,
   GERSTNER_GLSL,
   sampleGerstnerWaves,
   type WaveSample,
 } from '../../core/waves';
-import { atmosphereFor } from '../world/Atmosphere';
+
+interface OceanWeatherPalette { deep: number; mid: number; crest: number; foam: number; horizon: number; fogFar: number }
+const DAY_PALETTE: OceanWeatherPalette = { deep: 0x052d79, mid: 0x0668b1, crest: 0x1dbdbf, foam: 0xfff7dd, horizon: 0x8bc6e3, fogFar: 2550 };
+function atmosphereFor(weather: WeatherKind): OceanWeatherPalette {
+  if (weather === 'night') return { deep: 0x041c39, mid: 0x0b3d62, crest: 0x277a91, foam: 0x9bcddd, horizon: 0x365779, fogFar: 1900 };
+  if (weather === 'storm' || weather === 'maelstrom') return { deep: 0x102e4b, mid: 0x24566e, crest: 0x609b9e, foam: 0xd9e8e2, horizon: 0x718d9a, fogFar: 1650 };
+  if (weather === 'fog') return { deep: 0x366e8a, mid: 0x528eaa, crest: 0x8cc4cb, foam: 0xfff7dd, horizon: 0xbbd3d4, fogFar: 1000 };
+  return DAY_PALETTE;
+}
 
 export interface OceanFrame {
   time: number;

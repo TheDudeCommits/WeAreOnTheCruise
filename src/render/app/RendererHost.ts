@@ -1,5 +1,15 @@
 import * as THREE from 'three';
-import type { GameMetrics } from '../../core/contracts';
+
+export interface RenderMetrics {
+  fps: number;
+  frameMs: number;
+  drawCalls: number;
+  triangles: number;
+  geometries: number;
+  textures: number;
+  programs: number;
+  dpr: number;
+}
 
 export class RendererHost {
   readonly renderer: THREE.WebGLRenderer;
@@ -12,6 +22,7 @@ export class RendererHost {
   private lastRatioReviewAt = performance.now();
   private contextLost = false;
 
+  /** LOOK owns this class: post stack, quality tiers, precompile and adaptive resolution live here. */
   constructor(private readonly container: HTMLElement, captureMode: boolean, performanceMode = false) {
     this.renderer = new THREE.WebGLRenderer({ antialias: !performanceMode, alpha: false, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -19,7 +30,7 @@ export class RendererHost {
     // Keep metrics cumulative if a presentation pass is added.
     this.renderer.info.autoReset = false;
     this.renderer.shadowMap.enabled = !performanceMode;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.setClearColor(0x65cbea, 1);
     this.renderer.domElement.id = 'cruise-canvas';
     this.renderer.domElement.setAttribute('aria-label', 'Infinite anime ocean and sailing ships');
@@ -56,7 +67,7 @@ export class RendererHost {
     }
   }
 
-  getMetrics(entityCount: number, chunkCount: number): GameMetrics {
+  getMetrics(): RenderMetrics {
     const sum = this.frameSamples.reduce((total, sample) => total + sample, 0);
     const frameMs = sum / Math.max(1, this.frameSamples.length);
     const info = this.renderer.info;
@@ -67,8 +78,8 @@ export class RendererHost {
       triangles: info.render.triangles,
       geometries: info.memory.geometries,
       textures: info.memory.textures,
-      entities: entityCount,
-      chunks: chunkCount,
+      programs: info.programs?.length ?? 0,
+      dpr: this.pixelRatio,
     };
   }
 

@@ -1,4 +1,4 @@
-import './styles.css';
+import './styles/ui.css';
 import { GameApp } from './runtime/GameApp';
 import { appConfigFromLocation } from './runtime/AppConfig';
 

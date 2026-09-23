@@ -1,6 +1,6 @@
 {
   "name": "we-are-on-the-cruise",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,16 +8,14 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
     "test": "vitest run",
-    "capture": "node scripts/capture.mjs",
-    "capture:ships": "node scripts/capture-ships.mjs",
-    "profile": "node scripts/profile.mjs"
+    "check": "tsc -b && vitest run"
   },
   "dependencies": {
-    "three": "latest"
+    "three": "0.185.1"
   },
   "devDependencies": {
     "@playwright/test": "latest",
-    "@types/three": "latest",
+    "@types/three": "0.185.3",
     "typescript": "latest",
     "vite": "latest",
     "vitest": "latest"

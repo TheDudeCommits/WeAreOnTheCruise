@@ -1,10 +1,22 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { SKETCHFAB_SHIPS } from '../../content/sketchfabShips';
-import type { ShipKind } from '../../core/contracts';
+import type { HeroModelKey } from '../../game/ids';
 
-/** Full downloaded ship models. UV artwork, mesh silhouettes and source hierarchy survive intake. */
+type ShipKind = HeroModelKey;
+
+/** Provenance of the six downloaded hero models (kept for now; renamed in game). See ASSET-LICENSES.md. */
+export const HERO_MODEL_SOURCES: Readonly<Record<HeroModelKey, { uid: string; author: string; license: string }>> = {
+  'thousand-sunny': { uid: '99986d1c93654c9d8889017435b5fe06', author: 'Miraculousetabug', license: 'CC-BY-4.0' },
+  'going-merry': { uid: '4b2cb678bf984c018dfa1936bd156c8d', author: 'Oliver Edwards', license: 'CC-BY-4.0' },
+  'navy-galleon': { uid: '92898d5f63ad43589203d5a8dc14aa12', author: 'Ryanwill679 / TrashCG', license: 'CC-BY-4.0' },
+  'moby-dick': { uid: 'd9be26addfec48019188dd615a930311', author: 'Tigerar1', license: 'CC-BY-SA-4.0' },
+  'baratie': { uid: '015ebe70a76749eeb92f5f39693b8ea5', author: 'Chin Eeyang', license: 'CC-BY-4.0' },
+  'polar-tang': { uid: 'a7feb48976ce484aa4537e4c7124a9c4', author: 'taem5070', license: 'CC-BY-4.0' },
+};
+const SKETCHFAB_SHIPS = HERO_MODEL_SOURCES;
+
+/** Downloaded hero ship models (SHIPS-owned). UV artwork, silhouettes and hierarchy survive intake. */
 export class SketchfabShipAssets {
   private readonly loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   private readonly pending = new Map<string, Promise<THREE.Group>>();
