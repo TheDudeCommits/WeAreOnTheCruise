@@ -24,6 +24,7 @@ import { TopBar } from './TopBar';
 import { EventTracker } from './EventTracker';
 import { Roster } from './Roster';
 import { SafeZone } from './SafeZone';
+import { controls } from '../../input/Input';
 import { Coach, type HintId } from './Coach';
 
 export class Hud {
@@ -91,6 +92,8 @@ export class Hud {
     this.loadout.reset(); this.minimap.reset(); this.markers.reset(); this.feedback.reset();
     this.roster.reset(); this.tracker.reset(); this.coach.reset();
     this.ended = false;
+    // Toggle-mode AUTO latches do not carry over into a new voyage.
+    controls.latched.broadside = false; controls.latched.brace = false;
   }
 
   /** A modal (cards, chest, pause) covers the centre: hold stamps until it closes. */
