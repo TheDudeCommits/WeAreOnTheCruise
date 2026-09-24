@@ -375,8 +375,11 @@ export class Sakuga {
     }
 
     if (kind === 'lightning') {
-      this.bolt(x + spread(6), wy + 120, z + spread(6), x, wy + 0.5, z, 1.6, GlowPal.Lightning, 0.26, 0, 2, 5);
-      this.bolt(x + spread(8), wy + 110, z + spread(8), x, wy + 0.5, z, 1.2, GlowPal.Lightning, 0.14, 0.09, 1, 5);
+      // electric burst (the sky bolt belongs to lightningStrike; chains draw their own bolts)
+      for (let i = 0; i < 4; i++) {
+        const a = rand() * TAU, r = radius * range(0.6, 1.1);
+        this.bolt(x, wy + 2, z, x + Math.cos(a) * r, wy + 0.5, z + Math.sin(a) * r, 0.6, GlowPal.Lightning, 0.16, i * 0.02, 0, 3);
+      }
       this.burst(x, wy + 1.5, z, 10 * s, GlowPal.Lightning, 0.08);
       this.soft(x, wy + 2, z, 18 * s, GlowPal.Lightning, 0.22, 0.55);
       this.sparks(x, wy + 1, z, 14, 30, GlowPal.Lightning, 0, 1, 0, 0.35, 0.4);
@@ -486,9 +489,15 @@ export class Sakuga {
     if (o) { o.stampFoam(x, z, length * 0.5, 1); o.stampRing(x, z, length * 0.5, 0.8); }
   }
 
-  /** Storm lightning strike from the sky. */
+  /** Storm lightning strike from the sky: forked bolt, restrike, flash (the burst comes from the explosion event). */
   lightningStrike(x: number, z: number): void {
-    this.explosion('lightning', x, z, 10, true, false, 'enemy');
+    const wy = this.wy(x, z);
+    this.bolt(x + spread(6), wy + 120, z + spread(6), x, wy + 0.5, z, 1.6, GlowPal.Lightning, 0.26, 0, 2, 5);
+    this.bolt(x + spread(8), wy + 110, z + spread(8), x, wy + 0.5, z, 1.2, GlowPal.Lightning, 0.14, 0.09, 1, 5);
+    this.burst(x, wy + 2, z, 12, GlowPal.Lightning, 0.08);
+    const dist = this.distToFocus(x, z);
+    if (dist < 260) this.k.juice.flash(0xdff4ff, 0.22 * (1 - dist / 260), 0.1);
+    this.k.juice.shakeAt(0.3, dist, 0.3);
   }
 
   /** Chain lightning through world points (y given per point). */

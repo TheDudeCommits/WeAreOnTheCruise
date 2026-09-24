@@ -19,7 +19,7 @@ import { Glow } from './passes/GlowSprites';
 import { Head } from './passes/Heads';
 import { Prop } from './passes/Props';
 import type { Sakuga } from './Sakuga';
-import { ShipFrame, shipFrame } from './ShipFrames';
+import { ShipFrame, findShip, shipFrame } from './ShipFrames';
 
 const TAU = Math.PI * 2;
 const GRAVITY = 18; // matches src/game/sim/projectiles.ts
@@ -124,7 +124,43 @@ export class StateFx {
     for (const e of run.enemies) this.ship(e, dt, false);
     for (const b of run.bosses) this.ship(b, dt, true);
     this.player(run, dt);
+    this.tethers(run);
     this.aim(ctx, run);
+  }
+
+  /** Harpoon lines: from the player's bow (or the previously hooked ship) to each hooked target. */
+  private tethers(run: Readonly<RunState>): void {
+    const ev = this.events;
+    const k = this.k;
+    const f = this.frame;
+    let haveBow = false;
+    let bx = 0, by = 0, bz = 0;
+    for (let i = 0; i < ev.tetherTo.length; i++) {
+      const to = ev.tetherTo[i]!;
+      if (to < 0) continue;
+      const t = findShip(run, to);
+      let held = false;
+      if (t && t.life === 'alive') for (const st of t.statuses) if ((st.kind === 'hooked' || st.kind === 'slowed') && st.time > 0) held = true;
+      if (!held || k.clock - ev.tetherT[i]! > 12) { ev.tetherTo[i] = -1; continue; }
+      const from = ev.tetherFrom[i]!;
+      let x1: number, y1: number, z1: number;
+      if (from === 0) {
+        if (!haveBow) {
+          if (!shipFrame(run, k.ships, 0, f, this.waterY)) { continue; }
+          bx = f.x + f.fx * f.length * 0.48; bz = f.z + f.fz * f.length * 0.48; by = f.gunY + 0.5;
+          haveBow = true;
+        }
+        x1 = bx; y1 = by; z1 = bz;
+      } else {
+        const s = findShip(run, from);
+        if (!s) { ev.tetherTo[i] = -1; continue; }
+        x1 = s.x; z1 = s.z; y1 = this.fx.wy(s.x, s.z) + Math.max(3, s.length * 0.12);
+      }
+      const y2 = this.fx.wy(t!.x, t!.z) + Math.max(3, t!.length * 0.12);
+      const d = Math.hypot(t!.x - x1, t!.z - z1);
+      const sag = Math.max(0.3, Math.min(3, 60 / Math.max(10, d)));
+      k.ropes.add(x1, y1, z1, t!.x, y2, t!.z, sag, 0.24, 0.36, 0.22, 0.1, 0);
+    }
   }
 
   // ───────────── projectiles ─────────────
@@ -285,8 +321,8 @@ export class StateFx {
     this.hazAlive[slot] = 0;
     const kind = HAZ_KINDS[this.hazKind[slot]!];
     const x = this.hazX[slot * 2]!, z = this.hazX[slot * 2 + 1]!;
-    if (kind === 'lightning-strike') this.fx.lightningStrike(x, z);
-    else if (kind === 'burning-wreck') this.fx.sunk(x, z, 16);
+    // lightning-strike expiry: the sim emits 'hazard-triggered' + a 'lightning' explosion (EventFx draws both)
+    if (kind === 'burning-wreck') this.fx.sunk(x, z, 16);
     else if (kind === 'whirlpool') this.fx.foam(x, z, this.hazR0[slot]!, 1.6, 0, 1);
   }
 
@@ -357,14 +393,13 @@ export class StateFx {
           k.cel.imm(0);
         }
         k.decals.imm(Decal.Shadow, h.x, h.z, r * 1.25, r * 1.25, 0, 0, 0, 0x061426, 0.45 * fade, 0x061426, 0, 0.5);
-        if (ticked || rand() < dt * 0.6) {
-          const a = rand() * TAU, rr = rand() * r * 0.8;
-          const tx = h.x + Math.cos(a) * rr, tz = h.z + Math.sin(a) * rr;
-          fx.bolt(h.x + spread(r * 0.4), cy - 4, h.z + spread(r * 0.4), tx, fx.wy(tx, tz) + 0.5, tz, 1.3, GlowPal.Lightning, 0.22, 0, 1, 4);
-          fx.burst(tx, fx.wy(tx, tz) + 1, tz, 7, GlowPal.Lightning, 0.07);
-          fx.shock(tx, tz, 10, 0.35, 0xbfeaff, 1, 1);
-          k.juice.shakeAt(0.15, Math.hypot(tx - k.focusX, tz - k.focusZ), 0.2);
+        // ambient intra-cloud flicker only: damaging strikes arrive as 'lightning' events from the sim
+        if (rand() < dt * 0.5) {
+          const a = rand() * TAU;
+          fx.bolt(h.x + Math.cos(a) * r * 0.5, cy + spread(3), h.z + Math.sin(a) * r * 0.5, h.x - Math.cos(a) * r * 0.3, cy - 3, h.z - Math.sin(a) * r * 0.3,
+            0.7, GlowPal.Lightning, 0.14, 0, 1, 3);
         }
+        if (ticked) fx.soft(h.x, cy, h.z, r * 1.6, GlowPal.Lightning, 0.2, 0.5);
         // rain streaks
         const rain = Math.round(dt * 70 * k.q);
         for (let j = 0; j < rain; j++) {
@@ -640,21 +675,12 @@ export class StateFx {
           if (rand() < dt * 5) fx.sparks(s.x, top, s.z, 2, 10, GlowPal.Lightning, 0, 1, 0, 0.3, 0.2);
           break;
         }
-        case 'hooked': {
-          const f = this.frame;
-          if (this.lastRun && shipFrame(this.lastRun, k.ships, 0, f, this.waterY)) {
-            const bx = f.x + f.fx * f.length * 0.48, bz = f.z + f.fz * f.length * 0.48;
-            const tension = Math.max(0.2, 3 - Math.hypot(s.x - bx, s.z - bz) * 0.02);
-            k.ropes.add(bx, f.gunY + 0.5, bz, s.x, wy + Math.max(3, L * 0.12), s.z, tension, 0.22, 0.36, 0.22, 0.1, 0);
-          }
-          break;
-        }
+        case 'hooked': break; // ropes come from the 'harpoon' tether table (tethers())
         default: break;
       }
     }
   }
 
-  private lastRun: Readonly<RunState> | null = null;
   // boss submerge tracking (serpents): id → previous submerged fraction (≤ 4 bosses at once)
   private readonly bossId = new Int32Array(4).fill(-1);
   private readonly bossSub = new Float32Array(4);
@@ -706,7 +732,6 @@ export class StateFx {
   // ───────────── player ─────────────
 
   private player(run: Readonly<RunState>, dt: number): void {
-    this.lastRun = run;
     const k = this.k;
     const fx = this.fx;
     const p = run.player;
@@ -866,7 +891,7 @@ export class StateFx {
     if (p.skills.special.cooldown <= 0) {
       if (ship.special === 'signal-flare') d.imm(Decal.Circle, ctx.aim.x, ctx.aim.z, 30, 30, 0, 0, 0, PLAYER_MARK_HEX, 0.45, 0x5a4210, 0, 0.5);
       else if (ship.special === 'lionburst') {
-        const len = Math.min(180, al);
+        const len = Math.max(70, Math.min(180, al)); // CORE: Lionburst dash 70–180 m toward the aim point
         const start = p.length * 0.6;
         if (len > start + 10) {
           d.imm(Decal.Line, p.x + ax * (start + len) * 0.5, p.z + az * (start + len) * 0.5, 2, (len - start) * 0.5, aimAngle, 0, 0, PLAYER_MARK_HEX, 0.28, 0x5a4210, 0, 0.5);

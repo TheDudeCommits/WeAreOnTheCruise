@@ -58,6 +58,7 @@ export class EventFx {
   constructor(private readonly k: FxKit, private readonly fx: Sakuga) {}
 
   reset(): void {
+    this.tetherTo.fill(-1);
     this.jobK.fill(0);
     this.sunkId.fill(-1);
     this.launchAge = this.diveAge = 99;
@@ -182,6 +183,7 @@ export class EventFx {
       case 'status-changed': if (e.on) this.statusOn(e.target, e.status, run, water); break;
       case 'lightning': this.lightning(e.points, e.team, run, water); break;
       case 'harpoon': {
+        this.tether(e.from, e.to);
         const wy = fx.wy(e.x2, e.z2);
         fx.sparks(e.x2, wy + 4, e.z2, 8, 24, GlowPal.Spark, 0, 0.6, 0, 0.3, 0.3);
         fx.planks(e.x2, wy + 4, e.z2, 2, 5, 8, 0.6, 1.2, 0);
@@ -218,7 +220,9 @@ export class EventFx {
       case 'hazard-spawned': this.hazardSpawned(e.kind, e.x, e.z, e.radius); break;
       case 'hazard-triggered':
         if (e.kind === 'lightning-strike') fx.lightningStrike(e.x, e.z);
-        else if (e.kind === 'mine' || e.kind === 'powder-keg' || e.kind === 'barrel') fx.burst(e.x, fx.wy(e.x, e.z) + 2, e.z, 8, GlowPal.Explosion, 0.06);
+        else if (e.kind === 'mine' || e.kind === 'powder-keg' || e.kind === 'barrel') {
+          k.decals.emit(Decal.Shock, e.x, e.z, Math.max(6, e.radius * 0.5), 0.3, 0xff5a4a, 0.6, 0xff5a4a, 0.8, 1);
+        }
         break;
       case 'telegraph':
         k.decals.emit(Decal.Shock, e.x, e.z, e.radius * 1.15, 0.3, 0xff5a4a, 0.6, 0xff5a4a, 0.6, 1.2);
@@ -340,21 +344,20 @@ export class EventFx {
     if (!shipFrame(run, this.k.ships, e.owner, f, water)) return;
     if (w === 'broadside') {
       const sideSign = e.side === 'port' ? -1 : 1;
-      const sk = p.skills.broadside;
-      const manual = e.owner === 0 && sk.cooldownMax > 0 && sk.cooldown > sk.cooldownMax - 0.15;
-      this.broadside(f, sideSign, e.count, manual ? 1.3 : 1, manual ? 0.045 : 0.028, manual ? 4 : 2, true, GlowPal.Muzzle);
-      if (manual) {
-        this.k.juice.kick(5, 0.35);
-        this.k.juice.shake(0.28, 0.3);
-        // the smoke wall of a full broadside
-        const dx = f.sx * sideSign, dz = f.sz * sideSign;
-        for (let i = 0; i < 5; i++) {
-          const along = (i / 4 - 0.5) * f.length * 0.8;
-          fx.smoke(f.x + f.fx * along + dx * (f.gunSide + 9), f.gunY + 2, f.z + f.fz * along + dz * (f.gunSide + 9), 2, 5, 11, CelPal.Gunsmoke, 3.0,
-            dx * 6, 1, dz * 6, 2, 1.4, 3, 0.05 + i * 0.03, 0.4);
-        }
-        const o = this.k.ocean;
-        if (o) o.stampWake(f.x + dx * f.gunSide, f.z + dz * f.gunSide, dx, dz, f.length * 0.7, 0.8);
+      // manual Full Broadside guns fire while skills.broadside.active > 0 (CORE ripples them through a queue)
+      const manual = e.owner === 0 && p.skills.broadside.active > 0;
+      if (e.count > 1) {
+        // one event per volley (legacy skeleton sim): ripple the whole side here
+        this.broadside(f, sideSign, e.count, manual ? 1.3 : 1, manual ? 0.045 : 0.028, manual ? 4 : 2, true, GlowPal.Muzzle);
+      } else {
+        // one event per gun (CORE): x,z is the muzzle; glue it to the visual hull (heave/heel) at the same station
+        const along = (e.x - f.x) * f.fx + (e.z - f.z) * f.fz;
+        const nx = f.sx * sideSign, nz = f.sz * sideSign;
+        const mx = f.x + f.fx * along + nx * f.gunSide, mz = f.z + f.fz * along + nz * f.gunSide;
+        let dx = e.dirX, dz = e.dirZ;
+        const dl = Math.hypot(dx, dz) || 1; dx /= dl; dz /= dl;
+        fx.muzzle(mx, f.gunY, mz, dx, dz, manual ? 1.3 : 1, 0, manual ? 4 : 2, true);
+        if (manual) this.k.juice.kick(2.5, 0.25);
       }
       return;
     }
@@ -601,7 +604,9 @@ export class EventFx {
     for (let i = 0; i < n; i++) {
       const pt = points[i]!;
       let y = water(pt.x, pt.z) + 6;
-      if (i === 0 && team === 'player' && Math.hypot(pt.x - p.x, pt.z - p.z) < p.length) {
+      if (i === 0 && this.cloudAt(run, pt.x, pt.z)) {
+        y = water(pt.x, pt.z) + 40; // storm cloud base (StateFx draws clouds at ~wy + 44)
+      } else if (i === 0 && team === 'player' && Math.hypot(pt.x - p.x, pt.z - p.z) < p.length) {
         y = water(p.x, p.z) + p.length * 0.62;
       } else {
         const ship = this.nearestShipHeight(run, pt.x, pt.z);
@@ -612,6 +617,15 @@ export class EventFx {
     this.fx.chain(pts, n, team === 'player' ? GlowPal.Lightning : GlowPal.Magic);
     const d = Math.hypot(points[0]!.x - p.x, points[0]!.z - p.z);
     if (d < 200) this.k.juice.flash(0xcfefff, 0.1, 0.08);
+  }
+
+  private cloudAt(run: Readonly<RunState>, x: number, z: number): boolean {
+    const hs = run.hazards;
+    for (let i = 0; i < hs.length; i++) {
+      const h = hs[i]!;
+      if (h.alive && h.kind === 'storm-cloud' && Math.abs(h.x - x) < 3 && Math.abs(h.z - z) < 3) return true;
+    }
+    return false;
   }
 
   private nearestShipHeight(run: Readonly<RunState>, x: number, z: number): number {
@@ -658,7 +672,19 @@ export class EventFx {
         k.ocean?.stampWake(x, z, f.fx, f.fz, L * 0.8, 1);
         break;
       }
-      case 'broadside': k.juice.kick(5, 0.35); break;
+      case 'broadside': {
+        k.juice.kick(5, 0.35);
+        k.juice.shake(0.28, 0.3);
+        const side = (aimX - f.x) * f.sx + (aimZ - f.z) * f.sz >= 0 ? 1 : -1;
+        const dx = f.sx * side, dz = f.sz * side;
+        for (let i = 0; i < 5; i++) {
+          const along = (0.5 - i / 4) * f.length * 0.8;
+          fx.smoke(f.x + f.fx * along + dx * (f.gunSide + 9), f.gunY + 2, f.z + f.fz * along + dz * (f.gunSide + 9), 2, 5, 11, CelPal.Gunsmoke, 3.0,
+            dx * 6, 1, dz * 6, 2, 1.4, 3, 0.05 + i * 0.04, 0.4);
+        }
+        k.ocean?.stampWake(f.x + dx * f.gunSide, f.z + dz * f.gunSide, dx, dz, f.length * 0.7, 0.8);
+        break;
+      }
       case 'lionburst': {
         this.launchAge = 0;
         k.juice.speedLines(1, 1.2);
@@ -804,6 +830,25 @@ export class EventFx {
     }
     void range;
     void Cel;
+  }
+
+  // Harpoon tethers (from 'harpoon' events): drawn while the target stays hooked/slowed.
+  readonly tetherFrom = new Int32Array(24).fill(-1);
+  readonly tetherTo = new Int32Array(24).fill(-1);
+  readonly tetherT = new Float32Array(24);
+
+  private tether(from: number, to: number): void {
+    let slot = -1;
+    for (let i = 0; i < 24; i++) if (this.tetherTo[i] === to) { slot = i; break; }
+    if (slot < 0) {
+      let oldest = 0;
+      for (let i = 0; i < 24; i++) {
+        if (this.tetherTo[i] === -1) { slot = i; break; }
+        if (this.tetherT[i]! < this.tetherT[oldest]!) oldest = i;
+      }
+      if (slot < 0) slot = oldest;
+    }
+    this.tetherFrom[slot] = from; this.tetherTo[slot] = to; this.tetherT[slot] = this.k.clock;
   }
 
   /** Called every frame by FxSystem to age launch/dive markers. */
