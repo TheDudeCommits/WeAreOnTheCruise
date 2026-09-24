@@ -27,7 +27,7 @@ export const CAPTAIN_PERSONAS: readonly CaptainPersona[] = [
   { name: 'Oriel Stroud', title: 'Captain', short: 'Oriel' },
   { name: 'Maren Tull', title: 'Grey', short: 'Maren' },
   { name: 'Dace Whitlow', title: 'Captain', short: 'Dace' },
-  { name: 'Ada Quill', title: 'Lantern', short: 'Ada' },
+  { name: 'Ada Quill', title: 'Captain', short: 'Ada' },
 ];
 
 export function personaByName(name: string): CaptainPersona | undefined {

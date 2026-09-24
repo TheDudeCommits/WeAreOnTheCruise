@@ -149,7 +149,7 @@ export function installDebugBridge(app: GameApp): void {
         const s = sim();
         if (!s) return;
         const k = s.state.captains.find((x) => (id === undefined ? x.alive : x.id === id));
-        if (k && k.alive) { k.ai.grace = 0; hurtCaptain(s, k, 1e9); }
+        if (k && k.alive) { k.ai.grace = 0; hurtCaptain(s, k, k.hp * 4 + 100); }
       },
     },
   };
