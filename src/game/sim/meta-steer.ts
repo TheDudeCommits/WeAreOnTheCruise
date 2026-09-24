@@ -13,14 +13,14 @@
 import type { ProjectileKind } from '../ids';
 import type { BossState, EnemyState, PlayerState, TelegraphState } from '../types';
 import type { SimContext, Target } from './context';
+import { GRAVITY } from './core-runtime';
 
 export const TAU = Math.PI * 2;
 /** Must match the gravity used for ballistic kinds in src/game/sim/projectiles.ts (CORE). */
-export const SHELL_GRAVITY = 18;
+/** Shell gravity: the same constant the projectile integrator uses. */
+export const SHELL_GRAVITY = GRAVITY;
 /** Launch height used for lobbed shells. */
 export const SHELL_Y0 = 4;
-/** Offset of the off-map "limbo" used while a ship is fully submerged/phased (untargetable). */
-export const LIMBO_OFFSET = 40000;
 
 export function wrap(a: number): number {
   while (a > Math.PI) a -= TAU;
@@ -221,18 +221,22 @@ export function separate(c: SimContext, e: EnemyState, desired: number, weight =
   return Math.atan2(-fx, -fz);
 }
 
-/** Moves a ship into the off-map limbo (untargetable, no contacts) remembering its real position. */
+/**
+ * Puts a fully phased/submerged ship in limbo where it stands (e.hidden = 1: untargetable, no contacts, not drawn),
+ * remembering its position. It stays put until exitLimbo moves it.
+ */
 export function enterLimbo(e: EnemyState): void {
   if (e.ai.limbo === 1) return;
   e.ai.limbo = 1;
+  e.hidden = 1;
   e.ai.hx = e.x; e.ai.hz = e.z;
-  e.x += LIMBO_OFFSET; e.z += LIMBO_OFFSET;
   e.vx = 0; e.vz = 0; e.speed = 0;
 }
 
 /** Brings a ship back from limbo at (x, z). */
 export function exitLimbo(e: EnemyState, x: number, z: number, heading: number): void {
   e.ai.limbo = 0;
+  e.hidden = Math.max(e.ai.fade ?? 0, e.ai.sub ?? 0);
   e.x = x; e.z = z; e.heading = heading;
   e.vx = 0; e.vz = 0; e.yawRate = 0;
 }

@@ -271,7 +271,7 @@ export class Sim implements CoreSim {
       x, z, y: 0, heading: opts.heading ?? Math.atan2(-(this.state.player.x - x), -(this.state.player.z - z)),
       speed: 0, vx: 0, vz: 0, yawRate: 0, roll: 0, pitch: 0,
       radius: def.radius * scale, length: def.length * scale, beam: def.radius * 2 * scale,
-      hp, maxHp: hp, armor: def.armor, elite, hitFlash: 0, statuses: [],
+      hp, maxHp: hp, armor: def.armor, elite, hitFlash: 0, hidden: 0, statuses: [],
       attackCooldown: 1 + this.random() * 2, ai: newAiScratch(), spawnTime: this.state.time,
     };
     this.state.enemies.push(enemy);

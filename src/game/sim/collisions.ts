@@ -17,6 +17,7 @@ import type { BossState, EnemyState, PlayerState } from '../types';
 import type { Target } from './context';
 import { CLOSEST, clamp, isBoss, keelDistance, statusOf, type CoreSim } from './core-runtime';
 import { spawnShockwave, ULTIMATES } from './core-skills';
+import { bossDamage, enemyContactDamage } from './meta-spawn';
 import { areaMul, damageMul, ramMul } from './stats';
 import { crit, CRIT, ex, levelOf } from './weapons/common';
 import { ironRamSlot } from './weapons/iron-ram';
@@ -47,7 +48,8 @@ export function resolveCollisions(c: CoreSim): void {
     const e = enemies[i]!;
     if (e.life !== 'alive') continue;
     if (e.ai.contactCd > 0) e.ai.contactCd -= c.dt;
-    pushOutOfIslands(c, e);
+    // Stationary shore batteries are placed on land on purpose.
+    if (c.content.enemies[e.defId]?.behavior !== 'stationary') pushOutOfIslands(c, e);
   }
   const bosses = c.state.bosses;
   for (let i = 0; i < bosses.length; i++) {
@@ -114,9 +116,10 @@ function speedOf(c: CoreSim, t: Target): number {
   return c.content.enemies[t.defId]?.speed ?? 12;
 }
 
+/** Contact damage after META's time/difficulty and elite scaling (fire ships: 0, their contact is the blast). */
 function contactDamageOf(c: CoreSim, t: Target): number {
-  if (isBoss(t)) return c.content.bosses[t.defId].contactDamage;
-  return c.content.enemies[t.defId]?.contactDamage ?? 0;
+  if (isBoss(t)) return bossDamage(c, c.content.bosses[t.defId].contactDamage);
+  return c.content.enemies[t.defId] ? enemyContactDamage(c, t) : 0;
 }
 
 function shipsVsPlayer(c: CoreSim, p: PlayerState): void {
@@ -130,7 +133,7 @@ function shipsVsPlayer(c: CoreSim, p: PlayerState): void {
   const ramming = core.rammingSpeed > 0;
   for (let j = 0; j < n; j++) {
     const t = buf[j]!;
-    if (t.life !== 'alive') continue;
+    if (t.life !== 'alive' || (!isBoss(t) && t.hidden >= 1)) continue;
     const d = keelDistance(p, t.x, t.z);
     const overlap = hw + t.radius - d;
     if (overlap <= 0) continue;

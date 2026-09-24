@@ -322,7 +322,7 @@ export const isBoss = (t: Target): t is BossState => 'phase' in t;
 /** Weapons skip untargetable ships: submerged serpents/wyrmlings ('submerged'), phased wraiths ('invulnerable'). */
 export function targetable(t: Target): boolean {
   if (t.life !== 'alive') return false;
-  if (isBoss(t) && t.submerged > 0.6) return false;
+  if (isBoss(t) ? t.submerged > 0.6 : t.hidden >= 1) return false;
   return !untouchable(t);
 }
 

@@ -31,7 +31,7 @@ function enemy(id: number, defId: EnemyId, x: number, z: number, elite = false):
   return {
     id, defId, faction: FACTION_OF[defId], life: 'alive', sink: 0, x, z, y: 0, heading: rand() * 6.28, speed: def.speed, vx: 0, vz: 0,
     yawRate: 0, roll: 0, pitch: 0, radius: def.radius, length: def.length, beam: def.radius * 2, hp: def.hp, maxHp: def.hp,
-    armor: def.armor, elite, hitFlash: 0, statuses: [], attackCooldown: 1, ai: { orbit: 0.02 + rand() * 0.06, r: Math.hypot(x, z), a: Math.atan2(x, z) }, spawnTime: 0,
+    armor: def.armor, elite, hitFlash: 0, hidden: 0, statuses: [], attackCooldown: 1, ai: { orbit: 0.02 + rand() * 0.06, r: Math.hypot(x, z), a: Math.atan2(x, z) }, spawnTime: 0,
   };
 }
 

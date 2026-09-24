@@ -95,7 +95,7 @@ export class ShipSystem implements RenderSystem, ShipServices {
       if (!sp) { sp = { id: 0, x: 0, z: 0, heading: 0, speed: 0, submerged: 0, rear: 0, sink: 0, flash: 0 }; this.wyrmPoses[w] = sp; }
       const dist = p ? Math.hypot(p.x - e.x, p.z - e.z) : 999;
       sp.id = e.id; sp.x = e.x; sp.z = e.z; sp.heading = e.heading; sp.speed = e.speed;
-      sp.submerged = e.life === 'sinking' ? 0 : THREE.MathUtils.clamp((dist - 60) / 220, 0.05, 0.45);
+      sp.submerged = e.life === 'sinking' ? 0 : Math.max(e.hidden, THREE.MathUtils.clamp((dist - 60) / 220, 0.05, 0.45));
       sp.rear = e.life === 'sinking' ? 0 : THREE.MathUtils.clamp((75 - dist) / 45, 0, 1);
       sp.sink = e.life === 'sinking' ? e.sink : 0;
       sp.flash = e.hitFlash;

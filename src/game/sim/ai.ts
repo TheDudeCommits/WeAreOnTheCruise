@@ -5,7 +5,7 @@
  *
  * Enemy AI scratch (`e.ai`, numbers only; renderers may read the documented visual keys):
  *   visual:   fade 0..1 (Gloam wraith phasing, 1 = invisible) · sub 0..1 (wyrmling submerged) ·
- *             limbo 1 while fully phased/submerged (the ship is parked off-map at +40 km, untargetable).
+ *             limbo 1 while fully phased/submerged (the ship stays put with e.hidden = 1: untargetable, no contacts).
  *             Statuses mirror them: 'invulnerable' (wraith phase), 'submerged' (wyrmling dive), 'burning' (lit fire ship).
  *   behaviour: init mode t orbit flank skill reloadP reloadS windup windSide aimX aimZ tslot slotT retreated avoid
  *             hx hz tg lh lx lz leader fslot isLeader convoy detonate
@@ -56,13 +56,13 @@ export function updateEnemies(c: SimContext): void {
   const start = n > 0 ? c.state.tick % n : 0;
   for (let k = 0; k < n; k++) {
     const e = enemies[(start + k) % n]!;
-    if (e.life !== 'alive') { wreck(c, e); continue; }
+    if (e.life !== 'alive') { e.hidden = 0; wreck(c, e); continue; }
     e.hitFlash = Math.max(0, e.hitFlash - c.dt * 4);
     tickStatuses(c, e);
     const def = c.content.enemies[e.defId];
     if (e.ai.init !== 1) initEnemy(c, e);
-    if (e.ai.limbo !== 1 && c.hasStatus(e, 'stunned')) { drift(c, e); continue; }
-    switch (def.behavior) {
+    if (e.ai.limbo !== 1 && c.hasStatus(e, 'stunned')) drift(c, e);
+    else switch (def.behavior) {
       case 'swarm': swarm(c, e, def); break;
       case 'ram': rammer(c, e, def); break;
       case 'chaser': chaser(c, e, def); break;
@@ -73,6 +73,7 @@ export function updateEnemies(c: SimContext): void {
       case 'lunge': lunge(c, e, def); break;
       case 'stationary': stationary(c, e, def); break;
     }
+    e.hidden = e.ai.limbo === 1 ? 1 : Math.max(e.ai.fade ?? 0, e.ai.sub ?? 0);
   }
 }
 

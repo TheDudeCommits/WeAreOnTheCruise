@@ -315,6 +315,11 @@ export interface EnemyState extends Body {
   elite: boolean;
   /** 0..1 flash on hit (decays). */
   hitFlash: number;
+  /**
+   * 0..1 how far the ship has phased out (Gloam wraith) or dived (wyrmling). Renderers fade/sink it in place;
+   * at 1 it is gone: untargetable, no contacts, not shown on the minimap. Always 0 once it stops being alive.
+   */
+  hidden: number;
   statuses: StatusState[];
   attackCooldown: number;
   /** AI scratch (never saved). */

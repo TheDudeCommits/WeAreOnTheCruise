@@ -356,7 +356,7 @@ export class WakeSystem {
     src.length = e.length; src.beam = e.beam || e.length * 0.3;
     src.sink = e.life === 'sinking' ? Math.max(0.001, e.sink) : 0;
     src.contact = e.life === 'sinking' ? 1 - smooth(0.4, 1, e.sink) : 1;
-    let submerged = 0;
+    let submerged = e.hidden;
     for (let i = 0; i < e.statuses.length; i++) if (e.statuses[i]!.kind === 'submerged') submerged = 1;
     src.submerged = submerged;
     src.airborne = 0;

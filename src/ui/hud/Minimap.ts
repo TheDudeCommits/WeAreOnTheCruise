@@ -153,7 +153,7 @@ export class Minimap {
     // Enemies (normal first, elites on top).
     for (let pass = 0; pass < 2; pass++) {
       for (const en of run.enemies) {
-        if (en.life !== 'alive' || en.elite !== (pass === 1)) continue;
+        if (en.life !== 'alive' || en.hidden >= 1 || en.elite !== (pass === 1)) continue;
         plot(en.x, en.z, pt);
         const r = en.elite ? 4.6 : 2.7;
         ctx.globalAlpha = pt.clamped ? 0.55 : 1;

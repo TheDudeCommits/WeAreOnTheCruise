@@ -239,7 +239,7 @@ export class EnemyFleet {
       st.seen = this.frame;
       st.visual = visual;
       st.age += dt;
-      if (visual.count >= visual.capacity) continue;
+      if (visual.count >= visual.capacity || e.hidden >= 0.999) continue;
       const def = ENEMIES[e.defId];
       const stationary = def.speed <= 0;
       const scale = e.length / visual.length;
@@ -285,7 +285,10 @@ export class EnemyFleet {
           pitch += (e.id % 3 === 0 ? 1 : -1) * ease * 0.32;
         }
       }
-      const riseScale = scale * (0.55 + 0.45 * riseEase);
+      // Phasing (wraith blink): the hull sinks into its own mist and thins out before it vanishes.
+      const hid = e.hidden;
+      y -= hid * hid * 3 * scale;
+      const riseScale = scale * (0.55 + 0.45 * riseEase) * (1 - hid * 0.3);
       tmpQ.setFromEuler(tmpE.set(pitch, e.heading, roll, 'YXZ'));
       st.matrix.compose(tmpP.set(e.x, y, e.z), tmpQ, tmpS.set(riseScale, riseScale, riseScale));
 
@@ -299,7 +302,7 @@ export class EnemyFleet {
         else if (status.kind === 'stunned' && Math.sin(time * 24) > 0) tint.multiply(tmpC.setRGB(1.35, 1.25, 0.6));
         else if (status.kind === 'hooked') tint.multiply(tmpC.setRGB(1.05, 0.95, 0.9));
       }
-      if (visual.spectral) tint.multiplyScalar(0.85 + Math.sin(time * 2.3 + e.id * 1.7) * 0.25);
+      if (visual.spectral) tint.multiplyScalar(0.85 + Math.sin(time * 2.3 + e.id * 1.7) * 0.25 + hid * 1.2);
       if (s > 0) tint.multiplyScalar(1 - s * 0.45);
       const flash = e.hitFlash;
       if (flash > 0) { tint.r += flash * 1.9; tint.g += flash * 1.9; tint.b += flash * 1.8; }

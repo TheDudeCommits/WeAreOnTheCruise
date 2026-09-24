@@ -58,7 +58,7 @@ export class Markers {
       const t = this.targets[n++]!; t.kind = 'boss'; t.x = b.x; t.z = b.z; t.d = Math.hypot(b.x - p.x, b.z - p.z); t.rank = t.d; order.push(t);
     }
     for (const e of run.enemies) {
-      if (!e.elite || e.life !== 'alive' || n >= TARGETS) continue;
+      if (!e.elite || e.life !== 'alive' || e.hidden >= 1 || n >= TARGETS) continue;
       const t = this.targets[n++]!; t.kind = 'elite'; t.x = e.x; t.z = e.z; t.d = Math.hypot(e.x - p.x, e.z - p.z); t.rank = 1e6 + t.d; order.push(t);
     }
     for (const k of run.pickups) {
