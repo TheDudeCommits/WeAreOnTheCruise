@@ -3,7 +3,9 @@
  * Capture helpers never change gameplay rules; they only drive the same app loop with fixed steps.
  */
 import type * as THREE from 'three';
+import { DIRECTOR_EVENTS, type DirectorEventId } from '../game/content/director';
 import type { BossId, EnemyId, SeaId, ShipId, WeaponId } from '../game/ids';
+import { startEvent } from '../game/sim/director';
 import type { SimAction } from '../game/types';
 import type { GameApp } from './GameApp';
 
@@ -39,6 +41,8 @@ export interface CruiseBridge {
     killAll(): void;
     sinkBosses(): void;
     chargeUltimate(): void;
+    /** Forces a director set piece now (EVENTS QA): any DirectorEventId. False for an unknown id or no run. */
+    event(id: string): boolean;
   };
 }
 
@@ -125,6 +129,12 @@ export function installDebugBridge(app: GameApp): void {
       killAll: () => sim()?.debug.killAll(),
       sinkBosses: () => sim()?.debug.sinkBosses(),
       chargeUltimate: () => sim()?.debug.chargeUltimate(),
+      event: (id) => {
+        const s = sim();
+        if (!s || !(id in DIRECTOR_EVENTS)) return false;
+        startEvent(s, id as DirectorEventId);
+        return true;
+      },
     },
   };
   window.__CRUISE__ = bridge;

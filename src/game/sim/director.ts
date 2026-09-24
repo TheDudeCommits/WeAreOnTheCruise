@@ -22,10 +22,10 @@ import { spawnScaled } from './meta-spawn';
 import { TAU, fwdX, fwdZ, headingTo, openWaterNear, rand, randInt, sideX, sideZ } from './meta-steer';
 import { doubloonMul } from './stats';
 import { spawnRogueWave } from './weather';
-import { startWorldEvent, updateWorldEvents } from './world-events';
+import { eventWeight, startWorldEvent, updateWorldEvents } from './world-events';
 
 const SPAWN = { x: 0, z: 0, a: 0 };
-const EVENT_W = [0, 0, 0, 0, 0, 0, 0, 0];
+const EVENT_W = new Float64Array(32);
 
 export function updateDirector(c: SimContext): void {
   const s = c.state;
@@ -297,6 +297,7 @@ function runEvents(c: SimContext, sea: SeaDef, minute: number): void {
     let w = def.from <= minute && (sc[eventKey(def.id)] ?? 0) < def.maxPerRun ? def.weight : 0;
     if (def.id === 'storm-front' && s.sea.rain > 0.4) w *= 1.8;
     if (def.id === 'fog-bank' && s.sea.fog > 0.5) w *= 0.5;
+    w = eventWeight(c, def.id, w, minute);
     EVENT_W[i] = w;
     total += w;
   }
