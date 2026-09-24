@@ -10,6 +10,7 @@ import { harborSetFeatures, HARBOR_SET_RADIUS } from '../../world/harborSet';
 import { paletteForSea, type PaletteId } from '../../world/seas';
 import type { FrameContext, RenderHostHandles, RenderSystem } from '../frame';
 import { buildFeatureLodSteps, type FeatureLod } from './featureMesh';
+import { HorizonRing } from './horizon';
 import { FlagInstancer, PropInstancer } from './instancing';
 import { createWorldMaterials, ink, setEmissive, type WorldMaterials } from './materials';
 
@@ -81,6 +82,7 @@ export class WorldVisuals implements RenderSystem {
   private maxStepMs = 0;
   private active: ActiveJob | null = null;
   private props!: PropInstancer;
+  private horizon!: HorizonRing;
   private flags!: FlagInstancer;
   private instancesDirty = false;
   private instanceTimer = 0;
@@ -96,7 +98,8 @@ export class WorldVisuals implements RenderSystem {
     this.scene.add(this.group);
     this.props = new PropInstancer(this.materials.foliage, (mesh) => ink(mesh));
     this.flags = new FlagInstancer(this.materials.flag);
-    this.group.add(this.props.group, this.flags.mesh);
+    this.horizon = new HorizonRing();
+    this.group.add(this.props.group, this.flags.mesh, this.horizon.mesh);
   }
 
   update(ctx: FrameContext): void {
@@ -125,6 +128,8 @@ export class WorldVisuals implements RenderSystem {
     const map = (this.materials.waterfall as THREE.Material & { map?: THREE.Texture | null }).map;
     if (map) map.offset.y = -ctx.time * 0.85;
     this.flags.update(ctx.time, ctx.sea.windDir);
+    // Far silhouettes fade out in thick fog/storm where the horizon is gone anyway.
+    this.horizon.update(ctx.focus.x, ctx.focus.z, ctx.atmosphere, ctx.sea.fog < 0.6 && ctx.atmosphere.storm < 0.7);
     for (const entry of this.entries.values()) {
       if (entry.shown < 0 || entry.distance > 700) continue;
       for (const f of entry.lods[entry.shown]!.falls) ctx.services.ocean.stampFoam(f.x, f.z, f.r * 1.4, 0.8);
@@ -273,6 +278,7 @@ export class WorldVisuals implements RenderSystem {
     this.scene.remove(this.group);
     this.props.dispose();
     this.flags.dispose();
+    this.horizon.dispose();
     for (const m of this.materials.all) m.dispose();
   }
 }
