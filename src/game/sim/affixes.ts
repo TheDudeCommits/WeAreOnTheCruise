@@ -23,7 +23,7 @@ import type { SimContext } from './context';
 import { blastFriendlies, foeRuntime } from './ai-foes';
 import { enemyDamageScale, spawnScaled } from './meta-spawn';
 import { TAU, fwdX, fwdZ, headingTo, openWaterNear, rand } from './meta-steer';
-import { updateNamedCaptains } from './bounty';
+import { onNamedDeath, updateNamedCaptains } from './bounty';
 
 // ───────────────────────── Per-run scratch ─────────────────────────
 
@@ -235,6 +235,7 @@ export function onAffixDeath(c: SimContext, e: EnemyState): void {
     }
   }
   e.ai.shield = 0;
+  if (e.title) onNamedDeath(c, e);
 }
 
 function freeJob(c: SimContext): Job | null {

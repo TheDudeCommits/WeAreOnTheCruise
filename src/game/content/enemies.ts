@@ -239,3 +239,29 @@ export const AFFIX_TUNING = {
   /** Burning: fire patches dropped astern every `trailEvery` s while under way. */
   trailEvery: 0.8, trailRadius: 6.5, trailTtl: 3.2, trailDamage: 1.8,
 };
+
+/**
+ * Named bounty captains (FOES, src/game/sim/bounty.ts): rare named elites with two affixes and a heavy hull, announced
+ * with a banner, marked on the minimap, paying a big bounty and a captain's chest. Names are original.
+ */
+export const NAMED_CAPTAINS = {
+  /** First arrival (s) and the gap between arrivals (s); at most `max` per run, one alive at a time. */
+  first: [200, 260] as const,
+  gap: [170, 230] as const,
+  max: 4,
+  /** Target hull: base × (1 + perMinute × minute) × sea difficulty factor, clamped to 1.5–3× a regular elite. */
+  baseHp: 1400, perMinute: 0.16,
+  /** Bounty paid on the sink (× heat), doubloons dropped, escorts that sail with the captain. */
+  bounty: 450, doubloons: 30,
+  classes: {
+    corsair: [['corsair-brig', 3], ['harpooner', 4], ['bomb-ketch', 5], ['corsair-galleon', 8]],
+    admiralty: [['brig', 3], ['ironclad', 6], ['frigate', 6], ['man-o-war', 11]],
+    wraith: [['wraith', 3], ['drowned-galleon', 9]],
+  } as Readonly<Record<string, readonly (readonly [EnemyId, number])[]>>,
+  escorts: { corsair: ['skiff', 3], admiralty: ['cutter', 2], wraith: ['lantern-wisp', 4] } as Readonly<Record<string, readonly [EnemyId, number]>>,
+  names: {
+    corsair: ['Redmane the Unsunk', 'Salt-Tooth Maddock', 'Briony of the Burning Keel', 'Captain Coralie Hask', 'Old Gallows Pim', 'Marrow Quill, the Grinning', 'Scarlet Ysolde', 'Halvard Brine-Eye'],
+    admiralty: ['Commodore Aldous Pellweather', 'Captain Ines Holloway', 'Lieutenant Garrick Stroud', 'Vice-Admiral Rowena Thackery', 'Captain Tobias Wren, the Iron Hand', 'Commodore Hesketh Marr'],
+    wraith: ['The Hollow Bride', 'Captain Ashgrave', 'Mother Coldwater', 'Silas Grieve, the Drowned', 'The Lantern Widow', 'Morrow the Twice-Sunk'],
+  } as Readonly<Record<string, readonly string[]>>,
+};
