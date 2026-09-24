@@ -93,6 +93,10 @@ export class Bosses {
     for (const b of bosses) {
       if (b.life === 'dead') continue;
       let v = this.visuals.get(b.id);
+      // Upgrade a procedural stand-in once its manifest model has finished loading.
+      if (v && v.source === 'procedural' && this.assets && this.assets.get(b.defId === 'tidewyrm' ? 'tidewyrm-head' : BOSSES[b.defId].modelKey)) {
+        this.destroy(v); this.visuals.delete(b.id); v = undefined;
+      }
       if (!v) { v = this.create(b); this.visuals.set(b.id, v); }
       v.seen = this.frame;
       if (b.defId === 'tidewyrm') this.updateSerpent(v, b, dt, time, ocean);
@@ -148,10 +152,13 @@ export class Bosses {
       box.min.multiplyScalar(scale); box.max.multiplyScalar(scale);
       v.height = box.max.y;
       v.pivotY = Math.max(3, box.max.y * 0.12);
-      v.anchors = boxAnchors(box);
       sampler = new HullSampler(model.scene);
       if (!sampler.triangles) sampler = null;
       samplerScale = scale;
+      // Bounding boxes include yards and sails; measure the real hull sides for the gun-line anchors.
+      const gunY = Math.max(2, (model.entry.draft ?? 4) * 0.8);
+      const hullX = sampler ? sampler.sideX(gunY / scale, 0, 1) * scale : Number.NaN;
+      v.anchors = boxAnchors(box, Number.isNaN(hullX) ? undefined : hullX, gunY);
     } else {
       const spec = shipSpec(key === 'sovereign' ? 'sovereign' : 'dreadnought');
       const built = buildShip(spec!);
@@ -210,7 +217,12 @@ export class Bosses {
         mesh.matrix.copy(home);
         (z < 0 ? v.fore : v.aft).add(mesh);
         v.plates.push({ mesh, home, vel: new THREE.Vector3(), spin: new THREE.Vector3(), t: 0, delay: i * 0.12 + (side > 0 ? 0 : 0.06), side });
-        seams.box(0.3, h * 0.8, w * 0.8, { at: [x + side * 0.05, y, z], color: 0xff5a1e });
+        // Red-hot weld seams where the plate sat (thin strips along its edges).
+        const sx = x + side * 0.08;
+        seams.box(0.25, 0.28, w * 0.96, { at: [sx, y + h / 2 - 0.2, z], color: 0xff5a1e });
+        seams.box(0.25, 0.28, w * 0.96, { at: [sx, y - h / 2 + 0.2, z], color: 0xff5a1e });
+        seams.box(0.25, h * 0.9, 0.28, { at: [sx, y, z - w * 0.46], color: 0xffb040 });
+        seams.box(0.25, h * 0.55, 0.22, { at: [sx, y + h * 0.1, z + w * 0.1], rot: [0.5, 0, 0], color: 0xffd35e });
       }
     }
     const seamMesh = new THREE.Mesh(seams.build(), this.glow);
@@ -301,7 +313,9 @@ export class Bosses {
     const s = b.life === 'sinking' ? b.sink : 0;
     const ease = 1 - Math.pow(1 - Math.min(1, s * 1.5), 2);
     const lastStand = v.defId === 'sovereign' && b.phase >= 2 ? 0.07 : 0;
-    const y = v.heave - Math.pow(s, 2) * (v.height + L * 0.3 + 8);
+    // List and break first, then go down.
+    const descent = Math.pow(THREE.MathUtils.smoothstep(s, 0.28, 1), 1.5);
+    const y = v.heave - descent * (v.height + L * 0.3 + 8);
     v.root.position.set(b.x, y, b.z);
     v.root.rotation.set(v.pitch, b.heading, v.roll + b.roll + lastStand + ease * 0.18);
     // Split in two while sinking.
@@ -443,11 +457,13 @@ function defaultAnchors(length: number): AnchorSet {
   };
 }
 
-function boxAnchors(box: THREE.Box3): AnchorSet {
-  const deck = Math.max(3, box.max.y * 0.2);
+function boxAnchors(box: THREE.Box3, hullX?: number, gunY?: number): AnchorSet {
+  const deck = Math.max(3, box.max.y * 0.12);
+  const x = hullX ?? box.max.x * 0.7;
+  const y = gunY ?? deck * 0.7;
   return {
     bow: new THREE.Vector3(0, deck + 1, box.min.z + 2), stern: new THREE.Vector3(0, deck + 2, box.max.z - 2),
-    port: new THREE.Vector3(box.min.x * 0.92, deck * 0.7, 0), starboard: new THREE.Vector3(box.max.x * 0.92, deck * 0.7, 0),
+    port: new THREE.Vector3(-x - 0.5, y, 0), starboard: new THREE.Vector3(x + 0.5, y, 0),
     mast: new THREE.Vector3(0, box.max.y, 0), deck: new THREE.Vector3(0, deck + 1, 0),
   };
 }

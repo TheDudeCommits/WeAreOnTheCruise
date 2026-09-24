@@ -268,18 +268,20 @@ export class EnemyFleet {
       if (s > 0) {
         const list = e.id % 2 === 0 ? 1 : -1;
         const ease = 1 - Math.pow(1 - Math.min(1, s * 1.6), 2);
+        // List (and break in two) first, then go down.
+        const descent = Math.pow(THREE.MathUtils.smoothstep(s, 0.22, 1), 1.4);
         if (stationary) {
-          y -= s * s * (visual.height * 0.9 + 4);
+          y -= descent * (visual.height * 0.9 + 4);
           roll += list * ease * 0.18;
         } else if (visual.split) {
           splitAngle = ease * 0.62;
           gap = ease * 2.2;
           roll += list * ease * 0.22;
-          y -= Math.pow(s, 2.1) * (visual.height * scale + e.length * 0.36 + 6);
+          y -= descent * (visual.height * scale + e.length * 0.36 + 6);
         } else {
           roll += list * ease * 0.62;
           pitch += (e.id % 3 === 0 ? 1 : -1) * ease * 0.32;
-          y -= Math.pow(s, 1.8) * (visual.height * scale + 4);
+          y -= descent * (visual.height * scale + 4);
         }
       }
       const riseScale = scale * (0.55 + 0.45 * riseEase);

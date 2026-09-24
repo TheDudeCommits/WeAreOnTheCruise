@@ -24,7 +24,7 @@ export interface SerpentLook {
 }
 
 export const WYRMLING_LOOK: SerpentLook = { length: 16, radius: 1.15, rings: 18, sides: 10, back: 0x2f8f86, belly: 0xece2c2, fin: 0x1f5f73, wavelength: 9, amplitude: 1.3 };
-export const TIDEWYRM_LOOK: SerpentLook = { length: 140, radius: 4.6, rings: 44, sides: 14, back: 0x1f6f8a, belly: 0xf0e6c6, fin: 0x6fd8e8, wavelength: 46, amplitude: 7 };
+export const TIDEWYRM_LOOK: SerpentLook = { length: 140, radius: 4.6, rings: 48, sides: 14, back: 0x1f6f8a, belly: 0xf0e6c6, fin: 0x6fd8e8, wavelength: 42, amplitude: 9.5 };
 
 /** Pose input for one serpent (from EnemyState/BossState). */
 export interface SerpentPose {

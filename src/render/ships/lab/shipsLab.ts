@@ -217,12 +217,13 @@ function enemiesMode(): void {
   lab.camera.position.set(0, 190, 330);
   lab.controls.target.set(0, 5, 80);
   let flashT = 0, sinkT = 0;
+  let sinkFixed = -1;
   const poses: SerpentPose[] = [];
   const step = (dt: number) => {
     const t = lab.ocean.time;
     flashT += dt; sinkT += dt;
     for (const e of rows) {
-      if (e.life === 'sinking') e.sink = Math.min(1, (sinkT % 4.2) / 3.2);
+      if (e.life === 'sinking') e.sink = sinkFixed >= 0 ? sinkFixed : Math.min(1, (sinkT % 4.2) / 3.2);
       e.hitFlash = e.elite ? 0 : Math.max(0, 1 - ((flashT + e.id * 0.3) % 3) * 4);
       if (e.defId === 'wyrmling') {
         // Swim in small circles so the body trail is visible.
@@ -250,6 +251,7 @@ function enemiesMode(): void {
     api.ready = !assets || assets.loaded;
   };
   api.sources = () => fleet.sources();
+  api.sinkAt = (v: number) => { sinkFixed = v; };
   api.advance = (seconds: number) => { const k = Math.round(seconds * 60); for (let i = 0; i < k; i++) step(1 / 60); };
   api.view = (px: number, py: number, pz: number, tx: number, ty: number, tz: number) => { lab.camera.position.set(px, py, pz); lab.controls.target.set(tx, ty, tz); };
   api.metrics = () => ({ calls: lab.renderer.info.render.calls, triangles: lab.renderer.info.render.triangles, fleetDraws: fleet.drawCalls });
