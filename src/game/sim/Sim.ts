@@ -402,8 +402,9 @@ export class Sim implements CoreSim {
   targetsNear(x: number, z: number, radius: number, out: Target[]): Target[] {
     const buf = this.core.bufX;
     const n = this.core.near(this.state, x, z, radius, buf);
-    out.length = 0;
-    for (let i = 0; i < n; i++) out.push(buf[i]!);
+    // Overwrite in place, then trim: `out.length = 0` would drop the backing store and reallocate every query.
+    for (let i = 0; i < n; i++) out[i] = buf[i]!;
+    if (out.length !== n) out.length = n;
     return out;
   }
 
