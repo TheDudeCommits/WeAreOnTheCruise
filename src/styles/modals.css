@@ -6,7 +6,7 @@
 .cr-cards.is-leaving .cr-cardbtn-wrap.is-picked { animation: cr-card-picked .36s var(--ease-out) forwards; }
 @keyframes cr-fade-out { to { opacity: 0; } }
 .cr-modal__shade.is-cards { background: radial-gradient(ellipse at 50% 55%, rgba(8, 16, 44, .45), rgba(3, 6, 18, .86) 75%); }
-.cr-levelup { position: relative; display: flex; flex-direction: column; align-items: center; gap: calc(18 * var(--u)); }
+.cr-levelup { position: relative; display: flex; flex-direction: column; align-items: center; gap: calc(34 * var(--u)); }
 .cr-levelup__burst { position: absolute; left: 50%; top: 50%; width: calc(1700 * var(--u)); height: calc(1700 * var(--u)); translate: -50% -50%; background: url('/ui/speedlines.svg') center / cover no-repeat; opacity: .09; animation: cr-rot 90s linear infinite; pointer-events: none; }
 @keyframes cr-rot { from { rotate: 0deg; } to { rotate: 360deg; } }
 .cr-levelup__head { position: relative; display: flex; align-items: baseline; gap: calc(18 * var(--u)); }
@@ -21,8 +21,6 @@
 @keyframes cr-card-out { to { transform: translateY(calc(120 * var(--u))) rotate(6deg) scale(.8); opacity: 0; } }
 @keyframes cr-card-picked { 30% { transform: translateY(calc(-30 * var(--u))) scale(1.12); filter: brightness(2); opacity: 1; } to { transform: translateY(calc(-160 * var(--u))) scale(.6); opacity: 0; } }
 .cr-cardbtn-wrap { position: relative; pointer-events: auto; transition: transform .16s var(--ease-pop), filter .16s; }
-.cr-cards__row.is-dealt .cr-cardbtn-wrap { animation: cr-deal .5s calc(var(--i) * .08s) var(--ease-out) both; }
-@keyframes cr-deal { from { transform: translateY(calc(200 * var(--u))) rotateY(80deg) rotate(8deg) scale(.7); opacity: 0; } 60% { opacity: 1; } to { transform: none; opacity: 1; } }
 .cr-cardbtn-wrap:hover, .cr-cardbtn-wrap:focus { transform: translateY(calc(-16 * var(--u))) scale(1.05); z-index: 2; }
 .cr-cardbtn-wrap:hover .cr-card__frame, .cr-cardbtn-wrap:focus .cr-card__frame {
   box-shadow:

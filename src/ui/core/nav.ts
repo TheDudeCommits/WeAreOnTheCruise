@@ -21,7 +21,6 @@ export function navItems(scope: ParentNode): HTMLElement[] {
 export function focusEl(el: HTMLElement | null | undefined): boolean {
   if (!el) return false;
   el.focus({ preventScroll: true });
-  el.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
   return true;
 }
 

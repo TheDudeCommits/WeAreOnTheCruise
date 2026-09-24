@@ -241,9 +241,16 @@ export class CardsModal {
     });
     this.lvText.set(`Lv ${run.player.level}`);
     this.moreText.set(run.pendingLevelUps > 1 ? `+${run.pendingLevelUps - 1} more` : '');
-    this.row.classList.remove('is-dealt');
-    void this.row.offsetWidth;
-    this.row.classList.add('is-dealt');
+    // Deal animation per card (WAAPI: no forced reflow to restart a CSS animation).
+    for (const b of this.buttons) {
+      if (!b) continue;
+      const i = Number(b.dataset.index);
+      play(b, [
+        { transform: 'translateY(200px) rotateY(80deg) rotate(8deg) scale(.7)', opacity: 0 },
+        { opacity: 1, offset: 0.6 },
+        { transform: 'none', opacity: 1 },
+      ], { duration: 500, delay: i * 80, easing: 'cubic-bezier(.2,.9,.2,1)', fill: 'backwards' });
+    }
     this.locked = first ? 0.35 : 0.22;
     if (first) play(this.levelup.querySelector('.cr-levelup__title')!, [
       { transform: 'scale(2.4) rotate(-8deg)', opacity: 0 }, { transform: 'scale(.94) rotate(-3deg)', opacity: 1, offset: 0.6 }, { transform: 'scale(1) rotate(-3deg)', opacity: 1 },
@@ -305,9 +312,10 @@ export class CardsModal {
     this.rewards.replaceChildren(...this.rewardEls);
     this.chest.classList.remove('is-open', 'is-done');
     this.chestPrompt.classList.remove('is-on');
-    this.chestBox.classList.remove('is-shake');
-    void this.chestBox.offsetWidth;
     this.chestBox.classList.add('is-shake');
+    for (const a of this.chestBox.getAnimations()) a.cancel?.();
+    this.chestBox.classList.remove('is-shake');
+    requestAnimationFrame(() => this.chestBox.classList.add('is-shake'));
   }
 
   private tickChest(dt: number): void {
