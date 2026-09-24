@@ -10,7 +10,7 @@
 import * as THREE from 'three';
 import { SHIPS } from '../../game/content';
 import type { HeroModelKey, ShipId } from '../../game/ids';
-import type { BossState, EnemyState, HazardState, WeaponSlot } from '../../game/types';
+import type { BossState, CaptainState, EnemyState, HazardState, WeaponSlot } from '../../game/types';
 import type { FrameContext, RenderHostHandles, RenderSystem, ShipAnchor, ShipServices } from '../frame';
 import { FleetAssets } from '../loaders/FleetAssets';
 import { SketchfabShipAssets } from '../loaders/SketchfabShipAssets';
@@ -20,9 +20,11 @@ import { EscortSkiffs } from './fleet/EscortSkiffs';
 import { Serpents, type SerpentPose } from './fleet/Serpents';
 import type { GrowthInput, ShipGrowthEvent } from './hero/HeroGrowth';
 import { HeroShip, type HeroPose } from './hero/HeroShip';
+import { CaptainFleet } from './fleet/Captains';
 
 const NO_ENEMIES: readonly EnemyState[] = [];
 const NO_BOSSES: readonly BossState[] = [];
+const NO_CAPTAINS: readonly CaptainState[] = [];
 const NO_HAZARDS: readonly HazardState[] = [];
 const NO_WEAPONS: readonly WeaponSlot[] = [];
 const CREW_KEYS = ['sailor-a', 'sailor-b', 'sailor-c'] as const;
@@ -37,6 +39,7 @@ export class ShipSystem implements RenderSystem, ShipServices {
   readonly serpents = new Serpents(24);
   readonly bosses = new Bosses(this.fleetAssets, this.fleet.fleetMaterial);
   readonly skiffs = new EscortSkiffs(this.fleet.fleetMaterial);
+  readonly captains = new CaptainFleet();
   private readonly growthEvents: ShipGrowthEvent[] = [];
   private readonly wyrmPoses: SerpentPose[] = [];
   private readonly pose: HeroPose = { x: 0, z: 0, heading: 0, speed: 0, roll: 0, airborne: 0, submerged: 0, invulnerable: 0, sinceHit: 99, hpFraction: 1, alive: true };
@@ -49,7 +52,7 @@ export class ShipSystem implements RenderSystem, ShipServices {
 
   init(host: RenderHostHandles): void {
     this.scene = host.scene;
-    this.scene.add(this.heroShip.root, this.fleet.group, this.serpents.group, this.bosses.group, this.skiffs.group);
+    this.scene.add(this.heroShip.root, this.fleet.group, this.serpents.group, this.bosses.group, this.skiffs.group, this.captains.group);
     this.fleet.prebuild();
     this.bosses.preload();
     for (const key of CREW_KEYS) void this.fleetAssets.request(key);
@@ -105,6 +108,7 @@ export class ShipSystem implements RenderSystem, ShipServices {
 
     // Bosses and escorts.
     this.bosses.update(ctx.dt, ctx.time, run?.bosses ?? NO_BOSSES, ocean);
+    this.captains.update(ctx.dt, ctx.time, run?.captains ?? NO_CAPTAINS, ocean);
     this.bosses.drainEvents(this.growthEvents);
     let skiffPlayer: typeof this.skiffPlayer | null = null;
     if (p) { skiffPlayer = this.skiffPlayer; skiffPlayer.x = p.x; skiffPlayer.z = p.z; skiffPlayer.heading = p.heading; skiffPlayer.weapons = p.weapons; }
@@ -128,6 +132,7 @@ export class ShipSystem implements RenderSystem, ShipServices {
 
   anchor(shipId: number, name: ShipAnchor, out: THREE.Vector3): boolean {
     if (shipId === 0) return this.heroShip.anchor(name, out);
+    if (shipId < 0) return this.captains.anchor(shipId, name, out);
     if (this.fleet.has(shipId)) return this.fleet.anchor(shipId, name, out);
     if (this.bosses.has(shipId)) return this.bosses.anchor(shipId, name, out);
     const head = this.serpents.headOf(shipId);
@@ -137,6 +142,7 @@ export class ShipSystem implements RenderSystem, ShipServices {
 
   transform(shipId: number, out: THREE.Matrix4): boolean {
     if (shipId === 0) return this.heroShip.transform(out);
+    if (shipId < 0) return this.captains.transform(shipId, out);
     if (this.fleet.has(shipId)) return this.fleet.transform(shipId, out);
     if (this.bosses.has(shipId)) return this.bosses.transform(shipId, out);
     const head = this.serpents.headOf(shipId);

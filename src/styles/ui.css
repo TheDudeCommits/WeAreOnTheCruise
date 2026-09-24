@@ -6,6 +6,8 @@
 @import './hud.css';
 @import './modals.css';
 @import './results.css';
+@import './roster.css';
+@import './events.css';
 
 html, body { margin: 0; height: 100%; overflow: hidden; background: #06283f; }
 #game-root { position: fixed; inset: 0; }

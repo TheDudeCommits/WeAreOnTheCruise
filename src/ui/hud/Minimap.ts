@@ -141,6 +141,21 @@ export class Minimap {
       }
     }
 
+    // World event area (EVENTS sets run.worldEvent.x/z/radius): a dashed gold ring.
+    const ev = run.worldEvent;
+    if (ev && ev.x !== undefined && ev.z !== undefined) {
+      plot(ev.x, ev.z, pt);
+      const r = Math.max(5, (ev.radius ?? 40) * scale);
+      ctx.save();
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pt.clamped ? 6 : Math.min(r, edge), 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 207, 51, 0.9)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
     // Chests.
     for (const k of run.pickups) {
       if (!k.alive || k.kind !== 'chest') continue;
@@ -185,6 +200,29 @@ export class Minimap {
       ctx.lineWidth = 2;
       ctx.stroke();
     }
+    // AI captains: teal arrows (friendly), hollow while sunk.
+    for (const k of run.captains) {
+      plot(k.x, k.z, pt);
+      const fe2 = -Math.sin(k.heading), fn2 = Math.cos(k.heading);
+      const a2 = Math.atan2(fe2 * cos + fn2 * sin, -(fe2 * sin - fn2 * cos));
+      ctx.save();
+      ctx.globalAlpha = pt.clamped ? 0.6 : 1;
+      ctx.translate(pt.x, pt.y);
+      ctx.rotate(a2);
+      ctx.beginPath();
+      ctx.moveTo(0, -6.5);
+      ctx.lineTo(4.8, 5);
+      ctx.lineTo(0, 2.5);
+      ctx.lineTo(-4.8, 5);
+      ctx.closePath();
+      ctx.fillStyle = k.alive ? '#3fe0c8' : 'rgba(63, 224, 200, 0)';
+      ctx.fill();
+      ctx.strokeStyle = k.alive ? '#0b1026' : '#3fe0c8';
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+      ctx.restore();
+    }
+
     // Player arrow.
     const fe = -Math.sin(p.heading), fn = Math.cos(p.heading);
     const ax = fe * cos + fn * sin, ay = fe * sin - fn * cos;

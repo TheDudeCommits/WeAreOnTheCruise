@@ -19,6 +19,8 @@ import { Minimap } from './Minimap';
 import { ShipRing } from './ShipRing';
 import { SkillBar } from './SkillBar';
 import { TopBar } from './TopBar';
+import { EventTracker } from './EventTracker';
+import { Roster } from './Roster';
 
 export class Hud {
   readonly el: HTMLElement;
@@ -30,6 +32,8 @@ export class Hud {
   private readonly loadout = new Loadout();
   private readonly minimap = new Minimap();
   private readonly markers = new Markers();
+  private readonly roster = new Roster();
+  private readonly tracker = new EventTracker();
   readonly feedback = new Feedback();
   private readonly basis = new ScreenBasis();
   private readonly fps: TextCell;
@@ -50,7 +54,8 @@ export class Hud {
       this.markers.el,
       this.top.el,
       this.boss.el,
-      h('div', 'cr-hud__tr', this.minimap.el, fps),
+      this.tracker.el,
+      h('div', 'cr-hud__tr', this.minimap.el, fps, this.roster.el),
       this.banners.el,
       this.ring.el,
       this.skills.el,
@@ -69,6 +74,7 @@ export class Hud {
   reset(): void {
     this.top.reset(); this.boss.reset(); this.banners.reset(); this.ring.reset(); this.skills.reset();
     this.loadout.reset(); this.minimap.reset(); this.markers.reset(); this.feedback.reset();
+    this.roster.reset(); this.tracker.reset();
     this.ended = false;
   }
 
@@ -86,7 +92,8 @@ export class Hud {
     const mark = prof ? (k: string) => { const n = performance.now(); prof[k] = (prof[k] ?? 0) + n - t; prof[`${k}_max`] = Math.max(prof[`${k}_max`] ?? 0, n - t); t = n; } : null;
     // Read phase first: project() reads layout (RendererHost.getViewport), so no DOM writes before it.
     this.basis.update(f, p.x, p.z);
-    this.markers.measure(f, run, this.basis); mark?.('measure');
+    this.markers.measure(f, run, this.basis);
+    this.roster.measure(f, run); mark?.('measure');
     // Write phase.
     this.banners.tick(f.time);
     this.top.update(run, f.time); mark?.('top');
@@ -97,6 +104,7 @@ export class Hud {
     this.minimap.update(run, this.basis, f.dt, f.world); mark?.('minimap');
     this.markers.apply(); mark?.('markers');
     this.feedback.update(p); mark?.('feedback');
+    this.roster.update(run, f); this.tracker.update(run, f); mark?.('roster');
     if (this.skills.ultJustReady) this.banners.toast(`${ULTIMATES[ship.ultimate].name} ready — press R`, ULTIMATES[ship.ultimate].glyph, 'gold', iconPath(ship.ultimate));
     this.feedback.reduce = !!(f.settings as { reduceFlashing?: boolean }).reduceFlashing;
     // FPS readout.

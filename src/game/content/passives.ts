@@ -22,4 +22,9 @@ export const PASSIVES: Readonly<Record<PassiveId, PassiveDef>> = {
   'weather-eye': { id: 'weather-eye', name: 'Weather Eye', icon: icon('weather-eye'), maxRank: 5, description: 'A navigator who reads the sea: more experience from treasure.', perRank: { xpGain: 0.08 } },
   'drill-master': { id: 'drill-master', name: 'Drill Master', icon: icon('drill-master'), maxRank: 5, description: 'Drilled crews: brace, boost, special and full broadside recharge faster.', perRank: { skillCooldown: 0.12 } },
   'deep-stores': { id: 'deep-stores', name: 'Deep Stores', icon: icon('deep-stores'), maxRank: 5, description: 'Deeper magazines: +1 projectile for every 2 ranks and longer effects.', perRank: { amount: 0.5, duration: 0.08 } },
+  // Round 1 placeholders (contract): PACE designs these.
+  'clipper-rigging': { id: 'clipper-rigging', name: 'Clipper Rigging', icon: icon('cloudsilk-sails'), maxRank: 5, description: 'Racing rigging: more speed under full sail.', perRank: { speed: 0.06 } },
+  'racing-keel': { id: 'racing-keel', name: 'Racing Keel', icon: icon('cloudsilk-sails'), maxRank: 5, description: 'A narrow keel that carves tight turns.', perRank: { turn: 0.1 } },
+  momentum: { id: 'momentum', name: 'Momentum', icon: icon('cloudsilk-sails'), maxRank: 5, description: 'Every sinking fills the sails.', perRank: { speed: 0.03 } },
+  'trade-winds': { id: 'trade-winds', name: 'Trade Winds', icon: icon('drill-master'), maxRank: 5, description: 'The wind always finds you: skills recharge faster.', perRank: { skillCooldown: 0.06 } },
 };

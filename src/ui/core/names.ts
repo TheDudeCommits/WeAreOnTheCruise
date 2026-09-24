@@ -35,11 +35,13 @@ export const PASSIVE_GLYPH: Readonly<Record<PassiveId, GlyphId>> = {
   'ironwood-hull': 'shield', 'cloudsilk-sails': 'sail', 'powder-monkeys': 'keg', 'master-gunner': 'crosshair',
   'long-barrels': 'scope', 'salvage-nets': 'magnet', 'lucky-doubloon': 'coin', shipwright: 'hammer',
   'figurehead-fury': 'flame', 'weather-eye': 'eye', 'drill-master': 'clock', 'deep-stores': 'crate',
+  'clipper-rigging': 'sail', 'racing-keel': 'wheel', momentum: 'wind', 'trade-winds': 'wind',
 };
 
 export const META_GLYPH: Readonly<Record<MetaUpgradeId, GlyphId>> = {
   hull: 'shield', sails: 'sail', powder: 'keg', gunnery: 'clock', salvage: 'magnet', fortune: 'coin',
   wisdom: 'book', 'second-wind': 'wind', charts: 'map', banish: 'spot',
+  'copper-sheathing': 'sail', 'storm-sails': 'wind', 'rudder-chains': 'wheel',
 };
 
 export const STAT_GLYPH: Readonly<Record<StatKey, GlyphId>> = {

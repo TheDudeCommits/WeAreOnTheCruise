@@ -6,9 +6,7 @@
  * positive heading turns the bow to port (left). Starboard is (cos(heading), 0, -sin(heading)).
  */
 import type {
-  BossId, EnemyId, Faction, HazardKind, HeroModelKey, MetaUpgradeId, PassiveId, PickupKind,
-  ProjectileKind, Rarity, SeaId, ShipId, SkillSlot, SpecialId, StatKey, StatusKind, Team,
-  UltimateId, WeaponId, WeaponMount, WeatherId,
+  BossId, EliteAffixId, EnemyId, Faction, HazardKind, HeroModelKey, MetaUpgradeId, PassiveId, PickupKind, ProjectileKind, Rarity, SeaId, ShipId, SkillSlot, SpecialId, StatKey, StatusKind, Team, UltimateId, WeaponId, WeaponMount, WeatherId,
 } from './ids';
 
 export type Stats = Record<StatKey, number>;
@@ -320,6 +318,10 @@ export interface EnemyState extends Body {
    * at 1 it is gone: untargetable, no contacts, not shown on the minimap. Always 0 once it stops being alive.
    */
   hidden: number;
+  /** Elite modifiers (FOES). Empty for ordinary ships. */
+  affixes: EliteAffixId[];
+  /** Display name of a named bounty captain (FOES), shown on a nameplate; null for ordinary ships. */
+  title: string | null;
   statuses: StatusState[];
   attackCooldown: number;
   /** AI scratch (never saved). */
@@ -327,6 +329,47 @@ export interface EnemyState extends Body {
   spawnTime: number;
   /** Last weapon that damaged it (kill credit). */
   lastHitBy?: WeaponId;
+}
+
+/**
+ * An AI captain sailing the same sea as the player (CAPTAINS). Captains fill the roster while no live captains are
+ * online: they fight the fleet, draw some of its fire, sink, and sail back in. Ids are negative (ShipRef < 0).
+ */
+export interface CaptainState extends Body {
+  id: number;
+  name: string;
+  shipId: ShipId;
+  alive: boolean;
+  hp: number;
+  maxHp: number;
+  level: number;
+  kills: number;
+  bounty: number;
+  /** Seconds until a sunk captain sails back in (0 while alive). */
+  respawn: number;
+  /** 0..1 flash on hit (decays). */
+  hitFlash: number;
+  statuses: StatusState[];
+  /** AI scratch (never saved). */
+  ai: Record<string, number>;
+}
+
+/** The set-piece currently running (EVENTS), for the HUD tracker, markers and effects. */
+export interface WorldEventState {
+  /** DirectorEventId (content/director.ts). */
+  id: string;
+  name: string;
+  text: string;
+  /** Seconds elapsed / total. */
+  time: number;
+  duration: number;
+  /** Optional objective, e.g. 3 of 5 convoy ships sunk. */
+  progress?: number;
+  goal?: number;
+  /** Optional world anchor (e.g. the maelstrom's eye) for markers and effects. */
+  x?: number;
+  z?: number;
+  radius?: number;
 }
 
 export interface BossState extends Body {
@@ -522,11 +565,15 @@ export interface RunState {
   banished: string[];
   stats: RunStats;
   endless: boolean;
+  /** AI captains in this sea (CAPTAINS; empty when disabled). */
+  captains: CaptainState[];
+  /** The set-piece running now, or null (EVENTS). */
+  worldEvent: WorldEventState | null;
 }
 
 // ─────────────────────────────── Events ───────────────────────────────
 
-export type ShipRef = number; // 0 = player, >0 = enemy or boss id
+export type ShipRef = number; // 0 = player, >0 = enemy or boss id, <0 = AI captain
 
 export type SimEvent =
   | { type: 'weapon-fired'; weapon: WeaponId; owner: ShipRef; x: number; z: number; dirX: number; dirZ: number; side?: 'port' | 'starboard' | 'bow' | 'stern'; count: number }
@@ -561,6 +608,11 @@ export type SimEvent =
   | { type: 'boss-attack'; boss: BossId; id: ShipRef; attack: string; x: number; z: number }
   | { type: 'boss-defeated'; boss: BossId; id: ShipRef; x: number; z: number }
   | { type: 'director-event'; name: string; text: string }
+  | { type: 'world-event'; id: string; phase: 'start' | 'success' | 'fail' | 'end'; name: string; text: string; x?: number; z?: number }
+  | { type: 'captain-joined'; id: ShipRef; name: string; shipId: ShipId }
+  | { type: 'captain-sunk'; id: ShipRef; name: string; x: number; z: number }
+  | { type: 'captain-respawned'; id: ShipRef; name: string }
+  | { type: 'captain-kill'; id: ShipRef; name: string; victim: EnemyId | BossId; x: number; z: number }
   | { type: 'weather-changed'; weather: WeatherId }
   | { type: 'lightning-strike'; x: number; z: number }
   | { type: 'chest-opened'; rewards: CardOffer[] }
@@ -620,6 +672,8 @@ export interface Settings {
   damageNumbers: boolean;
   quality: QualitySetting;
   showFps: boolean;
+  /** AI captains sailing with you (0–4). Optional for older saves (default 3). */
+  captains?: number;
 }
 
 export interface RunResult {

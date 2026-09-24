@@ -29,6 +29,8 @@ const MIN_FADE = 1.6;
 const THREAT: Record<EnemyId, number> = {
   skiff: 0.45, cutter: 0.75, brig: 1, fireship: 1.3, 'mortar-barge': 1.2, frigate: 1.7, 'man-o-war': 2.6,
   'corsair-brig': 1.1, 'corsair-galleon': 2.1, wraith: 1.4, wyrmling: 1, fort: 1.4,
+  'signal-cutter': 0.9, ironclad: 1.8, harpooner: 1.2, 'bomb-ketch': 1.3, 'smoke-runner': 0.6, 'lantern-wisp': 0.7,
+  'drowned-galleon': 2.2, 'kraken-arm': 1.6,
 };
 
 type ParamWithHold = AudioParam & { cancelAndHoldAtTime?: (t: number) => AudioParam };

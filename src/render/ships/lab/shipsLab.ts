@@ -177,7 +177,7 @@ function enemyState(id: number, defId: EnemyId, x: number, z: number, elite: boo
   const def = ENEMIES[defId];
   return {
     id, defId, faction: def.faction, life: 'alive', sink: 0, x, z, y: 0, heading: 0, speed: def.speed * 0.5, vx: 0, vz: 0, yawRate: 0, roll: 0, pitch: 0,
-    radius: def.radius * (elite ? 1.2 : 1), length: def.length * (elite ? 1.2 : 1), beam: def.radius * 2, hp: 1, maxHp: 1, armor: 0, elite, hitFlash: 0, hidden: 0,
+    radius: def.radius * (elite ? 1.2 : 1), length: def.length * (elite ? 1.2 : 1), beam: def.radius * 2, hp: 1, maxHp: 1, armor: 0, elite, hitFlash: 0, hidden: 0, affixes: [], title: null,
     statuses: [], attackCooldown: 1, ai: {}, spawnTime: 0,
   };
 }

@@ -15,6 +15,7 @@ import { DIRECTOR } from '../content/director';
 import { ENEMY_AI } from '../content/enemies';
 import type { EnemyAttackDef, EnemyDef, EnemyState, StatusState } from '../types';
 import type { SimContext, Target } from './context';
+import { focusOf } from './targeting';
 import { metaRuntime, type MetaRuntime } from './meta-runtime';
 import { enemyDamage } from './meta-spawn';
 import {
@@ -173,14 +174,14 @@ function wreck(c: SimContext, e: EnemyState): void {
 // ───────────────────────── Swarm (skiffs) ─────────────────────────
 
 function swarm(c: SimContext, e: EnemyState, def: EnemyDef): void {
-  const p = c.state.player, ai = e.ai;
+  const p = focusOf(c, e), ai = e.ai;
   const dx = p.x - e.x, dz = p.z - e.z, dist = Math.hypot(dx, dz);
   const speed = baseSpeed(c, e, def);
   ai.t! -= c.dt;
   let desired: number, spd = speed;
   if (!p.alive) desired = headingTo(-dx, -dz);
   else if (ai.mode === SW_RAM) {
-    const aim = leadAim(c, e.x, e.z, speed * 1.3, 0.75);
+    const aim = leadAim(c, e.x, e.z, speed * 1.3, 0.75, p);
     desired = headingTo(aim.x - e.x, aim.z - e.z);
     spd = speed * 1.3;
     if (dist < p.radius + e.radius + 2 || ai.t! <= 0) { ai.mode = SW_PEEL; ai.t = rand(c, 1, 1.8); }
@@ -200,7 +201,7 @@ function swarm(c: SimContext, e: EnemyState, def: EnemyDef): void {
 // ───────────────────────── Ram (charger; also corsair brigs' boarding rush) ─────────────────────────
 
 function rammer(c: SimContext, e: EnemyState, def: EnemyDef): void {
-  const p = c.state.player, ai = e.ai;
+  const p = focusOf(c, e), ai = e.ai;
   const dx = p.x - e.x, dz = p.z - e.z, dist = Math.hypot(dx, dz);
   const speed = baseSpeed(c, e, def);
   ai.t! -= c.dt;
@@ -211,7 +212,7 @@ function rammer(c: SimContext, e: EnemyState, def: EnemyDef): void {
 
 function startRam(c: SimContext, e: EnemyState, speed: number): void {
   const ai = e.ai;
-  const aim = leadAim(c, e.x, e.z, speed * 1.9, 0.7);
+  const aim = leadAim(c, e.x, e.z, speed * 1.9, 0.7, focusOf(c, e));
   ai.mode = M_RAM_WINDUP;
   ai.t = 0.9;
   ai.lh = headingTo(aim.x - e.x, aim.z - e.z);
@@ -219,7 +220,7 @@ function startRam(c: SimContext, e: EnemyState, speed: number): void {
 }
 
 function ramStep(c: SimContext, e: EnemyState, def: EnemyDef, speed: number, dist: number): void {
-  const p = c.state.player, ai = e.ai;
+  const p = focusOf(c, e), ai = e.ai;
   if (ai.mode === M_RAM_WINDUP) {
     sail(c, e, ai.lh!, speed * 0.35, def.turnRate * 2);
     moveTelegraph(c, ai.tg!, e.x, e.z);
@@ -238,7 +239,7 @@ function ramStep(c: SimContext, e: EnemyState, def: EnemyDef, speed: number, dis
 function chaser(c: SimContext, e: EnemyState, def: EnemyDef): void {
   const attack = def.attack!;
   const tune = ENEMY_AI[e.defId];
-  const p = c.state.player, ai = e.ai;
+  const p = focusOf(c, e), ai = e.ai;
   const dx = p.x - e.x, dz = p.z - e.z, dist = Math.hypot(dx, dz);
   const speed = baseSpeed(c, e, def);
   const R = attack.range * tune.rangeFrac;
@@ -249,7 +250,7 @@ function chaser(c: SimContext, e: EnemyState, def: EnemyDef): void {
     desired = headingTo(-dx, -dz) + ai.orbit! * 0.8;
     if (ai.t! <= 0 || dist > R) ai.mode = 0;
   } else {
-    const aim = leadAim(c, e.x, e.z, attack.speed, gunLead(c, e, attack));
+    const aim = leadAim(c, e.x, e.z, attack.speed, gunLead(c, e, attack), p);
     desired = headingTo(aim.x - e.x, aim.z - e.z) + (dist > R + 40 ? ai.flank! * 0.3 : 0);
     spd = dist > R ? speed : speed * 0.55;
     if (dist < R * 0.45) { ai.mode = 1; ai.t = rand(c, 2, 3); }
@@ -259,7 +260,7 @@ function chaser(c: SimContext, e: EnemyState, def: EnemyDef): void {
   // Bow gun: fires when the (led) target is within ±18° of the bow.
   e.attackCooldown -= c.dt;
   if (e.attackCooldown > 0 || dist > attack.range || !p.alive) return;
-  const aim = leadAim(c, e.x, e.z, attack.speed, gunLead(c, e, attack));
+  const aim = leadAim(c, e.x, e.z, attack.speed, gunLead(c, e, attack), p);
   const tx = aim.x, tz = aim.z;
   if (Math.abs(wrap(headingTo(tx - e.x, tz - e.z) - e.heading)) > 0.32) return;
   if (!takeFire(e)) { e.attackCooldown = 0.25; return; }
@@ -280,7 +281,7 @@ function chaser(c: SimContext, e: EnemyState, def: EnemyDef): void {
 function broadside(c: SimContext, e: EnemyState, def: EnemyDef): void {
   const attack = def.attack!;
   const tune = ENEMY_AI[e.defId];
-  const p = c.state.player, ai = e.ai, dt = c.dt;
+  const p = focusOf(c, e), ai = e.ai, dt = c.dt;
   const dx = p.x - e.x, dz = p.z - e.z, dist = Math.hypot(dx, dz);
   const speed = baseSpeed(c, e, def);
   ai.reloadP! -= dt; ai.reloadS! -= dt; ai.t! -= dt; ai.slotT! -= dt;
@@ -345,7 +346,7 @@ function broadside(c: SimContext, e: EnemyState, def: EnemyDef): void {
 /** Fires (or starts the telegraph for) the side whose beam currently bears on the player. */
 function tryBroadside(c: SimContext, e: EnemyState, def: EnemyDef, dist: number): void {
   const attack = def.attack!;
-  const p = c.state.player, ai = e.ai;
+  const p = focusOf(c, e), ai = e.ai;
   if (dist > attack.range || !p.alive) return;
   const rel = wrap(headingTo(p.x - e.x, p.z - e.z) - e.heading);
   const arc = 0.5;
@@ -361,7 +362,7 @@ function tryBroadside(c: SimContext, e: EnemyState, def: EnemyDef, dist: number)
 function beginVolley(c: SimContext, e: EnemyState, def: EnemyDef, side: number, dist: number): void {
   const attack = def.attack!;
   const ai = e.ai;
-  const aim = leadAim(c, e.x, e.z, attack.speed, gunLead(c, e, attack));
+  const aim = leadAim(c, e.x, e.z, attack.speed, gunLead(c, e, attack), focusOf(c, e));
   ai.aimX = aim.x; ai.aimZ = aim.z;
   ai.windup = attack.telegraph;
   ai.windSide = side;
@@ -378,7 +379,7 @@ function fireVolley(c: SimContext, e: EnemyState, def: EnemyDef, side: number, l
   const ai = e.ai;
   let tx: number, tz: number;
   if (locked) { tx = ai.aimX!; tz = ai.aimZ!; }
-  else { const aim = leadAim(c, e.x, e.z, attack.speed, gunLead(c, e, attack)); tx = aim.x; tz = aim.z; }
+  else { const aim = leadAim(c, e.x, e.z, attack.speed, gunLead(c, e, attack), focusOf(c, e)); tx = aim.x; tz = aim.z; }
   const count = attack.count + (e.elite ? 1 : 0);
   const spread = gunSpread(c, e, attack);
   const fx = fwdX(e.heading), fz = fwdZ(e.heading);
@@ -422,7 +423,7 @@ function followFormation(c: SimContext, e: EnemyState, def: EnemyDef, speed: num
 
 /** Treasure convoy galleon: flees, never fires, slips away after its escape timer. */
 function convoy(c: SimContext, e: EnemyState, def: EnemyDef, speed: number, dist: number): void {
-  const p = c.state.player;
+  const p = focusOf(c, e);
   const away = headingTo(e.x - p.x, e.z - p.z);
   const wander = Math.sin((c.state.time + e.id) * 0.35) * 0.5;
   steer(c, e, away + wander, speed * 1.05, def.turnRate);
@@ -439,7 +440,7 @@ function convoy(c: SimContext, e: EnemyState, def: EnemyDef, speed: number, dist
 function artillery(c: SimContext, e: EnemyState, def: EnemyDef): void {
   const attack = def.attack!;
   const tune = ENEMY_AI[e.defId];
-  const p = c.state.player, ai = e.ai;
+  const p = focusOf(c, e), ai = e.ai;
   const dx = p.x - e.x, dz = p.z - e.z, dist = Math.hypot(dx, dz);
   const speed = baseSpeed(c, e, def);
   ai.t! -= c.dt;
@@ -462,7 +463,7 @@ function artillery(c: SimContext, e: EnemyState, def: EnemyDef): void {
 function fireMortars(c: SimContext, e: EnemyState, def: EnemyDef, dist: number): void {
   const attack = def.attack!;
   const tune = ENEMY_AI[e.defId];
-  const p = c.state.player;
+  const p = focusOf(c, e);
   const minute = c.state.time / 60;
   const count = attack.count + (minute >= 9 ? 1 : 0) + (e.elite ? 1 : 0);
   const flight = clamp(dist / attack.speed, attack.telegraph, attack.telegraph + 1.4);
@@ -471,7 +472,7 @@ function fireMortars(c: SimContext, e: EnemyState, def: EnemyDef, dist: number):
   const area = tune.area || 14;
   for (let k = 0; k < count; k++) {
     const t = flight + k * 0.25;
-    const pred = predictPlayer(c, t, lead);
+    const pred = predictPlayer(c, t, lead, p);
     let tx = pred.x, tz = pred.z;
     if (k > 0 || c.random() > e.ai.skill!) {
       const a = c.random() * TAU, r = area * rand(c, 0.6, 1.8);
@@ -488,12 +489,12 @@ function fireMortars(c: SimContext, e: EnemyState, def: EnemyDef, dist: number):
 
 function kamikaze(c: SimContext, e: EnemyState, def: EnemyDef): void {
   const tune = ENEMY_AI[e.defId];
-  const p = c.state.player, ai = e.ai;
+  const p = focusOf(c, e), ai = e.ai;
   const dist = Math.hypot(p.x - e.x, p.z - e.z);
   const speed = baseSpeed(c, e, def);
   let desired: number, spd: number;
   if (ai.mode !== 1) {
-    const aim = leadAim(c, e.x, e.z, Math.max(8, speed), 0.55);
+    const aim = leadAim(c, e.x, e.z, Math.max(8, speed), 0.55, p);
     desired = headingTo(aim.x - e.x, aim.z - e.z) + (dist > 160 ? ai.flank! * 0.25 : 0);
     spd = speed;
     if (dist < tune.igniteRange && p.alive) {
@@ -504,7 +505,7 @@ function kamikaze(c: SimContext, e: EnemyState, def: EnemyDef): void {
       ai.tg = c.addTelegraph({ shape: 'ring', team: 'enemy', x: e.x, z: e.z, radius: tune.area, duration: tune.fuse })?.id ?? 0;
     }
   } else {
-    const aim = leadAim(c, e.x, e.z, speed * tune.burnSpeed, 0.85);
+    const aim = leadAim(c, e.x, e.z, speed * tune.burnSpeed, 0.85, p);
     desired = headingTo(aim.x - e.x, aim.z - e.z);
     spd = speed * tune.burnSpeed;
     ai.t! -= c.dt;
@@ -543,7 +544,7 @@ function detonate(c: SimContext, e: EnemyState, def: EnemyDef, selfDestruct: boo
 function phaseShip(c: SimContext, e: EnemyState, def: EnemyDef): void {
   const attack = def.attack!;
   const tune = ENEMY_AI[e.defId];
-  const p = c.state.player, ai = e.ai, dt = c.dt;
+  const p = focusOf(c, e), ai = e.ai, dt = c.dt;
   const speed = baseSpeed(c, e, def);
   ai.t! -= dt;
   switch (ai.mode) {
@@ -614,7 +615,7 @@ function phaseShip(c: SimContext, e: EnemyState, def: EnemyDef): void {
 // ───────────────────────── Lunge (wyrmlings) ─────────────────────────
 
 function lunge(c: SimContext, e: EnemyState, def: EnemyDef): void {
-  const p = c.state.player, ai = e.ai, dt = c.dt;
+  const p = focusOf(c, e), ai = e.ai, dt = c.dt;
   const speed = baseSpeed(c, e, def);
   ai.t! -= dt;
   switch (ai.mode) {
@@ -638,7 +639,7 @@ function lunge(c: SimContext, e: EnemyState, def: EnemyDef): void {
       const spot = openWaterNear(c, p.x + fwdX(base) * r, p.z + fwdZ(base) * r, e.radius + 4);
       ai.lx = spot ? spot.x : ai.hx!;
       ai.lz = spot ? spot.z : ai.hz!;
-      const pred = predictPlayer(c, LUNGE_TELEGRAPH + (r / LUNGE_SPEED) * 0.6, 0.8);
+      const pred = predictPlayer(c, LUNGE_TELEGRAPH + (r / LUNGE_SPEED) * 0.6, 0.8, p);
       ai.lh = headingTo(pred.x - ai.lx, pred.z - ai.lz);
       ai.tg = lineTelegraph(c, ai.lx, ai.lz, ai.lh, LUNGE_LENGTH, e.radius + 3, LUNGE_TELEGRAPH)?.id ?? 0;
       ai.mode = LG_RIPPLE;
@@ -684,7 +685,7 @@ function stationary(c: SimContext, e: EnemyState, def: EnemyDef): void {
   e.vx = 0; e.vz = 0; e.speed = 0; e.yawRate = 0;
   const attack = def.attack;
   if (!attack) return;
-  const p = c.state.player;
+  const p = focusOf(c, e);
   const dist = Math.hypot(p.x - e.x, p.z - e.z);
   e.attackCooldown -= c.dt;
   if (e.attackCooldown <= 0 && dist < attack.range && dist > 40 && p.alive) {

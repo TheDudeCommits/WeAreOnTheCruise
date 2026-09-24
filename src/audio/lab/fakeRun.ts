@@ -28,7 +28,7 @@ export function fakeEnemy(id: number, defId: EnemyId, x: number, z: number, burn
   return {
     id, defId, faction: def.faction, life: 'alive', sink: 0, x, z, y: 0, heading: 0, speed: def.speed, vx: 0, vz: 0, yawRate: 0,
     roll: 0, pitch: 0, radius: def.radius, length: def.length, beam: def.radius * 2, hp: def.hp, maxHp: def.hp, armor: def.armor,
-    elite: false, hitFlash: 0, hidden: 0, statuses: burning ? [{ kind: 'burning', time: 99, magnitude: 1 }] : [], attackCooldown: 3, ai: {}, spawnTime: 0,
+    elite: false, hitFlash: 0, hidden: 0, affixes: [], title: null, statuses: burning ? [{ kind: 'burning', time: 99, magnitude: 1 }] : [], attackCooldown: 3, ai: {}, spawnTime: 0,
   };
 }
 

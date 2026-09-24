@@ -22,6 +22,7 @@ import { spawnScaled } from './meta-spawn';
 import { TAU, fwdX, fwdZ, headingTo, openWaterNear, rand, randInt, sideX, sideZ } from './meta-steer';
 import { doubloonMul } from './stats';
 import { spawnRogueWave } from './weather';
+import { startWorldEvent, updateWorldEvents } from './world-events';
 
 const SPAWN = { x: 0, z: 0, a: 0 };
 const EVENT_W = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -43,6 +44,7 @@ export function updateDirector(c: SimContext): void {
   syncActiveBoss(c);
   if (d.event) { d.eventTime -= c.dt; if (d.eventTime <= 0) { d.event = null; d.eventTime = 0; } }
   runEvents(c, sea, minute);
+  updateWorldEvents(c);
   spawnWaves(c, sea, minute);
   placeForts(c, sea, minute);
   if (s.tick % 30 === 0) recycle(c);
@@ -322,6 +324,7 @@ export function startEvent(c: SimContext, id: DirectorEventId, minute = c.state.
     case 'treasure-convoy': treasureConvoy(c); break;
     case 'storm-front': stormFront(c, def.duration); break;
     case 'fog-bank': fogBank(c, minute, def.duration); break;
+    default: startWorldEvent(c, id, minute);
   }
 }
 

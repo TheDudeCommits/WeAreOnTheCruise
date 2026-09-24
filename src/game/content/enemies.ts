@@ -67,6 +67,43 @@ export const ENEMIES: Readonly<Record<EnemyId, EnemyDef>> = {
     speed: 0, turnRate: 0, mass: 1e6, behavior: 'stationary', contactDamage: 0, xp: 15, doubloonChance: 0.4, firstMinute: 4,
     attack: { projectile: 'enemy-mortar', damage: 9, cooldown: 6.5, range: 300, count: 2, spread: 0.2, speed: 120, lead: 0.4, telegraph: 2 },
   },
+  // ── Round 1 placeholders (contract): FOES replaces the first seven, EVENTS the kraken arm. Not in any spawn table yet.
+  'signal-cutter': {
+    id: 'signal-cutter', name: 'Signal Cutter', faction: 'admiralty', modelKey: 'sloop', length: 20, radius: 7, hp: 48, armor: 0,
+    speed: 17, turnRate: 1.2, mass: 120, behavior: 'chaser', contactDamage: 6, xp: 4, doubloonChance: 0.03, firstMinute: 3,
+    attack: { projectile: 'enemy-chaser', damage: 3, cooldown: 3.4, range: 170, count: 1, spread: 0.13, speed: 95, lead: 0.1, telegraph: 0 },
+  },
+  ironclad: {
+    id: 'ironclad', name: 'Ironclad', faction: 'admiralty', modelKey: 'brig', length: 30, radius: 11, hp: 260, armor: 5,
+    speed: 10, turnRate: 0.6, mass: 900, behavior: 'ram', contactDamage: 16, xp: 8, doubloonChance: 0.08, firstMinute: 6,
+  },
+  harpooner: {
+    id: 'harpooner', name: 'Redtide Harpooner', faction: 'corsair', modelKey: 'corsair-brig', length: 26, radius: 9, hp: 120, armor: 1,
+    speed: 15, turnRate: 1.0, mass: 240, behavior: 'broadside', contactDamage: 8, xp: 5, doubloonChance: 0.06, firstMinute: 4,
+    attack: { projectile: 'enemy-cannonball', damage: 5, cooldown: 4.2, range: 135, count: 2, spread: 0.2, speed: 76, lead: 0.2, telegraph: 0 },
+  },
+  'bomb-ketch': {
+    id: 'bomb-ketch', name: 'Bomb Ketch', faction: 'corsair', modelKey: 'mortar-barge', length: 22, radius: 9, hp: 120, armor: 1,
+    speed: 9, turnRate: 0.7, mass: 320, behavior: 'artillery', contactDamage: 8, xp: 5, doubloonChance: 0.06, firstMinute: 5,
+    attack: { projectile: 'enemy-mortar', damage: 8, cooldown: 6, range: 260, count: 2, spread: 0.3, speed: 110, lead: 0.4, telegraph: 1.8 },
+  },
+  'smoke-runner': {
+    id: 'smoke-runner', name: 'Smoke Runner', faction: 'corsair', modelKey: 'skiff', length: 14, radius: 5, hp: 36, armor: 0,
+    speed: 20, turnRate: 1.8, mass: 50, behavior: 'swarm', contactDamage: 5, xp: 2, doubloonChance: 0.02, firstMinute: 2,
+  },
+  'lantern-wisp': {
+    id: 'lantern-wisp', name: 'Lantern Wisp', faction: 'wraith', modelKey: 'wraith', length: 10, radius: 4, hp: 30, armor: 0,
+    speed: 13, turnRate: 1.6, mass: 30, behavior: 'kamikaze', contactDamage: 12, xp: 2, doubloonChance: 0.02, firstMinute: 3,
+  },
+  'drowned-galleon': {
+    id: 'drowned-galleon', name: 'Drowned Galleon', faction: 'wraith', modelKey: 'corsair-galleon', length: 44, radius: 15, hp: 520, armor: 3,
+    speed: 9, turnRate: 0.5, mass: 1200, behavior: 'broadside', contactDamage: 12, xp: 13, doubloonChance: 0.2, firstMinute: 8,
+    attack: { projectile: 'enemy-cannonball', damage: 7, cooldown: 5, range: 165, count: 6, spread: 0.18, speed: 80, lead: 0.35, telegraph: 0.5 },
+  },
+  'kraken-arm': {
+    id: 'kraken-arm', name: "Kraken's Arm", faction: 'deep', modelKey: 'kraken-arm', length: 26, radius: 6, hp: 220, armor: 1,
+    speed: 0, turnRate: 0, mass: 1e6, behavior: 'stationary', contactDamage: 14, xp: 6, doubloonChance: 0.05, firstMinute: 99,
+  },
 };
 
 /** AI tuning per class (META, read by src/game/sim/ai.ts). */
@@ -113,4 +150,13 @@ export const ENEMY_AI: Readonly<Record<EnemyId, EnemyAiDef>> = {
   wraith: AI({ skill: 0.6, rangeFrac: 0.7 }),
   wyrmling: AI({ skill: 0.5 }),
   fort: AI({ skill: 0.55, area: 13, doubloons: 4 }),
+  // Round 1 placeholders (contract).
+  'signal-cutter': AI({ skill: 0.4, rangeFrac: 0.62, fireCost: 0.5 }),
+  ironclad: AI({ skill: 0.5 }),
+  harpooner: AI({ skill: 0.4, rangeFrac: 0.6, retreatBelow: 0.2 }),
+  'bomb-ketch': AI({ skill: 0.45, area: 12, retreatBelow: 0.3, doubloons: 2 }),
+  'smoke-runner': AI({ skill: 0.25 }),
+  'lantern-wisp': AI({ skill: 0.3, area: 14, igniteRange: 30, fuse: 1.2, burnSpeed: 1.2 }),
+  'drowned-galleon': AI({ skill: 0.55, rangeFrac: 0.75, gunSpan: 0.7, doubloons: 3, fireCost: 1.5 }),
+  'kraken-arm': AI({ skill: 0.5, area: 12 }),
 };

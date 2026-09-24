@@ -5,9 +5,10 @@
 .cr-cards.is-leaving { pointer-events: none; animation: cr-fade-out .36s ease-out forwards; }
 .cr-cards.is-leaving .cr-cardbtn-wrap.is-picked { animation: cr-card-picked .36s var(--ease-out) forwards; }
 @keyframes cr-fade-out { to { opacity: 0; } }
-.cr-modal__shade.is-cards { background: radial-gradient(ellipse at 50% 55%, rgba(8, 16, 44, .45), rgba(3, 6, 18, .86) 75%); }
+/* The battle stays visible behind the cards: only a soft edge vignette, no blackout. */
+.cr-modal__shade.is-cards { background: radial-gradient(ellipse at 50% 52%, rgba(8, 16, 44, 0) 42%, rgba(3, 6, 18, .34) 100%); }
 .cr-levelup { position: relative; display: flex; flex-direction: column; align-items: center; gap: calc(34 * var(--u)); }
-.cr-levelup__burst { position: absolute; left: 50%; top: 50%; width: calc(1700 * var(--u)); height: calc(1700 * var(--u)); translate: -50% -50%; background: url('/ui/speedlines.svg') center / cover no-repeat; opacity: .09; animation: cr-rot 90s linear infinite; pointer-events: none; }
+.cr-levelup__burst { position: absolute; left: 50%; top: 50%; width: calc(1700 * var(--u)); height: calc(1700 * var(--u)); translate: -50% -50%; background: url('/ui/speedlines.svg') center / cover no-repeat; opacity: .06; animation: cr-rot 90s linear infinite; pointer-events: none; }
 @keyframes cr-rot { from { rotate: 0deg; } to { rotate: 360deg; } }
 .cr-levelup__head { position: relative; display: flex; align-items: baseline; gap: calc(18 * var(--u)); }
 .cr-levelup__title { display: inline-block; font: 400 var(--fs-96)/1 var(--f-brush); text-transform: uppercase; color: var(--gold); -webkit-text-stroke: var(--stroke-xl) var(--ink); paint-order: stroke fill; text-shadow: 0 calc(8 * var(--u)) 0 var(--red-2), 0 calc(13 * var(--u)) 0 var(--ink); transform: rotate(-3deg); }

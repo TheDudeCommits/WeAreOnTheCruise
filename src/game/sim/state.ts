@@ -66,5 +66,7 @@ export function createRunState(opts: { seed: string; shipId: ShipId; seaId: SeaI
       bounty: 0, killsByWeapon: {}, damageByWeapon: {},
     },
     endless: false,
+    captains: [],
+    worldEvent: null,
   };
 }

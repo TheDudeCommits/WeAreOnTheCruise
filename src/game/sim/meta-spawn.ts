@@ -6,6 +6,7 @@ import { DIRECTOR } from '../content/director';
 import type { EnemyId } from '../ids';
 import type { EnemyState } from '../types';
 import type { SimContext } from './context';
+import { rollAffixes } from './affixes';
 
 export interface ScaledSpawnOpts {
   elite?: boolean;
@@ -22,6 +23,7 @@ export function spawnScaled(c: SimContext, id: EnemyId, x: number, z: number, op
   const hp = def.hp * enemyHpScale(c) * (opts.elite ? DIRECTOR.eliteHp : 1) * (opts.hpMul ?? 1);
   e.hp = hp;
   e.maxHp = hp;
+  if (e.elite) rollAffixes(c, e);
   return e;
 }
 

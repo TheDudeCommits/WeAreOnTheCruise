@@ -33,6 +33,7 @@ import { TrailPass } from './passes/Trails';
 import { WaveWallPass } from './passes/WaveWalls';
 import { Sakuga } from './Sakuga';
 import { StateFx } from './StateFx';
+import { WorldEventFx } from './WorldEventFx';
 
 const QUALITY_SCALE: Record<QualityTier, number> = { low: 0.5, medium: 0.75, high: 1, ultra: 1.2 };
 
@@ -52,6 +53,7 @@ export class FxSystem implements RenderSystem {
   readonly juice = new Juice();
   readonly kit: FxKit;
   readonly sakuga: Sakuga;
+  readonly worldEvents: WorldEventFx;
   readonly events: EventFx;
   readonly state: StateFx;
   private readonly passes: SpritePass[];
@@ -92,11 +94,12 @@ export class FxSystem implements RenderSystem {
       water: new WaterSampler(), ocean: null, ships: null, camX: 0, camY: 100, camZ: 0, focusX: 0, focusZ: 0, windX: 0, windZ: 0, clock: 0, q: 1, spawned: 0,
     };
     this.sakuga = new Sakuga(this.kit);
+    this.worldEvents = new WorldEventFx(this.kit, this.sakuga);
     this.events = new EventFx(this.kit, this.sakuga);
     this.state = new StateFx(this.kit, this.sakuga, this.events);
     debris.splash = (x, z, size) => this.sakuga.plop(x, z, size);
     this.group.name = 'fx';
-    this.group.add(decals.mesh, cel.mesh, heads.mesh, trails.mesh, glow.mesh, beams.mesh, ropes.mesh, walls.mesh, debris.mesh, props.group, numbers.mesh);
+    this.group.add(decals.mesh, cel.mesh, heads.mesh, trails.mesh, glow.mesh, beams.mesh, ropes.mesh, walls.mesh, debris.mesh, props.group, numbers.mesh, this.worldEvents.group);
   }
 
   init(host: RenderHostHandles): void {
@@ -154,6 +157,7 @@ export class FxSystem implements RenderSystem {
     if (run) {
       this.events.process(ctx, run);
       this.state.render(ctx, run, dt);
+      this.worldEvents.update(ctx, run, dt);
     }
     k.debris.update(dt, this.waterHeight, ctx.time);
     k.flotsam.update(dt, this.clock, k.water, k.props);
@@ -238,6 +242,7 @@ export class FxSystem implements RenderSystem {
     this.kit.numbers.clear();
     this.events.reset();
     this.state.reset();
+    this.worldEvents.reset();
   }
 
   dispose(): void {

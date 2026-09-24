@@ -18,14 +18,24 @@ export type WeaponId = (typeof WEAPON_IDS)[number];
 export const PASSIVE_IDS = [
   'ironwood-hull', 'cloudsilk-sails', 'powder-monkeys', 'master-gunner', 'long-barrels', 'salvage-nets',
   'lucky-doubloon', 'shipwright', 'figurehead-fury', 'weather-eye', 'drill-master', 'deep-stores',
+  // Round 1 (PACE): speed and handling.
+  'clipper-rigging', 'racing-keel', 'momentum', 'trade-winds',
 ] as const;
 export type PassiveId = (typeof PASSIVE_IDS)[number];
 
 export const ENEMY_IDS = [
   'skiff', 'cutter', 'brig', 'fireship', 'mortar-barge', 'frigate', 'man-o-war',
   'corsair-brig', 'corsair-galleon', 'wraith', 'wyrmling', 'fort',
+  // Round 1 (FOES): new classes.
+  'signal-cutter', 'ironclad', 'harpooner', 'bomb-ketch', 'smoke-runner', 'lantern-wisp', 'drowned-galleon',
+  // Round 1 (EVENTS): the Kraken's arms (spawned by the kraken event).
+  'kraken-arm',
 ] as const;
 export type EnemyId = (typeof ENEMY_IDS)[number];
+
+/** Elite modifiers (FOES): an elite rolls 1 (2 for named bounty captains). */
+export const ELITE_AFFIX_IDS = ['swift', 'armored', 'volatile', 'vampiric', 'shielded', 'splitting', 'burning', 'commander'] as const;
+export type EliteAffixId = (typeof ELITE_AFFIX_IDS)[number];
 
 export const BOSS_IDS = ['iron-warden', 'tidewyrm', 'sovereign'] as const;
 export type BossId = (typeof BOSS_IDS)[number];
@@ -39,7 +49,7 @@ export type SpecialId = (typeof SPECIAL_IDS)[number];
 export const ULTIMATE_IDS = ['ramming-speed', 'sunfire-barrage', 'torpedo-swarm', 'kitchen-inferno', 'admirals-judgment', 'tidal-colossus'] as const;
 export type UltimateId = (typeof ULTIMATE_IDS)[number];
 
-export const META_UPGRADE_IDS = ['hull', 'sails', 'powder', 'gunnery', 'salvage', 'fortune', 'wisdom', 'second-wind', 'charts', 'banish'] as const;
+export const META_UPGRADE_IDS = ['hull', 'sails', 'powder', 'gunnery', 'salvage', 'fortune', 'wisdom', 'second-wind', 'charts', 'banish', 'copper-sheathing', 'storm-sails', 'rudder-chains'] as const;
 export type MetaUpgradeId = (typeof META_UPGRADE_IDS)[number];
 
 export type Faction = 'player' | 'admiralty' | 'corsair' | 'wraith' | 'deep';

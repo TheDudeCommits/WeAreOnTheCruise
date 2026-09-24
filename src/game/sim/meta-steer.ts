@@ -11,8 +11,9 @@
  *            headings: direction (−sin angle, −cos angle)); `radius` is the half-width.
  */
 import type { ProjectileKind } from '../ids';
-import type { BossState, EnemyState, PlayerState, TelegraphState } from '../types';
+import type { BossState, EnemyState, TelegraphState } from '../types';
 import type { SimContext, Target } from './context';
+import type { Friendly } from './targeting';
 import { GRAVITY } from './core-runtime';
 
 export const TAU = Math.PI * 2;
@@ -46,15 +47,14 @@ export function randInt(c: SimContext, lo: number, hi: number): number {
 }
 
 /** Bearing of (x, z) seen from the player's bow: 0 ahead, +π/2 port beam, −π/2 starboard beam, ±π astern. */
-export function bearingFromPlayer(p: PlayerState, x: number, z: number): number {
+export function bearingFromPlayer(p: Friendly, x: number, z: number): number {
   return wrap(headingTo(x - p.x, z - p.z) - p.heading);
 }
 
 const AIM = { x: 0, z: 0, t: 0 };
 
-/** Intercept aim point on the player for a shot of `speed` fired from (sx, sz). `lead` 0 = current position, 1 = perfect. */
-export function leadAim(c: SimContext, sx: number, sz: number, speed: number, lead: number): Readonly<typeof AIM> {
-  const p = c.state.player;
+/** Intercept aim point on `p` (default: the player) for a shot of `speed` from (sx, sz). `lead` 0 = current position, 1 = perfect. */
+export function leadAim(c: SimContext, sx: number, sz: number, speed: number, lead: number, p: Friendly = c.state.player): Readonly<typeof AIM> {
   let tx = p.x, tz = p.z;
   let t = Math.hypot(tx - sx, tz - sz) / Math.max(1, speed);
   for (let i = 0; i < 2; i++) {
@@ -66,9 +66,8 @@ export function leadAim(c: SimContext, sx: number, sz: number, speed: number, le
   return AIM;
 }
 
-/** Player position predicted `t` seconds ahead (scaled by `lead`). */
-export function predictPlayer(c: SimContext, t: number, lead: number): Readonly<typeof AIM> {
-  const p = c.state.player;
+/** Position of `p` (default: the player) predicted `t` seconds ahead (scaled by `lead`). */
+export function predictPlayer(c: SimContext, t: number, lead: number, p: Friendly = c.state.player): Readonly<typeof AIM> {
   AIM.x = p.x + p.vx * t * lead;
   AIM.z = p.z + p.vz * t * lead;
   AIM.t = t;
