@@ -63,6 +63,12 @@ const before = new Set(scene.children);
 const handles = { renderer: host.renderer, scene, camera };
 for (const s of systems) await s.init(handles);
 const oceanObjects = scene.children.filter((o) => !before.has(o) && o.name !== 'world');
+// Lab only: the v2 sky stub leaves shadow bias at 0, which paints acne stripes on steep cliffs. LOOK owns the real
+// light setup; only patch it here when it is still unset.
+scene.traverse((o) => {
+  const light = o as THREE.DirectionalLight;
+  if (light.isDirectionalLight && light.shadow.normalBias === 0 && light.shadow.bias === 0) { light.shadow.normalBias = 0.6; light.shadow.bias = -0.0004; }
+});
 
 const controls = new OrbitControls(camera, host.renderer.domElement);
 controls.enableDamping = true;
@@ -120,8 +126,8 @@ function setView(name: string, mode: CamMode = camMode): void {
     pos.set(shipX + Math.sin(back) * 150, 105, shipZ + Math.cos(back) * 150);
     target.lerp(new THREE.Vector3(f.x, 0, f.z), 0.35);
   } else {
-    const dist = f.radius * 1.55 + 120;
-    pos.set(f.x + Math.sin(s.view) * dist, dist * 0.3 + top * 0.25, f.z + Math.cos(s.view) * dist);
+    const dist = f.radius * 1.25 + 90;
+    pos.set(f.x + Math.sin(s.view) * dist, dist * 0.2 + top * 0.3, f.z + Math.cos(s.view) * dist);
   }
   camera.position.copy(pos);
   controls.target.copy(target);

@@ -74,6 +74,8 @@ export class IslandShape {
   readonly maxHeight: number;
   readonly tierRise: number;
   readonly hasBeach: boolean;
+  /** 0..1 how strongly neighbouring strata tones differ (stacks read calmer, T6). */
+  readonly strataContrast: number;
   private readonly lobeNoise: CircleNoise;
   private readonly roughNoise: CircleNoise;
   private readonly beachNoise: CircleNoise;
@@ -111,7 +113,8 @@ export class IslandShape {
     this.beachWidthBase = clamp(spec.radius * 0.14, 5, 19);
     this.bumpAmp = spec.flatTop ? 0
       : a === 'dome' ? spec.height * 0.07 : a === 'cone' ? spec.height * 0.035 : a === 'rock' ? spec.height * 0.08
-      : a === 'reef' ? 0.35 : 0.55;
+      : a === 'reef' ? 1.1 : a === 'mesa' ? 1.6 : 0.55;
+    this.strataContrast = a === 'stack' ? 0.5 : a === 'cone' ? 0.4 : a === 'dome' ? 0.8 : 1;
     this.grooveAmp = a === 'mesa' || a === 'pillar' ? 1.5 : a === 'stack' ? 1.1 : a === 'dome' ? 0.9 : a === 'cone' ? 0.8 : a === 'rock' ? 0.35 : 0;
     this.tierRise = spec.tier && a === 'mesa' ? spec.height * (0.28 + rng.next() * 0.16) : 0;
 
@@ -175,7 +178,7 @@ export class IslandShape {
       case 'mesa': return s.height * (1 + 0.1 * n);
       case 'stack': case 'pillar': return s.height * (1 + 0.045 * n);
       case 'dome': return s.height * 0.44 * (1 + 0.22 * n);
-      case 'cone': return s.height * 0.3 * (1 + 0.25 * n);
+      case 'cone': return s.height * 0.2 * (1 + 0.25 * n);
       case 'rock': return s.height * 0.55 * (1 + 0.15 * n);
       case 'reef': return Math.max(0.9, s.height * (1 + 0.3 * n));
     }
@@ -190,7 +193,9 @@ export class IslandShape {
   /** Height the top surface rises to at the centre (plateau height for flat archetypes). */
   peakHeight(theta: number): number {
     const s = this.spec;
-    return s.archetype === 'dome' || s.archetype === 'cone' || s.archetype === 'rock' ? s.height : this.cliffHeight(theta);
+    if (s.archetype === 'dome' || s.archetype === 'cone' || s.archetype === 'rock') return s.height;
+    // Plateaus crown gently toward the middle (flat for fort parade grounds).
+    return this.cliffHeight(theta) * (s.archetype === 'mesa' && !s.flatTop ? 1.1 : 1);
   }
 
   /** Sand width from the waterline to the beach crest (m). */
@@ -218,11 +223,12 @@ export class IslandShape {
   /** Normalized top profile: 0 at the rim, 1 at the peak/plateau (u = 1 − s, s = r / rimR). */
   topProfile(u: number): number {
     switch (this.spec.archetype) {
-      case 'dome': return 1 - Math.pow(1 - clamp(u, 0, 1), 1.9);
+      case 'dome': return 1 - Math.pow(1 - clamp(u, 0, 1), this.spec.biome === 'harbor' ? 1.35 : 1.9);
       case 'rock': return Math.sqrt(clamp(u, 0, 1));
       case 'cone': {
-        if (u < 0.8) return Math.pow(u / 0.8, 1.25);
-        return 1 - 0.3 * smoothstep(0.8, 0.9, u);
+        // Stratovolcano: concave flanks steepening toward a crater rim, then the crater bowl.
+        if (u < 0.82) return Math.pow(u / 0.82, 1.55);
+        return 1 - 0.26 * smoothstep(0.82, 0.93, u);
       }
       default: return smoothstep(0, 0.34, u);
     }

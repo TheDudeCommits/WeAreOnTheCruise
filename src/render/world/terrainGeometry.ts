@@ -73,6 +73,8 @@ export function appendTerrain(b: MeshBuilder, model: RingModel, pal: TerrainPale
   const strata = shape.strata;
   const seed = shape.spec.seed;
   const lush = pal.lush;
+  const contrast = shape.strataContrast;
+  const peak = shape.maxHeight;
   for (let v = 0; v < b.vCount - v0; v++) {
     const o = (v0 + v) * 3;
     const x = b.pos[o]! + ox, y = b.pos[o + 1]!, z = b.pos[o + 2]! + oz;
@@ -96,7 +98,7 @@ export function appendTerrain(b: MeshBuilder, model: RingModel, pal: TerrainPale
           else grass(col, pal, patch, lush);
           break;
         }
-        col.copy(pal.strata[bandDef.tone % pal.strata.length]!);
+        col.copy(pal.strata[bandDef.tone % pal.strata.length]!).lerp(pal.strataMean, 1 - contrast);
         const f = bandDef.top > bandDef.bottom ? (y - bandDef.bottom) / (bandDef.top - bandDef.bottom) : 1;
         col.multiplyScalar((0.8 + 0.24 * Math.min(1, Math.max(0, f))) * (0.84 + 0.18 * streak));
         // Moss drips from the grass rim (only on real cliffs).
@@ -116,7 +118,21 @@ export function appendTerrain(b: MeshBuilder, model: RingModel, pal: TerrainPale
       case 6: col.copy(pal.underside).lerp(pal.grassDark, 0.25 * lush); break;
       default: {
         const steep = 1 - ny;
-        if (steep > 0.42 && lush > 0) {
+        if (lush < 0.3) {
+          // Bare ground: volcanic ash with sparse growth low down; reefs crusted with algae.
+          let k = 0;
+          while (k < strata.length - 1 && strata[k]!.top < y) k++;
+          col.copy(pal.strata[strata[k]!.tone % pal.strata.length]!).lerp(pal.strataMean, 0.5);
+          col.lerp(pal.wet, 0.2 + 0.3 * Math.max(0, -patch));
+          if (lush > 0) {
+            const low = 1 - smoothstep(peak * 0.25, peak * 0.45, y);
+            if (patch > 0.05) col.lerp(pal.grass, Math.min(0.75, (patch + 0.1) * 1.4) * low);
+            if (y > peak * 0.6) col.lerp(pal.strata[0]!, 0.25 * (0.5 + 0.5 * streak));
+          } else {
+            col.lerp(pal.moss, Math.max(0, patch) * 0.7);
+            if (y < 1.2) col.lerp(pal.wet, 0.5);
+          }
+        } else if (steep > 0.42) {
           // Steep top: exposed rock in the strata tone for that height.
           let k = 0;
           while (k < strata.length - 1 && strata[k]!.top < y) k++;
@@ -124,8 +140,6 @@ export function appendTerrain(b: MeshBuilder, model: RingModel, pal: TerrainPale
           col.lerp(pal.moss, smoothstep(0.75, 0.42, steep) * 0.5 * lush);
         } else if (y < 3.3 && beach > 0.5) {
           col.copy(pal.sand).lerp(pal.grass, smoothstep(2.6, 3.3, y) * 0.6);
-        } else if (lush <= 0) {
-          col.copy(pal.strata[1]!).lerp(pal.moss, Math.max(0, patch) * 0.6);
         } else {
           grass(col, pal, patch, lush);
         }

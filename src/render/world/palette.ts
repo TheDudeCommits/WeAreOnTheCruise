@@ -21,17 +21,19 @@ export interface TerrainPalette {
   underside: THREE.Color;
   /** Lush (jungle) vs sparse vegetation 0..1. */
   lush: number;
+  /** Average strata tone (for calmer, low-contrast cliffs). */
+  strataMean: THREE.Color;
 }
 
 const c = (hex: number) => new THREE.Color(hex);
 const tones = (...hex: number[]) => hex.map(c);
 
-type Recipe = Omit<TerrainPalette, 'lush'> & { lush?: number };
+type Recipe = Omit<TerrainPalette, 'lush' | 'strataMean'> & { lush?: number };
 
 const SANDSTONE = tones(0xe49c55, 0xf1cf96, 0xcb7a41, 0xe8b374, 0xb66239);
-const PALE_SANDSTONE = tones(0xd8b88c, 0xe9d5ad, 0xc29d74, 0xdfc59b, 0xb08a64);
+const PALE_SANDSTONE = tones(0xe0ad78, 0xefd4a4, 0xcd9663, 0xe7c08b, 0xbd8356);
 const BASALT = tones(0x4d4450, 0x5f5460, 0x3c353f, 0x6e5a55, 0x332d36);
-const LIMESTONE = tones(0xe3d6b4, 0xcdb994, 0xdcc6a0, 0xd2c09c, 0xbfa987);
+const LIMESTONE = tones(0xa89a7c, 0x8e8068, 0xc2b18d, 0x7d705c, 0xb5a582);
 const SLATE = tones(0x847f7b, 0x9a948c, 0x6f6a67, 0x8f877d, 0x5f5a58);
 const GLOAM_STONE = tones(0x7c8886, 0x93a09c, 0x687372, 0x88938e, 0x5b6564);
 const GLOAM_BASALT = tones(0x4a4f55, 0x5a6066, 0x3d4247, 0x5f5a5c, 0x34383d);
@@ -52,7 +54,7 @@ function recipe(palette: PaletteId, biome: IslandBiome): Recipe {
         grass: c(0x7b8a47), grassLight: c(0x9aa75c), grassDark: c(0x56633a), moss: c(0x6b7a45), underside: c(0x1f1a20), lush: 0.25,
       };
     case 'reef':
-      return { ...base, strata: LIMESTONE, wet: c(0x6e6a4e), grass: c(0x8a9a52), grassLight: c(0xa6b566), grassDark: c(0x6b7a45), moss: c(0x7c8c4c), lush: 0 };
+      return { ...base, strata: LIMESTONE, wet: c(0x4a4a3a), grass: c(0x7a8a4a), grassLight: c(0x9aa95c), grassDark: c(0x5a6a3c), moss: c(0x6f7f45), lush: 0 };
     case 'rocky':
     case 'fort':
       return {
@@ -74,7 +76,9 @@ export function terrainPalette(palette: PaletteId, biome: IslandBiome): TerrainP
   let p = cache.get(key);
   if (!p) {
     const r = recipe(palette, biome);
-    p = { ...r, lush: r.lush ?? 1 };
+    const mean = new THREE.Color(0, 0, 0);
+    for (const t of r.strata) { mean.r += t.r / r.strata.length; mean.g += t.g / r.strata.length; mean.b += t.b / r.strata.length; }
+    p = { ...r, lush: r.lush ?? 1, strataMean: mean };
     cache.set(key, p);
   }
   return p;

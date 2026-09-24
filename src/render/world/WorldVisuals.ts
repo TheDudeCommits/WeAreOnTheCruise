@@ -9,7 +9,8 @@ import type { WorldFeature } from '../../world/features';
 import { paletteForSea, type PaletteId } from '../../world/seas';
 import type { FrameContext, RenderHostHandles, RenderSystem } from '../frame';
 import { buildFeatureLod, type FeatureLod } from './featureMesh';
-import { createWorldMaterials, ink, type WorldMaterials } from './materials';
+import { FlagInstancer, PropInstancer } from './instancing';
+import { createWorldMaterials, ink, setEmissive, type WorldMaterials } from './materials';
 
 /** Features are streamed inside this radius of the focus (fog hides the rest). */
 export const STREAM_RADIUS = 2300;
@@ -34,7 +35,7 @@ interface Entry {
 
 interface Job { entry: Entry; lod: 0 | 1 | 2; priority: number }
 
-export interface WorldStats { features: number; built: number; pending: number; triangles: number; buildMs: number }
+export interface WorldStats { features: number; built: number; pending: number; triangles: number; buildMs: number; props: number }
 
 /** Adapter for WorldQuery implementations without features (one feature per island). */
 function adaptWorld(world: WorldQuery): FeatureSource {
@@ -72,6 +73,11 @@ export class WorldVisuals implements RenderSystem {
   private lastX = Infinity;
   private lastZ = Infinity;
   private buildMs = 0;
+  private props!: PropInstancer;
+  private flags!: FlagInstancer;
+  private instancesDirty = false;
+  private instanceTimer = 0;
+  private propCount = 0;
   /** Per-frame build budget (ms); raised while nothing is on screen yet. */
   budgetMs = 3.5;
   /** Force a LOD for all features (lab); null = distance based. */
@@ -81,6 +87,9 @@ export class WorldVisuals implements RenderSystem {
     this.scene = host.scene;
     this.group.name = 'world';
     this.scene.add(this.group);
+    this.props = new PropInstancer(this.materials.foliage, (mesh) => ink(mesh));
+    this.flags = new FlagInstancer(this.materials.flag);
+    this.group.add(this.props.group, this.flags.mesh);
   }
 
   update(ctx: FrameContext): void {
@@ -93,6 +102,38 @@ export class WorldVisuals implements RenderSystem {
       this.refresh(fx, fz, ctx.run?.seaId ?? null);
     }
     this.processJobs();
+    this.instanceTimer -= ctx.dt;
+    if (this.instancesDirty && this.instanceTimer <= 0) this.rebuildInstances();
+    this.animate(ctx);
+  }
+
+  /** Night glow, waterfall flow, flags, waterfall foam on the ocean. */
+  private animate(ctx: FrameContext): void {
+    const night = ctx.atmosphere.night;
+    const dim = Math.max(night, ctx.atmosphere.storm * 0.6);
+    setEmissive(this.materials.lamp, 0.12 + 2.9 * dim);
+    setEmissive(this.materials.lava, 0.9 + 1.9 * night);
+    const map = (this.materials.waterfall as THREE.Material & { map?: THREE.Texture | null }).map;
+    if (map) map.offset.y = -ctx.time * 0.85;
+    this.flags.update(ctx.time, ctx.sea.windDir);
+    for (const entry of this.entries.values()) {
+      if (entry.shown < 0 || entry.distance > 700) continue;
+      for (const f of entry.lods[entry.shown]!.falls) ctx.services.ocean.stampFoam(f.x, f.z, f.r * 1.4, 0.8);
+    }
+  }
+
+  private rebuildInstances(): void {
+    this.instancesDirty = false;
+    this.instanceTimer = 0.2;
+    const props: FeatureLod['props'][] = [], flags: FeatureLod['flags'][] = [];
+    for (const entry of this.entries.values()) {
+      if (entry.shown < 0) continue;
+      const lod = entry.lods[entry.shown]!;
+      props.push(lod.props);
+      flags.push(lod.flags);
+    }
+    this.propCount = this.props.rebuild(props);
+    this.flags.rebuild(flags);
   }
 
   private setWorld(world: WorldQuery): void {
@@ -122,7 +163,7 @@ export class WorldVisuals implements RenderSystem {
       entry.distance = d;
       entry.wanted = this.forceLod ?? this.lodFor(d, entry.wanted);
     }
-    for (const [id, entry] of this.entries) if (!keep.has(id)) { this.disposeEntry(entry); this.entries.delete(id); }
+    for (const [id, entry] of this.entries) if (!keep.has(id)) { this.disposeEntry(entry); this.entries.delete(id); this.instancesDirty = true; }
     this.queue.length = 0;
     for (const entry of this.entries.values()) {
       // Always have a far silhouette first, then the wanted detail.
@@ -173,6 +214,7 @@ export class WorldVisuals implements RenderSystem {
         if (entry.wanted - d >= 0 && entry.lods[entry.wanted - d]) { best = entry.wanted - d; break; }
       }
     }
+    if (entry.shown !== best) this.instancesDirty = true;
     entry.shown = best;
     for (let l = 0; l < 3; l++) { const lod = entry.lods[l]; if (lod) lod.group.visible = l === best; }
   }
@@ -188,13 +230,15 @@ export class WorldVisuals implements RenderSystem {
     for (const e of this.entries.values()) {
       if (e.shown >= 0) { built++; triangles += e.lods[e.shown]!.triangles; }
     }
-    return { features: this.entries.size, built, pending: this.queue.length, triangles, buildMs: this.buildMs };
+    return { features: this.entries.size, built, pending: this.queue.length, triangles, buildMs: this.buildMs, props: this.propCount };
   }
 
   dispose(): void {
     for (const entry of this.entries.values()) this.disposeEntry(entry);
     this.entries.clear();
     this.scene.remove(this.group);
+    this.props.dispose();
+    this.flags.dispose();
     for (const m of this.materials.all) m.dispose();
   }
 }

@@ -152,7 +152,7 @@ function addPiers(b: FeatureBuilder, main: IslandDef, bay: number): void {
     const r = shape.coastRadius(t);
     const dx = Math.sin(t), dz = Math.cos(t);
     const len = b.rng.range(26, 38);
-    b.addRect(main.x + dx * (r - 8), main.z + dz * (r - 8), dx, dz, len + 8, 6.5, 'harbor', 'pier', 2.6);
+    b.addRect(main.x + dx * (r - 8), main.z + dz * (r - 8), dx, dz, len + 8, 10, 'harbor', 'pier', 2.6);
   }
 }
 
@@ -174,7 +174,7 @@ function buildIsland(b: FeatureBuilder, x: number, z: number, bias: SeaBias, siz
       break;
     case 'volcanic':
       spec.archetype = rng.chance(0.8) ? 'cone' : 'mesa';
-      spec.height = radius * (spec.archetype === 'cone' ? rng.range(0.5, 0.75) : rng.range(0.3, 0.44));
+      spec.height = radius * (spec.archetype === 'cone' ? rng.range(0.72, 0.95) : rng.range(0.3, 0.44));
       if (spec.archetype === 'cone') landmark = 'volcano';
       break;
     case 'fort':
@@ -188,7 +188,7 @@ function buildIsland(b: FeatureBuilder, x: number, z: number, bias: SeaBias, siz
     case 'harbor':
       radius = spec.radius = Math.max(radius, 62);
       spec.archetype = 'dome';
-      spec.height = radius * rng.range(0.3, 0.4);
+      spec.height = radius * rng.range(0.24, 0.32);
       spec.bay = rng.range(0, TAU);
       spec.stretch = rng.range(0, 0.15);
       landmark = 'harbor';
@@ -199,7 +199,7 @@ function buildIsland(b: FeatureBuilder, x: number, z: number, bias: SeaBias, siz
       spec.height = rng.range(1.2, 2.3);
       break;
   }
-  if (biome !== 'reef') spec.height = clamp(spec.height, 9, 70);
+  if (biome !== 'reef') spec.height = clamp(spec.height, 9, spec.archetype === 'cone' ? 105 : 70);
   if (!landmark && biome !== 'reef' && rng.chance(bias.ruinsChance)) landmark = 'ruins';
   const main = b.add(x, z, spec, landmark);
   if (biome === 'harbor' && spec.bay !== undefined) addPiers(b, main, spec.bay);
@@ -221,18 +221,20 @@ function buildRocks(b: FeatureBuilder, x: number, z: number): void {
 
 function buildStacks(b: FeatureBuilder, x: number, z: number): void {
   const rng = b.rng;
-  const n = rng.integer(2, 6);
-  const spread = rng.range(40, 110);
+  const n = rng.integer(3, 7);
   const green = b.palette === 'sunward' ? 'tropical' : 'rocky';
-  for (let i = 0, tries = 0; i < n && tries < n * 6; tries++) {
-    const a = rng.range(0, TAU), d = i === 0 ? 0 : rng.range(20, spread);
-    const r = rng.range(6.5, 16);
-    const spec: Omit<ShapeSpec, 'seed'> = { biome: rng.chance(0.5) ? green : rockBiome(b), archetype: 'stack', radius: r, height: r * rng.range(2.2, 3.6) + 6, stretch: rng.range(0, 0.35), axis: rng.range(0, TAU) };
-    if (b.tryAdd(x + Math.sin(a) * d, z + Math.cos(a) * d, spec, 12)) i++;
+  const phase = rng.range(0, TAU);
+  for (let i = 0, tries = 0; i < n && tries < n * 8; tries++) {
+    // A loose ring of stacks around the tallest one, 22–95 m apart.
+    const a = phase + (i / Math.max(1, n - 1)) * TAU + rng.range(-0.4, 0.4);
+    const d = i === 0 ? 0 : rng.range(34, 95);
+    const r = i === 0 ? rng.range(10, 16) : rng.range(6, 13);
+    const spec: Omit<ShapeSpec, 'seed'> = { biome: rng.chance(0.55) ? green : rockBiome(b), archetype: 'stack', radius: r, height: r * rng.range(2.3, 3.6) + 6, stretch: rng.range(0, 0.3), axis: rng.range(0, TAU) };
+    if (b.tryAdd(x + Math.sin(a) * d, z + Math.cos(a) * d, spec, 10)) i++;
   }
-  const rocks = rng.integer(1, 4);
-  for (let i = 0, tries = 0; i < rocks && tries < 12; tries++) {
-    const a = rng.range(0, TAU), d = rng.range(20, spread + 30);
+  const rocks = rng.integer(2, 5);
+  for (let i = 0, tries = 0; i < rocks && tries < 16; tries++) {
+    const a = rng.range(0, TAU), d = rng.range(25, 120);
     const r = rng.range(3, 7);
     if (b.tryAdd(x + Math.sin(a) * d, z + Math.cos(a) * d, { biome: rockBiome(b), archetype: 'rock', radius: r, height: r * 1.3 + 1.5 }, 10)) i++;
   }
