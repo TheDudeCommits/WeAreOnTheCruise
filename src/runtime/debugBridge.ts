@@ -32,6 +32,7 @@ export interface CruiseBridge {
     god(on: boolean): void;
     weapon(id: WeaponId, level?: number): void;
     killAll(): void;
+    chargeUltimate(): void;
   };
 }
 
@@ -93,6 +94,7 @@ export function installDebugBridge(app: GameApp): void {
       god: (on) => sim()?.debug.god(on),
       weapon: (id, level) => sim()?.debug.giveWeapon(id, level),
       killAll: () => sim()?.debug.killAll(),
+      chargeUltimate: () => sim()?.debug.chargeUltimate(),
     },
   };
   window.__CRUISE__ = bridge;

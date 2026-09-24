@@ -12,7 +12,9 @@ export type QualityTier = 'low' | 'medium' | 'high' | 'ultra';
 
 /** Written by the sky system each frame before other systems update; read by ocean, world, ships, fx. */
 export interface AtmosphereState {
+  /** Direction TO the key light: the sun by day, blending to the moon at night (SkySystem). */
   sunDirection: THREE.Vector3;
+  /** Key-light colour/intensity (moonlight at night). */
   sunColor: THREE.Color;
   sunIntensity: number;
   ambientColor: THREE.Color;
