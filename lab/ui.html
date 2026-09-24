@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UI Lab — We Are On The Cruise</title>
+    <link rel="preload" href="/fonts/knewave/Knewave-Regular.latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/bangers/Bangers-Regular.latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/nunito/Nunito-Variable.latin.woff2" as="font" type="font/woff2" crossorigin />
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #06283f; }
+      #lab-bg { position: fixed; inset: 0; background: #0a3a5c center / cover no-repeat; }
+      #lab-panel { position: fixed; top: 8px; right: 8px; bottom: 8px; width: 250px; z-index: 100; overflow: auto; padding: 8px 10px 14px;
+        background: rgba(8, 12, 30, .9); color: #dfe6fb; font: 12px/1.3 system-ui, sans-serif; border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,.5); }
+      #lab-panel.collapsed { width: 120px; bottom: auto; }
+      #lab-panel.collapsed section { display: none; }
+      #lab-panel header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+      #lab-panel header b { color: #ffcf33; letter-spacing: .1em; }
+      #lab-panel header span { flex: 1; opacity: .6; font-size: 11px; }
+      #lab-panel h4 { margin: 10px 0 4px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9fb0da; }
+      #lab-panel button { margin: 2px; padding: 4px 7px; border: 1px solid #35447a; border-radius: 6px; background: #1a2550; color: #eef; font: 11px system-ui; cursor: pointer; }
+      #lab-panel button:hover, #lab-panel button.on { background: #ffcf33; color: #0b1026; }
+      #lab-panel label { display: grid; grid-template-columns: 80px 1fr; align-items: center; gap: 6px; margin: 2px 0; }
+      #lab-panel input[type=range] { width: 100%; }
+    </style>
+  </head>
+  <body>
+    <div id="lab-bg"></div>
+    <div id="game-root"></div>
+    <aside id="lab-panel"></aside>
+    <script type="module" src="/src/ui/lab/uiLab.ts"></script>
+  </body>
+</html>

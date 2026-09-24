@@ -1,0 +1,104 @@
+/* Design tokens, fonts and the UI root. Sizes scale with the viewport: 1u = 1px at 1600×900. */
+
+@font-face {
+  font-family: 'Knewave';
+  src: url('/fonts/knewave/Knewave-Regular.latin.woff2') format('woff2');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Bangers';
+  src: url('/fonts/bangers/Bangers-Regular.latin.woff2') format('woff2');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Nunito';
+  src: url('/fonts/nunito/Nunito-Variable.latin.woff2') format('woff2');
+  font-weight: 200 1000;
+  font-display: swap;
+}
+
+.cr-ui {
+  --u: clamp(0.72px, min(100vw / 1600, 100vh / 900), 1.7px);
+  --ink: #0b1026;
+  --ink-2: #16204a;
+  --ink-3: #25326b;
+  --plate: rgba(9, 14, 34, 0.84);
+  --plate-2: rgba(9, 14, 34, 0.62);
+  --paper: #f6e7c4;
+  --paper-2: #e6c98f;
+  --paper-3: #c99e5c;
+  --paper-ink: #3a220f;
+  --gold: #ffcf33;
+  --gold-2: #ffb020;
+  --gold-3: #b86d00;
+  --orange: #ff8a1c;
+  --red: #ff4a3d;
+  --red-2: #b31d1d;
+  --cyan: #3fe0ff;
+  --cyan-2: #1a9fd6;
+  --green: #62e36f;
+  --green-2: #23a843;
+  --teal: #3ff5d0;
+  --blue: #4fa3ff;
+  --purple: #b56bff;
+  --white: #fffaf0;
+  --accent: #ffcf33;
+
+  --f-brush: 'Knewave', 'Bangers', Impact, 'Arial Black', sans-serif;
+  --f-comic: 'Bangers', Impact, 'Arial Narrow Bold', sans-serif;
+  --f-ui: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  --f-sym: 'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols 2', sans-serif;
+
+  --fs-12: max(11px, calc(12 * var(--u)));
+  --fs-13: max(11.5px, calc(13 * var(--u)));
+  --fs-14: max(12px, calc(14 * var(--u)));
+  --fs-16: max(13px, calc(16 * var(--u)));
+  --fs-18: calc(18 * var(--u));
+  --fs-20: calc(20 * var(--u));
+  --fs-24: calc(24 * var(--u));
+  --fs-28: calc(28 * var(--u));
+  --fs-32: calc(32 * var(--u));
+  --fs-40: calc(40 * var(--u));
+  --fs-48: calc(48 * var(--u));
+  --fs-64: calc(64 * var(--u));
+  --fs-80: calc(80 * var(--u));
+  --fs-96: calc(96 * var(--u));
+
+  --stroke-s: calc(3 * var(--u));
+  --stroke-m: calc(5 * var(--u));
+  --stroke-l: calc(8 * var(--u));
+  --stroke-xl: calc(12 * var(--u));
+  --ease-pop: cubic-bezier(.2, 1.4, .35, 1);
+  --ease-out: cubic-bezier(.2, .9, .2, 1);
+
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--white);
+  font-family: var(--f-ui);
+  font-size: var(--fs-16);
+  font-weight: 700;
+  line-height: 1.25;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:where(.cr-ui) *, :where(.cr-ui) *::before, :where(.cr-ui) *::after { box-sizing: border-box; }
+.cr-ui [hidden] { display: none !important; }
+/* Resets use :where() so every component class wins over them. */
+:where(.cr-ui button) { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-align: inherit; }
+:where(.cr-ui a) { color: inherit; text-decoration: none; }
+:where(.cr-ui h1, .cr-ui h2, .cr-ui h3, .cr-ui h4, .cr-ui p) { margin: 0; font-weight: inherit; }
+:where(.cr-ui button:focus, .cr-ui :focus-visible) { outline: none; }
+
+/* Outlined "sticker" type: readable over bright water and night scenes alike. */
+.cr-ink {
+  -webkit-text-stroke: var(--stroke-m) var(--ink);
+  paint-order: stroke fill;
+}
+
+.hide-ui .cr-ui { display: none; }
