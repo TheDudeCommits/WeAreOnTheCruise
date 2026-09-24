@@ -12,7 +12,7 @@
  *                as particles age (foam thins into lace, crest ridge flattens).
  */
 import type { ProjectileKind } from '../../game/ids';
-import type { BossState, EnemyState, HazardState, RunState, SimEvent } from '../../game/types';
+import type { BossState, CaptainState, EnemyState, HazardState, RunState, SimEvent } from '../../game/types';
 import type { InteractionField } from './InteractionField';
 import { SHAPE_BLOB, SHAPE_CAPSULE, SHAPE_FRONT, SHAPE_HULL, SHAPE_RING, SHAPE_WAKE, SHAPE_WHIRL } from './StampBatch';
 
@@ -387,6 +387,21 @@ export class WakeSystem {
     this.source(src);
   }
 
+  /** AI captains (CAPTAINS): hero-class hulls; sinking for the first seconds after `captain-sunk` (ai.sinkT). */
+  captain(k: CaptainState): void {
+    const sinkT = k.alive ? 0 : k.ai.sinkT ?? 99;
+    if (!k.alive && sinkT > 4.5) return;
+    const src = this.scratch;
+    src.key = -1e9 + k.id; // escort skiffs already use small negative keys
+    src.x = k.x; src.z = k.z; src.heading = k.heading;
+    src.speed = k.alive ? Math.hypot(k.vx, k.vz) || Math.abs(k.speed) : 0;
+    src.length = k.length; src.beam = k.beam;
+    src.sink = k.alive ? 0 : Math.max(0.001, sinkT / 4.5);
+    src.contact = k.alive ? 1 : 1 - smooth(0.4, 1, src.sink);
+    src.submerged = 0; src.airborne = 0; src.wake = 1.05; src.serpent = false;
+    this.source(src);
+  }
+
   hazard(h: HazardState): void {
     if (!h.alive) return;
     const f = this.field;
@@ -515,6 +530,7 @@ export class WakeSystem {
     this.source(src);
     for (let i = 0; i < run.enemies.length; i++) this.enemy(run.enemies[i]!, enemyScale);
     for (let i = 0; i < run.bosses.length; i++) this.boss(run.bosses[i]!);
+    for (let i = 0; i < run.captains.length; i++) this.captain(run.captains[i]!);
     for (let i = 0; i < run.hazards.length; i++) this.hazard(run.hazards[i]!);
     for (let i = 0; i < events.length; i++) this.event(events[i]!);
   }

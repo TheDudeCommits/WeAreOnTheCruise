@@ -26,6 +26,8 @@ import { IslandField } from '../world/IslandField';
 import { FrameProfiler } from './FrameProfiler';
 import type { AppConfig } from './AppConfig';
 import { installDebugBridge } from './debugBridge';
+import { captainSetting, configureCaptains } from '../game/sim/captains-runtime';
+import { storedCaptainSetting } from './presence';
 
 const SYSTEM_NAMES = ['sky', 'ocean', 'world', 'ships', 'fx', 'camera'] as const;
 
@@ -87,6 +89,9 @@ export class GameApp {
     this.post = new PostStack(this.host.renderer);
     this.profile = loadProfile();
     this.settings = loadSettings();
+    // CAPTAINS: sanitizeSettings drops `captains`; restore it from the raw save (see presence.ts).
+    const savedCaptains = storedCaptainSetting();
+    if (savedCaptains !== undefined) this.settings = { ...this.settings, captains: savedCaptains };
     this.selectedShip = this.profile.lastShip;
     this.menuWorld = new IslandField(config.seed, { menuHarbor: true });
     this.world = this.menuWorld;
@@ -136,6 +141,7 @@ export class GameApp {
     saveProfile(this.profile);
     this.world = new IslandField(`${this.config.seed}:${this.profile.runs}`, { sea: seaId });
     this.sim = new Sim({ seed: this.world.seed, shipId, seaId, meta: this.profile, world: this.world });
+    configureCaptains(this.sim.state, captainSetting(this.settings)); // CAPTAINS: Settings.captains (default 3)
     this.credited = null;
     if (this.config.god) this.sim.debug.god(true);
     this.result = null;

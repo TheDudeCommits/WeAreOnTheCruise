@@ -14,7 +14,7 @@ import { Cel } from './passes/CelSprites';
 import { Decal } from './passes/Decals';
 import { Glow } from './passes/GlowSprites';
 import type { Sakuga } from './Sakuga';
-import { ShipFrame, findShip, shipFrame } from './ShipFrames';
+import { ShipFrame, findCaptain, findShip, shipFrame } from './ShipFrames';
 
 const TAU = Math.PI * 2;
 
@@ -142,9 +142,10 @@ export class EventFx {
       }
       case 'damage': {
         const wy = fx.wy(e.x, e.z);
-        const ship = e.target === 0 ? null : findShip(run, e.target);
+        const ship = e.target === 0 ? null : e.target < 0 ? findCaptain(run, e.target) : findShip(run, e.target);
         const h = ship ? Math.min(16, 5 + ship.length * 0.16) : 7;
-        k.numbers.add(e.target, e.amount, e.crit, e.x, wy + h, e.z, e.crit ? 0xffd23a : 0xffffff);
+        // AI captains (negative ids) show the hull damage they take in a soft coral, not the player's white.
+        k.numbers.add(e.target, e.amount, e.crit, e.x, wy + h, e.z, e.target < 0 ? 0xff9a7a : e.crit ? 0xffd23a : 0xffffff);
         break;
       }
       case 'player-hit': this.playerHit(e, run, water); break;
@@ -317,8 +318,24 @@ export class EventFx {
         if (e.overdrive) fx.ring(p.x, wy + 8, p.z, 6, 40, GlowPal.Gold, 0.6, 1.3);
         break;
       }
+      // AI captains (CAPTAINS): a captain's hull going down, and sailing back in.
+      case 'captain-sunk': {
+        const cap = findCaptain(run, e.id);
+        fx.kill(e.x, e.z, cap ? cap.length : 40, cap ? cap.heading : 0, false, false);
+        k.juice.shakeAt(0.35, Math.hypot(e.x - k.focusX, e.z - k.focusZ), 0.4, 60, 420);
+        break;
+      }
+      case 'captain-respawned': {
+        const cap = findCaptain(run, e.id);
+        if (!cap) break;
+        const wy = fx.wy(cap.x, cap.z);
+        fx.foam(cap.x, cap.z, cap.length * 0.5, 1.6, 0, 1.2);
+        fx.sparkles(cap.x, wy + 8, cap.z, 18, cap.length * 0.4, GlowPal.Glint, 1.3);
+        break;
+      }
       // Visual-free events (UI/audio/sky own them): card-chosen, passive-changed, skill-ready, director-event,
-      // weather-changed (sky crossfades), run-ended.
+      // weather-changed (sky crossfades), run-ended, captain-joined / captain-kill (roster; the kill has its own
+      // enemy-killed explosion).
       default: break;
     }
   }
@@ -497,10 +514,11 @@ export class EventFx {
     if (e.target === 'island') { fx.islandHit(e.x, Math.max(e.y, wy + 1), e.z, s); return; }
     // ship hit: estimate travel direction (player shots come from the player; enemy shots head into the player)
     const p = run.player;
+    const cap = e.targetId !== undefined && e.targetId < 0 ? findCaptain(run, e.targetId) : null;
     let dx: number, dz: number;
-    if (e.team === 'player') { dx = e.x - p.x; dz = e.z - p.z; } else { dx = p.x - e.x; dz = p.z - e.z; }
+    if (e.team === 'player') { dx = e.x - p.x; dz = e.z - p.z; } else if (cap) { dx = cap.x - e.x; dz = cap.z - e.z; } else { dx = p.x - e.x; dz = p.z - e.z; }
     const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;
-    const ship = e.targetId !== undefined && e.targetId !== 0 ? findShip(run, e.targetId) : null;
+    const ship = cap ?? (e.targetId !== undefined && e.targetId !== 0 ? findShip(run, e.targetId) : null);
     const y = wy + (ship ? Math.max(2.5, Math.min(6, ship.length * 0.1)) : 3.5);
     switch (e.projectile) {
       case 'water-bolt':

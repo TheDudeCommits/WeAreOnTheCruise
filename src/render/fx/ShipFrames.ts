@@ -3,7 +3,7 @@
  * ShipServices.transform/anchor (the visual ship, including heave and heel) with RunState fallbacks.
  */
 import * as THREE from 'three';
-import type { BossState, EnemyState, RunState } from '../../game/types';
+import type { BossState, CaptainState, EnemyState, RunState } from '../../game/types';
 import type { ShipServices } from '../frame';
 
 export class ShipFrame {
@@ -21,6 +21,7 @@ const m = new THREE.Matrix4();
 const v = new THREE.Vector3();
 
 export function findShip(run: Readonly<RunState>, id: number): EnemyState | BossState | null {
+  if (id < 0) return null; // AI captains: findCaptain
   const enemies = run.enemies;
   for (let i = 0; i < enemies.length; i++) if (enemies[i]!.id === id) return enemies[i]!;
   const bosses = run.bosses;
@@ -28,10 +29,18 @@ export function findShip(run: Readonly<RunState>, id: number): EnemyState | Boss
   return null;
 }
 
-/** Fills `out` for ship `id` (0 = player). Returns false if the ship is unknown to both sim and render. */
+/** AI captain by its (negative) ship ref (CAPTAINS). */
+export function findCaptain(run: Readonly<RunState>, id: number): CaptainState | null {
+  const list = run.captains;
+  for (let i = 0; i < list.length; i++) if (list[i]!.id === id) return list[i]!;
+  return null;
+}
+
+/** Fills `out` for ship `id` (0 = player, < 0 = AI captain). Returns false if the ship is unknown to both sim and render. */
 export function shipFrame(run: Readonly<RunState>, ships: ShipServices | null, id: number, out: ShipFrame, waterY: (x: number, z: number) => number): boolean {
   let body: { x: number; z: number; heading: number; length: number; beam: number } | null = null;
   if (id === 0) body = run.player;
+  else if (id < 0) body = findCaptain(run, id);
   else body = findShip(run, id);
   if (body) { out.length = body.length; out.beam = body.beam; out.heading = body.heading; }
   if (ships && ships.transform(id, m)) {
