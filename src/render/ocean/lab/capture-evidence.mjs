@@ -88,7 +88,7 @@ try {
 
   // ───────────── Perf ─────────────
   if (want('perf')) {
-    for (const [dpr, quality] of [['1.25', 'high'], ['1.5', 'high'], ['1.25', 'medium']]) {
+    for (const [dpr, quality] of [['1', 'high'], ['1.25', 'high'], ['1.5', 'high'], ['1.25', 'medium']]) {
       await page.goto(`${base}/lab/ocean.html?clean=1&dpr=${dpr}&quality=${quality}&cam=tactical&hour=10`);
       await page.waitForFunction(() => window.__OCEAN_LAB__, null, { timeout: 30000 });
       await page.waitForTimeout(1500);
