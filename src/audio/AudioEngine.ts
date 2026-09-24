@@ -172,7 +172,8 @@ export class AudioEngine implements AudioSystem {
     if (!this.isUnlocked || !this.ctx || !this.mixer) return;
     const now = this.ctx.currentTime;
     this.frameCounts.clear();
-    if (screenChanged && this.director && (frame.screen === 'harbor' || frame.screen === 'run')) this.director.warm(['run-calm', 'run-combat']);
+    if (screenChanged && this.director && frame.screen === 'harbor') this.director.warm(['run-calm', 'run-combat']);
+    if (screenChanged && this.director && frame.screen === 'run' && frame.run) { this.director.warmSea(frame.run.seaId); this.warmedLate = false; }
     if (screenChanged && frame.screen === 'run' && frame.run && frame.run.time > 690) this.warmedFinal = false;
     this.mixer.update(now);
     this.mixer.setPauseMode(this.pauseMode(frame));
@@ -186,7 +187,7 @@ export class AudioEngine implements AudioSystem {
     }
     // Stream the late-run tracks ahead of need (boss music must be ready at the 10 s boss warning).
     if (this.director && frame.screen === 'run' && frame.run) {
-      if (frame.run.time > 20 && !this.warmedLate) { this.warmedLate = true; this.director.warm(['run-horde', 'boss']); }
+      if (frame.run.time > 20 && !this.warmedLate) { this.warmedLate = true; this.director.warmSea(frame.run.seaId, ['horde']); this.director.warm(['boss']); }
       if (frame.run.time > 690 && !this.warmedFinal) { this.warmedFinal = true; this.director.warm(['boss-final']); }
     }
   }

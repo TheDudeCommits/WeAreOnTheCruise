@@ -1,14 +1,18 @@
 /**
  * Adaptive music (AUDIO-owned): streamed tracks (HTMLAudioElement → MediaElementAudioSourceNode, so long
- * tracks are never fully decoded), bar-synced equal-power crossfades, intensity hysteresis, and stingers.
+ * tracks are never fully decoded), bar-synced equal-power crossfades, combat-heat layers with hysteresis, per-sea run
+ * tracks, and stingers.
  *
  * Rules: a track that fades out keeps playing silently for WARM_SECONDS, so flipping back resumes it
  * seamlessly (no restart); after that it pauses and later resumes from where it stopped.
+ *
+ * Run layers (calm / combat / horde) follow the combat heat (heat.ts): kills per minute, threat nearby, the player's
+ * own guns, hull taken, set pieces. Each sea has its own three layers (SEA_SUFFIX), falling back to Sunward's.
  */
-import type { EnemyId } from '../game/ids';
+import type { SeaId } from '../game/ids';
 import type { RunState, SimEvent } from '../game/types';
 import type { AppScreen } from '../render/frame';
-import { smoothstep } from './spatial';
+import { CombatHeat, LayerSelector, type RunLayer } from './heat';
 import type { MusicDef } from './types';
 
 export type MusicState =
@@ -22,16 +26,11 @@ const STATE_TRACK: Record<MusicState, string | null> = {
   victory: null, defeat: null,
 };
 
+/** Per-sea variants of the run layers: `run-calm` + suffix (missing keys fall back to the base track). */
+const SEA_SUFFIX: Record<SeaId, string> = { 'sunward-shallows': '', 'stormwrack-reach': '-storm', 'the-gloam': '-gloam' };
+
 const WARM_SECONDS = 25;
 const MIN_FADE = 1.6;
-
-/** Relative threat of each enemy class for the intensity meter. */
-const THREAT: Record<EnemyId, number> = {
-  skiff: 0.45, cutter: 0.75, brig: 1, fireship: 1.3, 'mortar-barge': 1.2, frigate: 1.7, 'man-o-war': 2.6,
-  'corsair-brig': 1.1, 'corsair-galleon': 2.1, wraith: 1.4, wyrmling: 1, fort: 1.4,
-  'signal-cutter': 0.9, ironclad: 1.8, harpooner: 1.2, 'bomb-ketch': 1.3, 'smoke-runner': 0.6, 'lantern-wisp': 0.7,
-  'drowned-galleon': 2.2, 'kraken-arm': 1.6,
-};
 
 type ParamWithHold = AudioParam & { cancelAndHoldAtTime?: (t: number) => AudioParam };
 
@@ -174,14 +173,14 @@ export class MusicDirector {
   intensityOverride: number | null = null;
   intensity = 0;
   rawIntensity = 0;
-  private activity = 0;
+  /** Combat heat meter (drives the run layers; the barks read it too). */
+  readonly heat = new CombatHeat();
+  private readonly layers = new LayerSelector();
   private current: MusicTrack | null = null;
   private readonly tracks = new Map<string, MusicTrack>();
   private pending: { state: MusicState; at: number; fade: number } | null = null;
-  private runState: 'calm' | 'combat' | 'horde' = 'calm';
-  private candidate: 'calm' | 'combat' | 'horde' | null = null;
-  private candidateTime = 0;
-  private dwell = 0;
+  private runState: RunLayer = 'calm';
+  private sea: SeaId | null = null;
   private stingerUntil = 0;
   private outcome: 'victory' | 'defeat' | 'retired' | null = null;
   private lastScreen: AppScreen = 'boot';
@@ -199,12 +198,21 @@ export class MusicDirector {
   /** Starts working (after unlock). */
   enable(): void { this.enabled = true; }
 
-  trackInfo(): { state: MusicState; track: string | null; position: number; level: number; intensity: number; runState: string; pending: string | null } {
+  trackInfo(): {
+    state: MusicState; track: string | null; position: number; level: number; intensity: number; runState: string; pending: string | null;
+    heat: CombatHeat['parts'] & { lull: number };
+  } {
     return {
       state: this.state, track: this.current?.key ?? null, position: +(this.current?.position() ?? 0).toFixed(2),
       level: +(this.current?.fader.gain.value ?? 0).toFixed(3), intensity: +this.intensity.toFixed(3), runState: this.runState,
       pending: this.pending ? `${this.pending.state}@${(this.pending.at - this.ctx.currentTime).toFixed(2)}s` : null,
+      heat: { ...this.heat.parts, lull: +this.heat.lull.toFixed(1) },
     };
+  }
+
+  /** Streams the run layers of a sea ahead of need. */
+  warmSea(sea: SeaId, layers: readonly RunLayer[] = ['calm', 'combat']): void {
+    for (const l of layers) { const k = this.keyFor(l, sea); if (k) this.track(k); }
   }
 
   /** Preloads the tracks a screen is likely to need (media elements stream; nothing is played). */
@@ -215,9 +223,10 @@ export class MusicDirector {
   update(input: DirectorInput): void {
     const { now } = input;
     if (input.screen !== this.lastScreen) {
-      if (input.screen === 'run') { this.outcome = null; this.runState = 'calm'; this.dwell = 0; this.intensity = 0; this.activity = 0; this.candidate = null; }
+      if (input.screen === 'run') { this.outcome = null; this.runState = 'calm'; this.intensity = 0; this.heat.reset(); this.layers.reset(); }
       this.lastScreen = input.screen;
     }
+    if (input.run && input.screen === 'run') this.sea = input.run.seaId;
     this.measure(input);
     if (!this.enabled) return;
     const desired = this.override ?? this.desiredState(input);
@@ -300,50 +309,23 @@ export class MusicDirector {
     return this.runState;
   }
 
-  /** Intensity meter + calm/combat/horde hysteresis (run only). */
+  /** Combat heat → calm/combat/horde layer with hysteresis (run only). */
   private measure(input: DirectorInput): void {
     const { run, dt } = input;
     if (!run || input.screen !== 'run') { this.intensity += (0 - this.intensity) * Math.min(1, dt / 3); return; }
-    const p = run.player;
-    const active = run.status === 'running';
-    if (!active) return;
-    let threat = 0;
-    for (const e of run.enemies) {
-      if (e.life !== 'alive') continue;
-      const d = Math.hypot(e.x - p.x, e.z - p.z);
-      if (d > 340) continue;
-      threat += (THREAT[e.defId] ?? 1) * (e.elite ? 2.2 : 1) * (1 - smoothstep(120, 340, d));
-    }
-    for (const ev of input.events) {
-      if (ev.type === 'player-hit') this.activity += Math.min(1.5, (ev.amount / Math.max(1, p.maxHp)) * 6);
-      else if (ev.type === 'enemy-fired') { if (Math.hypot(ev.x - p.x, ev.z - p.z) < 260) this.activity += 0.035 * Math.min(4, ev.count); }
-      else if (ev.type === 'enemy-killed') this.activity += 0.06;
-    }
-    this.activity *= Math.exp(-dt / 4);
-    const threatN = 1 - Math.exp(-threat / 5);
-    const actN = 1 - Math.exp(-this.activity);
-    const timeN = smoothstep(120, 780, run.time);
-    const raw = Math.min(1, 0.66 * Math.max(threatN, actN) + 0.18 * Math.min(threatN, actN) + 0.24 * timeN * (threatN > 0.12 ? 1 : 0.35));
-    this.rawIntensity = this.intensityOverride ?? raw;
-    const target = this.rawIntensity;
-    const tau = target > this.intensity ? 1.2 : 5;
-    this.intensity += (target - this.intensity) * Math.min(1, dt / tau);
+    this.heat.update(run, input.events, dt, this.intensityOverride);
+    this.rawIntensity = this.heat.raw;
+    this.intensity = this.heat.heat;
+    if (run.status !== 'running') return;
+    this.runState = this.layers.update(this.heat, run.time, dt);
+  }
 
-    // Hysteresis with minimum dwell.
-    this.dwell += dt;
-    const i = this.intensity;
-    let next: 'calm' | 'combat' | 'horde' = this.runState;
-    let hold = 0;
-    if (this.runState === 'calm' && i > 0.34) { next = 'combat'; hold = 1.5; }
-    else if (this.runState === 'combat' && (i > 0.85 || (i > 0.68 && run.time > 360))) { next = 'horde'; hold = 3; }
-    else if (this.runState === 'combat' && i < 0.18) { next = 'calm'; hold = 9; }
-    else if (this.runState === 'horde' && i < 0.45) { next = 'combat'; hold = 10; }
-    if (next === this.runState) { this.candidate = null; this.candidateTime = 0; return; }
-    if (this.candidate !== next) { this.candidate = next; this.candidateTime = 0; }
-    this.candidateTime += dt;
-    if (this.candidateTime >= hold && this.dwell >= 14) {
-      this.runState = next; this.candidate = null; this.candidateTime = 0; this.dwell = 0;
-    }
+  /** Track key of a run layer in a sea (the sea's own variant when the manifest has it). */
+  private keyFor(state: MusicState, sea: SeaId | null): string | null {
+    const base = STATE_TRACK[state];
+    if (!base || !sea || !base.startsWith('run-')) return base;
+    const k = base + SEA_SUFFIX[sea];
+    return this.defs[k] ? k : base;
   }
 
   private request(state: MusicState, now: number): void {
@@ -376,7 +358,7 @@ export class MusicDirector {
       this.stingerUntil = now + Math.max(2, len);
       return;
     }
-    const key = STATE_TRACK[state];
+    const key = this.keyFor(state, this.sea);
     const next = key ? this.track(key) : null;
     if (this.current && this.current !== next) fadeParam(this.current.fader.gain, 0, fade, now);
     if (next) {

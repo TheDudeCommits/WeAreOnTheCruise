@@ -1272,6 +1272,66 @@
    "desc": "late-run horde: Battle Theme A",
    "file": "music/run-horde.ogg"
   },
+  "run-calm-storm": {
+   "gain": 0.85,
+   "bpm": 86,
+   "beatsPerBar": 4,
+   "loop": true,
+   "loopEnd": 124.7,
+   "loopCrossfade": 2,
+   "desc": "Stormwrack calm: War on Water, chapter 2 — tense military march",
+   "file": "music/run-calm-storm.ogg"
+  },
+  "run-combat-storm": {
+   "gain": 0.9,
+   "bpm": 120.2,
+   "beatsPerBar": 4,
+   "loop": true,
+   "loopEnd": 232.3,
+   "loopCrossfade": 3,
+   "desc": "Stormwrack combat: QaziJamJam — a 4-minute orchestral battle theme with variations",
+   "file": "music/run-combat-storm.ogg"
+  },
+  "run-horde-storm": {
+   "gain": 0.9,
+   "bpm": 120.2,
+   "beatsPerBar": 4,
+   "loop": true,
+   "seamless": true,
+   "desc": "Stormwrack horde: Determined Pursuit (seamless loop)",
+   "file": "music/run-horde-storm.ogg",
+   "loopEnd": 107.96
+  },
+  "run-calm-gloam": {
+   "gain": 0.8,
+   "bpm": 99.4,
+   "beatsPerBar": 4,
+   "loop": true,
+   "loopEnd": 39.5,
+   "loopCrossfade": 3,
+   "desc": "Gloam calm: Mysterious Ambience — dark piano textures",
+   "file": "music/run-calm-gloam.ogg"
+  },
+  "run-combat-gloam": {
+   "gain": 0.9,
+   "bpm": 143.6,
+   "beatsPerBar": 4,
+   "loop": true,
+   "loopEnd": 63.6,
+   "loopCrossfade": 1.5,
+   "desc": "Gloam combat: Battle Theme B (B minor)",
+   "file": "music/run-combat-gloam.ogg"
+  },
+  "run-horde-gloam": {
+   "gain": 0.9,
+   "bpm": 132.5,
+   "beatsPerBar": 4,
+   "loop": true,
+   "loopEnd": 71.2,
+   "loopCrossfade": 2.5,
+   "desc": "Gloam horde: Dark Descent — orchestra and choir (CC BY 3.0, Matthew Pablo)",
+   "file": "music/run-horde-gloam.ogg"
+  },
   "boss": {
    "gain": 0.9,
    "bpm": 117.5,
@@ -1327,6 +1387,28 @@
     "oga-a-sailors-chant"
    ]
   },
+  "music/run-calm-gloam.ogg": {
+   "bytes": 626185,
+   "sha256": "f9384a610b15a5cdf0b10ffff0a3d255820f5190328a91ab96ea01bc910a7be8",
+   "duration": 42.917,
+   "channels": 2,
+   "lufs": -15.9,
+   "truePeak": -2.6,
+   "sources": [
+    "oga-mysterious-ambience-song21"
+   ]
+  },
+  "music/run-calm-storm.ogg": {
+   "bytes": 1542816,
+   "sha256": "06c6698ee759d96c363b7c2ac4aba205501e5f1a68054a5a2370da16607fcf06",
+   "duration": 124.901,
+   "channels": 2,
+   "lufs": -16,
+   "truePeak": -0.1,
+   "sources": [
+    "oga-war-on-water-tracks"
+   ]
+  },
   "music/run-calm.ogg": {
    "bytes": 1272652,
    "sha256": "ed11d335f9a583bebd04a3b709bdb7870018e7b4cecca9ce482f7d13e1710480",
@@ -1338,6 +1420,28 @@
     "oga-trials-of-the-sea"
    ]
   },
+  "music/run-combat-gloam.ogg": {
+   "bytes": 793705,
+   "sha256": "c3de8202f950de948676a0ac6f2341df130a2c30612883ae551516afba2209d2",
+   "duration": 66.044,
+   "channels": 2,
+   "lufs": -16,
+   "truePeak": -2.5,
+   "sources": [
+    "oga-battle-theme-b-for-rpg"
+   ]
+  },
+  "music/run-combat-storm.ogg": {
+   "bytes": 2954329,
+   "sha256": "19add9cd69d8684b0f910415255a60c72c2971c4558149d63215dc0f8f5b1bb5",
+   "duration": 234.122,
+   "channels": 2,
+   "lufs": -16,
+   "truePeak": -2.7,
+   "sources": [
+    "oga-qazijamjam-orchestral-battle-theme"
+   ]
+  },
   "music/run-combat.ogg": {
    "bytes": 1257792,
    "sha256": "b10d408109e3aadfad3d481c9200304064ae99f0a371f3a354195c7d66030a50",
@@ -1347,6 +1451,28 @@
    "truePeak": -3.4,
    "sources": [
     "oga-chest-of-adventure"
+   ]
+  },
+  "music/run-horde-gloam.ogg": {
+   "bytes": 911306,
+   "sha256": "48c46f63b34c25f1b1f6af7a87f4c3c56c873dd90b77a20c987f61f273d12cc9",
+   "duration": 83.337,
+   "channels": 2,
+   "lufs": -16,
+   "truePeak": -3.9,
+   "sources": [
+    "oga-dark-descent"
+   ]
+  },
+  "music/run-horde-storm.ogg": {
+   "bytes": 1216397,
+   "sha256": "e032e9a4bb4d91a40261b46508bcc3c31a694077df8e9a87085311fad74063b7",
+   "duration": 108.007,
+   "channels": 2,
+   "lufs": -16,
+   "truePeak": -4.5,
+   "sources": [
+    "oga-determined-pursuit-epic-orchestra-loop"
    ]
   },
   "music/run-horde.ogg": {

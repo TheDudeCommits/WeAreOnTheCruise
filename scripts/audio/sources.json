@@ -2286,7 +2286,8 @@
   "page": "https://opengameart.org/content/determined-pursuit-epic-orchestra-loop",
   "license": "CC0-1.0",
   "download": "https://opengameart.org/sites/default/files/determined_pursuit_loop.wav",
-  "host": "opengameart.org"
+  "host": "opengameart.org",
+  "licenseChecked": "2026-09-24: page licence field 'CC0'"
  },
  "oga-boss-battle-music": {
   "title": "Boss Battle Music",
@@ -2371,5 +2372,50 @@
   "download": "https://cdn.freesound.org/previews/412/412308_7707368-hq.ogg",
   "host": "freesound (HQ preview)",
   "duration": 297.804
+ },
+ "oga-war-on-water-tracks": {
+  "title": "War on Water: Tracks (Chapter 2)",
+  "author": "yd",
+  "page": "https://opengameart.org/content/war-on-water-tracks",
+  "license": "CC0-1.0",
+  "download": "https://opengameart.org/sites/default/files/wowchapter2.ogg",
+  "host": "opengameart.org",
+  "licenseChecked": "2026-09-24: page licence field 'CC0'"
+ },
+ "oga-qazijamjam-orchestral-battle-theme": {
+  "title": "QaziJamJam (orchestral battle theme)",
+  "author": "Emma_MA",
+  "page": "https://opengameart.org/content/qazijamjam-orchestral-battle-theme",
+  "license": "CC0-1.0",
+  "download": "https://opengameart.org/sites/default/files/QaziJamJam.wav",
+  "host": "opengameart.org",
+  "licenseChecked": "2026-09-24: page licence field 'CC0'"
+ },
+ "oga-mysterious-ambience-song21": {
+  "title": "Mysterious Ambience (song21)",
+  "author": "cynicmusic (pixelsphere.org)",
+  "page": "https://opengameart.org/content/mysterious-ambience-song21",
+  "license": "CC0-1.0",
+  "download": "https://opengameart.org/sites/default/files/song21_0.mp3",
+  "host": "opengameart.org",
+  "licenseChecked": "2026-09-24: page offers CC-BY 3.0 / CC-BY-SA 3.0 / GPL 3.0 / CC0; used under CC0"
+ },
+ "oga-battle-theme-b-for-rpg": {
+  "title": "Battle Theme B for RPG",
+  "author": "cynicmusic",
+  "page": "https://opengameart.org/content/battle-theme-b-for-rpg",
+  "license": "CC0-1.0",
+  "download": "https://opengameart.org/sites/default/files/battleThemeB.mp3",
+  "host": "opengameart.org",
+  "licenseChecked": "2026-09-24: page licence field 'CC0'"
+ },
+ "oga-dark-descent": {
+  "title": "Dark Descent",
+  "author": "Matthew Pablo (www.matthewpablo.com)",
+  "page": "https://opengameart.org/content/dark-descent",
+  "license": "CC-BY-3.0",
+  "download": "https://opengameart.org/sites/default/files/Dark%20Descent_0.mp3",
+  "host": "opengameart.org",
+  "licenseChecked": "2026-09-24: page licence field 'CC-BY 3.0' (attribution in CREDITS.md)"
  }
 }

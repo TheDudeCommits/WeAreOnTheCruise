@@ -173,6 +173,13 @@ export const MUSIC = {
   'run-calm': { ...O('trials-of-the-sea'), gain: 0.9, bpm: 117.5, beatsPerBar: 4, loop: true, loopEnd: 99.4, loopCrossfade: 2.5, desc: 'calm sailing: Trials of the Sea' },
   'run-combat': { ...O('chest-of-adventure'), gain: 0.9, bpm: 120, beatsPerBar: 4, loop: true, loopStart: 3, loopEnd: 102.5, loopCrossfade: 3, desc: 'combat: Chest of Adventure' },
   'run-horde': { ...O('battle-theme-a'), gain: 0.9, bpm: 148, beatsPerBar: 4, loop: true, loopEnd: 93.6, loopCrossfade: 2, desc: 'late-run horde: Battle Theme A' },
+  // Per-sea run layers (music.ts SEA_SUFFIX): Stormwrack is martial and driving, the Gloam dark and eerie.
+  'run-calm-storm': { ...O('war-on-water-tracks'), gain: 0.85, bpm: 86, beatsPerBar: 4, loop: true, loopEnd: 124.7, loopCrossfade: 2, desc: 'Stormwrack calm: War on Water, chapter 2 — tense military march' },
+  'run-combat-storm': { ...O('qazijamjam-orchestral-battle-theme'), gain: 0.9, bpm: 120.2, beatsPerBar: 4, loop: true, loopEnd: 232.3, loopCrossfade: 3, desc: 'Stormwrack combat: QaziJamJam — a 4-minute orchestral battle theme with variations' },
+  'run-horde-storm': { ...O('determined-pursuit-epic-orchestra-loop'), gain: 0.9, bpm: 120.2, beatsPerBar: 4, loop: true, seamless: true, desc: 'Stormwrack horde: Determined Pursuit (seamless loop)' },
+  'run-calm-gloam': { ...O('mysterious-ambience-song21'), gain: 0.8, bpm: 99.4, beatsPerBar: 4, loop: true, loopEnd: 39.5, loopCrossfade: 3, desc: 'Gloam calm: Mysterious Ambience — dark piano textures' },
+  'run-combat-gloam': { ...O('battle-theme-b-for-rpg'), gain: 0.9, bpm: 143.6, beatsPerBar: 4, loop: true, loopEnd: 63.6, loopCrossfade: 1.5, desc: 'Gloam combat: Battle Theme B (B minor)' },
+  'run-horde-gloam': { ...O('dark-descent'), gain: 0.9, bpm: 132.5, beatsPerBar: 4, loop: true, loopEnd: 71.2, loopCrossfade: 2.5, desc: 'Gloam horde: Dark Descent — orchestra and choir (CC BY 3.0, Matthew Pablo)' },
   boss: { ...O('boss-battle-music'), gain: 0.9, bpm: 117.5, beatsPerBar: 4, loop: true, seamless: true, desc: 'boss: Epic Boss Battle (seamless loop)' },
   'boss-final': { ...O('the-final-battle'), gain: 0.9, bpm: 161.5, beatsPerBar: 4, loop: true, loopEnd: 144.5, loopCrossfade: 2.5, desc: 'final boss (The Sovereign): The Final Battle' },
 };

@@ -18,6 +18,6 @@ export const CUE_IDS = [
 
 export type CueId = (typeof CUE_IDS)[number];
 
-export const MUSIC_KEYS = ['title', 'harbor', 'run-calm', 'run-combat', 'run-horde', 'boss', 'boss-final'] as const;
+export const MUSIC_KEYS = ['title', 'harbor', 'run-calm', 'run-combat', 'run-horde', 'run-calm-storm', 'run-combat-storm', 'run-horde-storm', 'run-calm-gloam', 'run-combat-gloam', 'run-horde-gloam', 'boss', 'boss-final'] as const;
 
 export type MusicKey = (typeof MUSIC_KEYS)[number];
