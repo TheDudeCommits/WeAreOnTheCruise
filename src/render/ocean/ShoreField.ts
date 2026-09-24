@@ -48,6 +48,8 @@ export class ShoreField {
 
   /** True once no refinement work is pending. */
   get settled(): boolean { return this.queue.length === 0; }
+  /** True when any island is within reach of the window (the shader skips the fetch otherwise). */
+  active = false;
 
   update(world: WorldQuery, focusX: number, focusZ: number, budgetMs = 1.2): void {
     const n = this.n;
@@ -83,6 +85,7 @@ export class ShoreField {
     }
     this.refine(world, budgetMs);
     const half = (n >> 1) * this.texel;
+    this.active = world.islandsNear((wx0 + (n >> 1)) * this.texel, (wz0 + (n >> 1)) * this.texel, half * 1.42 + this.maxDistance, this.islands).length > 0;
     this.rect.set((wx0 + (n >> 1)) * this.texel, (wz0 + (n >> 1)) * this.texel, half - this.texel * 2, 1 / (n * this.texel));
     if (this.dirty) {
       this.texture.needsUpdate = true;

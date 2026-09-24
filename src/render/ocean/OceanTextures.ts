@@ -149,7 +149,8 @@ function makeTarget(size: number, anisotropy: number): THREE.WebGLRenderTarget {
 
 /** Renders the three textures once. Safe to call during init (restores the renderer's target/clear state). */
 export function createOceanTextures(renderer: THREE.WebGLRenderer, seed = 1): OceanTextureSet {
-  const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  // 4x keeps grazing-angle ripples crisp; 8x doubled the cost of every fetch on the horizon half of the screen.
+  const anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-1, -1, 0, 3, -1, 0, -1, 3, 0]), 3));
   geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array([0, 0, 2, 0, 0, 2]), 2));

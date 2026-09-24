@@ -29,8 +29,11 @@ ${COMMON}
 uniform mat4 uInvViewProj;
 uniform float uFarDist;
 uniform float uGridAngle;
+uniform sampler2D uFoamTex;
+uniform vec2 uCloudOff;
 
 varying vec3 vWorld;
+varying float vCloud;
 varying vec2 vRel;
 varying vec2 vWRel;
 varying vec2 vRtUv;
@@ -73,6 +76,8 @@ void main() {
   vWorld = world;
   vRel = rel;
   vWRel = world.xz - uOrigin;
+  // Low-frequency painterly patches (230 m tiles): per-vertex is plenty; LOD from the grid footprint.
+  vCloud = textureLod(uFoamTex, vWRel * (1.0 / 230.0) + uCloudOff, clamp(log2(max(foot, 0.45) / 0.45), 0.0, 9.0)).b;
   vRtUv = rtUv;
   vShoreUv = world.xz * uShoreRect.w;
   vFoot = foot;
@@ -96,7 +101,6 @@ uniform sampler2D uFoamTex;
 uniform vec4 uDetailOff;         // offsets A.xy, B.xy (texture space)
 uniform vec2 uDetailScale;       // 1/tileA, 1/tileB (metres)
 uniform vec4 uFoamOff;           // Eulerian.xy, Lagrangian.xy
-uniform vec2 uCloudOff;
 uniform vec4 uWind;              // dir.xy, strength, streak
 uniform vec3 uSunDir;
 uniform vec3 uSunColor;
@@ -126,8 +130,15 @@ varying vec2 vRtUv;
 varying vec2 vShoreUv;
 varying float vFoot;
 varying float vViewDepth;
+varying float vCloud;
+uniform float uShoreActive;
 
 void main() {
+#if OCEAN_PROFILE == 1
+  gl_FragColor = vec4(0.05, 0.25, 0.6, 1.0);
+  #include <colorspace_fragment>
+  return;
+#endif
   vec3 toCam = cameraPosition - vWorld;
   float dist = length(toCam);
   vec3 V = toCam / max(dist, 1e-4);
@@ -160,55 +171,90 @@ void main() {
   }
   vec3 Ng = normalize(cross(Bt, T));
   float jac = T.x * Bt.z - Bt.x * T.z;
+#if OCEAN_PROFILE == 2
+  gl_FragColor = vec4(Ng * 0.5 + 0.5 + vec3(jac, height, ridgeS / max(-ridgeC, 1e-4)) * 0.01, 1.0);
+  return;
+#endif
   vec2 slope = -Ng.xz / max(Ng.y, 0.2);
   float hN = height / max(uAmpSum, 0.05);
 
   // ── Interaction targets ──
+  // Fetches are skipped outside the targets and, for the gradient, far from the camera (coherent branches).
   vec2 e2 = smoothstep(vec2(0.0), vec2(0.06), vRtUv) * smoothstep(vec2(1.0), vec2(0.94), vRtUv);
   float rtEdge = e2.x * e2.y;
-  vec4 trRaw = texture(uTransient, vRtUv);
-  vec4 trX = texture(uTransient, vRtUv + vec2(uRtTexel, 0.0));
-  vec4 trZ = texture(uTransient, vRtUv + vec2(0.0, uRtTexel));
-  vec4 pr = texture(uPersist, vRtUv) * rtEdge;
-  vec4 tr = trRaw * rtEdge;
-  float h0 = trRaw.r - trRaw.g;
-  vec2 rtSlope = vec2((trX.r - trX.g) - h0, (trZ.r - trZ.g) - h0) / uRtWorldTexel;
-  rtSlope *= rtEdge * (1.0 - smoothstep(1.2, 4.0, pix));
-  slope += rtSlope;
-  float lift = h0 * rtEdge;
+  vec4 tr = vec4(0.0);
+  vec4 pr = vec4(0.0);
+  float lift = 0.0;
+  if (rtEdge > 0.0) {
+    vec4 trRaw = texture(uTransient, vRtUv);
+    pr = texture(uPersist, vRtUv) * rtEdge;
+    tr = trRaw * rtEdge;
+    float h0 = trRaw.r - trRaw.g;
+    lift = h0 * rtEdge;
+    if (pix < 4.0) {
+      // Central differences over 1.5 texels: smooth gradients (forward differences of a bilinear texture
+      // are piecewise constant and read as stair-steps up close).
+      float o = uRtTexel * 1.5;
+      vec4 a = texture(uTransient, vRtUv + vec2(o, 0.0));
+      vec4 b = texture(uTransient, vRtUv - vec2(o, 0.0));
+      vec4 c = texture(uTransient, vRtUv + vec2(0.0, o));
+      vec4 d = texture(uTransient, vRtUv - vec2(0.0, o));
+      vec2 rtSlope = vec2((a.r - a.g) - (b.r - b.g), (c.r - c.g) - (d.r - d.g)) / (3.0 * uRtWorldTexel);
+      slope += rtSlope * rtEdge * (1.0 - smoothstep(1.2, 4.0, pix));
+    }
+  }
   vec3 Nm = normalize(vec3(-slope.x, 1.0, -slope.y));
 
   // ── Detail normals: wind aligned, scrolling, faded with distance ──
   vec2 wd = uWind.xy;
   vec2 wp = vec2(-wd.y, wd.x);
   vec2 pw = vec2(dot(vRel, wd), dot(vRel, wp));
-  vec3 nA = texture(uDetailA, pw * uDetailScale.x + uDetailOff.xy).xyz * 2.0 - 1.0;
-  vec2 pwB = vec2(dot(pw, vec2(0.94, 0.34)), dot(pw, vec2(-0.34, 0.94)));
-  vec3 nB = texture(uDetailB, pwB * uDetailScale.y + uDetailOff.zw).xyz * 2.0 - 1.0;
+  // Derivatives are taken in uniform control flow; branched fetches use textureGrad (mip selection stays valid).
+  vec2 pwDx = dFdx(pw);
+  vec2 pwDy = dFdy(pw);
+  vec2 wrDx = dFdx(vWRel);
+  vec2 wrDy = dFdy(vWRel);
   float fadeA = uLookA.w * (1.0 - smoothstep(100.0, 650.0, dist));
   float fadeB = uLookA.w * (1.0 - smoothstep(25.0, 170.0, dist)) * 0.5;
-  vec2 sA = nA.xz / max(nA.y, 0.35) * fadeA;
-  vec2 sB = nB.xz / max(nB.y, 0.35) * fadeB;
-  sB = vec2(sB.x * 0.94 - sB.y * 0.34, sB.x * 0.34 + sB.y * 0.94);
-  vec2 sDet = sA + sB;
+  vec2 sDet = vec2(0.0);
+  float ft = 1.0;
+  if (fadeA > 0.0) {
+    vec3 nA = textureGrad(uDetailA, pw * uDetailScale.x + uDetailOff.xy, pwDx * uDetailScale.x, pwDy * uDetailScale.x).xyz * 2.0 - 1.0;
+    sDet = nA.xz / max(nA.y, 0.35) * fadeA;
+    float lenN = length(nA);
+    if (fadeB > 0.0) {
+      mat2 rotB = mat2(0.94, -0.34, 0.34, 0.94);
+      vec2 pwB = rotB * pw;
+      vec3 nB = textureGrad(uDetailB, pwB * uDetailScale.y + uDetailOff.zw, (rotB * pwDx) * uDetailScale.y, (rotB * pwDy) * uDetailScale.y).xyz * 2.0 - 1.0;
+      vec2 sB = nB.xz / max(nB.y, 0.35) * fadeB;
+      sDet += vec2(sB.x * 0.94 - sB.y * 0.34, sB.x * 0.34 + sB.y * 0.94);
+      lenN = min(lenN, length(nB));
+    }
+    ft = mix(1.0, clamp(lenN, 0.05, 1.0), clamp(fadeA * 1.5, 0.0, 1.0));
+  }
   vec2 detWorld = wd * sDet.x + wp * sDet.y;
   vec3 Nd = normalize(vec3(-(slope.x + detWorld.x), 1.0, -(slope.y + detWorld.y)));
-  float ft = mix(1.0, clamp(min(length(nA), length(nB)), 0.05, 1.0), clamp(max(fadeA, fadeB) * 1.5, 0.0, 1.0));
   float P = uLookA.z;
   float Peff = max(P * ft / (ft + P * (1.0 - ft)), 6.0);
 
+#if OCEAN_PROFILE == 3
+  gl_FragColor = vec4(Nd * 0.5 + 0.5 + vec3(tr.b, pr.r, ft) * 0.01, 1.0);
+  return;
+#endif
   // ── Light & view ──
   vec3 L = normalize(uSunDir);
   float sunUp = smoothstep(-0.04, 0.1, L.y);
   float NdV = clamp(dot(Nm, V), 0.0, 1.0);
 
   // ── Shore field ──
-  float shoreD = texture(uShore, vShoreUv).r;
-  vec2 sdd = abs(vWorld.xz - uShoreRect.xy);
-  float shoreValid = 1.0 - smoothstep(uShoreRect.z - 40.0, uShoreRect.z, max(sdd.x, sdd.y));
-  shoreD = mix(uShoreMax, shoreD, shoreValid);
-  vec4 cloud = texture(uFoamTex, vWRel * (1.0 / 230.0) + uCloudOff);
-  float shallowAmt = 1.0 - smoothstep(4.0, 90.0, shoreD + (cloud.b - 0.5) * 34.0);
+  float shoreD = uShoreMax;
+  float shoreValid = 0.0;
+  if (uShoreActive > 0.5) {
+    vec2 sdd = abs(vWorld.xz - uShoreRect.xy);
+    shoreValid = 1.0 - smoothstep(uShoreRect.z - 40.0, uShoreRect.z, max(sdd.x, sdd.y));
+    if (shoreValid > 0.0) shoreD = mix(uShoreMax, texture(uShore, vShoreUv).r, shoreValid);
+  }
+  float shallowAmt = 1.0 - smoothstep(4.0, 90.0, shoreD + (vCloud - 0.5) * 34.0);
 
   // ── Body colour: deep cobalt looking down, turquoise-leaning at grazing faces, soft cel bands ──
   float deepness = smoothstep(0.18, 0.9, NdV);
@@ -242,19 +288,24 @@ void main() {
   vec3 Nr = normalize(mix(Nm, Nd, 0.4));
   vec3 Rr = reflect(-V, Nr);
   vec3 R = reflect(-V, Nd);
-  float F = 0.02 + 0.98 * pow(1.0 - clamp(dot(Nr, V), 0.0, 1.0), 5.0);
+  float fx = 1.0 - clamp(dot(Nr, V), 0.0, 1.0);
+  float fx2 = fx * fx;
+  float F = 0.02 + 0.98 * fx2 * fx2 * fx;
   vec3 refl = mix(uHorizon, uSky, smoothstep(0.0, 0.45, Rr.y));
-  refl *= 1.0 + (cloud.b - 0.5) * uLookC.x * 1.4;
+  refl *= 1.0 + (vCloud - 0.5) * uLookC.x * 1.4;
   refl += vec3(0.85, 0.9, 1.0) * uLookC.z * 0.9;
   col = mix(col, refl, clamp(F * uLookB.z * (1.0 - shallowAmt * 0.35), 0.0, 1.0));
 
+#if OCEAN_PROFILE == 4
+  gl_FragColor = vec4(col, 1.0);
+  return;
+#endif
   // ── Foam: interaction + shore (Eulerian) and whitecaps (Lagrangian, wind-stretched strokes) ──
-  vec4 fE = texture(uFoamTex, vWRel * (1.0 / 26.0) + uFoamOff.xy);
-  // Lagrangian samples: crest segments stretched along the crests (across the wind), storm streaks along it.
-  vec4 fL = texture(uFoamTex, pw * vec2(1.0 / 16.0, 1.0 / 58.0) + uFoamOff.zw);
-  float windStreak = texture(uFoamTex, pw * vec2(1.0 / 72.0, 1.0 / 15.0) + uFoamOff.wz).a;
   float farBlur = smoothstep(0.35, 2.6, pix);
   float covI = clamp(max(pr.r, tr.b), 0.0, 1.5);
+  // Shape textures are only fetched where foam can exist (most of the open sea skips them).
+  vec4 fE = vec4(0.5);
+  if (covI > 0.0 || shoreD < 36.0) fE = textureGrad(uFoamTex, vWRel * (1.0 / 26.0) + uFoamOff.xy, wrDx * (1.0 / 26.0), wrDy * (1.0 / 26.0));
   // Whitecaps: a band on the sharpest crests (Jacobian compression normalised by the sea state's maximum),
   // broken into wind-aligned strokes; never thresholded noise (no speckle at low coverage).
   float compress = clamp((1.0 - jac) / max(uCapNorm, 1e-3), 0.0, 1.5);
@@ -262,10 +313,21 @@ void main() {
   float ridgeW = 0.32 + 0.45 * uWind.z + 1.4 * uWind.w;
   float ridge = (1.0 - smoothstep(ridgeW * 0.45, ridgeW + pix * 1.2, ridgeDist)) * step(ridgeC, 0.0);
   float crestGate = smoothstep(uLookB.x, uLookB.y, clamp(hN, 0.0, 1.2) * 0.85 + compress * 0.45);
-  float seg = smoothstep(0.42, 0.66, fL.b + uWind.w * 0.14);
+  float lineCap = ridge * crestGate * (1.0 - smoothstep(0.7, 2.2, pix));
   // Storms add broad breaking patches on compressed crests, streaked along the wind.
-  float stormCap = smoothstep(0.55, 0.9, compress + hN * 0.25) * smoothstep(0.25, 0.7, windStreak) * uWind.w;
-  float covC = max(ridge * crestGate * seg * (1.0 - smoothstep(0.7, 2.2, pix)), stormCap * (1.0 - smoothstep(2.0, 8.0, pix)));
+  float stormPot = smoothstep(0.55, 0.9, compress + hN * 0.25) * uWind.w * (1.0 - smoothstep(2.0, 8.0, pix));
+  vec4 fL = vec4(0.5);
+  float covC = 0.0;
+  if (lineCap + stormPot > 1e-3) {
+    // Lagrangian samples: crest segments stretched along the crests (across the wind), storm streaks along it.
+    const vec2 LS = vec2(1.0 / 16.0, 1.0 / 58.0);
+    fL = textureGrad(uFoamTex, pw * LS + uFoamOff.zw, pwDx * LS, pwDy * LS);
+    float seg = smoothstep(0.42, 0.66, fL.b + uWind.w * 0.14);
+    float stormCap = 0.0;
+    const vec2 SS = vec2(1.0 / 72.0, 1.0 / 15.0);
+    if (stormPot > 1e-3) stormCap = stormPot * smoothstep(0.25, 0.7, textureGrad(uFoamTex, pw * SS + uFoamOff.wz, pwDx * SS, pwDy * SS).a);
+    covC = max(lineCap * seg, stormCap);
+  }
   float coast = (1.0 - smoothstep(0.5, 6.0, shoreD)) * step(-6.0, shoreD);
   float surfPhase = fract(shoreD / 9.0 + uTime * 0.21 + fE.b * 0.4);
   float surf = smoothstep(0.7, 0.9, surfPhase) * (1.0 - smoothstep(3.0, 34.0, shoreD)) * smoothstep(0.32, 0.6, fE.b + 0.08);
@@ -300,9 +362,12 @@ void main() {
   float toksvig = (1.0 + Peff) / (1.0 + P);
   float glint = smoothstep(0.55 - aaS, 0.55 + aaS, spec) * toksvig * (1.0 - smoothstep(0.6, 2.2, pix));
   // Broad sun path by day; at night a narrower moon path broken up by the ripples.
-  float sheenDay = pow(max(dot(Rr, L), 0.0), 18.0);
-  float sheenNight = pow(max(dot(R, L), 0.0), 140.0) * 1.6 + pow(max(dot(Rr, L), 0.0), 60.0) * 0.25;
-  float sheen = mix(sheenDay, sheenNight, uLookC.y) * uLookA.y;
+  float sheen = pow(max(dot(Rr, L), 0.0), 18.0);
+  if (uLookC.y > 0.01) {
+    float sheenNight = pow(max(dot(R, L), 0.0), 140.0) * 1.6 + pow(max(dot(Rr, L), 0.0), 60.0) * 0.25;
+    sheen = mix(sheen, sheenNight, uLookC.y);
+  }
+  sheen *= uLookA.y;
   // Sheen is tinted toward the horizon so a warm sun does not turn blue water lavender; glints stay sun-coloured.
   vec3 sheenCol = mix(uSunColor, uHorizon * 1.15, 0.45);
   col += (uSunColor * glint * uLookA.x + sheenCol * sheen) * sunUp * (1.0 - foamSolid * 0.85);

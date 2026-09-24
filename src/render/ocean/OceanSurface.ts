@@ -15,11 +15,15 @@ import type { OceanTextureSet } from './OceanTextures';
 import type { ShoreField } from './ShoreField';
 import { OCEAN_FRAGMENT, OCEAN_VERTEX } from './surfaceShaders';
 
+/**
+ * Grid cells in NDC. ~7-8 px cells at 1600-2400 px wide keep ~1 m spacing near the ship while avoiding the
+ * quad over-shading that ~5 px triangles cause (fragment cost dominates the ocean).
+ */
 const GRID: Record<QualityTier, [number, number]> = {
-  low: [240, 150],
-  medium: [340, 208],
-  high: [460, 280],
-  ultra: [600, 364],
+  low: [200, 124],
+  medium: [260, 160],
+  high: [330, 204],
+  ultra: [430, 264],
 };
 const NDC_X: [number, number] = [-1.25, 1.25];
 const NDC_Y: [number, number] = [-1.42, 1.25];
@@ -131,6 +135,7 @@ export class OceanSurface {
       uLookB: { value: new THREE.Vector4() },
       uLookC: { value: new THREE.Vector4() },
       uTime: { value: 0 },
+      uShoreActive: { value: 0 },
       uDebug: { value: 0 },
     };
     this.material = new THREE.ShaderMaterial({
@@ -141,6 +146,7 @@ export class OceanSurface {
       side: THREE.DoubleSide,
       depthWrite: true,
       depthTest: true,
+      defines: { OCEAN_PROFILE: 0 },
     });
     this.mesh = new THREE.Mesh(buildGrid(...GRID.high), this.material);
     this.mesh.name = 'ocean-surface';
@@ -151,6 +157,12 @@ export class OceanSurface {
     this.mesh.renderOrder = 10;
     this.mesh.userData.oceanProjectedGrid = true;
     this.mesh.onBeforeRender = (_renderer, _scene, camera) => this.syncCamera(camera);
+  }
+
+  /** Debug: compile-time shader variants for cost profiling (0 = full, 1 = flat colour). */
+  setProfile(mode: number): void {
+    this.material.defines.OCEAN_PROFILE = mode;
+    this.material.needsUpdate = true;
   }
 
   setQuality(tier: QualityTier): void {
@@ -269,6 +281,7 @@ export class OceanSurface {
     (u.uLookC!.value as THREE.Vector4).set(look.cloudPatch, look.night, look.flash, sunLevel);
     u.uTime!.value = time % 3600;
     u.uShoreMax!.value = shore.maxDistance;
+    u.uShoreActive!.value = shore.active ? 1 : 0;
   }
 
   dispose(): void {

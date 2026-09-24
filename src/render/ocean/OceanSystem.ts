@@ -179,6 +179,11 @@ export class OceanSystem implements RenderSystem, OceanServices {
     return this.timer?.available ?? false;
   }
 
+  resetGpuTiming(): void { this.timer?.reset(); }
+
+  /** Debug: shader cost profiling variants (see OceanSurface.setProfile). */
+  setProfile(mode: number): void { this.surface?.setProfile(mode); }
+
   stats(): OceanDebugStats {
     return {
       gpu: { ...(this.timer?.ms ?? {}) },

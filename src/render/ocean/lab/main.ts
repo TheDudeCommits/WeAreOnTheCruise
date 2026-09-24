@@ -10,6 +10,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { WeatherId } from '../../../game/ids';
 import type { SimEvent } from '../../../game/types';
 import type { FrameContext, QualityTier, RenderServices } from '../../frame';
+import { GpuTimer } from '../GpuTimer';
 import { OceanSystem } from '../OceanSystem';
 import { applyLabSky, createAtmosphere, createSea, LabSky, WEATHER_PRESETS } from './labAtmosphere';
 import { LabFleet } from './labFleet';
@@ -140,6 +141,7 @@ function updateCamera(dt: number, snap: boolean): void {
 // ───────────────────────────── Frame ─────────────────────────────
 let time = 0;
 let fpsEma = 60;
+let oceanUpdates = true;
 function applySea(): void {
   const preset = WEATHER_PRESETS[state.weather];
   sea.weather = sea.nextWeather = state.weather;
@@ -167,7 +169,7 @@ function frame(dt: number, snapCamera = false): void {
   (fleet.run as { status: string }).status = state.paused ? 'paused' : 'running';
   ctx.focus.x = h.x; ctx.focus.z = h.z; ctx.focus.heading = h.heading; ctx.focus.speed = h.speed;
   ctx.viewport.width = window.innerWidth; ctx.viewport.height = window.innerHeight;
-  ocean.update(ctx);
+  if (oceanUpdates) ocean.update(ctx);
   fleet.place(ocean);
   updateCamera(dt, snapCamera);
   sky.update(atmosphere, camera.position);
@@ -180,7 +182,9 @@ function frame(dt: number, snapCamera = false): void {
   const fog = scene.fog as THREE.Fog;
   fog.color.copy(atmosphere.fogColor); fog.near = atmosphere.fogNear; fog.far = atmosphere.fogFar;
   ocean.setDebugView(state.debug);
+  if (frameTiming) { frameTimer.poll(); frameTimer.begin('frame'); }
   renderer.render(scene, camera);
+  if (frameTiming) frameTimer.end('frame');
 }
 
 let last = performance.now();
@@ -280,23 +284,49 @@ window.addEventListener('resize', () => {
 });
 
 // ───────────────────────────── Automation / bench ─────────────────────────────
-async function bench(frames = 240): Promise<Record<string, unknown>> {
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const frameTimer = new GpuTimer(renderer.getContext() as WebGL2RenderingContext);
+let frameTiming = false;
+
+/**
+ * GPU cost of the ocean, measured with EXT_disjoint_timer_query_webgl2 while the lab runs vsync-paced (a tight
+ * loop backs the GPU queue up and inflates timestamps). Phase 1 times the interaction passes and the surface
+ * draw; phase 2 times whole frames with the ocean on vs hidden vs fully off.
+ */
+async function bench(seconds = 4): Promise<Record<string, unknown>> {
   const had = state.fixed;
-  state.fixed = true;
-  ocean.enableGpuTiming(true);
-  const gl = renderer.getContext() as WebGL2RenderingContext;
-  const start = performance.now();
-  for (let i = 0; i < frames; i++) {
-    frame(1 / 60);
-    if (i % 30 === 29) { gl.finish(); await new Promise((r) => setTimeout(r, 0)); }
-  }
-  gl.finish();
-  const cpuMs = (performance.now() - start) / frames;
-  // Let pending queries resolve.
-  for (let i = 0; i < 6; i++) { frame(1 / 60); gl.finish(); await new Promise((r) => setTimeout(r, 16)); }
-  const s = ocean.stats();
+  state.fixed = false;
+  const mesh = ocean.mesh!;
+  const available = ocean.enableGpuTiming(true);
+  ocean.resetGpuTiming();
+  await sleep(seconds * 1000);
+  const passes = { ...ocean.stats().gpu };
+  ocean.enableGpuTiming(false);
+  const phase = async (visible: boolean, updates: boolean) => {
+    mesh.visible = visible;
+    oceanUpdates = updates;
+    frameTimer.reset();
+    frameTiming = true;
+    await sleep(seconds * 500);
+    frameTiming = false;
+    return frameTimer.ms.frame ?? NaN;
+  };
+  const full = await phase(true, true);
+  const hidden = await phase(false, true);
+  const off = await phase(false, false);
+  mesh.visible = true;
+  oceanUpdates = true;
   state.fixed = had;
-  return { gpu: s.gpu, cpuFrameMs: +cpuMs.toFixed(2), particles: s.particles, stamps: [s.transientStamps, s.persistentStamps], size: [renderer.domElement.width, renderer.domElement.height], tris: renderer.info.render.triangles, calls: renderer.info.render.calls };
+  const s = ocean.stats();
+  const r = (v: number) => +v.toFixed(3);
+  return {
+    timerQuery: available,
+    passesMs: Object.fromEntries(Object.entries(passes).map(([k, v]) => [k, r(v)])),
+    frameMs: { full: r(full), surfaceHidden: r(hidden), oceanOff: r(off) },
+    oceanMs: { surface: r(full - hidden), interaction: r(hidden - off), total: r(full - off) },
+    particles: s.particles, stamps: [s.transientStamps, s.persistentStamps], size: [renderer.domElement.width, renderer.domElement.height],
+    fps: +fpsEma.toFixed(1),
+  };
 }
 
 declare global {
