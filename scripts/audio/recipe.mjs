@@ -57,7 +57,7 @@ const HEAVY_BOOM = (delay, gainDb) => F(853280, { trim: [0, 3.2], delay, gainDb,
 /** Crew barks: owner-generated masters (scripts/audio/generated/barks), cut at the end of speech, band-limited to sit
  * under the guns like a shout across the deck. One voice at a time (category 'voice'); barks.ts rate-limits them. */
 const G = (id, end, extra = {}) => ({ src: `gen-crew-${id}`, trim: [0, end], highpass: 110, lowpass: 7500, fadeOut: 0.12, ...extra });
-const BARK = { category: 'voice', gain: 0.55, priority: 85, minInterval: 1.5, maxPerFrame: 1 };
+const BARK = { category: 'voice', gain: 0.55, priority: 85, minInterval: 1.5, maxPerFrame: 1, rate: 22050 };
 
 export const CUES = {
   // ───────────── UI (Kenney CC0 packs) ─────────────
@@ -243,33 +243,33 @@ export const CUES = {
   'bark-elite': { ...BARK, desc: 'lookout: "Elite sighted! Mind her guns!"', files: [G('elite', 4.4)] },
 
   // ───────────── ambience beds (loops) ─────────────
-  'amb-ocean': { category: 'ambience', gain: 1, desc: 'open-sea wash', files: [F(176617, { trim: [118, 148], loop: { xfade: 3 }, norm: 'bed' })] },
-  'amb-bow-wash': { category: 'ambience', gain: 1, desc: 'bow wave along the hull (rate follows speed)', files: [F(360631, { trim: [20, 38], loop: { xfade: 3 }, norm: 'bed' })] },
-  'amb-wind': { category: 'ambience', gain: 0.9, desc: 'wind (level + brightness follow sea.windStrength)', files: [F(344887, { trim: [2, 15.5], loop: { xfade: 3 }, norm: 'bed' })] },
-  'amb-rain': { category: 'ambience', gain: 0.9, desc: 'heavy rain (decorrelated stereo)', files: [{ layers: [F(200272, { trim: [4, 21], pan: -0.85 }), F(200272, { trim: [22, 39], pan: 0.85 })], loop: { xfade: 3 }, norm: 'bed', limitDb: 4 }] },
-  'amb-fire': { category: 'ambience', gain: 1, desc: 'burning ship crackle (positional)', files: [F(364992, { trim: [2, 16], loop: { xfade: 3 }, norm: 'bed', channels: 1, limitDb: 10 })] },
-  'amb-whirlpool': { category: 'ambience', gain: 1, desc: 'whirlpool churn (positional)', files: [F(193755, { trim: [7, 21], loop: { xfade: 3 }, norm: 'bed', channels: 1, limitDb: 10 })] },
-  'amb-harbor': { category: 'ambience', gain: 1, desc: 'harbour: water lapping, boats, rigging', files: [F(254125, { trim: [2, 42], loop: { xfade: 4 }, norm: 'bed' })] },
-  'amb-rope': { category: 'ambience', gain: 0.8, desc: 'tow line creaking under strain (harpoon tether on the player)', files: [F(559079, { trim: [2.4, 10.4], loop: { xfade: 1.5 }, norm: 'bed', channels: 1, limitDb: 8 })] },
-  'amb-wisp': { category: 'ambience', gain: 0.8, desc: 'wisps draining the hull: ghostly harmonic hum', files: [F(752478, { trim: [2, 14], loop: { xfade: 2 }, norm: 'bed', channels: 1, limitDb: 6 })] },
-  'amb-maelstrom': { category: 'ambience', gain: 1, desc: 'the Maelstrom: deep churning drone (positional)', files: [{ layers: [F(193755, { trim: [7, 21], semis: -5 }), F(412308, { trim: [200, 214], lowpass: 380, gainDb: 2 })], loop: { xfade: 3 }, norm: 'bed', channels: 1, limitDb: 10 }] },
-  'amb-surf': { category: 'ambience', gain: 1, desc: 'rogue wave approaching: roaring surf (follows the wave front)', files: [F(412308, { trim: [259, 271], lowpass: 5000, loop: { xfade: 2 }, norm: 'bed', channels: 1, limitDb: 8 })] },
+  'amb-ocean': { category: 'ambience', rate: 32000, gain: 1, desc: 'open-sea wash', files: [F(176617, { trim: [118, 148], loop: { xfade: 3 }, norm: 'bed' })] },
+  'amb-bow-wash': { category: 'ambience', rate: 32000, gain: 1, desc: 'bow wave along the hull (rate follows speed)', files: [F(360631, { trim: [20, 38], loop: { xfade: 3 }, norm: 'bed' })] },
+  'amb-wind': { category: 'ambience', rate: 32000, gain: 0.9, desc: 'wind (level + brightness follow sea.windStrength)', files: [F(344887, { trim: [2, 15.5], loop: { xfade: 3 }, norm: 'bed' })] },
+  'amb-rain': { category: 'ambience', rate: 32000, gain: 0.9, desc: 'heavy rain (decorrelated stereo)', files: [{ layers: [F(200272, { trim: [4, 21], pan: -0.85 }), F(200272, { trim: [22, 39], pan: 0.85 })], loop: { xfade: 3 }, norm: 'bed', limitDb: 4 }] },
+  'amb-fire': { category: 'ambience', rate: 32000, gain: 1, desc: 'burning ship crackle (positional)', files: [F(364992, { trim: [2, 16], loop: { xfade: 3 }, norm: 'bed', channels: 1, limitDb: 10 })] },
+  'amb-whirlpool': { category: 'ambience', rate: 32000, gain: 1, desc: 'whirlpool churn (positional)', files: [F(193755, { trim: [7, 21], loop: { xfade: 3 }, norm: 'bed', channels: 1, limitDb: 10 })] },
+  'amb-harbor': { category: 'ambience', rate: 32000, gain: 1, desc: 'harbour: water lapping, boats, rigging', files: [F(254125, { trim: [2, 42], loop: { xfade: 4 }, norm: 'bed' })] },
+  'amb-rope': { category: 'ambience', rate: 32000, gain: 0.8, desc: 'tow line creaking under strain (harpoon tether on the player)', files: [F(559079, { trim: [2.4, 10.4], loop: { xfade: 1.5 }, norm: 'bed', channels: 1, limitDb: 8 })] },
+  'amb-wisp': { category: 'ambience', rate: 32000, gain: 0.8, desc: 'wisps draining the hull: ghostly harmonic hum', files: [F(752478, { trim: [2, 14], loop: { xfade: 2 }, norm: 'bed', channels: 1, limitDb: 6 })] },
+  'amb-maelstrom': { category: 'ambience', rate: 32000, gain: 1, desc: 'the Maelstrom: deep churning drone (positional)', files: [{ layers: [F(193755, { trim: [7, 21], semis: -5 }), F(412308, { trim: [200, 214], lowpass: 380, gainDb: 2 })], loop: { xfade: 3 }, norm: 'bed', channels: 1, limitDb: 10 }] },
+  'amb-surf': { category: 'ambience', rate: 32000, gain: 1, desc: 'rogue wave approaching: roaring surf (follows the wave front)', files: [F(412308, { trim: [259, 271], lowpass: 5000, loop: { xfade: 2 }, norm: 'bed', channels: 1, limitDb: 8 })] },
 };
 
 /** Streamed music (MusicDirector). bpm values are estimates used only for bar-ish crossfade timing. */
 export const MUSIC = {
-  title: { ...O('pirates-orchestra-208'), gain: 0.9, bpm: 120, beatsPerBar: 4, loop: true, loopEnd: 124, loopCrossfade: 3, desc: "title: Pirate's Orchestra — orchestra + accordion" },
-  harbor: { ...O('a-sailors-chant'), gain: 0.85, bpm: 140, beatsPerBar: 4, loop: true, seamless: true, desc: "harbor: A Sailor's Chant — shanty, loopable" },
-  'run-calm': { ...O('trials-of-the-sea'), gain: 0.9, bpm: 117.5, beatsPerBar: 4, loop: true, loopEnd: 99.4, loopCrossfade: 2.5, desc: 'calm sailing: Trials of the Sea' },
-  'run-combat': { ...O('chest-of-adventure'), gain: 0.9, bpm: 120, beatsPerBar: 4, loop: true, loopStart: 3, loopEnd: 102.5, loopCrossfade: 3, desc: 'combat: Chest of Adventure' },
-  'run-horde': { ...O('battle-theme-a'), gain: 0.9, bpm: 148, beatsPerBar: 4, loop: true, loopEnd: 93.6, loopCrossfade: 2, desc: 'late-run horde: Battle Theme A' },
+  title: { ...O('pirates-orchestra-208'), gain: 1, bpm: 120, beatsPerBar: 4, loop: true, loopEnd: 124, loopCrossfade: 3, desc: "title: Pirate's Orchestra — orchestra + accordion" },
+  harbor: { ...O('a-sailors-chant'), gain: 1, bpm: 140, beatsPerBar: 4, loop: true, seamless: true, desc: "harbor: A Sailor's Chant — shanty, loopable" },
+  'run-calm': { ...O('trials-of-the-sea'), gain: 0.95, bpm: 117.5, beatsPerBar: 4, loop: true, loopEnd: 99.4, loopCrossfade: 2.5, desc: 'calm sailing: Trials of the Sea' },
+  'run-combat': { ...O('chest-of-adventure'), gain: 1, bpm: 120, beatsPerBar: 4, loop: true, loopStart: 3, loopEnd: 102.5, loopCrossfade: 3, desc: 'combat: Chest of Adventure' },
+  'run-horde': { ...O('battle-theme-a'), gain: 1, bpm: 148, beatsPerBar: 4, loop: true, loopEnd: 93.6, loopCrossfade: 2, desc: 'late-run horde: Battle Theme A' },
   // Per-sea run layers (music.ts SEA_SUFFIX): Stormwrack is martial and driving, the Gloam dark and eerie.
-  'run-calm-storm': { ...O('war-on-water-tracks'), gain: 0.85, bpm: 86, beatsPerBar: 4, loop: true, loopEnd: 124.7, loopCrossfade: 2, desc: 'Stormwrack calm: War on Water, chapter 2 — tense military march' },
-  'run-combat-storm': { ...O('qazijamjam-orchestral-battle-theme'), gain: 0.9, bpm: 120.2, beatsPerBar: 4, loop: true, loopEnd: 232.3, loopCrossfade: 3, desc: 'Stormwrack combat: QaziJamJam — a 4-minute orchestral battle theme with variations' },
-  'run-horde-storm': { ...O('determined-pursuit-epic-orchestra-loop'), gain: 0.9, bpm: 120.2, beatsPerBar: 4, loop: true, seamless: true, desc: 'Stormwrack horde: Determined Pursuit (seamless loop)' },
-  'run-calm-gloam': { ...O('mysterious-ambience-song21'), gain: 0.8, bpm: 99.4, beatsPerBar: 4, loop: true, loopEnd: 39.5, loopCrossfade: 3, desc: 'Gloam calm: Mysterious Ambience — dark piano textures' },
-  'run-combat-gloam': { ...O('battle-theme-b-for-rpg'), gain: 0.9, bpm: 143.6, beatsPerBar: 4, loop: true, loopEnd: 63.6, loopCrossfade: 1.5, desc: 'Gloam combat: Battle Theme B (B minor)' },
-  'run-horde-gloam': { ...O('dark-descent'), gain: 0.9, bpm: 132.5, beatsPerBar: 4, loop: true, loopEnd: 71.2, loopCrossfade: 2.5, desc: 'Gloam horde: Dark Descent — orchestra and choir (CC BY 3.0, Matthew Pablo)' },
-  boss: { ...O('boss-battle-music'), gain: 0.9, bpm: 117.5, beatsPerBar: 4, loop: true, seamless: true, desc: 'boss: Epic Boss Battle (seamless loop)' },
-  'boss-final': { ...O('the-final-battle'), gain: 0.9, bpm: 161.5, beatsPerBar: 4, loop: true, loopEnd: 144.5, loopCrossfade: 2.5, desc: 'final boss (The Sovereign): The Final Battle' },
+  'run-calm-storm': { ...O('war-on-water-tracks'), gain: 0.95, bpm: 86, beatsPerBar: 4, loop: true, loopEnd: 124.7, loopCrossfade: 2, desc: 'Stormwrack calm: War on Water, chapter 2 — tense military march' },
+  'run-combat-storm': { ...O('qazijamjam-orchestral-battle-theme'), gain: 1, bpm: 120.2, beatsPerBar: 4, loop: true, loopEnd: 232.3, loopCrossfade: 3, desc: 'Stormwrack combat: QaziJamJam — a 4-minute orchestral battle theme with variations' },
+  'run-horde-storm': { ...O('determined-pursuit-epic-orchestra-loop'), gain: 1, bpm: 120.2, beatsPerBar: 4, loop: true, seamless: true, desc: 'Stormwrack horde: Determined Pursuit (seamless loop)' },
+  'run-calm-gloam': { ...O('mysterious-ambience-song21'), gain: 0.9, bpm: 99.4, beatsPerBar: 4, loop: true, loopEnd: 39.5, loopCrossfade: 3, desc: 'Gloam calm: Mysterious Ambience — dark piano textures' },
+  'run-combat-gloam': { ...O('battle-theme-b-for-rpg'), gain: 1, bpm: 143.6, beatsPerBar: 4, loop: true, loopEnd: 63.6, loopCrossfade: 1.5, desc: 'Gloam combat: Battle Theme B (B minor)' },
+  'run-horde-gloam': { ...O('dark-descent'), gain: 1, bpm: 132.5, beatsPerBar: 4, loop: true, loopEnd: 71.2, loopCrossfade: 2.5, desc: 'Gloam horde: Dark Descent — orchestra and choir (CC BY 3.0, Matthew Pablo)' },
+  boss: { ...O('boss-battle-music'), gain: 1, bpm: 117.5, beatsPerBar: 4, loop: true, seamless: true, desc: 'boss: Epic Boss Battle (seamless loop)' },
+  'boss-final': { ...O('the-final-battle'), gain: 1, bpm: 161.5, beatsPerBar: 4, loop: true, loopEnd: 144.5, loopCrossfade: 2.5, desc: 'final boss (The Sovereign): The Final Battle' },
 };

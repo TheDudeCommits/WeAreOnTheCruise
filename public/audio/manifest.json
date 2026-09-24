@@ -1502,6 +1502,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "bosun: \"Fire!\" / \"Fire as she bears!\" / \"Give 'em a broadside!\"",
    "files": [
     "sfx/bark-fire-1.ogg",
@@ -1515,6 +1516,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "bosun: \"Brace! Brace!\" / \"Hold fast, lads!\"",
    "files": [
     "sfx/bark-brace-1.ogg",
@@ -1527,6 +1529,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "bosun: \"Boss off the bow! Stand to your guns!\"",
    "files": [
     "sfx/bark-boss.ogg"
@@ -1538,6 +1541,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "bosun: \"She's going down!\" / \"Down she goes!\"",
    "files": [
     "sfx/bark-sink-1.ogg",
@@ -1550,6 +1554,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "bosun: \"Level up, captain!\"",
    "files": [
     "sfx/bark-level.ogg"
@@ -1561,6 +1566,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "bosun: \"We're taking water!\" / \"Hull's breached! Patch her up!\"",
    "files": [
     "sfx/bark-water-1.ogg",
@@ -1573,6 +1579,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "bosun: \"Harpoon on the hull! Boost to snap the line!\"",
    "files": [
     "sfx/bark-harpoon.ogg"
@@ -1584,6 +1591,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "bosun: \"Kraken! All hands!\"",
    "files": [
     "sfx/bark-kraken.ogg"
@@ -1595,6 +1603,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "bosun: \"It's got us! Boost free!\"",
    "files": [
     "sfx/bark-grab.ogg"
@@ -1606,6 +1615,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "bosun: \"Whirlpool off the bow!\"",
    "files": [
     "sfx/bark-whirlpool.ogg"
@@ -1617,6 +1627,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "bosun: \"Blockade ahead! Run out the guns!\"",
    "files": [
     "sfx/bark-blockade.ogg"
@@ -1628,6 +1639,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "bosun: \"Victory! The sea is ours!\"",
    "files": [
     "sfx/bark-victory.ogg"
@@ -1639,6 +1651,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "bosun: \"Man the guns!\"",
    "files": [
     "sfx/bark-guns.ogg"
@@ -1650,6 +1663,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "lookout: \"They've marked us! Here they come!\"",
    "files": [
     "sfx/bark-marked.ogg"
@@ -1661,6 +1675,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "lookout: \"Wisps on the hull! Brace to shake 'em off!\"",
    "files": [
     "sfx/bark-wisps.ogg"
@@ -1672,6 +1687,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "lookout: \"Rogue wave! Boost through it!\"",
    "files": [
     "sfx/bark-wave.ogg"
@@ -1683,6 +1699,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "lookout: \"Ghost ships rising!\"",
    "files": [
     "sfx/bark-ghosts.ogg"
@@ -1694,6 +1711,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "lookout: \"Eruption! Watch the sky!\"",
    "files": [
     "sfx/bark-eruption.ogg"
@@ -1705,6 +1723,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "lookout: \"Treasure ho!\"",
    "files": [
     "sfx/bark-treasure.ogg"
@@ -1716,6 +1735,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "lookout: \"Something's rising below us!\"",
    "files": [
     "sfx/bark-rising.ogg"
@@ -1727,6 +1747,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "lookout: \"Captain down! Cover them!\"",
    "files": [
     "sfx/bark-captain-down.ogg"
@@ -1738,6 +1759,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "lookout: \"Wave rider! Ha ha!\"",
    "files": [
     "sfx/bark-rider.ogg"
@@ -1749,6 +1771,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "lookout: \"The lighthouse blesses us, captain!\"",
    "files": [
     "sfx/bark-beacon.ogg"
@@ -1760,6 +1783,7 @@
    "priority": 85,
    "minInterval": 1.5,
    "maxPerFrame": 1,
+   "rate": 22050,
    "desc": "lookout: \"Elite sighted! Mind her guns!\"",
    "files": [
     "sfx/bark-elite.ogg"
@@ -1767,6 +1791,7 @@
   },
   "amb-ocean": {
    "category": "ambience",
+   "rate": 32000,
    "gain": 1,
    "desc": "open-sea wash",
    "files": [
@@ -1775,6 +1800,7 @@
   },
   "amb-bow-wash": {
    "category": "ambience",
+   "rate": 32000,
    "gain": 1,
    "desc": "bow wave along the hull (rate follows speed)",
    "files": [
@@ -1783,6 +1809,7 @@
   },
   "amb-wind": {
    "category": "ambience",
+   "rate": 32000,
    "gain": 0.9,
    "desc": "wind (level + brightness follow sea.windStrength)",
    "files": [
@@ -1791,6 +1818,7 @@
   },
   "amb-rain": {
    "category": "ambience",
+   "rate": 32000,
    "gain": 0.9,
    "desc": "heavy rain (decorrelated stereo)",
    "files": [
@@ -1799,6 +1827,7 @@
   },
   "amb-fire": {
    "category": "ambience",
+   "rate": 32000,
    "gain": 1,
    "desc": "burning ship crackle (positional)",
    "files": [
@@ -1807,6 +1836,7 @@
   },
   "amb-whirlpool": {
    "category": "ambience",
+   "rate": 32000,
    "gain": 1,
    "desc": "whirlpool churn (positional)",
    "files": [
@@ -1815,6 +1845,7 @@
   },
   "amb-harbor": {
    "category": "ambience",
+   "rate": 32000,
    "gain": 1,
    "desc": "harbour: water lapping, boats, rigging",
    "files": [
@@ -1823,6 +1854,7 @@
   },
   "amb-rope": {
    "category": "ambience",
+   "rate": 32000,
    "gain": 0.8,
    "desc": "tow line creaking under strain (harpoon tether on the player)",
    "files": [
@@ -1831,6 +1863,7 @@
   },
   "amb-wisp": {
    "category": "ambience",
+   "rate": 32000,
    "gain": 0.8,
    "desc": "wisps draining the hull: ghostly harmonic hum",
    "files": [
@@ -1839,6 +1872,7 @@
   },
   "amb-maelstrom": {
    "category": "ambience",
+   "rate": 32000,
    "gain": 1,
    "desc": "the Maelstrom: deep churning drone (positional)",
    "files": [
@@ -1847,6 +1881,7 @@
   },
   "amb-surf": {
    "category": "ambience",
+   "rate": 32000,
    "gain": 1,
    "desc": "rogue wave approaching: roaring surf (follows the wave front)",
    "files": [
@@ -1856,7 +1891,7 @@
  },
  "music": {
   "title": {
-   "gain": 0.9,
+   "gain": 1,
    "bpm": 120,
    "beatsPerBar": 4,
    "loop": true,
@@ -1866,7 +1901,7 @@
    "file": "music/title.ogg"
   },
   "harbor": {
-   "gain": 0.85,
+   "gain": 1,
    "bpm": 140,
    "beatsPerBar": 4,
    "loop": true,
@@ -1876,7 +1911,7 @@
    "loopEnd": 68.04
   },
   "run-calm": {
-   "gain": 0.9,
+   "gain": 0.95,
    "bpm": 117.5,
    "beatsPerBar": 4,
    "loop": true,
@@ -1886,7 +1921,7 @@
    "file": "music/run-calm.ogg"
   },
   "run-combat": {
-   "gain": 0.9,
+   "gain": 1,
    "bpm": 120,
    "beatsPerBar": 4,
    "loop": true,
@@ -1897,7 +1932,7 @@
    "file": "music/run-combat.ogg"
   },
   "run-horde": {
-   "gain": 0.9,
+   "gain": 1,
    "bpm": 148,
    "beatsPerBar": 4,
    "loop": true,
@@ -1907,7 +1942,7 @@
    "file": "music/run-horde.ogg"
   },
   "run-calm-storm": {
-   "gain": 0.85,
+   "gain": 0.95,
    "bpm": 86,
    "beatsPerBar": 4,
    "loop": true,
@@ -1917,7 +1952,7 @@
    "file": "music/run-calm-storm.ogg"
   },
   "run-combat-storm": {
-   "gain": 0.9,
+   "gain": 1,
    "bpm": 120.2,
    "beatsPerBar": 4,
    "loop": true,
@@ -1927,7 +1962,7 @@
    "file": "music/run-combat-storm.ogg"
   },
   "run-horde-storm": {
-   "gain": 0.9,
+   "gain": 1,
    "bpm": 120.2,
    "beatsPerBar": 4,
    "loop": true,
@@ -1937,7 +1972,7 @@
    "loopEnd": 107.96
   },
   "run-calm-gloam": {
-   "gain": 0.8,
+   "gain": 0.9,
    "bpm": 99.4,
    "beatsPerBar": 4,
    "loop": true,
@@ -1947,7 +1982,7 @@
    "file": "music/run-calm-gloam.ogg"
   },
   "run-combat-gloam": {
-   "gain": 0.9,
+   "gain": 1,
    "bpm": 143.6,
    "beatsPerBar": 4,
    "loop": true,
@@ -1957,7 +1992,7 @@
    "file": "music/run-combat-gloam.ogg"
   },
   "run-horde-gloam": {
-   "gain": 0.9,
+   "gain": 1,
    "bpm": 132.5,
    "beatsPerBar": 4,
    "loop": true,
@@ -1967,7 +2002,7 @@
    "file": "music/run-horde-gloam.ogg"
   },
   "boss": {
-   "gain": 0.9,
+   "gain": 1,
    "bpm": 117.5,
    "beatsPerBar": 4,
    "loop": true,
@@ -1977,7 +2012,7 @@
    "loopEnd": 123.39
   },
   "boss-final": {
-   "gain": 0.9,
+   "gain": 1,
    "bpm": 161.5,
    "beatsPerBar": 4,
    "loop": true,
@@ -1990,7 +2025,7 @@
  "files": {
   "music/boss-final.ogg": {
    "bytes": 1946097,
-   "sha256": "de57cc0ccc90baea3bd1a09d5eddc2b28242199f21a4bc16753f06cea7a3c75f",
+   "sha256": "fd4746af4f1f6117fe797e6db1b3702ddf80722c67b9002911309505d9ff8881",
    "duration": 145.828,
    "channels": 2,
    "lufs": -16,
@@ -2001,7 +2036,7 @@
   },
   "music/boss.ogg": {
    "bytes": 1444293,
-   "sha256": "d310d130d38caa8eb4d4f8442e9350deb4b94d3fc9e154234dd1d39fc389af57",
+   "sha256": "be546f249a2d99db6e81e0cf19135932aa8ab4766398b4c48023af62a144d5a4",
    "duration": 123.435,
    "channels": 2,
    "lufs": -16,
@@ -2012,7 +2047,7 @@
   },
   "music/harbor.ogg": {
    "bytes": 1048990,
-   "sha256": "cba091168ea4ac497ec77da12a90f1422dbcdacde04a8e677f06b0f795d7f72e",
+   "sha256": "ffd198e98e456ad67720c4f971d5bb5ca813f2b721d883083fa246b1ccc41710",
    "duration": 68.092,
    "channels": 2,
    "lufs": -16,
@@ -2023,7 +2058,7 @@
   },
   "music/run-calm-gloam.ogg": {
    "bytes": 626185,
-   "sha256": "f9384a610b15a5cdf0b10ffff0a3d255820f5190328a91ab96ea01bc910a7be8",
+   "sha256": "5d551262df9c0e01c60f8ea0598dc705450569a67a51a70d20a084c820697e3a",
    "duration": 42.917,
    "channels": 2,
    "lufs": -15.9,
@@ -2034,7 +2069,7 @@
   },
   "music/run-calm-storm.ogg": {
    "bytes": 1542816,
-   "sha256": "06c6698ee759d96c363b7c2ac4aba205501e5f1a68054a5a2370da16607fcf06",
+   "sha256": "73dc542060e1a9030c32b3a7edec2c7c46716094ecdcd13dd540bda5478a92e8",
    "duration": 124.901,
    "channels": 2,
    "lufs": -16,
@@ -2045,7 +2080,7 @@
   },
   "music/run-calm.ogg": {
    "bytes": 1272652,
-   "sha256": "ed11d335f9a583bebd04a3b709bdb7870018e7b4cecca9ce482f7d13e1710480",
+   "sha256": "4f27c85825a2b76f3bb62d0898a2c98b5169f85efa90497a483788b7fc9dd676",
    "duration": 101.655,
    "channels": 2,
    "lufs": -16,
@@ -2056,7 +2091,7 @@
   },
   "music/run-combat-gloam.ogg": {
    "bytes": 793705,
-   "sha256": "c3de8202f950de948676a0ac6f2341df130a2c30612883ae551516afba2209d2",
+   "sha256": "47d44431dc47c794b8d5ba2ad421b82c929245008d90118354902008db267dd6",
    "duration": 66.044,
    "channels": 2,
    "lufs": -16,
@@ -2067,7 +2102,7 @@
   },
   "music/run-combat-storm.ogg": {
    "bytes": 2954329,
-   "sha256": "19add9cd69d8684b0f910415255a60c72c2971c4558149d63215dc0f8f5b1bb5",
+   "sha256": "e1702baeffa12d30a394246985c70f4fe31c9ebf17b96f99ceaf34519f22c835",
    "duration": 234.122,
    "channels": 2,
    "lufs": -16,
@@ -2078,7 +2113,7 @@
   },
   "music/run-combat.ogg": {
    "bytes": 1257792,
-   "sha256": "b10d408109e3aadfad3d481c9200304064ae99f0a371f3a354195c7d66030a50",
+   "sha256": "1a63cc35883fd2ff20b52dc951f925c0affcaa866170081fd549e2cb7ee1bbab",
    "duration": 106.818,
    "channels": 2,
    "lufs": -16,
@@ -2089,7 +2124,7 @@
   },
   "music/run-horde-gloam.ogg": {
    "bytes": 911306,
-   "sha256": "48c46f63b34c25f1b1f6af7a87f4c3c56c873dd90b77a20c987f61f273d12cc9",
+   "sha256": "3574d771cbe8de16d9a916849ba296d532db69b713e69d734ff7fbcd225dc07d",
    "duration": 83.337,
    "channels": 2,
    "lufs": -16,
@@ -2100,7 +2135,7 @@
   },
   "music/run-horde-storm.ogg": {
    "bytes": 1216397,
-   "sha256": "e032e9a4bb4d91a40261b46508bcc3c31a694077df8e9a87085311fad74063b7",
+   "sha256": "3f8d083a484f9ea65628aa7fe32cd99daa69a0a69fee8a85073d32cce2741deb",
    "duration": 108.007,
    "channels": 2,
    "lufs": -16,
@@ -2111,7 +2146,7 @@
   },
   "music/run-horde.ogg": {
    "bytes": 1161529,
-   "sha256": "a758b61db8faeb2439f3db31cf12ef1a892deb4e6bc545dfc53fe431f14965fc",
+   "sha256": "d0c8b24bdd4361acca7812a9c235e478a39ba68f4fc79ea88847fcada8431e8f",
    "duration": 95.858,
    "channels": 2,
    "lufs": -16,
@@ -2122,7 +2157,7 @@
   },
   "music/title.ogg": {
    "bytes": 1583717,
-   "sha256": "0c418c645a808b0fd2d776bd55e1b642ab7dd5d8c4ea3de08bd6aee5605c95d9",
+   "sha256": "8709c516af95bbc511f9f00346a0d170463fb361e17280e7fc37aaba693007a4",
    "duration": 128.052,
    "channels": 2,
    "lufs": -16,

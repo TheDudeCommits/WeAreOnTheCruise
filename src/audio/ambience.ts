@@ -139,9 +139,10 @@ export class AmbienceController {
     const targets: Record<BedId, number> = { 'amb-ocean': 0, 'amb-bow-wash': 0, 'amb-wind': 0, 'amb-rain': 0, 'amb-harbor': 0 };
     let washRate = 1, windCutoff = 2500;
     if (menu) {
-      targets['amb-ocean'] = 0.4;
-      targets['amb-harbor'] = screen === 'harbor' ? 0.85 : 0.55;
-      targets['amb-wind'] = 0.12;
+      // Menus: the music leads; the harbour bed sits under it.
+      targets['amb-ocean'] = 0.32;
+      targets['amb-harbor'] = screen === 'harbor' ? 0.6 : 0.42;
+      targets['amb-wind'] = 0.1;
     } else if (screen === 'results') {
       targets['amb-ocean'] = 0.35;
     } else if (inRun && run) {

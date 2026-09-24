@@ -249,15 +249,21 @@ export class AudioEngine implements AudioSystem {
   /** Post-limiter analyser (null before unlock). */
   tap(): AnalyserNode | null { return this.mixer?.tap() ?? null; }
 
-  /** Instantaneous output level (dBFS) from the post-limiter tap. */
-  meter(): { rmsDb: number; peakDb: number } | null {
+  /**
+   * Instantaneous output level from the post-ceiling tap: RMS and peak (dBFS), plus short-term K-weighted levels
+   * (LUFS-like) of the output and of the music and SFX buses (the loudness QA averages these over a phase).
+   */
+  meter(): { rmsDb: number; peakDb: number; lufs: number; musicLufs: number; sfxLufs: number } | null {
     const a = this.tap();
-    if (!a) return null;
+    if (!a || !this.mixer) return null;
     const buf = this.meterBuf && this.meterBuf.length === a.fftSize ? this.meterBuf : (this.meterBuf = new Float32Array(a.fftSize));
     a.getFloatTimeDomainData(buf);
     let sum = 0, peak = 0;
     for (let i = 0; i < buf.length; i++) { const v = buf[i]!; sum += v * v; const m = Math.abs(v); if (m > peak) peak = m; }
-    return { rmsDb: +(10 * Math.log10(sum / buf.length + 1e-12)).toFixed(1), peakDb: +(20 * Math.log10(peak + 1e-9)).toFixed(1) };
+    return {
+      rmsDb: +(10 * Math.log10(sum / buf.length + 1e-12)).toFixed(1), peakDb: +(20 * Math.log10(peak + 1e-9)).toFixed(1),
+      lufs: +this.mixer.kLevel('master').toFixed(1), musicLufs: +this.mixer.kLevel('music').toFixed(1), sfxLufs: +this.mixer.kLevel('sfx').toFixed(1),
+    };
   }
 
   stats(): AudioStatsSnapshot {
@@ -312,7 +318,7 @@ export class AudioEngine implements AudioSystem {
           this.manifest = m;
           for (const [id, def] of Object.entries(m.cues)) {
             const tier: LoadTier = def.category === 'ui' || MENU_TIER_CUES.has(id) ? 'menu' : 'run';
-            for (const f of def.files) this.bank.register(f, tier);
+            for (const f of def.files) this.bank.register(f, tier, def.rate);
           }
           const missing = CUE_IDS.filter((id) => !m.cues[id]);
           if (missing.length) console.warn('[audio] manifest lacks cues', missing);

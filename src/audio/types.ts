@@ -41,6 +41,8 @@ export interface CueDef {
   ref?: number;
   maxDistance?: number;
   duck?: DuckSpec;
+  /** Decode sample rate in Hz (speech and long beds; saves decoded memory). */
+  rate?: number;
   /** Human description for the lab / ledger. */
   desc?: string;
 }
