@@ -9,7 +9,8 @@
  * A ram = the player driving bow-first into a ship at > 4 m/s (any contact during Ramming Speed): damage from
  * closing speed and hull mass (× Iron Ram, × Ramming Speed, × ramDamage stat), knockback, 'ram' + 'collision'
  * events, and recoil damage to the rammer unless Iron Ram / Ramming Speed. Other contacts deal the ship's
- * contactDamage to the player. Each ship has a contact cooldown (ai.contactCd; Iron Ram's level cooldown).
+ * contactDamage to the player (at most one contact hit per CONTACT_GRACE) and glance off the hull.
+ * Each ship has a contact cooldown (ai.contactCd; Iron Ram's level cooldown).
  */
 import type { BossState, EnemyState, PlayerState } from '../types';
 import type { Target } from './context';
@@ -21,6 +22,10 @@ import { ironRamSlot } from './weapons/iron-ram';
 
 /** Ram damage per (m/s of closing speed × √tonnes). */
 export const RAM_K = 0.1;
+/** Metres a ship glances off the hull after running into it (mass-scaled like knockback). */
+export const CONTACT_BOUNCE = 7;
+/** Seconds after a contact hit during which further contact hits are ignored. */
+export const CONTACT_GRACE = 0.25;
 const RESTITUTION = 0.3;
 const HARD_IMPACT = 8;
 
@@ -28,6 +33,7 @@ export function resolveCollisions(c: CoreSim): void {
   const p = c.state.player;
   const core = c.core;
   if (core.islandCd > 0) core.islandCd = Math.max(0, core.islandCd - c.dt);
+  if (core.contactGrace > 0) core.contactGrace = Math.max(0, core.contactGrace - c.dt);
   if (p.alive && p.airborne < 0.3) {
     islandsVsPlayer(c, p);
     if (p.submerged < 0.5) shipsVsPlayer(c, p);
@@ -141,10 +147,16 @@ function shipsVsPlayer(c: CoreSim, p: PlayerState): void {
     if (isRam) ram(c, p, t, vpn, nx, nz, cx + nx * hw, cz + nz * hw, massP, massT);
     else {
       if (closing > 2) c.emit({ type: 'collision', a: 0, b: t.id, x: cx + nx * hw, z: cz + nz * hw, impulse: closing });
-      // Grinding bow-first with an iron prow (or during Ramming Speed) does not hurt the player.
+      // A ship that runs into the hull glances off (so it has to come round again instead of grinding) and rocks it.
+      if (!boss) core.push(c, t, nx, nz, CONTACT_BOUNCE * (0.6 + Math.min(1, Math.max(0, closing) / 10)));
+      core.kickRoll(-(nx * Math.cos(p.heading) - nz * Math.sin(p.heading)) * Math.min(0.12, 0.02 + Math.max(0, closing) * 0.006) * Math.sqrt(massT / (massP + massT)));
+      // Grinding bow-first with an iron prow (or during Ramming Speed) does not hurt the player; a short grace
+      // window keeps a swarm touching the hull at once from stacking its contact damage.
       const armouredBow = ramming || (slot !== undefined && bowOn);
       const dmg = contactDamageOf(c, t);
-      if (dmg > 0 && !armouredBow) c.hurtPlayer(dmg, t.x, t.z, t.id, boss ? 'boss' : 'contact');
+      if (dmg > 0 && !armouredBow && core.contactGrace <= 0) {
+        if (c.hurtPlayer(dmg, t.x, t.z, t.id, boss ? 'boss' : 'contact') > 0) core.contactGrace = CONTACT_GRACE;
+      }
     }
     t.ai.contactCd = ramming ? 0.3 : slot ? levelOf(c, slot).cooldown : 0.6;
   }

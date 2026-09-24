@@ -213,6 +213,7 @@ export class CoreRuntime {
   ultGunCursor = 0;
   parryUsed = false;
   islandCd = 0;
+  contactGrace = 0;
   playerBurnT = 0;
 
   // Islands around the player (broad phase for projectiles / ships).

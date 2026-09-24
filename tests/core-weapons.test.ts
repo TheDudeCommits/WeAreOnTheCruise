@@ -228,10 +228,21 @@ describe('CORE weapons: branches and overdrives', () => {
     const ta = run(a, 3, dummies(a, [[0, -90], [30, -110], [60, -120]]));
     expect(has(ta, (e) => e.type === 'harpoon' && e.from !== 0)).toBe(true);
 
+    // Tow Line: its harpoons tie tow tethers…
     const b = makeSim('hp-b'); b.debug.giveWeapon('harpoon', 3, 'B');
-    const db = dummies(b, [[0, -120], [0, -80], [3, -60]], 'skiff');
-    const tb = run(b, 4, db, true);
-    expect(has(tb, (e) => e.type === 'ram' && e.attacker !== 0)).toBe(true);
+    const [hooked] = dummies(b, [[0, -110]], 'skiff');
+    run(b, 2, [hooked!]);
+    const k = b.core.tTarget.indexOf(hooked!.e);
+    expect(k).toBeGreaterThanOrEqual(0);
+    expect(b.core.tTow[k]).toBe(1);
+    // …and a towed ship dragged through a neighbour smashes into it ('ram' from ship to ship, both damaged).
+    const tow = makeSim('hp-tow');
+    const [shipA, shipB] = dummies(tow, [[0, -135], [0, -70]], 'skiff');
+    tow.core.tether(shipA!.e, null, 5, 20, 30, true);
+    const tt = run(tow, 5, [shipA!, shipB!], true, () => { shipB!.e.x = 0; shipB!.e.z = -70; shipB!.e.vx = 0; shipB!.e.vz = 0; });
+    expect(has(tt, (e) => e.type === 'ram' && e.attacker === shipA!.e.id && e.target === shipB!.e.id)).toBe(true);
+    expect(shipB!.e.hp).toBeLessThan(shipB!.e.maxHp);
+    expect(shipA!.e.hp).toBeLessThan(shipA!.e.maxHp);
 
     const od = makeSim('hp-6'); od.debug.giveWeapon('harpoon', 6, 'B');
     const group = dummies(od, [[0, -130], [20, -140], [-20, -135], [10, -115]]);
