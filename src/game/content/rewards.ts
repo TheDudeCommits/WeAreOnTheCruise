@@ -69,9 +69,9 @@ export const CHESTS = {
   eliteCounts: [60, 30, 10] as readonly number[],
   eliteLuckShift: 6,
   bossCount: 3,
-  /** Doubloons added on top of the rewards. */
-  eliteDoubloons: 5,
-  bossDoubloons: 25,
+  /** Doubloons added on top of the rewards (a purse: exact, see ECONOMY). */
+  eliteDoubloons: 3,
+  bossDoubloons: 12,
   /** Chip rarity floor for chest chips. */
   chipRarity: 1,
 };
@@ -111,10 +111,32 @@ export const BOUNTY = {
   victory: 250000,
 };
 
-/** Doubloon economy (meta currency). A decent run banks ~150–400; a victory ~500–700. */
+/**
+ * Doubloon economy (REPLAY round 2). Doubloons buy the harbor: 13 upgrades (17,990 ◈) and two ships (1,550 ◈).
+ *
+ * Two kinds of income:
+ * - **Plunder**, doubloons on the water: ordinary kills (ENEMY_AI.doubloons × the enemy's drop chance), elites
+ *   (eliteKill), bosses (BossDef.doubloons), bounty captains, set pieces and salvage. A coin is worth its table value
+ *   × `plunder` (at least 1). The final boss's hold is plunder too, banked directly with the victory.
+ * - **Purses**, banked exactly: wages per full minute, chest purses (CHESTS), the victory bonus, endless milestones.
+ * Everything is then × doubloonMul (Fortune, and the heat/daily reward: × (1 + 0.25 × heat)).
+ *
+ * Measured at heat 0 without harbor upgrades, 3 AI captains (balance-sim ledger, 12 seeds × 2 ships):
+ * a Sunward victory banks ≈ 500 ◈ (plunder ≈ 45%, chests ≈ 25%, victory ≈ 25%, wages ≈ 5%), a run lost at ~10:00
+ * ≈ 150–250 ◈. Career model (scripts/economy-model.ts): with quests, the whole harbor takes ≈ 40 runs for a captain
+ * who stays at heat 0, ≈ 30 for one who climbs a heat level every few wins, ≈ 25 for a fast climber.
+ */
 export const ECONOMY = {
-  /** Wages paid at every full minute survived. */
-  minuteWage: 4,
-  eliteKill: 4,
-  victoryBonus: 100,
+  /** Wages paid at every full minute survived (purse). */
+  minuteWage: 2,
+  /** Doubloons an elite spills when it sinks (plunder, before `plunder`), besides its chest. */
+  eliteKill: 2,
+  /** Purse banked with a victory, on top of the flagship's hold. */
+  victoryBonus: 40,
+  /** Value of doubloons on the water relative to their table values (kills, elites, bosses, captains, set pieces). */
+  plunder: 0.45,
+  /** Endless mode: every boss sunk after the victory is a milestone purse of milestone × (loop + 1) ◈. */
+  endlessMilestone: 40,
+  /** Endless milestone bounty (× the bounty multiplier) per loop. */
+  endlessMilestoneBounty: 40000,
 };

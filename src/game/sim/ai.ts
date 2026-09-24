@@ -24,6 +24,7 @@ import { AFFIX_TUNING } from '../content/enemies';
 import { GRAVITY } from './core-runtime';
 import { metaRuntime, type MetaRuntime } from './meta-runtime';
 import { enemyDamage } from './meta-spawn';
+import { runMods } from './run-mods';
 import {
   TAU, avoidIslands, bearingFromPlayer, clamp, enterLimbo, exitLimbo, fwdX, fwdZ, headingTo, killTelegraph,
   leadAim, lineTelegraph, moveTelegraph, openWaterNear, predictPlayer, rand, sail, separate, sideX, sideZ, wrap,
@@ -125,7 +126,7 @@ export function clearStatus(e: EnemyState, kind: StatusState['kind']): void {
 
 /** Speed after heat, slows, hooks and buffs. */
 export function baseSpeed(c: SimContext, e: EnemyState, def: EnemyDef): number {
-  let m = DIRECTOR.speedScale(c.state.time / 60) * (((e.ai.fbuf ?? 0) & BUFF_AURA) ? AURA_SPEED : 1) * affixSpeed(e);
+  let m = DIRECTOR.speedScale(c.state.time / 60) * runMods(c.state).enemySpeed * (((e.ai.fbuf ?? 0) & BUFF_AURA) ? AURA_SPEED : 1) * affixSpeed(e);
   for (const st of e.statuses) {
     if (st.time <= 0) continue;
     if (st.kind === 'slowed') m *= 1 - Math.min(0.8, st.magnitude > 1 ? 0.4 : st.magnitude);

@@ -46,11 +46,10 @@ export const pickupMul = (s: Stats) => 1 + s.pickupRadius;
 export const xpMul = (s: Stats) => 1 + s.xpGain;
 export const ramMul = (s: Stats) => 1 + s.ramDamage;
 /**
- * Doubloon income multiplier. INCOME scales the whole economy: round 1 (denser hordes, events, bounty captains, AI
- * captains) tripled income per run, so it is brought back toward the design's pace of unlocks.
+ * Doubloon income multiplier (Fortune, heat and daily rewards all arrive through doubloonGain). The economy itself
+ * lives in content/rewards.ts ECONOMY (REPLAY round 2 replaced round 1's blanket ×0.5 with per-source values).
  */
-const INCOME = 0.5;
-export const doubloonMul = (s: Stats) => (1 + s.doubloonGain) * INCOME;
+export const doubloonMul = (s: Stats) => 1 + s.doubloonGain;
 /** Acceleration multiplier (Clipper Rigging, Copper Sheathing). */
 export const accelMul = (s: Stats) => 1 + s.accel;
 /** Extra top speed while the sails are set past half (Clipper Rigging), scaled by the trim 0.55 → 1. */

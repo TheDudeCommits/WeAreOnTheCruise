@@ -24,6 +24,8 @@ import { doubloonMul } from './stats';
 import { spawnRogueWave } from './weather';
 import { eventWeight, startWorldEvent, updateWorldEvents } from './world-events';
 import { captainBudgetMul } from './captains-runtime';
+import { runMods } from './run-mods';
+import { spawnNamed } from './bounty';
 
 const SPAWN = { x: 0, z: 0, a: 0 };
 const EVENT_W = new Float64Array(32);
@@ -34,7 +36,9 @@ export function updateDirector(c: SimContext): void {
   const sea = c.content.seas[s.seaId];
   const minute = s.time / 60;
   d.minute = minute;
-  d.heat = DIRECTOR.heat(minute, sea.difficulty);
+  // REPLAY: the heat reward (× daily rules) rides on the bounty multiplier, so every bounty source pays it.
+  const mods = runMods(s);
+  d.heat = DIRECTOR.heat(minute, sea.difficulty) * mods.reward;
   const sc = d.scratch;
   if ((sc[SCRATCH.victoryAt] ?? 0) > 0) {
     if (s.time >= sc[SCRATCH.victoryAt]!) { sc[SCRATCH.victoryAt] = 0; c.endRun('victory'); }
@@ -45,6 +49,7 @@ export function updateDirector(c: SimContext): void {
   syncActiveBoss(c);
   if (d.event) { d.eventTime -= c.dt; if (d.eventTime <= 0) { d.event = null; d.eventTime = 0; } }
   runEvents(c, sea, minute);
+  if (mods.bountyCaptains > 0) wantedMen(c, sea, mods.bountyCaptains);
   updateWorldEvents(c);
   spawnWaves(c, sea, minute);
   placeForts(c, sea, minute);
@@ -123,7 +128,7 @@ export function spawnBossAhead(c: SimContext, id: BossId, loop: number): void {
     if (c.world.isWater(px, pz, def.radius + 25)) { x = px; z = pz; break; }
   }
   const b = c.spawnBoss(id, x, z, headingTo(p.x - x, p.z - z));
-  const hp = def.hp * DIRECTOR.bossHpScale(sea.difficulty, loop, id);
+  const hp = def.hp * DIRECTOR.bossHpScale(sea.difficulty, loop, id) * runMods(s).bossHp;
   b.hp = hp;
   b.maxHp = hp;
   s.director.activeBoss = id;
@@ -212,7 +217,8 @@ function spawnWaves(c: SimContext, sea: SeaDef, minute: number): void {
   if (underFloor && d.budget - cost < -DIRECTOR.debt(minute)) return;
   d.budget -= cost;
   sc[SCRATCH.nextEntry] = -1;
-  const elite = elites < DIRECTOR.maxElites && c.random() < DIRECTOR.eliteChance(minute);
+  const mods = runMods(s);
+  const elite = elites < DIRECTOR.maxElites + mods.extraElites && c.random() < DIRECTOR.eliteChance(minute) * mods.eliteChance;
   spawnGroup(c, entry.enemy, size, elite);
 }
 
@@ -303,7 +309,7 @@ function runEvents(c: SimContext, sea: SeaDef, minute: number): void {
     EVENT_W[i] = w;
     total += w;
   }
-  sc[SCRATCH.nextEvent] = s.time + rand(c, plan.gap[0], plan.gap[1]);
+  sc[SCRATCH.nextEvent] = s.time + rand(c, plan.gap[0], plan.gap[1]) * runMods(s).eventGap;
   if (total <= 0) return;
   let r = c.random() * total;
   for (let i = 0; i < n; i++) {
@@ -418,6 +424,28 @@ function fogBank(c: SimContext, minute: number, duration: number): void {
     if (e) e.ai.t = rand(c, 1, 3);
   }
 }
+
+// ───────────────────────── Heat: Wanted Men ─────────────────────────
+
+/** Extra bounty captains at heat (HEAT rule 'Wanted Men'): the first at 2:30, then between the bosses. */
+const WANTED = { first: 150, gap: [150, 200] as const, bossMargin: 40 };
+
+function wantedMen(c: SimContext, sea: SeaDef, extra: number): void {
+  const s = c.state, d = s.director, sc = d.scratch;
+  const done = sc[SCRATCH_WANTED.done] ?? 0;
+  if (done >= extra || !s.player.alive) return;
+  const next = sc[SCRATCH_WANTED.next] ?? WANTED.first;
+  if (s.time < next) return;
+  const nextBoss = sea.bosses[d.nextBossIndex];
+  let titled = false;
+  for (const e of s.enemies) if (e.title && e.life === 'alive') { titled = true; break; }
+  if (d.activeBoss || d.bossWarning || titled || (nextBoss && nextBoss.at - s.time < WANTED.bossMargin)) { sc[SCRATCH_WANTED.next] = s.time + 10; return; }
+  const e = spawnNamed(c);
+  if (e) sc[SCRATCH_WANTED.done] = done + 1;
+  sc[SCRATCH_WANTED.next] = s.time + (e ? rand(c, WANTED.gap[0], WANTED.gap[1]) : 10);
+}
+
+const SCRATCH_WANTED = { next: 'rp:wantedNext', done: 'rp:wantedDone' } as const;
 
 // ───────────────────────── Forts ─────────────────────────
 

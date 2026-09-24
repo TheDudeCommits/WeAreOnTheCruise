@@ -20,16 +20,31 @@
  *                        real hull (use it to tune incoming damage without deaths cutting runs short)
  *   --captains N         AI captains sailing with the bot (0–4, default 0); adds captain kills, sinkings and the
  *                        share of the fleet's attention on the player to the report
+ *   --jobs N             run each sea × ship in parallel child processes, N at a time (default 6)
+ *   --heat N             heat level 0–8 (REPLAY): sea balance + heat rules through src/game/meta/voyage.ts
+ *   --tune JSON          tuning experiment without editing content: numbers merged into the live tables, e.g.
+ *                        '{"SEA_BALANCE":{"the-gloam":{"enemyDamage":0.9}},"CAPTAIN":{"firePerCaptain":0.5}}'
+ *                        (tables: SEA_BALANCE, DIRECTOR, BOSS_HP_MUL, CAPTAIN, ECONOMY, CHESTS, RARE_DROPS, HEAT, EVENT_TUNING)
+ *
+ * Every run also keeps a doubloon ledger (wages, kill/elite/boss/event drops, chests, victory purse, cards) so the
+ * summary shows where the economy's income comes from.
  */
-import { writeFileSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { CONTENT } from '../src/game/content';
+import { CHESTS, ECONOMY, RARE_DROPS } from '../src/game/content/rewards';
+import { BOSS_HP_MUL, DIRECTOR, EVENT_TUNING, HEAT, SEA_BALANCE } from '../src/game/content/director';
+import { CAPTAIN } from '../src/game/content/captains';
 import type { BossId, SeaId, ShipId, WeaponId } from '../src/game/ids';
 import { SEA_IDS } from '../src/game/ids';
 import { defaultProfile } from '../src/game/meta/save';
+import { applyVoyage } from '../src/game/meta/voyage';
 import { Sim } from '../src/game/sim/Sim';
 import { captainRuntime, configureCaptains } from '../src/game/sim/captains-runtime';
-import { cooldownMul, damageMul, extraAmount, rangeMul } from '../src/game/sim/stats';
-import type { CardOffer, ContentDb, MetaProfile, WeaponSlot } from '../src/game/types';
+import { cooldownMul, damageMul, doubloonMul, extraAmount, rangeMul } from '../src/game/sim/stats';
+import type { CardOffer, ContentDb, MetaProfile, SimEvent, WeaponSlot } from '../src/game/types';
 import { IslandField } from '../src/world/IslandField';
 
 // ───────────────────────── CLI ─────────────────────────
@@ -53,6 +68,26 @@ const TANK = flag('tank');
 const SOURCES = flag('sources');
 const TANK_MUL = 100;
 const CAPTAINS = Math.max(0, Math.min(4, Math.floor(Number(opt('captains', '0')) || 0)));
+const JOBS = Math.max(1, Math.floor(Number(opt('jobs', SEAS.length * SHIPS.length > 1 ? '6' : '1')) || 1));
+const HEAT_LEVEL = Math.max(0, Math.min(8, Math.floor(Number(opt('heat', '0')) || 0)));
+const TUNE = opt('tune', '');
+
+/** Merges numbers from `patch` into `target` (nested objects recurse; anything else is ignored). */
+function mergeNumbers(target: Record<string, unknown>, patch: Record<string, unknown>, path: string): void {
+  for (const [k, v] of Object.entries(patch)) {
+    if (typeof v === 'number' && typeof target[k] === 'number') target[k] = v;
+    else if (v && typeof v === 'object' && target[k] && typeof target[k] === 'object') mergeNumbers(target[k] as Record<string, unknown>, v as Record<string, unknown>, `${path}.${k}`);
+    else throw new Error(`--tune: ${path}.${k} is not a number in the live table`);
+  }
+}
+if (TUNE) {
+  const tables: Record<string, unknown> = { SEA_BALANCE, DIRECTOR, BOSS_HP_MUL, CAPTAIN, ECONOMY, CHESTS, RARE_DROPS, HEAT, EVENT_TUNING };
+  const patch = JSON.parse(TUNE) as Record<string, Record<string, unknown>>;
+  for (const [name, value] of Object.entries(patch)) {
+    if (!tables[name]) throw new Error(`--tune: unknown table ${name}`);
+    mergeNumbers(tables[name] as Record<string, unknown>, value, name);
+  }
+}
 
 function contentFor(ship: ShipId): ContentDb {
   if (!TANK) return CONTENT;
@@ -403,6 +438,64 @@ interface RunReport {
   ms: number;
   /** AI captains: kills (all captains), sinkings, share of enemy attention on the player, captain levels at the end. */
   captains: { kills: number; sinkings: number; playerShare: number; levels: number[]; dealt: number; taken: number };
+  /** Doubloons banked by source: wages, kill, elite, boss, event, chest, victory, card, other. */
+  income: Record<string, number>;
+}
+
+/**
+ * Doubloon ledger: doubloon pickups are tagged at spawn by what else happened that tick (a boss or elite sinking, a
+ * kill, otherwise a set piece or point of interest) and credited when collected; chests and wages are read from
+ * their own events and clock. Whatever is left of the tick's doubloon delta is the victory purse (the final boss
+ * banks directly) or 'other'.
+ */
+class IncomeLedger {
+  readonly income: Record<string, number> = {};
+  private readonly origin = new Map<number, string>();
+  private lastMinute = 0;
+  /** Doubloons banked outside sim.step (a queued chest opening inside chooseCard): its event drains next step. */
+  private carry = 0;
+
+  add(key: string, amount: number): void { if (amount) this.income[key] = (this.income[key] ?? 0) + amount; }
+
+  /** A card choice (or chest close) that banked `delta`: a doubloon card is 'card'; the rest is a queued chest. */
+  choice(offer: CardOffer | undefined, delta: number): void {
+    const card = offer?.kind === 'doubloons' ? Math.min(delta, Math.round(offer.amount ?? 0)) : 0;
+    this.add('card', card);
+    this.carry += delta - card;
+  }
+
+  /** Call after each sim step with that step's events and the doubloon delta it produced. */
+  tick(sim: Sim, events: readonly SimEvent[], delta: number): void {
+    let bossKill = false, eliteKill = false, kill = false;
+    for (const e of events) {
+      if (e.type === 'boss-defeated') bossKill = true;
+      else if (e.type === 'enemy-killed') { kill = true; if (e.elite) eliteKill = true; }
+    }
+    let known = 0;
+    for (const e of events) {
+      if (e.type === 'pickup-spawned' && e.kind === 'doubloon') this.origin.set(e.id, bossKill ? 'boss' : eliteKill ? 'elite' : kill ? 'kill' : 'event');
+      else if (e.type === 'pickup-collected' && e.kind === 'doubloon') {
+        const amount = Math.max(1, Math.round(e.value * ECONOMY.plunder * doubloonMul(sim.state.player.stats)));
+        this.add(this.origin.get(e.id) ?? 'event', amount);
+        this.origin.delete(e.id);
+        known += amount;
+      } else if (e.type === 'chest-opened') {
+        const purse = e.rewards.find((r) => r.kind === 'doubloons')?.amount ?? 0;
+        this.add('chest', purse);
+        known += purse;
+      }
+    }
+    const minute = Math.floor(sim.state.time / 60);
+    if (minute > this.lastMinute) {
+      const wage = Math.round(ECONOMY.minuteWage * doubloonMul(sim.state.player.stats)) * (minute - this.lastMinute);
+      this.lastMinute = minute;
+      this.add('wages', wage);
+      known += wage;
+    }
+    const rest = delta + this.carry - known;
+    this.carry = 0;
+    if (rest !== 0) this.add(bossKill ? 'victory' : 'other', rest);
+  }
 }
 
 function metaProfile(): MetaProfile {
@@ -421,6 +514,7 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
   const world = new IslandField(seed, { sea });
   const sim = new Sim({ seed, shipId: ship, seaId: sea, meta: metaProfile(), world, content: contentFor(ship) });
   configureCaptains(sim.state, CAPTAINS);
+  applyVoyage(sim, { heat: HEAT_LEVEL });
   const perMinute: number[] = [];
   const shots: Record<string, { fired: number; hits: number; volleys: number }> = {};
   const sourcesPerMinute: Record<string, number>[] = [];
@@ -432,6 +526,7 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
   };
   const shot = (k: string) => (shots[k] ??= { fired: 0, hits: 0, volleys: 0 });
   const bot = new Bot(sim, seed);
+  const ledger = new IncomeLedger();
   const checkpoints: Checkpoint[] = [];
   const bosses: RunReport['bosses'] = [];
   let died: number | null = null, revives = 0, maxAlive12 = 0, next = 0;
@@ -445,17 +540,29 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
     const s = sim.state;
     if (s.status === 'levelup' && s.offers) {
       if (bot.shouldReroll(s.offers)) { sim.reroll(); bot.stats.rerolls++; continue; }
-      sim.chooseCard(bot.pickCard(s.offers));
+      const before = s.stats.doubloons;
+      const pick = bot.pickCard(s.offers);
+      const offer = s.offers[pick];
+      sim.chooseCard(pick);
+      ledger.choice(offer, s.stats.doubloons - before);
       continue;
     }
-    if (s.status === 'chest') { sim.chooseCard(0); continue; }
+    if (s.status === 'chest') {
+      const before = s.stats.doubloons;
+      sim.chooseCard(0);
+      ledger.choice(undefined, s.stats.doubloons - before);
+      continue;
+    }
     if (s.status !== 'running') break;
     bot.drive();
     bot.proxyTick(1 / 60);
+    const purseBefore = s.stats.doubloons;
     sim.step(1 / 60);
     onTick?.(sim);
     let unsourced = 0;
-    for (const e of sim.drainEvents()) {
+    const stepEvents = sim.drainEvents();
+    ledger.tick(sim, stepEvents, s.stats.doubloons - purseBefore);
+    for (const e of stepEvents) {
       if (e.type === 'enemy-fired') { const k = shot(e.projectile); k.fired += e.count; k.volleys++; }
       if (e.type === 'projectile-hit' && e.team === 'enemy' && e.targetId === 0) shot(e.projectile).hits++;
       if (e.type === 'player-hit') {
@@ -528,6 +635,7 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
         taken: Math.round(s.captains.reduce((a, k) => a + (k.ai.taken ?? 0), 0)),
       };
     })(),
+    income: ledger.income,
   };
 }
 
@@ -548,41 +656,35 @@ function levelGap(times: readonly number[], from: number, to: number): number {
 const EARLY: readonly [number, number] = [0, 180];
 const LATE: readonly [number, number] = [600, 900];
 
-/** CLI entry: runs only when this file is executed directly (so the bot can be imported by other scripts). */
-function main(): void {
-  const reports: RunReport[] = [];
-  console.log(`balance-sim: seeds=${SEEDS} ships=${SHIPS.join(',')} seas=${SEAS.join(',')} minutes=${MINUTES} proxy=${PROXY} meta=${META} captains=${CAPTAINS}`);
-  console.log('sea               ship             seed  L@1 L@3 L@5 L@10 L@15 | kills@5/10/15   | alive@5/10/12max/15 | hp%@5/10/15   | died   | warden tidewyrm sovereign (s)  | ◈    | outcome');
-  for (const sea of SEAS) {
-    for (const ship of SHIPS) {
-      for (let i = 0; i < SEEDS; i++) {
-        const seed = `bal-${i + 1}`;
-        const r = runOne(ship, sea, seed);
-        reports.push(r);
-        const L = (m: number) => pad(cp(r, m)?.level ?? '—', m >= 10 ? 4 : 3);
-        const K = (m: number) => cp(r, m)?.kills ?? '—';
-        const A = (m: number) => cp(r, m)?.alive ?? '—';
-        const H = (m: number) => { const c = cp(r, m); return c ? Math.round(c.hp * 100) : '—'; };
-        const boss = (id: BossId) => { const b = r.bosses.find((x) => x.boss === id); return b ? (b.killed !== null ? `${Math.round(b.killed - b.spawned)}` : 'alive') : '—'; };
-        console.log(
-          `${sea.padEnd(17)} ${ship.padEnd(16)} ${seed.padEnd(5)} ${L(1)} ${L(3)} ${L(5)} ${L(10)} ${L(15)} | ${String(`${K(5)}/${K(10)}/${K(15)}`).padEnd(15)} | ${String(`${A(5)}/${A(10)}/${r.maxAlive12}/${A(15)}`).padEnd(19)} | ${String(`${H(5)}/${H(10)}/${H(15)}`).padEnd(13)} | ${fmtTime(r.died).padEnd(6)} | ${pad(boss('iron-warden'), 6)} ${pad(boss('tidewyrm'), 8)} ${pad(boss('sovereign'), 9)}      | ${pad(r.doubloons, 4)} | ${r.outcome}${r.revives ? ` (+${r.revives} revive)` : ''}`
-          + (CAPTAINS ? ` | capK ${cp(r, 5)?.capKills ?? '—'}/${cp(r, 10)?.capKills ?? '—'}/${cp(r, 15)?.capKills ?? '—'} sunk ${r.captains.sinkings} focus ${Math.round(r.captains.playerShare * 100)}% capL ${r.captains.levels.join(',')} taken ${r.captains.taken}` : ''),
-        );
-        console.log(
-          `   pace: hit ${f1(r.firstHit ?? NaN)} s · near ${f1(r.firstNear ?? NaN)} s · L2 ${f0(r.levelTimes[0] ?? null)} s · gap early ${f0(levelGap(r.levelTimes, ...EARLY))} s / late ${f0(levelGap(r.levelTimes, ...LATE))} s · idle ${f0(r.idle)} s · xp ${r.xpCollected}/${r.xpDropped} (${Math.round((100 * r.xpCollected) / Math.max(1, r.xpDropped))}%)`,
-        );
-        if (VERBOSE) {
-          console.log(`   loadout ${r.loadout.join(' ')} proxied=[${r.proxied.join(',')}] bot=${JSON.stringify(r.bot)} ${r.ms}ms`);
-          console.log(`   dealt ${JSON.stringify(r.damageByWeapon)} taken ${JSON.stringify(r.damageTaken)}`);
-          console.log(`   enemy fire ${Object.entries(r.shots).map(([k, v]) => `${k}: ${v.volleys} volleys, ${v.fired} shots, ${v.hits} hits (${Math.round((100 * v.hits) / Math.max(1, v.fired))}%)`).join(' · ')}`);
-        }
-      }
-    }
+/** One per-run report line (plus the pace line and, with --verbose, the loadout and fire details). */
+function printRun(r: RunReport): void {
+  const L = (m: number) => pad(cp(r, m)?.level ?? '—', m >= 10 ? 4 : 3);
+  const K = (m: number) => cp(r, m)?.kills ?? '—';
+  const A = (m: number) => cp(r, m)?.alive ?? '—';
+  const H = (m: number) => { const c = cp(r, m); return c ? Math.round(c.hp * 100) : '—'; };
+  const boss = (id: BossId) => { const b = r.bosses.find((x) => x.boss === id); return b ? (b.killed !== null ? `${Math.round(b.killed - b.spawned)}` : 'alive') : '—'; };
+  console.log(
+    `${r.sea.padEnd(17)} ${r.ship.padEnd(16)} ${r.seed.padEnd(5)} ${L(1)} ${L(3)} ${L(5)} ${L(10)} ${L(15)} | ${String(`${K(5)}/${K(10)}/${K(15)}`).padEnd(15)} | ${String(`${A(5)}/${A(10)}/${r.maxAlive12}/${A(15)}`).padEnd(19)} | ${String(`${H(5)}/${H(10)}/${H(15)}`).padEnd(13)} | ${fmtTime(r.died).padEnd(6)} | ${pad(boss('iron-warden'), 6)} ${pad(boss('tidewyrm'), 8)} ${pad(boss('sovereign'), 9)}      | ${pad(r.doubloons, 4)} | ${r.outcome}${r.revives ? ` (+${r.revives} revive)` : ''}`
+    + (CAPTAINS ? ` | capK ${cp(r, 5)?.capKills ?? '—'}/${cp(r, 10)?.capKills ?? '—'}/${cp(r, 15)?.capKills ?? '—'} sunk ${r.captains.sinkings} focus ${Math.round(r.captains.playerShare * 100)}% capL ${r.captains.levels.join(',')} taken ${r.captains.taken}` : ''),
+  );
+  console.log(
+    `   pace: hit ${f1(r.firstHit ?? NaN)} s · near ${f1(r.firstNear ?? NaN)} s · L2 ${f0(r.levelTimes[0] ?? null)} s · gap early ${f0(levelGap(r.levelTimes, ...EARLY))} s / late ${f0(levelGap(r.levelTimes, ...LATE))} s · idle ${f0(r.idle)} s · xp ${r.xpCollected}/${r.xpDropped} (${Math.round((100 * r.xpCollected) / Math.max(1, r.xpDropped))}%)`,
+  );
+  if (VERBOSE) {
+    console.log(`   loadout ${r.loadout.join(' ')} proxied=[${r.proxied.join(',')}] bot=${JSON.stringify(r.bot)} ${r.ms}ms`);
+    console.log(`   dealt ${JSON.stringify(r.damageByWeapon)} taken ${JSON.stringify(r.damageTaken)}`);
+    console.log(`   enemy fire ${Object.entries(r.shots).map(([k, v]) => `${k}: ${v.volleys} volleys, ${v.fired} shots, ${v.hits} hits (${Math.round((100 * v.hits) / Math.max(1, v.fired))}%)`).join(' · ')}`);
+    console.log(`   income ${JSON.stringify(r.income)}`);
   }
+}
 
+const INCOME_KEYS = ['wages', 'kill', 'elite', 'boss', 'event', 'chest', 'victory', 'card', 'other'] as const;
+
+function printSummary(reports: readonly RunReport[], seas: readonly SeaId[]): void {
   console.log('\nSummary per sea (targets: first hit 5–8 s, first level ≤ 20 s, level gaps 15–25 s early (0–3 min) / 40–60 s late (10–15 min), L 25–35 @15; alive 60–90 @12; bosses 45–120 s; deaths: some on Sunward, more on Stormwrack/Gloam)');
-  for (const sea of SEAS) {
+  for (const sea of seas) {
     const rs = reports.filter((r) => r.sea === sea);
+    if (rs.length === 0) continue;
     const lv = (m: number) => mean(rs.map((r) => cp(r, m)?.level).filter((v): v is number => v !== undefined));
     const deaths = rs.filter((r) => r.died !== null);
     const bossStat = (id: BossId) => {
@@ -597,7 +699,69 @@ function main(): void {
     console.log(`   Iron Warden ${bossStat('iron-warden')} · Tidewyrm ${bossStat('tidewyrm')} · Sovereign ${bossStat('sovereign')}`);
     const m = (f: (r: RunReport) => number) => f1(mean(rs.map(f).filter((v) => Number.isFinite(v))));
     console.log(`   pace: first hit ${m((r) => r.firstHit ?? NaN)} s · first near ${m((r) => r.firstNear ?? NaN)} s · first level ${m((r) => r.levelTimes[0] ?? NaN)} s · gap early ${m((r) => levelGap(r.levelTimes, ...EARLY))} s · late ${m((r) => levelGap(r.levelTimes, ...LATE))} s · idle ${m((r) => r.idle)} s · xp collected ${m((r) => (100 * r.xpCollected) / Math.max(1, r.xpDropped))}% · kills@15 ${m((r) => cp(r, 15)?.kills ?? NaN)}`);
+    const wins = rs.filter((r) => r.outcome === 'victory');
+    const lost = rs.filter((r) => r.outcome !== 'victory');
+    const inc = INCOME_KEYS.map((k) => `${k} ${Math.round(mean(rs.map((r) => r.income?.[k] ?? 0)))}`).join(' · ');
+    console.log(`   ◈ income per run: ${inc} · victories avg ${wins.length ? Math.round(mean(wins.map((r) => r.doubloons))) : '—'} · others avg ${lost.length ? Math.round(mean(lost.map((r) => r.doubloons))) : '—'}`);
   }
+}
+
+/** Runs each sea × ship in its own child process (same options), then merges the reports in the usual order. */
+async function runParallel(): Promise<RunReport[]> {
+  const dir = mkdtempSync(join(tmpdir(), 'balance-sim-'));
+  const script = process.argv[1]!;
+  const base: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i]!;
+    if (a === '--seas' || a === '--ships' || a === '--json' || a === '--jobs') { i++; continue; }
+    base.push(a);
+  }
+  const jobs = SEAS.flatMap((sea) => SHIPS.map((ship) => ({ sea, ship, key: `${sea}__${ship}` })));
+  const outputs = new Map<string, string>();
+  const queue = [...jobs];
+  const worker = async (): Promise<void> => {
+    for (let job = queue.shift(); job; job = queue.shift()) {
+      const file = join(dir, `${job.key}.json`);
+      const child = spawn(process.execPath, [...process.execArgv, script, ...base, '--seas', job.sea, '--ships', job.ship, '--jobs', '1', '--json', file, '--child'], { stdio: ['ignore', 'pipe', 'inherit'] });
+      let out = '';
+      child.stdout.on('data', (d: Buffer) => { out += d.toString(); });
+      const code = await new Promise<number>((res) => child.on('close', (c) => res(c ?? 1)));
+      if (code !== 0) throw new Error(`balance-sim child for ${job.key} exited with ${code}`);
+      outputs.set(job.key, out);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(JOBS, jobs.length) }, worker));
+  const reports: RunReport[] = [];
+  for (const job of jobs) {
+    process.stdout.write(outputs.get(job.key) ?? '');
+    reports.push(...(JSON.parse(readFileSync(join(dir, `${job.key}.json`), 'utf8')) as RunReport[]));
+  }
+  rmSync(dir, { recursive: true, force: true });
+  return reports;
+}
+
+/** CLI entry: runs only when this file is executed directly (so the bot can be imported by other scripts). */
+async function main(): Promise<void> {
+  const child = flag('child');
+  let reports: RunReport[] = [];
+  if (!child) {
+    console.log(`balance-sim: seeds=${SEEDS} ships=${SHIPS.join(',')} seas=${SEAS.join(',')} minutes=${MINUTES} proxy=${PROXY} meta=${META} captains=${CAPTAINS} heat=${HEAT_LEVEL}${TUNE ? ` tune=${TUNE}` : ''}`);
+    console.log('sea               ship             seed  L@1 L@3 L@5 L@10 L@15 | kills@5/10/15   | alive@5/10/12max/15 | hp%@5/10/15   | died   | warden tidewyrm sovereign (s)  | ◈    | outcome');
+  }
+  if (!child && JOBS > 1 && SEAS.length * SHIPS.length > 1) reports = await runParallel();
+  else {
+    for (const sea of SEAS) {
+      for (const ship of SHIPS) {
+        for (let i = 0; i < SEEDS; i++) {
+          const r = runOne(ship, sea, `bal-${i + 1}`);
+          reports.push(r);
+          printRun(r);
+        }
+      }
+    }
+  }
+  if (child) { if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify(reports)); return; }
+  printSummary(reports, SEAS);
   if (TANK) {
     console.log('\nIncoming damage per minute (% of max hull), mean over runs:');
     for (const sea of SEAS) {
@@ -627,4 +791,4 @@ function main(): void {
   if (JSON_OUT) { writeFileSync(JSON_OUT, JSON.stringify(reports, null, 2)); console.log(`wrote ${JSON_OUT}`); }
 }
 
-if ((process.argv[1] ?? '').replace(/\\/g, '/').endsWith('scripts/balance-sim.ts')) main();
+if ((process.argv[1] ?? '').replace(/\\/g, '/').endsWith('scripts/balance-sim.ts')) void main().catch((err: unknown) => { console.error(err); process.exit(1); });
