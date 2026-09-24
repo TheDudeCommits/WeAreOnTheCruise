@@ -253,7 +253,7 @@ function buildArch(b: FeatureBuilder, x: number, z: number): void {
   const common = { biome, archetype: 'pillar' as const, radius, height, faceDistance, stretch: 0.22, axis: axis + Math.PI / 2 };
   const a = b.add(x - dx * off, z - dz * off, { ...common, face: axis }, 'arch');
   const c = b.add(x + dx * off, z + dz * off, { ...common, face: axis + Math.PI }, 'arch');
-  b.arch = { ax: a.x, az: a.z, bx: c.x, bz: c.z, crown: height * 1.03, clearance: Math.max(46, height * 0.66), width: radius * 1.05 };
+  b.arch = { ax: a.x, az: a.z, bx: c.x, bz: c.z, crown: height * 1.03, clearance: Math.max(50, height * 0.68), width: radius * 1.05 };
   const rocks = rng.integer(1, 4);
   for (let i = 0, tries = 0; i < rocks && tries < 12; tries++) {
     const t = rng.range(0, TAU), d = rng.range(off + radius + 25, off + radius + 70);

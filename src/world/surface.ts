@@ -42,6 +42,9 @@ export interface RingModel {
 
 export type SurfaceZone = 'water' | 'beach' | 'slope' | 'cliff' | 'top';
 
+/** Max distance (m) any terrain above the waterline may reach past the collision coast (ledges, grass lip). */
+export const OVERHANG = 0.8;
+
 export interface SurfaceSample { zone: SurfaceZone; y: number; /** 0 = flat .. 1 = vertical. */ steep: number; beach: number; s: number }
 
 const TOP_RINGS: Record<Archetype, readonly (readonly number[])[]> = {
@@ -137,7 +140,7 @@ export class IslandSurface {
       this.topBand[i] = k;
       const rim = Math.max(R * 0.3, this.faceR(i, H, k));
       this.rimR[i] = rim;
-      this.lipR[i] = rim + 0.85 * (1 - b) * (H > 4 ? 1 : 0.3);
+      this.lipR[i] = Math.min(rim + 0.85 * (1 - b) * (H > 4 ? 1 : 0.3), R + OVERHANG);
       this.lipY[i] = H + 0.32 * (1 - b);
       this.tierS[i] = shape.tierAt(t);
     }
@@ -149,7 +152,7 @@ export class IslandSurface {
     const shape = this.shape;
     const ramp = smoothstep(1.8, 6, y);
     let cliff = R - shape.lean * Math.max(0, y) - (shape.bandInset(k, t) + shape.groove(i, t)) * ramp;
-    cliff = Math.min(cliff, R + 0.9 * ramp);
+    cliff = Math.min(cliff, R + OVERHANG * 0.6 * ramp);
     if (b <= 0) return cliff;
     const ys = this.shoreY[i]!, H = this.H[i]!;
     const f = H > ys + 0.01 ? clamp((y - ys) / (H - ys), 0, 1) : 1;
@@ -314,7 +317,7 @@ export function buildRingModel(surface: IslandSurface, lod: 0 | 1 | 2): RingMode
       face.push(ring('face', band.k, (i) => {
         const y = clampY(i, (band.bottom + band.top) / 2);
         const bulge = 0.34 * (1 - B[i]!) * smoothstep(3, 6, y);
-        return [bandRadius(i, y, band.k) + bulge, y];
+        return [Math.min(bandRadius(i, y, band.k) + bulge, R[i]! + OVERHANG), y];
       }));
     }
     const top = ring('face', band.k, (i) => { const y = clampY(i, band.top); return [bandRadius(i, y, band.k), y]; });

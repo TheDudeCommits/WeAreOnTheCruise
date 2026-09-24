@@ -8,6 +8,7 @@
 import { createSeededRandom, type SeededRandom } from '../core/rng';
 import type { IslandDef } from '../game/types';
 import { TAU, angleDiff, clamp, fbm, hash01, lerp } from './noise';
+import { signedDistanceValue } from './polygon';
 import { IslandSurface } from './surface';
 import type { PaletteId } from './seas';
 
@@ -62,6 +63,9 @@ export interface IslandPlan {
   vines: VinePlan[];
   battery: BatterySite[];
 }
+
+/** Horizontal extent of a boulder relative to its size (vertex noise × scale jitter). */
+export const ROCK_EXTENT = 1.35;
 
 const plans = new WeakMap<IslandDef, Map<PaletteId, IslandPlan>>();
 const surfaces = new WeakMap<IslandDef, IslandSurface>();
@@ -226,6 +230,7 @@ function planVegetation(p: Planner): void {
         const smp = s.sample(x, z);
         if (smp.zone === 'water' || smp.zone === 'cliff' || smp.y < 1.2 || !p.free(x, z, 1.8)) continue;
         const prop = addProp(p, 'palm', x, smp.y - 0.3, z, 0.8 + rng.next() * 0.45);
+        if (!prop) continue;
         prop.lean = 0.12 + rng.next() * 0.3;
         prop.leanYaw = tt + (rng.next() - 0.5) * 0.8;
       }
@@ -239,14 +244,16 @@ function planVegetation(p: Planner): void {
         const g = p.top(x, z, 0.7, 0.05);
         if (!g || !p.free(x, z, 2)) continue;
         const prop = addProp(p, 'palm', x, g.y - 0.3, z, 0.8 + rng.next() * 0.4);
-        prop.lean = 0.1 + rng.next() * 0.25; prop.leanYaw = a;
+        if (prop) { prop.lean = 0.1 + rng.next() * 0.25; prop.leanYaw = a; }
       }
     }
   }
 }
 
-function addProp(p: Planner, kind: PropKind, x: number, y: number, z: number, scale: number, blocks = true): PropPlacement {
+function addProp(p: Planner, kind: PropKind, x: number, y: number, z: number, scale: number, blocks = true): PropPlacement | null {
   const rng = p.rng;
+  // Trunks stand at least 0.6 m inside the coast (props never sprout from the water).
+  if (signedDistanceValue(p.def.outline, x, z) > -0.6) return null;
   const prop: PropPlacement = { kind, x, y, z, yaw: rng.range(0, TAU), scale, lean: rng.range(0, 0.08), leanYaw: rng.range(0, TAU), tint: rng.next(), variant: rng.next() };
   p.plan.props.push(prop);
   if (blocks) p.block(x, z, kind === 'bush' ? 1.2 : 2.2 * scale);
@@ -271,8 +278,16 @@ function planRocks(p: Planner): void {
     const size = b > 0.5 ? rng.range(0.7, 1.9) : rng.range(1.2, reef ? 2.6 : 3.4);
     const inside = Math.max(size - 1, 0.3) + rng.range(0.1, b > 0.5 ? 2.5 : 0.8);
     const tt = t + (rng.next() - 0.5) * (TAU / n) * 0.8;
-    const r = R - inside;
-    const x = def.x + Math.sin(tt) * r, z = def.z + Math.cos(tt) * r;
+    let r = R - inside;
+    let x = def.x + Math.sin(tt) * r, z = def.z + Math.cos(tt) * r;
+    // Collision truth: the boulder's footprint (≤ 1.35 × size with noise/scale) may cross the coast by ≤ 1 m.
+    let excess = signedDistanceValue(def.outline, x, z) + size * ROCK_EXTENT - 1;
+    for (let k = 0; k < 6 && excess > 0; k++) {
+      r -= excess + 0.05;
+      x = def.x + Math.sin(tt) * r; z = def.z + Math.cos(tt) * r;
+      excess = signedDistanceValue(def.outline, x, z) + size * ROCK_EXTENT - 1;
+    }
+    if (excess > 0) continue;
     const y = b > 0.5 ? s.sample(x, z).y * 0.5 : rng.range(-0.4, 0.8);
     p.plan.rocks.push({ x, y, z, r: size, yaw: rng.range(0, TAU), squash: rng.range(0.55, 0.85), tint: rng.next() });
   }
@@ -284,6 +299,7 @@ function planRocks(p: Planner): void {
     const g = p.top(x, z, 0.6, 0.02);
     if (!g || !p.free(x, z, 2)) continue;
     const size = rng.range(1, reef ? 2.2 : 3);
+    if (signedDistanceValue(def.outline, x, z) + size * ROCK_EXTENT > 1) continue;
     p.plan.rocks.push({ x, y: g.y - size * 0.2, z, r: size, yaw: rng.range(0, TAU), squash: rng.range(0.5, 0.8), tint: rng.next() });
   }
 }

@@ -25,7 +25,7 @@ export function appendArchSpan(b: MeshBuilder, span: ArchSpan, faceDistance: num
   const px = uz, pz = -ux; // across the span
   const tFa = faceDistance / D, tFb = 1 - tFa;
   const half = 0.5 - tFa;
-  const spring = span.clearance * 0.5;
+  const spring = span.clearance * 0.66;
   const rings = lod === 0 ? 44 : lod === 1 ? 20 : 10;
   const around = lod === 0 ? 18 : lod === 1 ? 12 : 8;
   const t0 = tFa * 0.35, t1 = 1 - tFa * 0.35;
@@ -39,7 +39,7 @@ export function appendArchSpan(b: MeshBuilder, span: ArchSpan, faceDistance: num
     const e = Math.min(1, Math.abs(t - 0.5) / half);
     const yBot = inOpening ? spring + (span.clearance - spring) * Math.sqrt(Math.max(0, 1 - e * e)) : spring - (Math.abs(t - 0.5) - half) * D * 0.9;
     const yTop = span.crown + 1.5 * Math.sin(Math.PI * t) + fbm(seed, t * 6, 0.3, 2) * 1.2;
-    const W = span.width * (1 + 0.45 * Math.pow(Math.abs(t - 0.5) * 2, 2));
+    const W = span.width * (1 + 0.2 * Math.pow(Math.abs(t - 0.5) * 2, 2));
     const cy = (yTop + yBot) / 2, hs = (yTop - yBot) / 2;
     ringStart.push(b.vCount);
     for (let a = 0; a < around; a++) {
@@ -110,7 +110,9 @@ export function appendArchSpan(b: MeshBuilder, span: ArchSpan, faceDistance: num
     const W = span.width * (1 + 0.45 * Math.pow(Math.abs(t - 0.5) * 2, 2));
     const off = side * W * 0.42;
     const x = span.ax + dx * t + px * off - ox, z = span.az + dz * t + pz * off - oz;
-    const len = 5 + 10 * hash01(seed + 11, i);
+    // Vines dangle into the opening but stop above the sailing clearance (masts pass under them).
+    const len = Math.min(5 + 10 * hash01(seed + 11, i), yBot + 1 - span.clearance * 0.84);
+    if (len < 2) continue;
     const w = 0.45;
     let pa = -1, pb = -1;
     for (let k = 0; k <= 5; k++) {

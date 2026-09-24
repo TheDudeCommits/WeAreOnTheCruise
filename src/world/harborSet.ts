@@ -89,7 +89,7 @@ export function harborSetFeatures(): readonly WorldFeature[] {
     const common = { biome: 'tropical' as const, archetype: 'pillar' as const, radius, height, faceDistance, stretch: 0.22, axis: axis + Math.PI / 2 };
     const a = b.add(c.x - dx * off, c.z - dz * off, { ...common, face: axis }, 'arch');
     const d = b.add(c.x + dx * off, c.z + dz * off, { ...common, face: axis + Math.PI }, 'arch');
-    b.arch = { ax: a.x, az: a.z, bx: d.x, bz: d.z, crown: height * 1.03, clearance: Math.max(46, height * 0.66), width: radius * 1.05 };
+    b.arch = { ax: a.x, az: a.z, bx: d.x, bz: d.z, crown: height * 1.03, clearance: Math.max(50, height * 0.68), width: radius * 1.05 };
     out.push(b.finish('harbor-set'));
   }
   // A few foreground rocks just outside the camera orbit.
