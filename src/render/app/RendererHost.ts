@@ -50,6 +50,13 @@ export function hostFor(renderer: THREE.WebGLRenderer): RendererHost | undefined
  */
 export const SHADOW_PROXY_LAYER = 1;
 
+let viewCameraRef: THREE.PerspectiveCamera | null = null;
+/**
+ * The game's view camera (PERF: per-instance culling and distance LODs read it during system updates, where it still
+ * holds last frame's pose — cull with a margin). Null until a RendererHost exists.
+ */
+export function viewCamera(): THREE.PerspectiveCamera | null { return viewCameraRef; }
+
 /** Turns `object` into a shadow-only caster (no colour, no ink, no occlusion). Children are not changed. */
 export function makeShadowProxy(object: THREE.Object3D): void {
   object.layers.set(SHADOW_PROXY_LAYER);
@@ -194,6 +201,7 @@ export class RendererHost {
 
     this.camera = new THREE.PerspectiveCamera(50, 1, 1, 6000);
     this.camera.position.set(0, 90, 120);
+    viewCameraRef ??= this.camera;
     this.profile = qualityProfile(performanceMode ? 'low' : 'high');
     // QA pin: `?dpr=1.5` fixes the pixel ratio and turns adaptive resolution off (performance evidence).
     const pinned = Number(new URLSearchParams(window.location.search).get('dpr'));
@@ -363,6 +371,7 @@ export class RendererHost {
     this.renderer.dispose();
     this.renderer.domElement.remove();
     hosts.delete(this.renderer);
+    if (viewCameraRef === this.camera) viewCameraRef = null;
   }
 
   private maxDpr(): number {

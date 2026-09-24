@@ -18,9 +18,9 @@ const c = (hex: number) => new THREE.Color(hex);
 
 export interface PropVariant { key: string; kind: PropKind; geometry: THREE.BufferGeometry; /** Visual height at scale 1 (m). */ height: number }
 
-function palm(bend: number, fronds: number, height: number): THREE.BufferGeometry {
+function palm(bend: number, fronds: number, height: number, low = false): THREE.BufferGeometry {
   const b = new MeshBuilder(1024);
-  const segs = 8;
+  const segs = low ? 4 : 8;
   const pts: THREE.Vector3[] = [];
   for (let i = 0; i <= segs; i++) {
     const t = i / segs;
@@ -28,7 +28,7 @@ function palm(bend: number, fronds: number, height: number): THREE.BufferGeometr
   }
   const trunkA = c(0x8b6a46), trunkB = c(0x6c4f33);
   // Tapered ringed trunk (hexagonal rings so it reads as a palm, not a pipe).
-  const sides = 6;
+  const sides = low ? 4 : 6;
   const rings: number[][] = [];
   for (let i = 0; i <= segs; i++) {
     const p = pts[i]!;
@@ -54,7 +54,7 @@ function palm(bend: number, fronds: number, height: number): THREE.BufferGeometr
     const a = (f / fronds) * Math.PI * 2 + (f % 2) * 0.2;
     const dx = Math.cos(a), dz = Math.sin(a);
     const len = height * (0.42 + 0.08 * ((f * 7) % 3));
-    const steps = 5;
+    const steps = low ? 3 : 5;
     let prevL = -1, prevC = -1, prevR = -1, prevLu = -1, prevCu = -1, prevRu = -1;
     for (let s = 0; s <= steps; s++) {
       const t = s / steps;
@@ -80,9 +80,9 @@ function palm(bend: number, fronds: number, height: number): THREE.BufferGeometr
       prevL = L; prevC = C; prevR = R; prevLu = Lu; prevCu = Cu; prevRu = Ru;
     }
   }
-  // Coconuts.
+  // Coconuts (full detail only).
   const nut = c(0x6b4a2a);
-  for (let k = 0; k < 3; k++) {
+  for (let k = 0; k < (low ? 0 : 3); k++) {
     const a = k * 2.1;
     b.sphere(trs(m4, top.x + Math.cos(a) * 0.45, top.y - 0.35, top.z + Math.sin(a) * 0.45, 0, 0.32, 0.32, 0.32), nut, 0);
   }
@@ -92,11 +92,11 @@ function palm(bend: number, fronds: number, height: number): THREE.BufferGeometr
 }
 
 /** Cloud-like canopy: a few squashed spheres, darker underneath. */
-function broadleaf(variant: number): THREE.BufferGeometry {
+function broadleaf(variant: number, lowDetail = false): THREE.BufferGeometry {
   const b = new MeshBuilder(2048);
   const trunk = c(0x6e5037);
   const trunkH = variant === 1 ? 6.5 : variant === 2 ? 4.2 : 5;
-  b.cylinder(trs(m4, 0, trunkH / 2, 0, 0, 0.42, trunkH, 0.42), trunk, 6, 0.7, 1);
+  b.cylinder(trs(m4, 0, trunkH / 2, 0, 0, 0.42, trunkH, 0.42), trunk, lowDetail ? 4 : 6, 0.7, 1);
   const blobs: [number, number, number, number][] = variant === 1
     ? [[0, trunkH + 3.2, 0, 2.6], [0.9, trunkH + 1.4, 0.5, 2.3], [-1, trunkH + 1.6, -0.4, 2.2], [0.1, trunkH + 5.2, 0.2, 1.9]]
     : variant === 2
@@ -104,7 +104,7 @@ function broadleaf(variant: number): THREE.BufferGeometry {
       : [[0, trunkH + 2.2, 0, 3], [1.6, trunkH + 1.1, 0.8, 2.3], [-1.5, trunkH + 1.3, -0.7, 2.3], [0.4, trunkH + 0.9, -1.7, 2.1]];
   const low = c(0x2f6e32), high = c(0x74b94b);
   for (const [x, y, z, r] of blobs) {
-    b.append(canopySphere(1), trs(m4, x, y, z, hash01(variant, x * 10 | 0) * 6, r, r * 0.78, r), (_x, py, _z, _nx, ny, _nz, out) => {
+    b.append(canopySphere(lowDetail ? 0 : 1), trs(m4, x, y, z, hash01(variant, x * 10 | 0) * 6, r, r * 0.78, r), (_x, py, _z, _nx, ny, _nz, out) => {
       const h = (py - (trunkH - 0.5)) / 7;
       out.copy(low).lerp(high, Math.max(0, Math.min(1, h * 0.7 + ny * 0.35 + 0.15)));
     });
@@ -112,9 +112,9 @@ function broadleaf(variant: number): THREE.BufferGeometry {
   return b.toGeometry();
 }
 
-function conifer(): THREE.BufferGeometry {
+function conifer(low = false): THREE.BufferGeometry {
   const b = new MeshBuilder(1024);
-  b.cylinder(trs(m4, 0, 1.5, 0, 0, 0.35, 3, 0.35), c(0x5a3f2a), 5, 0.7, 1);
+  b.cylinder(trs(m4, 0, 1.5, 0, 0, 0.35, 3, 0.35), c(0x5a3f2a), low ? 4 : 5, 0.7, 1);
   const dark = c(0x24503b), light = c(0x3f7550);
   const tiers = 4;
   for (let t = 0; t < tiers; t++) {
@@ -122,19 +122,19 @@ function conifer(): THREE.BufferGeometry {
     const r = 3.2 - t * 0.65;
     b.cylinder(trs(m4, 0, y + 1.6, 0, t * 0.7, r, 3.4, r), (_x, py, _z, _nx, ny, _nz, out) => {
       out.copy(dark).lerp(light, Math.max(0, ny) * 0.8 + (py - y) * 0.05);
-    }, 7, 0, 1);
+    }, low ? 5 : 7, 0, 1);
   }
   return b.toGeometry();
 }
 
-function deadTree(): THREE.BufferGeometry {
+function deadTree(low = false): THREE.BufferGeometry {
   const b = new MeshBuilder(512);
   const bark = c(0x5d534c), barkLight = c(0x7d7168);
-  b.cylinder(trs(m4, 0, 3, 0, 0, 0.38, 6, 0.38, 0.08, 0.05), bark, 5, 0.6, 1);
+  b.cylinder(trs(m4, 0, 3, 0, 0, 0.38, 6, 0.38, 0.08, 0.05), bark, low ? 4 : 5, 0.6, 1);
   const branches: [number, number, number, number][] = [[0.9, 4.8, 0.6, 3], [2.6, 4, -0.7, 2.6], [4.2, 5.2, 0.5, 2.2], [5.4, 3.6, -0.9, 1.8]];
   for (const [yaw, y, pitch, len] of branches) {
     const dx = Math.sin(yaw) * Math.sin(Math.abs(pitch) + 0.6), dz = Math.cos(yaw) * Math.sin(Math.abs(pitch) + 0.6);
-    b.cylinder(trs(m4, dx * len * 0.5, y + len * 0.35, dz * len * 0.5, yaw, 0.12, len, 0.12, 0.9, 0), barkLight, 4, 0.4, 1);
+    b.cylinder(trs(m4, dx * len * 0.5, y + len * 0.35, dz * len * 0.5, yaw, 0.12, len, 0.12, 0.9, 0), barkLight, low ? 3 : 4, 0.4, 1);
   }
   return b.toGeometry();
 }
@@ -154,6 +154,24 @@ function bush(variant: number): THREE.BufferGeometry {
 }
 
 let variants: PropVariant[] | null = null;
+let lowVariants: THREE.BufferGeometry[] | null = null;
+
+/**
+ * PERF: low-detail geometry per prop variant (same order as propVariants): fewer trunk sides and frond steps, detail-0
+ * canopies, no coconuts — about a third of the triangles. Used for trees far from the focus and, for every tree, as
+ * the shadow-only caster (the detailed trees no longer cast).
+ */
+export function propLowGeometries(): THREE.BufferGeometry[] {
+  if (lowVariants) return lowVariants;
+  const all = propVariants();
+  lowVariants = [
+    palm(0.8, 8, 11, true), palm(1.8, 9, 12.5, true),
+    broadleaf(0, true), broadleaf(1, true), broadleaf(2, true),
+    conifer(true), deadTree(true),
+    all[7]!.geometry, all[8]!.geometry,
+  ];
+  return lowVariants;
+}
 
 export function propVariants(): PropVariant[] {
   if (variants) return variants;

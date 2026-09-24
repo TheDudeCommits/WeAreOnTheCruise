@@ -23,12 +23,20 @@ import { fleetAtlas } from '../atlas';
 import { GeoBuilder } from '../geometry/GeoBuilder';
 import { PALETTE } from '../geometry/parts';
 import { cloneMaterial, glowMaterial, partMaterial } from '../materials';
+import { viewCamera } from '../../app/RendererHost';
 import { FOE_LOOKS, foeLookKeys, type FoeLook } from './foeLooks';
 import { buildFort, buildShip, shipSpec, type BuiltShip, type ProcKey } from './procShips';
 
 type AnchorSet = Record<ShipAnchor, THREE.Vector3>;
 
-interface InstPart { mesh: THREE.InstancedMesh; half: 'fore' | 'aft' | 'glow' | 'whole'; }
+interface InstPart {
+  mesh: THREE.InstancedMesh;
+  half: 'fore' | 'aft' | 'glow' | 'whole';
+  /** PERF detail tier: near-only parts (deck props, procedural extras) are skipped beyond FAR_DETAIL. */
+  near: boolean;
+  /** Instances written this frame. */
+  count: number;
+}
 
 interface ClassVisual {
   key: string;
@@ -66,6 +74,16 @@ interface EnemyVisualState {
 }
 
 const CAPACITY = 96;
+/**
+ * PERF budget: instances outside the view frustum (last frame's camera, widened by CULL_MARGIN) are not drawn at all,
+ * and beyond FAR_DETAIL metres from the camera only the hull (and glow) parts are — deck props and procedural extras
+ * are a few pixels there. `EnemyFleet.stats` reports the split.
+ */
+const CULL_MARGIN = 12;
+export const FAR_DETAIL = 180;
+const frustum = new THREE.Frustum();
+const projScreen = new THREE.Matrix4();
+const sphere = new THREE.Sphere();
 const BIG = 28;
 const RINGS = 64;
 const BUBBLES = 24;
@@ -121,6 +139,8 @@ export class EnemyFleet {
   private readonly requested = new Set<string>();
   /** Manifest loads and dressed-look builds in flight (PERF warm-up waits for them before compiling). */
   private readonly pendingLoads: Promise<unknown>[] = [];
+  /** PERF QA: last frame's instance split (drawn near, drawn far, culled off-screen). */
+  readonly stats = { near: 0, far: 0, culled: 0 };
 
   constructor(private readonly assets: FleetAssets | null) {
     this.group.name = 'enemy-fleet';
@@ -249,7 +269,7 @@ export class EnemyFleet {
     }));
   }
 
-  private addPart(parts: InstPart[], key: string, geometry: THREE.BufferGeometry, material: THREE.Material, half: InstPart['half'], owned: boolean): void {
+  private addPart(parts: InstPart[], key: string, geometry: THREE.BufferGeometry, material: THREE.Material, half: InstPart['half'], owned: boolean, near = false): void {
     if (owned) this.ownedGeometries.push(geometry);
     const mesh = new THREE.InstancedMesh(geometry, material, CAPACITY);
     mesh.frustumCulled = false;
@@ -264,7 +284,7 @@ export class EnemyFleet {
     mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
     if (half !== 'glow') markInk(mesh);
     this.group.add(mesh);
-    parts.push({ mesh, half });
+    parts.push({ mesh, half, near, count: 0 });
   }
 
   /** Non-tintable clone of a manifest material (per-instance multiply tint), optionally spectral. */
@@ -357,9 +377,9 @@ export class EnemyFleet {
       if (split) {
         const [fore, aft] = splitByZ(geo, 0);
         this.ownedGeometries.push(geo);
-        this.addPart(parts, `${id}:extras`, fore, this.enemyMaterial, 'fore', true);
-        this.addPart(parts, `${id}:extras`, aft, this.enemyMaterial, 'aft', true);
-      } else this.addPart(parts, `${id}:extras`, geo, this.enemyMaterial, 'whole', true);
+        this.addPart(parts, `${id}:extras`, fore, this.enemyMaterial, 'fore', true, true);
+        this.addPart(parts, `${id}:extras`, aft, this.enemyMaterial, 'aft', true, true);
+      } else this.addPart(parts, `${id}:extras`, geo, this.enemyMaterial, 'whole', true, true);
     }
     if (g.vertexCount) this.addPart(parts, `${id}:glow`, g.build(), this.glowMaterial, 'glow', true);
   }
@@ -387,9 +407,9 @@ export class EnemyFleet {
         if (split) {
           const [fore, aft] = splitByZ(merged, 0);
           this.ownedGeometries.push(merged);
-          this.addPart(parts, `${id}:${key}`, fore, mat, 'fore', true);
-          this.addPart(parts, `${id}:${key}`, aft, mat, 'aft', true);
-        } else this.addPart(parts, `${id}:${key}`, merged, mat, 'whole', true);
+          this.addPart(parts, `${id}:${key}`, fore, mat, 'fore', true, true);
+          this.addPart(parts, `${id}:${key}`, aft, mat, 'aft', true, true);
+        } else this.addPart(parts, `${id}:${key}`, merged, mat, 'whole', true, true);
       }
     }
   }
@@ -416,7 +436,7 @@ export class EnemyFleet {
     });
     // The procedural stand-in is no longer drawn: hide its meshes for good.
     const proc = this.lookProc.get(id);
-    if (proc) for (const p of proc.parts) { p.mesh.count = 0; p.mesh.visible = false; }
+    if (proc) for (const p of proc.parts) { p.count = 0; p.mesh.count = 0; p.mesh.visible = false; }
   }
 
   /** Procedural stand-in for a dressed class (base procedural hull or the wisp) while/if the GLBs are missing. */
@@ -478,10 +498,16 @@ export class EnemyFleet {
 
   update(dt: number, time: number, enemies: readonly EnemyState[], ocean: OceanServices): void {
     this.frame++;
-    for (const v of this.procedural.values()) v.count = 0;
-    for (const v of this.manifest.values()) v.count = 0;
-    for (const v of this.looks.values()) v.count = 0;
-    for (const v of this.lookProc.values()) v.count = 0;
+    for (const v of this.procedural.values()) resetVisual(v);
+    for (const v of this.manifest.values()) resetVisual(v);
+    for (const v of this.looks.values()) resetVisual(v);
+    for (const v of this.lookProc.values()) resetVisual(v);
+    // PERF: view frustum (last frame's camera) and position for culling and the detail tier.
+    const camera = viewCamera();
+    if (camera) frustum.setFromProjectionMatrix(projScreen.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+    const cx = camera?.position.x ?? 0, cy = camera?.position.y ?? 0, cz = camera?.position.z ?? 0;
+    const stats = this.stats;
+    stats.near = 0; stats.far = 0; stats.culled = 0;
     this.eliteCount = 0;
     this.affixCount = 0;
     this.bubbleCount = 0;
@@ -585,7 +611,15 @@ export class EnemyFleet {
       const flash = e.hitFlash;
       if (flash > 0) { tint.r += flash * 1.9; tint.g += flash * 1.9; tint.b += flash * 1.8; }
 
-      const i = visual.count++;
+      // PERF: off-screen instances are not drawn (their matrix above still feeds anchors and transforms).
+      if (camera) {
+        sphere.center.set(e.x, y + visual.height * scale * 0.4, e.z);
+        sphere.radius = Math.max(visual.length, visual.height) * scale * 0.62 + CULL_MARGIN;
+        if (!frustum.intersectsSphere(sphere)) { stats.culled++; continue; }
+      }
+      const far = camera ? Math.hypot(e.x - cx, y - cy, e.z - cz) > FAR_DETAIL + visual.length * scale * 0.5 : false;
+      if (far) stats.far++; else stats.near++;
+      visual.count++;
       if (visual.split) {
         const pz = visual.splitZ, py = visual.pivotY;
         mFore.copy(st.matrix).multiply(mA.makeTranslation(0, py, pz)).multiply(mR.makeRotationX(splitAngle)).multiply(mB.makeTranslation(0, -py, -pz - gap));
@@ -594,6 +628,8 @@ export class EnemyFleet {
       const glowPulse = e.defId === 'signal-cutter' && (e.ai.markT ?? 0) > 0 ? 1.6 + Math.sin(time * 14) * 0.6
         : e.defId === 'lantern-wisp' ? 1.2 + Math.sin(time * 9 + e.id * 2.1) * 0.25 + (e.ai.wl === 1 ? 0.8 : 0) : 1;
       for (const part of visual.parts) {
+        if (far && part.near) continue;
+        const i = part.count++;
         let m = st.matrix;
         if (part.half === 'fore' && visual.split) m = mFore;
         else if (part.half === 'aft' && visual.split) m = mAft;
@@ -699,11 +735,16 @@ function withInstanceColor(mesh: THREE.InstancedMesh): void {
   mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
 }
 
+function resetVisual(v: ClassVisual): void {
+  v.count = 0;
+  for (const part of v.parts) part.count = 0;
+}
+
 function flushVisual(v: ClassVisual): void {
   for (const part of v.parts) {
-    part.mesh.count = v.count;
-    part.mesh.visible = v.count > 0;
-    if (v.count > 0) {
+    part.mesh.count = part.count;
+    part.mesh.visible = part.count > 0;
+    if (part.count > 0) {
       part.mesh.instanceMatrix.needsUpdate = true;
       if (part.mesh.instanceColor) part.mesh.instanceColor.needsUpdate = true;
     }

@@ -36,10 +36,10 @@ export function isTerrainIsland(landmark: string | undefined): boolean {
   return landmark !== 'pier' && landmark !== 'breakwater';
 }
 
-function mesh(geo: THREE.BufferGeometry, material: THREE.Material, name: string, shadows: boolean): THREE.Mesh {
+function mesh(geo: THREE.BufferGeometry, material: THREE.Material, name: string, shadows: boolean, casts = shadows): THREE.Mesh {
   const m = new THREE.Mesh(geo, material);
   m.name = name;
-  m.castShadow = shadows;
+  m.castShadow = casts;
   m.receiveShadow = shadows;
   m.matrixAutoUpdate = false;
   return m;
@@ -116,7 +116,8 @@ export function* buildFeatureLodSteps(feature: WorldFeature, lod: 0 | 1 | 2, mat
     const geo = solid.toGeometry();
     geometries.push(geo);
     triangles += solid.iCount / 3;
-    group.add(mesh(geo, mats.terrain, 'terrain', shadows));
+    // PERF: only full-detail (LOD0, < ~460 m) terrain casts; LOD1 shadows fall beyond the shadow reach's useful range.
+    group.add(mesh(geo, mats.terrain, 'terrain', shadows, lod === 0));
   }
   if (!t.lamp.empty) {
     const geo = t.lamp.toGeometry();
