@@ -75,6 +75,7 @@ export const GRAVITY = 18;
 export class FreeList {
   private readonly free: Int32Array;
   private count = 0;
+  private lazyEpoch = -1;
   constructor(readonly capacity: number) { this.free = new Int32Array(capacity); }
   rebuild(list: readonly { alive: boolean }[]): void {
     let n = 0;
@@ -83,6 +84,23 @@ export class FreeList {
   }
   /** Lowest dead index first; −1 when empty. */
   pop(): number { return this.count > 0 ? this.free[--this.count]! : -1; }
+
+  /**
+   * A reusable dead slot index, `list.length` when the pool may still grow, or −1 when it is saturated.
+   * Slots that died since the last rebuild are found by one extra rebuild per `epoch` (tick) when the pool is full.
+   */
+  acquire(list: readonly { alive: boolean }[], epoch: number): number {
+    let idx = this.pop();
+    while (idx >= 0 && list[idx]!.alive) idx = this.pop();
+    if (idx >= 0) return idx;
+    if (list.length < this.capacity) return list.length;
+    if (this.lazyEpoch === epoch) return -1;
+    this.lazyEpoch = epoch;
+    this.rebuild(list);
+    idx = this.pop();
+    while (idx >= 0 && list[idx]!.alive) idx = this.pop();
+    return idx;
+  }
 }
 
 const BUF = 1024;

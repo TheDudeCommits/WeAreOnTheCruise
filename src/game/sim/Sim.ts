@@ -7,9 +7,7 @@
  */
 import { hashString, createSeededRandom } from '../../core/rng';
 import { CONTENT } from '../content';
-import {
-  HAZARD_POOL, MAX_STEPS_PER_FRAME, PICKUP_POOL, PROJECTILE_POOL, SIM_DT, TELEGRAPH_POOL,
-} from '../constants';
+import { MAX_STEPS_PER_FRAME, SIM_DT } from '../constants';
 import type { BossId, EnemyId, HazardKind, PickupKind, ProjectileKind, SeaId, ShipId, StatusKind, Team, WeaponId } from '../ids';
 import type {
   BossState, ContentDb, EnemyState, HazardState, MetaProfile, PickupState, PlayerInput, PlayerState,
@@ -322,11 +320,9 @@ export class Sim implements CoreSim {
   ): number {
     const list = this.state.projectiles;
     const core = this.core;
-    let idx = core.projFree.pop();
-    while (idx >= 0 && list[idx]!.alive) idx = core.projFree.pop();
-    if (idx < 0) {
-      if (list.length >= PROJECTILE_POOL) return -1;
-      idx = list.length;
+    const idx = core.projFree.acquire(list, this.state.tick);
+    if (idx < 0) return -1;
+    if (idx === list.length) {
       list.push({
         id: 0, alive: false, kind, team, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, damage: 0, radius: 0, pierce: 0,
         ttl: 0, age: 0, weapon: undefined, target: undefined, crit: false, area: 0, hits: [],
@@ -355,11 +351,9 @@ export class Sim implements CoreSim {
   ): number {
     const list = this.state.hazards;
     const core = this.core;
-    let idx = core.hazFree.pop();
-    while (idx >= 0 && list[idx]!.alive) idx = core.hazFree.pop();
-    if (idx < 0) {
-      if (list.length >= HAZARD_POOL) return -1;
-      idx = list.length;
+    const idx = core.hazFree.acquire(list, this.state.tick);
+    if (idx < 0) return -1;
+    if (idx === list.length) {
       list.push({
         id: 0, alive: false, kind, team, x: 0, z: 0, radius: 0, ttl: 0, age: 0, damage: 0, tick: 0, tickTimer: 0,
         vx: 0, vz: 0, weapon: undefined, armed: true,
@@ -380,13 +374,9 @@ export class Sim implements CoreSim {
   spawnPickup(kind: PickupKind, x: number, z: number, value = 1): PickupState | null {
     const list = this.state.pickups;
     const core = this.core;
-    let idx = core.pickFree.pop();
-    while (idx >= 0 && list[idx]!.alive) idx = core.pickFree.pop();
-    if (idx < 0) {
-      if (list.length >= PICKUP_POOL) return null;
-      idx = list.length;
-      list.push({ id: 0, alive: false, kind, x: 0, z: 0, value: 0, age: 0, magnet: false });
-    }
+    const idx = core.pickFree.acquire(list, this.state.tick);
+    if (idx < 0) return null;
+    if (idx === list.length) list.push({ id: 0, alive: false, kind, x: 0, z: 0, value: 0, age: 0, magnet: false });
     const k = list[idx]!;
     k.id = this.nextId(); k.alive = true; k.kind = kind; k.x = x; k.z = z; k.value = value; k.age = 0; k.magnet = false;
     core.kSpeed[idx] = 0;
@@ -397,11 +387,9 @@ export class Sim implements CoreSim {
   addTelegraph(t: TelegraphSpawn): TelegraphState | null {
     const list = this.state.telegraphs;
     const core = this.core;
-    let idx = core.teleFree.pop();
-    while (idx >= 0 && list[idx]!.alive) idx = core.teleFree.pop();
-    if (idx < 0) {
-      if (list.length >= TELEGRAPH_POOL) return null;
-      idx = list.length;
+    const idx = core.teleFree.acquire(list, this.state.tick);
+    if (idx < 0) return null;
+    if (idx === list.length) {
       list.push({ id: 0, alive: false, shape: t.shape, team: t.team, x: 0, z: 0, radius: 0, length: 0, angle: 0, time: 0, duration: 0 });
     }
     const slot = list[idx]!;
