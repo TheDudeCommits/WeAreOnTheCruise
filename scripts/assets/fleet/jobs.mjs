@@ -79,6 +79,25 @@ export const JOBS = [
     source: SKETCHFAB('c5e06cf1ba164b749cb47044fe7b86eb', 'Low-Poly Pirate Ship', 'Greggory_Fisher'),
     notes: 'Admiralty Frigate: flat colours remapped (white upper hull, navy lower hull, gold trim) and baked into one palette texture; black sails re-mapped to white canvas with the original gold wave-crest; loose deck clutter (cannonballs, cups, bottles) removed; decimated from 73k tris.',
   },
+  {
+    key: 'fireship', role: 'enemy', src: 'src/83b5b588468f4d89a463dd0729f234ce/source.glb', yaw: 0, length: 22, draft: 1.8, tris: 13500, tex: 1024,
+    recolor: (ctx) => RECOLOR.fireship(ctx),
+    source: SKETCHFAB('83b5b588468f4d89a463dd0729f234ce', 'Stylized Pirate Ship', 'Nik_kale'),
+    notes: 'Redtide Fire Ship: hull charred, blue trim turned ember orange, sails re-mapped to Redtide red with the cutlass-and-sun. Attach powder-keg props on deck (y ≈ 2 m) and fire FX at runtime.',
+  },
+  {
+    key: 'skiff', role: 'enemy', src: 'src/c9b94c52d0704614930ad5e076e02198/source.glb', yaw: 90, length: 12, draft: 0.6, tris: 8000, tex: 512,
+    recolor: (ctx) => RECOLOR.raiderSkiff(ctx),
+    source: SKETCHFAB('c9b94c52d0704614930ad5e076e02198', 'Boat', 'local.yany'),
+    notes: 'Raider Skiff: rowboat hull stained black with a red gunwale; a simple mast, yard and red square sail (cutlass-and-sun) were added so skiffs read as Redtide at a distance. Also suitable for escort-skiff summons with a different tint.',
+  },
+  // ───────────── Gloam Wraiths ─────────────
+  {
+    key: 'wraith', role: 'enemy', src: 'src/31f365301da8410d83dce11d3ace5813/source.glb', yaw: -90, length: 30, draft: 2.2, tris: 22000, tex: 1024, keepEmissive: true,
+    recolor: (ctx) => RECOLOR.wraith(ctx),
+    source: SKETCHFAB('31f365301da8410d83dce11d3ace5813', 'Ghost ship', 'Sololopenko'),
+    notes: 'Gloam Wraith: whole hull shifted to spectral teal, purple sails re-mapped to torn pale-teal canvas with a spiral sigil, lanterns keep a teal emissive glow (material wraith-light). Decimated from 105k tris.',
+  },
 ];
 
 export { RECOLOR };

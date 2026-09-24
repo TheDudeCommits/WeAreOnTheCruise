@@ -263,3 +263,37 @@ function planarSailUVs(doc, prim, layout, emblemMinShare) {
   prim.setAttribute('TEXCOORD_0', acc);
   for (const sem of prim.listSemantics()) if (/^TEXCOORD_[1-9]|^COLOR_/.test(sem)) prim.setAttribute(sem, null);
 }
+
+/** Append a primitive built from raw arrays (positions xyz, uvs uv, indices) with `material` to the first mesh. */
+export function addGeometry(doc, { positions, uvs, indices, material, name = 'added' }) {
+  const buf = doc.getRoot().listBuffers()[0] || doc.createBuffer();
+  const pos = doc.createAccessor().setType('VEC3').setArray(new Float32Array(positions)).setBuffer(buf);
+  const prim = doc.createPrimitive().setAttribute('POSITION', pos).setMaterial(material)
+    .setIndices(doc.createAccessor().setType('SCALAR').setArray(new Uint16Array(indices)).setBuffer(buf));
+  if (uvs) prim.setAttribute('TEXCOORD_0', doc.createAccessor().setType('VEC2').setArray(new Float32Array(uvs)).setBuffer(buf));
+  // flat normals are fine for toon shading; compute per-vertex from faces
+  const n = new Float32Array(positions.length);
+  for (let t = 0; t < indices.length; t += 3) {
+    const [a, b, c] = [indices[t], indices[t + 1], indices[t + 2]];
+    const ux = positions[b * 3] - positions[a * 3], uy = positions[b * 3 + 1] - positions[a * 3 + 1], uz = positions[b * 3 + 2] - positions[a * 3 + 2];
+    const vx = positions[c * 3] - positions[a * 3], vy = positions[c * 3 + 1] - positions[a * 3 + 1], vz = positions[c * 3 + 2] - positions[a * 3 + 2];
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    for (const i of [a, b, c]) { n[i * 3] += nx; n[i * 3 + 1] += ny; n[i * 3 + 2] += nz; }
+  }
+  for (let i = 0; i < n.length; i += 3) { const l = Math.hypot(n[i], n[i + 1], n[i + 2]) || 1; n[i] /= l; n[i + 1] /= l; n[i + 2] /= l; }
+  prim.setAttribute('NORMAL', doc.createAccessor().setType('VEC3').setArray(n).setBuffer(buf));
+  let mesh = doc.getRoot().listMeshes()[0];
+  if (!mesh) { mesh = doc.createMesh(name); const node = doc.createNode(name).setMesh(mesh); (doc.getRoot().getDefaultScene() || doc.getRoot().listScenes()[0]).addChild(node); }
+  mesh.addPrimitive(prim);
+  return prim;
+}
+
+/** Box geometry arrays (axis aligned, min/max corners) appended into acc {positions, indices}. */
+export function pushBox(acc, [x0, y0, z0], [x1, y1, z1]) {
+  const base = acc.positions.length / 3;
+  const P = [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0], [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]];
+  // duplicate vertices per face for hard edges
+  const faces = [[0, 3, 2, 1], [4, 5, 6, 7], [0, 1, 5, 4], [3, 7, 6, 2], [0, 4, 7, 3], [1, 2, 6, 5]];
+  for (const f of faces) { const b = acc.positions.length / 3; for (const i of f) acc.positions.push(...P[i]); acc.uvs?.push(0.9, 0.5, 0.95, 0.5, 0.95, 0.55, 0.9, 0.55); acc.indices.push(b, b + 1, b + 2, b, b + 2, b + 3); }
+  return base;
+}

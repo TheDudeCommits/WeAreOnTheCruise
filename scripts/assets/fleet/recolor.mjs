@@ -66,11 +66,72 @@ export async function paintHull(doc, { material, deckY, navyTop, minSide = 0.35,
   }
   return moved;
 }
+async function makeSailMaterial(doc, name) {
+  const { sharp } = await import('./tools.mjs');
+  const png = await sharp(Buffer.from(SVG(name))).resize(1024, 512, { fit: 'fill' }).png().toBuffer();
+  const tex = doc.createTexture(`${name}-albedo`).setImage(new Uint8Array(png)).setMimeType('image/png').setURI(`${name}-albedo.png`);
+  return doc.createMaterial(name).setBaseColorTexture(tex).setDoubleSided(true).setMetallicFactor(0).setRoughnessFactor(1);
+}
 const WHITE_RAMP = [[0, '#8a857d'], [0.12, '#cfcabe'], [0.3, '#ece7dc'], [1, '#fdfaf2']];
 const NAVY_RAMP = [[0, '#0b1127'], [0.35, '#1a2750'], [0.7, '#27396e'], [1, '#4a5f98']];
 async function rampOne(mat, stops) { const t = mat.getBaseColorTexture(); const f = L.ramp(stops); if (t) await L.editTexture(t, (r, g, b, a) => [...f(L.lum(r, g, b)), a]); }
 
+/** Per-pixel HSL remap of a material's albedo texture. f(h,s,l,r,g,b) → [h,s,l] | null. */
+export async function hslMaterial(mat, f) {
+  const t = mat.getBaseColorTexture(); if (!t) return;
+  await L.editTexture(t, (r, g, b, a) => { const [h, s, l] = L.rgb2hsl(r, g, b); const o = f(h, s, l, r, g, b); return o ? [...L.hsl2rgb(...o), a] : null; });
+}
+
 export const RECOLOR = {
+  /** Nik_kale "Stylized Pirate Ship" → Redtide fire ship: charred hull, ember-orange swirls, red sails. */
+  async fireship({ doc }) {
+    await L.sailify(doc, { name: 'redtide-sail', svg: SVG('redtide-sail'), select: (t, i) => i.texel && i.texel[0] > 150 && i.texel[2] > 130 && i.texel[1] < i.texel[0] - 12 && t.centroid[1] > 3 });
+    await L.sailify(doc, { name: 'redtide-flag', svg: SVG('redtide-flag'), layout: 'full', texSize: [256, 256], select: (t, i) => t.centroid[1] > 18.2 && i.texel && Math.max(...i.texel) > 90 });
+    const m = doc.getRoot().listMaterials().find((x) => x.getName() === 'material_0');
+    await hslMaterial(m, (h, s, l) => {
+      if (h > 190 && h < 260 && s > 0.25) return [26, 0.95, Math.min(0.62, l + 0.12)]; // blue swirls -> ember orange
+      if (h > 280 || h < 12) return null; // pink/red bits stay
+      return [18, s * 0.35, l * 0.42]; // wood -> charred
+    });
+  },
+
+  /** local.yany "Boat" → Redtide raider skiff: black-stained hull, red gunwale, plus a small mast and red square sail. */
+  async raiderSkiff({ doc }) {
+    const mats = doc.getRoot().listMaterials();
+    await hslMaterial(mats.find((x) => x.getName() === 'Planks'), (h, s, l) => [230, 0.08, l * 0.32]);
+    await hslMaterial(mats.find((x) => x.getName() === 'Wood'), (h, s, l) => [2, 0.72, l * 0.62]);
+    // mast + yard (dark wood, reuse the Metal material) and a red square sail with the emblem half of the Redtide canvas
+    const wood = mats.find((x) => x.getName() === 'Metal');
+    const acc = { positions: [], indices: [], uvs: [] };
+    L.pushBox(acc, [-0.13, 0.2, -1.73], [0.13, 7.6, -1.47]);
+    L.pushBox(acc, [-2.7, 6.9, -1.72], [2.7, 7.1, -1.52]);
+    L.addGeometry(doc, { ...acc, material: wood, name: 'skiff-rig' });
+    const sailMat = await makeSailMaterial(doc, 'redtide-sail');
+    const S = { positions: [], indices: [], uvs: [] };
+    const cols = 4, rows = 3, x0 = -2.5, x1 = 2.5, y0 = 2.3, y1 = 6.85, zc = -1.8, bulge = 0.45;
+    for (let r = 0; r <= rows; r++) for (let c = 0; c <= cols; c++) {
+      const u = c / cols, v = r / rows; const x = x0 + (x1 - x0) * u, y = y1 - (y1 - y0) * v;
+      const z = zc - bulge * Math.sin(Math.PI * u) * Math.sin(Math.PI * Math.min(1, v * 0.9 + 0.1));
+      S.positions.push(x, y, z); S.uvs.push(0.01 + u * 0.48, 0.01 + v * 0.98);
+    }
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const a = r * (cols + 1) + c, b = a + 1, d = a + cols + 1, e = d + 1; S.indices.push(a, d, b, b, d, e, a, b, d, b, e, d); }
+    L.addGeometry(doc, { ...S, material: sailMat, name: 'skiff-sail' });
+  },
+
+  /** Sololopenko "Ghost ship" → Gloam Wraith: spectral teal hull, torn pale-teal sails, teal lantern glow. */
+  async wraith({ doc }) {
+    await L.sailify(doc, { name: 'wraith-sail', svg: SVG('wraith-sail'), select: (t, i) => i.texel && i.texel[2] > 140 && i.texel[0] > 90 && i.texel[1] < 110 && i.texel[2] > i.texel[1] + 40 });
+    const mats = doc.getRoot().listMaterials();
+    const main = mats.find((x) => x.getName() === 'main'), light = mats.find((x) => x.getName() === 'light');
+    if (light) {
+      const glow = L.cloneMaterial(doc, light, 'wraith-light');
+      for (const mesh of doc.getRoot().listMeshes()) for (const p of mesh.listPrimitives()) if (p.getMaterial() === light) p.setMaterial(glow);
+      await hslMaterial(glow, (h, s, l) => [172, 0.75, Math.max(0.55, l)]);
+      glow.setEmissiveTexture(glow.getBaseColorTexture()).setEmissiveFactor([0.6, 1, 0.9]);
+    }
+    await hslMaterial(main, (h, s, l) => [168 + (h > 180 && h < 260 ? 6 : 0), Math.min(0.55, s * 0.55 + 0.08), Math.min(0.85, l * 0.8 + 0.04)]);
+  },
+
   /** Greggory_Fisher "Low-Poly Pirate Ship" (flat colours) → Admiralty frigate: white upper hull, navy lower hull, gold trim. */
   async admiraltyFrigate({ doc }) {
     await L.sailify(doc, { name: 'admiralty-sail', svg: SVG('admiralty-sail'), select: (t, i) => /M_Sail_0[12]/.test(i.material) });

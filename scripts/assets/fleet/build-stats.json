@@ -306,5 +306,89 @@
     ],
     "clips": [],
     "built": "2026-09-24"
+  },
+  "fireship": {
+    "file": "/assets/fleet/fireship.glb",
+    "bytes": 273060,
+    "sha256": "55af3051ee62dd6701cf342bd580462362555c4168d403f12e39d0208caf5e69",
+    "sourceSha256": "152d711258da9ea58bdd9d7961c08db8c8f6aaca628293298bd7dc33d6e6f18f",
+    "tris": 13272,
+    "materials": 3,
+    "draws": 3,
+    "textures": 3,
+    "maxTexture": 1024,
+    "size": [
+      7.53,
+      21.55,
+      22
+    ],
+    "min": [
+      -3.77,
+      -1.8,
+      -11
+    ],
+    "max": [
+      3.77,
+      19.75,
+      11
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "skiff": {
+    "file": "/assets/fleet/skiff.glb",
+    "bytes": 150832,
+    "sha256": "4828cc6f02a5558a7c8688713c5377664dc8982e3ee0d26ed1e18be98344a1e9",
+    "sourceSha256": "977e03cf75b9a5c96061a92ffc76bed01b4c8fa50fe498290e57f3ed32dfc060",
+    "tris": 7364,
+    "materials": 4,
+    "draws": 4,
+    "textures": 4,
+    "maxTexture": 512,
+    "size": [
+      5.4,
+      8.2,
+      12
+    ],
+    "min": [
+      -2.7,
+      -0.6,
+      -6
+    ],
+    "max": [
+      2.7,
+      7.6,
+      6
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "wraith": {
+    "file": "/assets/fleet/wraith.glb",
+    "bytes": 364476,
+    "sha256": "d8b33aa7a97747101f3263cd7d5afca4229a03eb2ec0e829e2fb5f6b0514639d",
+    "sourceSha256": "b58740bec63b2141d6539a955f46c3ca1e1cc2f92c783c8f905a0985453ef646",
+    "tris": 21599,
+    "materials": 3,
+    "draws": 3,
+    "textures": 3,
+    "maxTexture": 1024,
+    "size": [
+      12.28,
+      26.54,
+      30
+    ],
+    "min": [
+      -6.14,
+      -2.2,
+      -15
+    ],
+    "max": [
+      6.14,
+      24.34,
+      15
+    ],
+    "clips": [],
+    "built": "2026-09-24"
   }
 }
