@@ -51,7 +51,7 @@ export const BUFF_AURA = 2;
 // ───────────────────────── Per-run runtime ─────────────────────────
 
 const SHOT_CAP = 160;
-const SHOT_HARPOON = 1, SHOT_VAMP = 2, SHOT_BOMB = 3;
+const SHOT_HARPOON = 1, SHOT_VAMP = 2, SHOT_BOMB = 3, SHOT_VAMP_LOB = 4;
 
 interface Shot { pr: ProjectileState | null; id: number; owner: number; kind: number; target: number; value: number }
 
@@ -97,7 +97,7 @@ export function trackShot(c: SimContext, pr: ProjectileState | null, owner: numb
   s.pr = pr; s.id = pr.id; s.owner = owner; s.kind = kind; s.target = target; s.value = value;
 }
 
-export const SHOT = { harpoon: SHOT_HARPOON, vamp: SHOT_VAMP, bomb: SHOT_BOMB } as const;
+export const SHOT = { harpoon: SHOT_HARPOON, vamp: SHOT_VAMP, bomb: SHOT_BOMB, vampLob: SHOT_VAMP_LOB } as const;
 
 // ───────────────────────── Friendly ships (player / AI captains) ─────────────────────────
 
@@ -207,9 +207,18 @@ function resolveShots(c: SimContext, rt: FoeRuntime): void {
     const pr = s.pr;
     let done = !pr || pr.id !== s.id || !pr.alive;
     if (!done && pr) {
-      if (s.kind === SHOT_BOMB) {
+      if (s.kind === SHOT_BOMB || s.kind === SHOT_VAMP_LOB) {
         const vy = pr.vy - GRAVITY * dt;
-        if (pr.y + vy * dt <= 0) { onKegLands(c, s, pr.x + pr.vx * dt, pr.z + pr.vz * dt); done = true; }
+        if (pr.y + vy * dt <= 0) {
+          const x = pr.x + pr.vx * dt, z = pr.z + pr.vz * dt;
+          if (s.kind === SHOT_BOMB) onKegLands(c, s, x, z);
+          else {
+            // A lobbed shell hurts what its blast reaches (CORE: max(area, 6) from the hull edge).
+            const f = friendlyByRef(c, s.target);
+            if (f && hittable(c, f) && edgeOf(c, f, x, z) <= Math.max(pr.area, 6)) onShotHits(c, s, f, x, z);
+          }
+          done = true;
+        }
       } else {
         const x = pr.x + pr.vx * dt, z = pr.z + pr.vz * dt;
         const f = friendlyByRef(c, s.target);
@@ -256,7 +265,7 @@ function onShotHits(c: SimContext, s: Shot, f: Friendly, x: number, z: number): 
     ai.tetherT = FOES.harpoon.tether;
     ai.tetherRef = s.target;
     c.emit({ type: 'harpoon', from: e.id, to: s.target, x1: e.x, z1: e.z, x2: x, z2: z });
-  } else if (s.kind === SHOT_VAMP) {
+  } else if (s.kind === SHOT_VAMP || s.kind === SHOT_VAMP_LOB) {
     vampHeal(e, s.value);
   }
 }

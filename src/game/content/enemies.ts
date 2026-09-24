@@ -1,4 +1,4 @@
-import type { EnemyId } from '../ids';
+import type { EliteAffixId, EnemyId } from '../ids';
 import type { EnemyDef } from '../types';
 
 export { BOSSES } from './bosses';
@@ -207,4 +207,35 @@ export const FOES = {
     telegraph: 2.4, rise: 1.4, ring: 0.55, breach: 12, knock: 14,
     surface: [20, 26] as const, deep: [4, 7] as const, dive: 1.5, riseRange: [75, 105] as const,
   },
+};
+
+/** Elite affixes (FOES): display names, one-line rules for UI, ring colours for FX/UI, roll weights. */
+export interface AffixDef { id: EliteAffixId; name: string; text: string; color: number; weight: number }
+
+export const AFFIXES: Readonly<Record<EliteAffixId, AffixDef>> = {
+  swift: { id: 'swift', name: 'Swift', text: 'Faster sails and quicker guns.', color: 0x7fe8ff, weight: 1 },
+  armored: { id: 'armored', name: 'Armoured', text: 'Iron plating: small shots glance off.', color: 0xb8c4d6, weight: 1 },
+  volatile: { id: 'volatile', name: 'Volatile', text: 'Blows up when sunk. Clear the red ring.', color: 0xff5a2a, weight: 1 },
+  vampiric: { id: 'vampiric', name: 'Vampiric', text: 'Heals whenever it hits you.', color: 0xff2e6a, weight: 0.8 },
+  shielded: { id: 'shielded', name: 'Shielded', text: 'A regenerating bubble: break it, then sink the ship.', color: 0x4fb4ff, weight: 1 },
+  splitting: { id: 'splitting', name: 'Splitting', text: 'Its crew escapes in skiffs when it sinks.', color: 0x9dff5a, weight: 0.9 },
+  burning: { id: 'burning', name: 'Burning', text: 'Leaves a trail of burning water.', color: 0xffa31a, weight: 1 },
+  commander: { id: 'commander', name: 'Commander', text: 'Rallies nearby ships: faster, harder-hitting guns.', color: 0xc77dff, weight: 0.8 },
+};
+
+/** Affix mechanics (read by src/game/sim/affixes.ts; Swift and the Commander aura also by ai.ts / meta-spawn.ts). */
+export const AFFIX_TUNING = {
+  /** Elites roll one affix, two from this minute. */
+  twoFrom: 10,
+  armoredArmor: 3, armoredHp: 1.25,
+  /** Volatile death blast: radius (m), telegraph (s), damage. */
+  volatileRadius: 30, volatileFuse: 1.4, volatileDamage: 16,
+  /** Vampiric: hull healed per landed hit (fraction of max hull). */
+  vampHeal: 0.025,
+  /** Shielded: bubble = fraction of max hull; regen per second (fraction of the bubble) after a delay (longer once broken). */
+  shield: 0.35, shieldRegen: 0.14, shieldDelay: 5, shieldBreakDelay: 8,
+  /** Splitting: skiffs (or wisps for Gloam ships) that escape the wreck. */
+  splitMin: 2, splitMax: 3,
+  /** Burning: fire patches dropped astern every `trailEvery` s while under way. */
+  trailEvery: 0.8, trailRadius: 6.5, trailTtl: 3.2, trailDamage: 1.8,
 };

@@ -18,12 +18,14 @@ import { ENEMY_AI, FOES } from '../content/enemies';
 import type { EnemyAttackDef, EnemyDef, EnemyState, StatusState } from '../types';
 import type { SimContext, Target } from './context';
 import { focusOf } from './targeting';
-import { BUFF_AURA, BUFF_MARK, FOE_AI, foeBuffs, foePrePass, smokeHidden } from './ai-foes';
+import { BUFF_AURA, BUFF_MARK, FOE_AI, SHOT, foeBuffs, foePrePass, refOf, smokeHidden, trackShot } from './ai-foes';
+import { AFFIX_TUNING } from '../content/enemies';
+import { GRAVITY } from './core-runtime';
 import { metaRuntime, type MetaRuntime } from './meta-runtime';
 import { enemyDamage } from './meta-spawn';
 import {
-  TAU, avoidIslands, bearingFromPlayer, clamp, enterLimbo, exitLimbo, fireShot, fwdX, fwdZ, headingTo, killTelegraph,
-  leadAim, lineTelegraph, lobShell, moveTelegraph, openWaterNear, predictPlayer, rand, sail, separate, sideX, sideZ, wrap,
+  TAU, avoidIslands, bearingFromPlayer, clamp, enterLimbo, exitLimbo, fwdX, fwdZ, headingTo, killTelegraph,
+  leadAim, lineTelegraph, moveTelegraph, openWaterNear, predictPlayer, rand, sail, separate, sideX, sideZ, wrap,
 } from './meta-steer';
 
 const blastScratch: Target[] = [];
@@ -149,6 +151,35 @@ export function reloadTime(c: SimContext, e: EnemyState, attack: EnemyAttackDef)
   const b = e.ai.fbuf ?? 0;
   const buff = (b & BUFF_MARK ? FOES.signal.reload : 1) * (b & BUFF_AURA ? AURA_RELOAD : 1) * affixReload(e);
   return attack.cooldown * rand(c, 0.9, 1.1) * (e.elite ? 0.85 : 1) * DIRECTOR.graceReload(c.state.time / 60) * buff;
+}
+
+/** Flat enemy shot (meta-steer.fireShot) that also feeds a Vampiric elite when it lands. */
+function shotAt(
+  c: SimContext, e: EnemyState, kind: EnemyAttackDef['projectile'], sx: number, sz: number, tx: number, tz: number,
+  speed: number, damage: number, range: number, radius: number, err: number,
+): void {
+  const ang = Math.atan2(tx - sx, tz - sz) + err;
+  const pr = c.spawnProjectile({
+    kind, team: 'enemy', x: sx, y: 3, z: sz, vx: Math.sin(ang) * speed, vy: 0, vz: Math.cos(ang) * speed,
+    damage, radius, ttl: range / speed + 0.35,
+  });
+  if (pr && vampiric(e)) trackShot(c, pr, e.id, SHOT.vamp, refOf(c, focusOf(c, e)), e.maxHp * AFFIX_TUNING.vampHeal);
+}
+
+/** Lobbed mortar shell with its circle telegraph (meta-steer.lobShell), tracked for Vampiric elites. */
+function lobAt(c: SimContext, e: EnemyState, sx: number, sz: number, tx: number, tz: number, flight: number, damage: number, area: number, launchY: number): void {
+  const T = Math.max(0.4, flight);
+  const pr = c.spawnProjectile({
+    kind: 'enemy-mortar', team: 'enemy', x: sx, y: launchY, z: sz, vx: (tx - sx) / T, vy: 0.5 * GRAVITY * T - launchY / T, vz: (tz - sz) / T,
+    damage, area, radius: 1.4, ttl: T + 1,
+  });
+  c.addTelegraph({ shape: 'circle', team: 'enemy', x: tx, z: tz, radius: area, duration: T });
+  if (pr && vampiric(e)) trackShot(c, pr, e.id, SHOT.vampLob, refOf(c, focusOf(c, e)), e.maxHp * AFFIX_TUNING.vampHeal);
+}
+
+function vampiric(e: EnemyState): boolean {
+  const a = e.affixes;
+  return a.length > 0 && (a[0] === 'vampiric' || a[1] === 'vampiric');
 }
 
 /** A ship that fires from inside a smoke screen gives itself away for a moment. */
@@ -303,7 +334,7 @@ function chaser(c: SimContext, e: EnemyState, def: EnemyDef): void {
   const damage = enemyDamage(c, e, attack.damage);
   for (let k = 0; k < count; k++) {
     const fan = count > 1 ? (k - (count - 1) / 2) * 0.06 : 0;
-    fireShot(c, attack.projectile, bx, bz, tx, tz, attack.speed, damage, attack.range, 1.3, fan + (c.random() - 0.5) * 2 * spread);
+    shotAt(c, e, attack.projectile, bx, bz, tx, tz, attack.speed, damage, attack.range, 1.3, fan + (c.random() - 0.5) * 2 * spread);
   }
   c.emit({ type: 'enemy-fired', source: e.id, projectile: attack.projectile, x: bx, z: bz, dirX: fwdX(e.heading), dirZ: fwdZ(e.heading), count });
   revealShooter(e);
@@ -424,7 +455,7 @@ function fireVolley(c: SimContext, e: EnemyState, def: EnemyDef, side: number, l
   for (let k = 0; k < count; k++) {
     const along = count > 1 ? (k / (count - 1) - 0.5) * span : 0;
     const gx = e.x + fx * along + sx * e.radius * 0.7, gz = e.z + fz * along + sz * e.radius * 0.7;
-    fireShot(c, attack.projectile, gx, gz, tx + fx * along * 0.5, tz + fz * along * 0.5, attack.speed, damage, attack.range * 1.15, radius,
+    shotAt(c, e, attack.projectile, gx, gz, tx + fx * along * 0.5, tz + fz * along * 0.5, attack.speed, damage, attack.range * 1.15, radius,
       (c.random() - 0.5) * 2 * spread);
   }
   c.emit({ type: 'enemy-fired', source: e.id, projectile: attack.projectile, x: e.x, z: e.z, dirX: sx, dirZ: sz, count });
@@ -513,7 +544,7 @@ function fireMortars(c: SimContext, e: EnemyState, def: EnemyDef, dist: number):
       const a = c.random() * TAU, r = area * rand(c, 0.6, 1.8);
       tx += Math.sin(a) * r; tz += Math.cos(a) * r;
     }
-    lobShell(c, 'enemy-mortar', e.x, e.z, tx, tz, t, damage, area, true, Math.max(0, e.y) + 4);
+    lobAt(c, e, e.x, e.z, tx, tz, t, damage, area, Math.max(0, e.y) + 4);
   }
   const inv = 1 / (dist || 1);
   c.emit({ type: 'enemy-fired', source: e.id, projectile: 'enemy-mortar', x: e.x, z: e.z, dirX: (p.x - e.x) * inv, dirZ: (p.z - e.z) * inv, count });
