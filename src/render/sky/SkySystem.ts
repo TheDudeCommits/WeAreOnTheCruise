@@ -24,8 +24,8 @@ import { RainField } from './rain';
 const UP = new THREE.Vector3(0, 1, 0);
 /** Enemy albedo lift at full night: +0.3 EV. */
 const NIGHT_LIFT = Math.pow(2, 0.3);
-/** Shadow-fit probe points in NDC (screen corners + a point above centre). */
-const SHADOW_CORNERS: readonly (readonly [number, number])[] = [[-1, -1], [1, -1], [1, 1], [-1, 1], [0, 0.35]];
+/** Shadow-fit probe points in NDC, x/y pairs (screen corners + a point above centre). */
+const SHADOW_CORNERS = [-1, -1, 1, -1, 1, 1, -1, 1, 0, 0.35] as const;
 
 function smoothstep(a: number, b: number, x: number): number {
   const t = THREE.MathUtils.clamp((x - a) / (b - a), 0, 1);
@@ -311,8 +311,8 @@ export class SkySystem implements RenderSystem {
     const reach = this.profile.shadowReach;
     const pts = this.footprint;
     let n = 0;
-    for (const [x, y] of SHADOW_CORNERS) {
-      this.ndc.set(x, y, 0.5).unproject(cam);
+    for (let c = 0; c < SHADOW_CORNERS.length; c += 2) {
+      this.ndc.set(SHADOW_CORNERS[c]!, SHADOW_CORNERS[c + 1]!, 0.5).unproject(cam);
       const dir = this.ndc.sub(cam.position).normalize();
       let t = reach * 2;
       if (dir.y < -1e-4) t = Math.min(t, -cam.position.y / dir.y);
