@@ -98,6 +98,7 @@ export class Hud {
     this.markers.apply(); mark?.('markers');
     this.feedback.update(p); mark?.('feedback');
     if (this.skills.ultJustReady) this.banners.toast(`${ULTIMATES[ship.ultimate].name} ready — press R`, ULTIMATES[ship.ultimate].glyph, 'gold', iconPath(ship.ultimate));
+    this.feedback.reduce = !!(f.settings as { reduceFlashing?: boolean }).reduceFlashing;
     // FPS readout.
     this.fpsEl.hidden = !f.settings.showFps;
     if (f.settings.showFps) { const v = Math.round(f.fps); if (v !== this.lastFps) { this.lastFps = v; this.fps.set(`${v} FPS`); } }

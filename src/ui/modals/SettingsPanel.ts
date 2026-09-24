@@ -5,16 +5,18 @@ import { glyph, type GlyphId } from '../core/icons';
 import { focusDefault, keyDir, moveFocus, type PadIntent } from '../core/nav';
 import { prompt } from '../core/prompts';
 
+/** `reduceFlashing` is optional on the base contract; the local extension keeps this compiling before the merge. */
+export type UiSettings = Settings & { reduceFlashing?: boolean };
 type SliderKey = 'masterVolume' | 'musicVolume' | 'sfxVolume' | 'cameraShake';
-type ToggleKey = 'muted' | 'damageNumbers' | 'showFps';
+type ToggleKey = 'muted' | 'damageNumbers' | 'showFps' | 'reduceFlashing';
 const QUALITIES: readonly QualitySetting[] = ['auto', 'low', 'medium', 'high', 'ultra'];
 
-interface Row { el: HTMLElement; left(): void; right(): void; activate(): void; sync(s: Settings): void }
+interface Row { el: HTMLElement; left(): void; right(): void; activate(): void; sync(s: UiSettings): void }
 
 export class SettingsPanel {
   readonly el: HTMLElement;
   open = false;
-  private settings: Settings | null = null;
+  private settings: UiSettings | null = null;
   private onClose: (() => void) | null = null;
   private readonly rows: Row[] = [];
   private readonly body: HTMLElement;
@@ -26,6 +28,7 @@ export class SettingsPanel {
     this.slider('sfxVolume', 'Effects', 'cannon');
     this.toggle('muted', 'Mute all audio', 'mute');
     this.slider('cameraShake', 'Camera shake', 'quake');
+    this.toggle('reduceFlashing', 'Reduce flashing', 'bolt');
     this.toggle('damageNumbers', 'Damage numbers', 'burst');
     this.quality();
     this.toggle('showFps', 'Show FPS', 'clock');
@@ -44,7 +47,7 @@ export class SettingsPanel {
   }
 
   show(settings: Readonly<Settings>, onClose: () => void): void {
-    this.settings = { ...settings };
+    this.settings = { ...(settings as UiSettings) };
     this.onClose = onClose;
     this.open = true;
     this.el.hidden = false;
@@ -92,7 +95,7 @@ export class SettingsPanel {
       this.commit();
     };
     input.addEventListener('input', () => set(Number(input.value) / 100));
-    const sync = (s: Settings) => {
+    const sync = (s: UiSettings) => {
       const v = Math.round(s[key] * 100);
       if (input.value !== String(v)) input.value = String(v);
       input.style.setProperty('--v', String(v / 100));
@@ -113,7 +116,7 @@ export class SettingsPanel {
       this.commit();
     };
     btn.addEventListener('click', () => flip());
-    const sync = (s: Settings) => { btn.classList.toggle('is-on', s[key]); btn.setAttribute('aria-checked', String(s[key])); };
+    const sync = (s: UiSettings) => { const on = !!s[key]; btn.classList.toggle('is-on', on); btn.setAttribute('aria-checked', String(on)); };
     this.rows.push({ el, left: () => flip(false), right: () => flip(true), activate: () => flip(), sync });
   }
 
@@ -132,7 +135,7 @@ export class SettingsPanel {
       this.settings.quality = QUALITIES[Math.max(0, Math.min(QUALITIES.length - 1, i + d))]!;
       this.commit();
     };
-    const sync = (s: Settings) => buttons.forEach((b, i) => b.classList.toggle('is-on', QUALITIES[i] === s.quality));
+    const sync = (s: UiSettings) => buttons.forEach((b, i) => b.classList.toggle('is-on', QUALITIES[i] === s.quality));
     this.rows.push({ el, left: () => step(-1), right: () => step(1), activate: () => step(1), sync });
   }
 

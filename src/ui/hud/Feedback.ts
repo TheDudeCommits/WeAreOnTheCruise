@@ -14,6 +14,8 @@ export class Feedback {
   private readonly wedges: HTMLElement[] = [];
   private next = 0;
   private lastQ = -1;
+  /** Settings.reduceFlashing: full-screen flashes are toned down. */
+  reduce = false;
 
   constructor() {
     this.vignette = h('div', 'cr-vignette', h('span', 'cr-vignette__beat'));
@@ -39,7 +41,8 @@ export class Feedback {
   /** A hit: edge flash scaled by severity, plus a wedge pointing at the source (angle clockwise from screen-up, px position of the ship). */
   hit(severity: number, angle: number | null, x: number, y: number, braced: boolean): void {
     const s = Math.max(0.25, Math.min(1, severity));
-    play(this.hitFlash, [{ opacity: 0.35 + s * 0.55 }, { opacity: 0 }], { duration: 380 + s * 300, easing: 'ease-out' });
+    const peak = this.reduce ? 0.18 + s * 0.17 : 0.35 + s * 0.55;
+    play(this.hitFlash, [{ opacity: peak }, { opacity: 0 }], { duration: (this.reduce ? 600 : 380) + s * 300, easing: 'ease-out' });
     this.hitFlash.classList.toggle('is-braced', braced);
     if (angle === null) return;
     const w = this.wedges[this.next]!;
@@ -53,11 +56,10 @@ export class Feedback {
     ], { duration: 950, easing: 'ease-out', fill: 'forwards' });
   }
 
-  levelFlash(): void {
-    play(this.flash, [{ opacity: 0.85 }, { opacity: 0 }], { duration: 520, easing: 'ease-out' });
-  }
+  levelFlash(): void { this.whiteFlash(0.85, 520); }
 
   whiteFlash(strength = 0.6, duration = 400): void {
-    play(this.flash, [{ opacity: strength }, { opacity: 0 }], { duration, easing: 'ease-out' });
+    const peak = this.reduce ? Math.min(0.12, strength * 0.2) : strength;
+    play(this.flash, [{ opacity: peak }, { opacity: 0 }], { duration: this.reduce ? duration * 1.6 : duration, easing: 'ease-out' });
   }
 }

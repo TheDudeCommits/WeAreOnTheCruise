@@ -17,7 +17,8 @@ export function mockProfile(kind: 'fresh' | 'rich' | 'mid' = 'mid'): MetaProfile
 }
 
 export function mockSettings(): Settings {
-  return { version: 2, masterVolume: 0.8, musicVolume: 0.7, sfxVolume: 0.85, muted: false, cameraShake: 1, damageNumbers: true, quality: 'auto', showFps: false };
+  const s: Settings & { reduceFlashing?: boolean } = { version: 2, masterVolume: 0.8, musicVolume: 0.7, sfxVolume: 0.85, muted: false, cameraShake: 1, damageNumbers: true, quality: 'auto', showFps: false, reduceFlashing: false };
+  return s;
 }
 
 let rng = 1234567;

@@ -133,6 +133,8 @@ export class Ui implements UiSystem {
     const t0 = performance.now();
     this.frame = f;
     this.settingsValue = f.settings;
+    const calm = !!(f.settings as { reduceFlashing?: boolean }).reduceFlashing;
+    if (calm !== this.layer.classList.contains('is-calm')) this.layer.classList.toggle('is-calm', calm);
     this.pollPad(f.dt);
     switch (this.screen) {
       case 'harbor': this.harbor.update(f); break;
