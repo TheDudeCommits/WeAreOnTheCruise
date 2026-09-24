@@ -9,8 +9,9 @@
  * A ram = the player driving bow-first into a ship at > 4 m/s (any contact during Ramming Speed): damage from
  * closing speed and hull mass (× Iron Ram, × Ramming Speed, × ramDamage stat), knockback, 'ram' + 'collision'
  * events, and recoil damage to the rammer unless Iron Ram / Ramming Speed. Other contacts deal the ship's
- * contactDamage to the player (at most one contact hit per CONTACT_GRACE) and glance off the hull.
- * Each ship has a contact cooldown (ai.contactCd; Iron Ram's level cooldown).
+ * contactDamage to the player scaled by how hard they hit (at most one contact hit per CONTACT_GRACE); the ship that
+ * ran into the hull glances off and takes CONTACT_CRUSH of a ram's damage. Each ship has a contact cooldown
+ * (ai.contactCd; Iron Ram's level cooldown).
  */
 import type { BossState, EnemyState, PlayerState } from '../types';
 import type { Target } from './context';
@@ -26,6 +27,8 @@ export const RAM_K = 0.1;
 export const CONTACT_BOUNCE = 7;
 /** Seconds after a contact hit during which further contact hits are ignored. */
 export const CONTACT_GRACE = 0.25;
+/** Share of a player-ram's damage a ship takes when it runs into the player's hull (the rammer feels it too). */
+export const CONTACT_CRUSH = 0.4;
 const RESTITUTION = 0.3;
 const HARD_IMPACT = 8;
 
@@ -106,6 +109,11 @@ function massOf(c: CoreSim, t: Target): number {
   return (def?.mass ?? 250) * (t.elite ? 1.6 : 1);
 }
 
+function speedOf(c: CoreSim, t: Target): number {
+  if (isBoss(t)) return c.content.bosses[t.defId].speed;
+  return c.content.enemies[t.defId]?.speed ?? 12;
+}
+
 function contactDamageOf(c: CoreSim, t: Target): number {
   if (isBoss(t)) return c.content.bosses[t.defId].contactDamage;
   return c.content.enemies[t.defId]?.contactDamage ?? 0;
@@ -146,14 +154,19 @@ function shipsVsPlayer(c: CoreSim, p: PlayerState): void {
     const isRam = (vpn > 4 && bowOn) || (ramming && closing > 2);
     if (isRam) ram(c, p, t, vpn, nx, nz, cx + nx * hw, cz + nz * hw, massP, massT);
     else {
-      if (closing > 2) c.emit({ type: 'collision', a: 0, b: t.id, x: cx + nx * hw, z: cz + nz * hw, impulse: closing });
-      // A ship that runs into the hull glances off (so it has to come round again instead of grinding) and rocks it.
-      if (!boss) core.push(c, t, nx, nz, CONTACT_BOUNCE * (0.6 + Math.min(1, Math.max(0, closing) / 10)));
-      core.kickRoll(-(nx * Math.cos(p.heading) - nz * Math.sin(p.heading)) * Math.min(0.12, 0.02 + Math.max(0, closing) * 0.006) * Math.sqrt(massT / (massP + massT)));
-      // Grinding bow-first with an iron prow (or during Ramming Speed) does not hurt the player; a short grace
-      // window keeps a swarm touching the hull at once from stacking its contact damage.
+      const hitSpeed = Math.max(0, closing);
+      if (hitSpeed > 2) c.emit({ type: 'collision', a: 0, b: t.id, x: cx + nx * hw, z: cz + nz * hw, impulse: hitSpeed });
+      core.kickRoll(-(nx * Math.cos(p.heading) - nz * Math.sin(p.heading)) * Math.min(0.12, 0.02 + hitSpeed * 0.006) * Math.sqrt(massT / (massP + massT)));
+      if (!boss) {
+        // The rammer glances off (it has to come round again instead of grinding) and is crushed by the heavier hull.
+        core.push(c, t, nx, nz, CONTACT_BOUNCE * (0.6 + Math.min(1, hitSpeed / 10)));
+        if (hitSpeed > 3) c.hitTarget(t, RAM_K * CONTACT_CRUSH * hitSpeed * Math.sqrt(massP), undefined, false, 0, p.x, p.z, null, 0, 0, false);
+      }
+      // Contact damage scales with how hard it hit (a glancing touch stings, a full-speed ram hurts). Grinding
+      // bow-first with an iron prow (or during Ramming Speed) does not hurt the player, and a short grace window keeps
+      // a swarm touching the hull at once from stacking contact damage.
       const armouredBow = ramming || (slot !== undefined && bowOn);
-      const dmg = contactDamageOf(c, t);
+      const dmg = contactDamageOf(c, t) * clamp(0.4 + (0.6 * hitSpeed) / Math.max(4, speedOf(c, t)), 0.4, 1.2);
       if (dmg > 0 && !armouredBow && core.contactGrace <= 0) {
         if (c.hurtPlayer(dmg, t.x, t.z, t.id, boss ? 'boss' : 'contact') > 0) core.contactGrace = CONTACT_GRACE;
       }
