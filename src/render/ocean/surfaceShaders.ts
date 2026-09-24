@@ -257,14 +257,16 @@ void main() {
   float shallowAmt = 1.0 - smoothstep(4.0, 90.0, shoreD + (vCloud - 0.5) * 34.0);
 
   // ── Body colour: deep cobalt looking down, turquoise-leaning at grazing faces, soft cel bands ──
-  float deepness = smoothstep(0.18, 0.9, NdV);
+  // View-angle depth uses a flattened normal (swell faces tint, they do not stripe) plus the actual view angle.
+  float NdVsoft = clamp(dot(normalize(mix(vec3(0.0, 1.0, 0.0), Nm, 0.55)), V), 0.0, 1.0);
+  float deepness = smoothstep(0.12, 0.92, NdVsoft);
   vec3 body = mix(uMid, uDeep, deepness);
   // Sun-facing faces lighter; the sensitivity drops with a low sun so dusk light does not stripe the swells.
-  float tone = clamp(0.52 + (dot(Nm, L) - L.y) * 1.6 * mix(0.3, 1.0, clamp(L.y * 1.4, 0.0, 1.0)) + hN * 0.42 + lift * 0.12, 0.0, 1.0);
-  vec3 cShadow = uDeep * 0.78;
+  float tone = clamp(0.54 + (dot(Nm, L) - L.y) * 1.25 * mix(0.3, 1.0, clamp(L.y * 1.4, 0.0, 1.0)) + hN * 0.4 + lift * 0.12, 0.0, 1.0);
+  vec3 cShadow = mix(uDeep, uMid, 0.12) * 0.86;
   vec3 cLight = mix(uMid, uSSS, 0.22);
-  vec3 col = mix(cShadow, body, smoothstep(0.16, 0.4, tone));
-  col = mix(col, cLight, smoothstep(0.64, 0.92, tone) * 0.55);
+  vec3 col = mix(cShadow, body, smoothstep(0.08, 0.46, tone));
+  col = mix(col, cLight, smoothstep(0.64, 0.94, tone) * 0.5);
 
   // Back-lit crest glow (sun through thin water), incl. water piled up by the bow wave.
   vec2 Lh = normalize(L.xz + vec2(1e-4, 0.0));
