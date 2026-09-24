@@ -138,7 +138,7 @@ function addSatellites(b: FeatureBuilder, main: IslandDef, count: number, stackC
     const r = stack ? rng.range(7, 15) : rng.range(3, 9);
     const dist = main.radius * rng.range(0.9, 1.2) + r + rng.range(14, 50);
     const spec: Omit<ShapeSpec, 'seed'> = stack
-      ? { biome: main.biome === 'tropical' ? 'tropical' : rockBiome(b), archetype: 'stack', radius: r, height: rng.range(16, 38) }
+      ? { biome: main.biome === 'tropical' ? 'tropical' : rockBiome(b), archetype: 'stack', radius: r, height: r * rng.range(2, 3.2) + 5 }
       : { biome: rockBiome(b), archetype: 'rock', radius: r, height: clamp(r * rng.range(0.9, 1.6) + 1.5, 3, 12) };
     if (b.tryAdd(main.x + Math.sin(a) * dist, main.z + Math.cos(a) * dist, spec, 12)) s++;
   }
@@ -156,9 +156,9 @@ function addPiers(b: FeatureBuilder, main: IslandDef, bay: number): void {
   }
 }
 
-function buildIsland(b: FeatureBuilder, x: number, z: number, bias: SeaBias, size: SizeClass): void {
+function buildIsland(b: FeatureBuilder, x: number, z: number, bias: SeaBias, size: SizeClass, forced?: IslandBiome): void {
   const rng = b.rng;
-  const biome = pickWeighted(rng, bias.biomes);
+  const biome = forced ?? pickWeighted(rng, bias.biomes);
   let radius = sizeRadius(rng, size);
   const spec: Omit<ShapeSpec, 'seed'> = { biome, archetype: 'dome', radius, height: 20, stretch: rng.range(0, 0.32), axis: rng.range(0, TAU) };
   let landmark: string | undefined;
@@ -226,8 +226,8 @@ function buildStacks(b: FeatureBuilder, x: number, z: number): void {
   const green = b.palette === 'sunward' ? 'tropical' : 'rocky';
   for (let i = 0, tries = 0; i < n && tries < n * 6; tries++) {
     const a = rng.range(0, TAU), d = i === 0 ? 0 : rng.range(20, spread);
-    const r = rng.range(7, 18);
-    const spec: Omit<ShapeSpec, 'seed'> = { biome: rng.chance(0.5) ? green : rockBiome(b), archetype: 'stack', radius: r, height: rng.range(18, 48), stretch: rng.range(0, 0.35), axis: rng.range(0, TAU) };
+    const r = rng.range(6.5, 16);
+    const spec: Omit<ShapeSpec, 'seed'> = { biome: rng.chance(0.5) ? green : rockBiome(b), archetype: 'stack', radius: r, height: r * rng.range(2.2, 3.6) + 6, stretch: rng.range(0, 0.35), axis: rng.range(0, TAU) };
     if (b.tryAdd(x + Math.sin(a) * d, z + Math.cos(a) * d, spec, 12)) i++;
   }
   const rocks = rng.integer(1, 4);
@@ -289,6 +289,30 @@ function buildLandmarkIsland(b: FeatureBuilder, x: number, z: number, kind: Feat
       addSatellites(b, main, rng.integer(0, 3), 0.3);
     }
   }
+}
+
+export interface FeatureRecipe {
+  kind: FeatureKind;
+  /** Forced biome for 'island'. */
+  biome?: IslandBiome;
+  size?: SizeClass;
+  palette?: PaletteId;
+  seed?: number;
+}
+
+/** Builds one feature of a chosen kind centred near (x, z) — labs, the harbour set and tests. */
+export function buildFeatureAt(id: string, x: number, z: number, recipe: FeatureRecipe, bias: SeaBias): WorldFeature {
+  const seed = recipe.seed ?? hashCoordinates(0x9e37, Math.round(x), Math.round(z), 5);
+  const rng = createSeededRandom(seed);
+  const b = new FeatureBuilder(id, seed, rng, recipe.palette ?? bias.palette);
+  switch (recipe.kind) {
+    case 'island': buildIsland(b, x, z, bias, recipe.size ?? 'medium', recipe.biome); break;
+    case 'rocks': buildRocks(b, x, z); break;
+    case 'stacks': buildStacks(b, x, z); break;
+    case 'arch': buildArch(b, x, z); break;
+    default: buildLandmarkIsland(b, x, z, recipe.kind);
+  }
+  return b.finish(recipe.kind);
 }
 
 /**

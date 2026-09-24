@@ -148,7 +148,7 @@ export class IslandSurface {
     const R = this.R[i]!, b = this.beach[i]!, t = this.theta[i]!;
     const shape = this.shape;
     const ramp = smoothstep(1.8, 6, y);
-    let cliff = R - shape.lean * Math.max(0, y) - shape.bandInset(k, t) * ramp;
+    let cliff = R - shape.lean * Math.max(0, y) - (shape.bandInset(k, t) + shape.groove(i, t)) * ramp;
     cliff = Math.min(cliff, R + 0.9 * ramp);
     if (b <= 0) return cliff;
     const ys = this.shoreY[i]!, H = this.H[i]!;
@@ -345,7 +345,7 @@ export function buildRingModel(surface: IslandSurface, lod: 0 | 1 | 2): RingMode
       // Bands collapsed above the tier top reuse the band that holds the top (no flat slivers at the rim).
       const kk = y >= high - 1e-4 ? bandAt(high) : k;
       const ramp = smoothstep(low + 0.5, low + 3, y);
-      return Math.max(2, base - shape.lean * (y - low) - shape.bandInset(kk, surface.theta[i]!) * ramp * 0.8);
+      return Math.max(2, base - shape.lean * (y - low) - (shape.bandInset(kk, surface.theta[i]!) * 0.8 + shape.groove(i, surface.theta[i]!)) * ramp);
     };
     let prev: RingData | null = null;
     let lastK = 0;

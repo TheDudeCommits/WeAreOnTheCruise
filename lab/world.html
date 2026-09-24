@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>World lab · We Are On The Cruise</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #06283f; overflow: hidden; font: 13px/1.4 system-ui, sans-serif; }
+      #lab-root { position: fixed; inset: 0; }
+      #lab-panel { position: fixed; top: 10px; left: 10px; z-index: 10; max-width: 330px; padding: 10px 12px; border-radius: 8px;
+        background: rgba(6, 22, 40, 0.82); color: #f3ead2; box-shadow: 0 4px 18px rgba(0,0,0,.35); }
+      #lab-panel h1 { margin: 0 0 6px; font-size: 14px; letter-spacing: .04em; color: #ffd272; }
+      #lab-panel .row { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 8px; }
+      #lab-panel button { border: 0; border-radius: 4px; padding: 4px 7px; cursor: pointer; background: #1d3f63; color: #f3ead2; font: inherit; }
+      #lab-panel button.on { background: #ffd272; color: #06283f; }
+      #lab-panel .label { color: #9fc2d6; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+      #lab-stats { font: 11px/1.4 ui-monospace, monospace; color: #bfe3f0; white-space: pre; }
+      body.clean #lab-panel { display: none; }
+    </style>
+  </head>
+  <body>
+    <div id="lab-root"></div>
+    <div id="lab-panel"><h1>WORLD LAB</h1><div id="lab-controls"></div><div id="lab-stats"></div></div>
+    <script type="module" src="/src/render/world/lab/worldLab.ts"></script>
+  </body>
+</html>

@@ -7,7 +7,7 @@
  */
 import { createSeededRandom } from '../core/rng';
 import type { IslandBiome, IslandDef, Vec2 } from '../game/types';
-import { CircleNoise, TAU, angleDiff, clamp, fbm, smoothstep } from './noise';
+import { CircleNoise, TAU, angleDiff, clamp, fbm, hash01, smoothstep } from './noise';
 
 export type Archetype = 'dome' | 'mesa' | 'stack' | 'rock' | 'cone' | 'reef' | 'pillar';
 
@@ -86,6 +86,7 @@ export class IslandShape {
   private readonly roughAmp: number;
   private readonly bumpAmp: number;
   private readonly beachWidthBase: number;
+  private readonly grooveAmp: number;
 
   constructor(spec: ShapeSpec) {
     this.spec = spec;
@@ -111,17 +112,18 @@ export class IslandShape {
     this.bumpAmp = spec.flatTop ? 0
       : a === 'dome' ? spec.height * 0.07 : a === 'cone' ? spec.height * 0.035 : a === 'rock' ? spec.height * 0.08
       : a === 'reef' ? 0.35 : 0.55;
+    this.grooveAmp = a === 'mesa' || a === 'pillar' ? 1.5 : a === 'stack' ? 1.1 : a === 'dome' ? 0.9 : a === 'cone' ? 0.8 : a === 'rock' ? 0.35 : 0;
     this.tierRise = spec.tier && a === 'mesa' ? spec.height * (0.28 + rng.next() * 0.16) : 0;
 
     // Strata: absolute-height bands so layers line up across a whole island (and across arch pillars + span).
     const top = spec.height * 1.2 + this.tierRise + 3;
-    const base = clamp(spec.height / 7.5, 1.8, 6.2);
+    const base = clamp(spec.height / 5.2, 2.4, 9);
     const strength = STRATA[a];
     this.strata = [];
     let y = 2.2, k = 0;
     const toneStart = rng.integer(0, 5);
     while (y < top && k < 40) {
-      const thick = base * (0.6 + rng.next() * 0.85);
+      const thick = base * (0.45 + rng.next() * 1.1);
       const hard = k % 2 === 0;
       const inset = (hard ? -0.38 : 0.95) * (0.55 + rng.next() * 0.9) * strength;
       this.strata.push({ bottom: y, top: y + thick, inset, tone: (toneStart + k) % 5 });
@@ -197,11 +199,20 @@ export class IslandShape {
   /** Horizontal run of the grassy bank behind the beach (m). */
   bankWidth(theta: number): number { return this.beachWidthBase * 0.55 * (0.85 + 0.2 * this.widthNoise.at(theta + 2.1)); }
 
-  /** Radial inset of strata band `k` at θ. */
+  /** Radial inset of strata band `k` at θ: ledges come and go around the island instead of ringing it. */
   bandInset(k: number, theta: number): number {
     const band = this.strata[k];
     if (!band) return 0;
-    return band.inset * (1 + 0.45 * this.bandNoise.at(theta + k * 1.37));
+    const gate = Math.max(0, this.bandNoise.at(theta + k * 1.37) + 0.15);
+    return band.inset * (0.12 + 1.15 * gate);
+  }
+
+  /** Vertical groove depth for a coast vertex (weathered fluting, constant with height). */
+  groove(index: number, theta: number): number {
+    if (this.grooveAmp === 0) return 0;
+    const h = hash01(this.spec.seed ^ 0x3c6ef372, index, 7);
+    const broad = 0.5 + 0.5 * this.widthNoise.at(theta * 3 + 0.7);
+    return this.grooveAmp * (h * h * 0.85 + 0.15) * (0.4 + 0.6 * broad);
   }
 
   /** Normalized top profile: 0 at the rim, 1 at the peak/plateau (u = 1 − s, s = r / rimR). */
