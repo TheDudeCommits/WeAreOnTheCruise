@@ -161,9 +161,9 @@ export class Mixer {
       else amb = Math.min(amb, v);
     }
     const tau = 0.02;
-    if (Math.abs(music - this.duckLevels.music) > 1e-3 || music < 1) this.musicDuck.gain.setTargetAtTime(music, now, tau);
-    if (Math.abs(sfx - this.duckLevels.sfx) > 1e-3 || sfx < 1) this.worldDucked.gain.setTargetAtTime(sfx, now, tau);
-    if (Math.abs(amb - this.duckLevels.ambience) > 1e-3 || amb < 1) this.ambience.gain.setTargetAtTime(amb, now, tau);
+    if (Math.abs(music - this.duckLevels.music) > 2e-3) this.musicDuck.gain.setTargetAtTime(music, now, tau);
+    if (Math.abs(sfx - this.duckLevels.sfx) > 2e-3) this.worldDucked.gain.setTargetAtTime(sfx, now, tau);
+    if (Math.abs(amb - this.duckLevels.ambience) > 2e-3) this.ambience.gain.setTargetAtTime(amb, now, tau);
     this.duckLevels.music = music; this.duckLevels.sfx = sfx; this.duckLevels.ambience = amb;
   }
 

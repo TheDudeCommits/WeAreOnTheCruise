@@ -78,8 +78,8 @@ export class VoicePool {
     return n;
   }
 
-  activeAll(now = this.ctx.currentTime): Record<CategoryId, number> {
-    const out = {} as Record<CategoryId, number>;
+  /** Active voices per category (fills `out`, or a fresh record for debug callers). */
+  activeAll(now = this.ctx.currentTime, out = {} as Record<CategoryId, number>): Record<CategoryId, number> {
     for (const id of CATEGORY_IDS) out[id] = this.active(id, now);
     return out;
   }

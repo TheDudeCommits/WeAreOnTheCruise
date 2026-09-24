@@ -84,6 +84,9 @@ export class AudioEngine implements AudioSystem {
   private readonly dropped: Record<string, number> = {};
   private readonly bySource: Record<string, number> = {};
   private readonly peakVoices = {} as Record<CategoryId, number>;
+  private readonly activeScratch = {} as Record<CategoryId, number>;
+  private warmedLate = false;
+  private warmedFinal = false;
   private readonly recent: AudioLogEntry[] = [];
   private noteSource = 'direct';
   private meterBuf: Float32Array<ArrayBuffer> | null = null;
@@ -170,6 +173,7 @@ export class AudioEngine implements AudioSystem {
     const now = this.ctx.currentTime;
     this.frameCounts.clear();
     if (screenChanged && this.director && (frame.screen === 'harbor' || frame.screen === 'run')) this.director.warm(['run-calm', 'run-combat']);
+    if (screenChanged && frame.screen === 'run' && frame.run && frame.run.time > 690) this.warmedFinal = false;
     this.mixer.update(now);
     this.mixer.setPauseMode(this.pauseMode(frame));
     if (frame.run?.status === 'paused' && frame.screen === 'run') this.mixer.duck({ target: 'music', depth: -6, hold: 0.2, attack: 0.15, release: 0.5 }, now);
@@ -177,8 +181,13 @@ export class AudioEngine implements AudioSystem {
     this.director?.update({ now, dt: frame.dt, screen: frame.screen, run: frame.run, events: frame.events });
     this.ambience?.update(now, frame.dt, frame.screen, frame.run, this.listener);
     if (this.pool) {
-      const active = this.pool.activeAll(now);
+      const active = this.pool.activeAll(now, this.activeScratch);
       for (const id of CATEGORY_IDS) if (active[id] > this.peakVoices[id]) this.peakVoices[id] = active[id];
+    }
+    // Stream the late-run tracks ahead of need (boss music must be ready at the 10 s boss warning).
+    if (this.director && frame.screen === 'run' && frame.run) {
+      if (frame.run.time > 20 && !this.warmedLate) { this.warmedLate = true; this.director.warm(['run-horde', 'boss']); }
+      if (frame.run.time > 690 && !this.warmedFinal) { this.warmedFinal = true; this.director.warm(['boss-final']); }
     }
   }
 
