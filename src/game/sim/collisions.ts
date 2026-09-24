@@ -141,8 +141,10 @@ function shipsVsPlayer(c: CoreSim, p: PlayerState): void {
     if (isRam) ram(c, p, t, vpn, nx, nz, cx + nx * hw, cz + nz * hw, massP, massT);
     else {
       if (closing > 2) c.emit({ type: 'collision', a: 0, b: t.id, x: cx + nx * hw, z: cz + nz * hw, impulse: closing });
+      // Grinding bow-first with an iron prow (or during Ramming Speed) does not hurt the player.
+      const armouredBow = ramming || (slot !== undefined && bowOn);
       const dmg = contactDamageOf(c, t);
-      if (dmg > 0 && !ramming) c.hurtPlayer(dmg, t.x, t.z, t.id, boss ? 'boss' : 'contact');
+      if (dmg > 0 && !armouredBow) c.hurtPlayer(dmg, t.x, t.z, t.id, boss ? 'boss' : 'contact');
     }
     t.ai.contactCd = ramming ? 0.3 : slot ? levelOf(c, slot).cooldown : 0.6;
   }

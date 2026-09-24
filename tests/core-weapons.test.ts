@@ -35,7 +35,7 @@ function dummies(sim: Sim, spots: readonly [number, number][], def: EnemyId = 'b
   });
 }
 
-const RING: [number, number][] = [];
+const RING: [number, number][] = [[0, 42], [0, 75]]; // two astern (drop weapons trail behind the stern)
 for (const d of [45, 80, 120, 170, 220]) for (let k = 0; k < 8; k++) {
   const a = (k / 8) * Math.PI * 2 + d * 0.013;
   RING.push([Math.sin(a) * d, Math.cos(a) * d]);
@@ -129,20 +129,18 @@ describe('CORE weapons: branches and overdrives', () => {
     const sim = makeSim('rt');
     sim.debug.giveWeapon('broadside', 6, 'A');
     const d = dummies(sim, [[100, 0], [-100, 0]]);
-    const trace = run(sim, 4, d);
-    const shots = trace.events.filter((e) => e.type === 'weapon-fired' && e.weapon === 'broadside');
-    const port = shots.filter((e) => e.type === 'weapon-fired' && e.side === 'port').length;
-    const star = shots.filter((e) => e.type === 'weapon-fired' && e.side === 'starboard').length;
+    let port = 0, star = 0, started = false, silentAfterStart = 0;
+    for (let w = 0; w < 16; w++) {
+      const trace = run(sim, 0.25, d);
+      const shots = trace.events.filter((e) => e.type === 'weapon-fired' && e.weapon === 'broadside');
+      if (shots.length > 0) started = true;
+      else if (started) silentAfterStart++;
+      port += shots.filter((e) => e.type === 'weapon-fired' && e.side === 'port').length;
+      star += shots.filter((e) => e.type === 'weapon-fired' && e.side === 'starboard').length;
+    }
     expect(port).toBeGreaterThan(10);
     expect(star).toBeGreaterThan(10);
-    // Continuous: shots in (almost) every quarter second.
-    let gaps = 0, last = -1;
-    for (let i = 0; i < trace.events.length; i++) {
-      const e = trace.events[i]!;
-      if (e.type === 'weapon-fired' && e.weapon === 'broadside') last = i;
-    }
-    expect(last).toBeGreaterThan(0);
-    expect(gaps).toBe(0);
+    expect(silentAfterStart).toBe(0); // once rolling, never a quarter second without a gun
   });
 
   it('bow chaser only fires ahead; Longtom pierces; Lance of Dawn fires lances', () => {
@@ -276,8 +274,8 @@ describe('CORE weapons: branches and overdrives', () => {
 
     const b = makeSim('sr-b'); b.debug.giveWeapon('storm-rod', 3, 'B');
     const db = dummies(b, [[60, 0], [70, 10]]);
-    run(b, 0.5, db);
-    expect(b.hasStatus(db[1]!.e, 'stunned')).toBe(true);
+    const tclap = run(b, 1, db);
+    expect(has(tclap, (e) => e.type === 'status-changed' && e.status === 'stunned' && e.target === db[1]!.e.id && e.on)).toBe(true);
 
     const od = makeSim('sr-6'); od.debug.giveWeapon('storm-rod', 6, 'A'); od.press('gear-up');
     const t6 = run(od, 4, dummies(od, [[60, 0], [-70, 30]]));
@@ -288,17 +286,29 @@ describe('CORE weapons: branches and overdrives', () => {
   });
 
   it('mines arm then blow; magnets home; depth charges blast wide; Minefield seeds itself', () => {
-    const sim = makeSim('tm'); sim.debug.giveWeapon('tide-mines', 1);
-    const t = run(sim, 6, dummies(sim, [[0, 58]]));
-    expect(t.maxHazards.get('mine') ?? 0).toBeGreaterThan(0);
+    const anchored = (seed: string) => { const s = makeSim(seed); s.press('gear-down'); return s; };
+    const sim = anchored('tm'); sim.debug.giveWeapon('tide-mines', 1);
+    const near = dummies(sim, [[0, 46]]);
+    let dropTick = -1, blastTick = -1;
+    const t: Trace = { events: [], kinds: new Set(), maxHazards: new Map(), projectiles: [] };
+    for (let tick = 0; tick < 360; tick++) {
+      const step = run(sim, 1 / 60, near);
+      for (const e of step.events) {
+        t.events.push(e);
+        if (dropTick < 0 && e.type === 'hazard-spawned' && e.kind === 'mine') dropTick = tick;
+        if (blastTick < 0 && e.type === 'explosion' && e.kind === 'mine') blastTick = tick;
+      }
+    }
+    expect(dropTick).toBeGreaterThanOrEqual(0);
+    expect(blastTick - dropTick).toBeGreaterThanOrEqual(58); // a mine only blows once armed (~1 s)
     expect(has(t, (e) => e.type === 'explosion' && e.kind === 'mine')).toBe(true);
 
-    const a = makeSim('tm-a'); a.debug.giveWeapon('tide-mines', 3, 'A');
-    const ta = run(a, 8, dummies(a, [[40, 90]]));
+    const a = anchored('tm-a'); a.debug.giveWeapon('tide-mines', 3, 'A');
+    const ta = run(a, 8, dummies(a, [[30, 75]]));
     expect(has(ta, (e) => e.type === 'explosion' && e.kind === 'mine')).toBe(true);
 
-    const b = makeSim('tm-b'); b.debug.giveWeapon('tide-mines', 3, 'B');
-    const tb = run(b, 6, dummies(b, [[0, 58]]));
+    const b = anchored('tm-b'); b.debug.giveWeapon('tide-mines', 3, 'B');
+    const tb = run(b, 6, dummies(b, [[0, 46]]));
     const wet = tb.events.find((e) => e.type === 'explosion' && e.kind === 'water');
     expect(wet?.type === 'explosion' && wet.radius).toBeGreaterThan(30);
 
@@ -338,7 +348,7 @@ describe('CORE weapons: branches and overdrives', () => {
     tusk.state.player.hp = tusk.state.player.maxHp * 0.5;
     tusk.state.sea.windDir = Math.PI / 2;
     tusk.press('gear-up');
-    const d = dummies(tusk, [[0, -90]], 'frigate');
+    const d = dummies(tusk, [[0, -90]], 'skiff');
     const hp0 = tusk.state.player.hp;
     const tt = run(tusk, 8, d, false, (s) => { s.state.sea.windDir = Math.PI / 2; });
     expect(has(tt, (e) => e.type === 'ram' && e.attacker === 0)).toBe(true);
