@@ -1,7 +1,7 @@
 {
   "version": 1,
   "generated": "2026-09-24",
-  "conventions": "Y up, bow/forward toward -Z, metres. Ships: origin at the waterline centre, keel at -draft, `length` = bow-to-stern extent incl. bowsprit. Props/crew/nature: origin at ground centre, `height` in metres. Meshopt-compressed (EXT_meshopt_compression + KHR_mesh_quantization), WebP textures (EXT_texture_webp); plain PBR albedo materials for toonifyObject.",
+  "conventions": "Y up, bow/forward toward -Z, metres. Ships: origin at the waterline centre, keel at -draft, `length` = bow-to-stern extent incl. bowsprit. Props/crew/nature: origin at ground centre, `height` in metres (crew: rest-pose standing height, also used as `length`; crew face -Z). Meshopt-compressed (EXT_meshopt_compression + KHR_mesh_quantization), WebP textures (EXT_texture_webp); plain PBR albedo materials for toonifyObject.",
   "models": {
     "man-o-war": {
       "file": "/assets/fleet/man-o-war.glb",
@@ -309,6 +309,198 @@
       "sha256": "d8b33aa7a97747101f3263cd7d5afca4229a03eb2ec0e829e2fb5f6b0514639d",
       "sourceSha256": "b58740bec63b2141d6539a955f46c3ca1e1cc2f92c783c8f905a0985453ef646",
       "notes": "Gloam Wraith: whole hull shifted to spectral teal, purple sails re-mapped to torn pale-teal canvas with a spiral sigil, lanterns keep a teal emissive glow (material wraith-light). Decimated from 105k tris."
+    },
+    "sailor-a": {
+      "file": "/assets/fleet/sailor-a.glb",
+      "length": 1.75,
+      "height": 1.75,
+      "tris": 5684,
+      "materials": 1,
+      "role": "crew",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Characters_Henry.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Characters_Henry.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "clips": [
+        "Death",
+        "Duck",
+        "HitReact",
+        "Idle",
+        "Punch",
+        "Run",
+        "Sword",
+        "Walk",
+        "Wave",
+        "Yes"
+      ],
+      "bytes": 344032,
+      "sha256": "bf424520a990b756db3363c8b1f08e366eb7d5822226afbf5cdcda4a3f1442f8",
+      "sourceSha256": "fc52c1ea8b87a8c24e1710a75290e9f0b520d3f30d2e4be6d3616d82e41fef7e",
+      "notes": "Deckhand with a red bandana. Lute removed. Skinned; clips Idle/Wave/Yes (cheer)/Punch (haul)/Duck (brace)/HitReact/Death/Run/Walk/Sword. Faces −Z."
+    },
+    "sailor-b": {
+      "file": "/assets/fleet/sailor-b.glb",
+      "length": 1.75,
+      "height": 1.75,
+      "tris": 5684,
+      "materials": 1,
+      "role": "crew",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Characters_Anne.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Characters_Anne.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "clips": [
+        "Death",
+        "Duck",
+        "HitReact",
+        "Idle",
+        "Punch",
+        "Run",
+        "Sword",
+        "Walk",
+        "Wave",
+        "Yes"
+      ],
+      "bytes": 343672,
+      "sha256": "a2a1eeedc7959426af7984faabf9dd32e2eaf161c33e860607ad0d02566eda35",
+      "sourceSha256": "9eafbfc1250652bbfd338cfd29c258ba0e0fee31586162696ee4bc3217ac3485",
+      "notes": "Deckhand (woman, braided hair). Axe removed. Same clip set as sailor-a."
+    },
+    "sailor-c": {
+      "file": "/assets/fleet/sailor-c.glb",
+      "length": 1.75,
+      "height": 1.75,
+      "tris": 5684,
+      "materials": 1,
+      "role": "crew",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Characters_Henry.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Characters_Henry.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "clips": [
+        "Death",
+        "Duck",
+        "HitReact",
+        "Idle",
+        "Punch",
+        "Run",
+        "Sword",
+        "Walk",
+        "Wave",
+        "Yes"
+      ],
+      "bytes": 344032,
+      "sha256": "eab29c7f0da74c9e9092bace01c9db0269b458e1ed0c33759de97289e84fae4c",
+      "sourceSha256": "fc52c1ea8b87a8c24e1710a75290e9f0b520d3f30d2e4be6d3616d82e41fef7e",
+      "notes": "sailor-a with a blue bandana, red vest and brown trousers (palette swap) for crowd variety."
+    },
+    "admiralty-sailor": {
+      "file": "/assets/fleet/admiralty-sailor.glb",
+      "length": 1.75,
+      "height": 1.75,
+      "tris": 5684,
+      "materials": 1,
+      "role": "crew",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Characters_Henry.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Characters_Henry.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "clips": [
+        "Death",
+        "Duck",
+        "HitReact",
+        "Idle",
+        "Punch",
+        "Run",
+        "Sword",
+        "Walk",
+        "Wave",
+        "Yes"
+      ],
+      "bytes": 344032,
+      "sha256": "a88793ff2c66286f59bf0393538e8939793565df8210e61d00ed1f37cc967aad",
+      "sourceSha256": "fc52c1ea8b87a8c24e1710a75290e9f0b520d3f30d2e4be6d3616d82e41fef7e",
+      "notes": "Admiralty deckhand: navy bandana and trousers, white vest and sleeves (palette swap of the CC0 character)."
+    },
+    "corsair": {
+      "file": "/assets/fleet/corsair.glb",
+      "length": 1.8,
+      "height": 1.8,
+      "tris": 5396,
+      "materials": 1,
+      "role": "crew",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Characters_Captain_Barbarossa.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Characters_Captain_Barbarossa.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "clips": [
+        "Death",
+        "Duck",
+        "HitReact",
+        "Idle",
+        "Punch",
+        "Run",
+        "Sword",
+        "Walk",
+        "Wave",
+        "Yes"
+      ],
+      "bytes": 300776,
+      "sha256": "a8f23edbf48d103a63dde56365c65dfe76946d33e9042ca01c68cd6ee866f293",
+      "sourceSha256": "db9499c91a143750031bcff287cab6c9b63a0682801bb120c128e244f0d6d5c4",
+      "notes": "Redtide corsair captain with red tricorn, hook, cutlass and a parrot (second skinned mesh). Enemy decks / cutscenes."
+    },
+    "wraith-crew": {
+      "file": "/assets/fleet/wraith-crew.glb",
+      "length": 1.75,
+      "height": 1.75,
+      "tris": 5952,
+      "materials": 1,
+      "role": "crew",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Characters_Skeleton.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Characters_Skeleton.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "clips": [
+        "Death",
+        "Duck",
+        "HitReact",
+        "Idle",
+        "Punch",
+        "Run",
+        "Sword",
+        "Walk",
+        "Wave",
+        "Yes"
+      ],
+      "bytes": 368576,
+      "sha256": "fa44b57c141886d17d4928f6eb08ab9272d1a69fe29216a8d9b5a4e877290392",
+      "sourceSha256": "c4f060ac42cd3e761a0726dbd339b6e9ae10e153ff10540dffefc44c6270092b",
+      "notes": "Extra: skeleton deckhand with dagger for Gloam Wraith ships (tint teal/emissive at runtime)."
     }
   }
 }

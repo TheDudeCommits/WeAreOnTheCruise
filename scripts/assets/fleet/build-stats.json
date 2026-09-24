@@ -390,5 +390,239 @@
     ],
     "clips": [],
     "built": "2026-09-24"
+  },
+  "sailor-a": {
+    "file": "/assets/fleet/sailor-a.glb",
+    "bytes": 344032,
+    "sha256": "bf424520a990b756db3363c8b1f08e366eb7d5822226afbf5cdcda4a3f1442f8",
+    "sourceSha256": "fc52c1ea8b87a8c24e1710a75290e9f0b520d3f30d2e4be6d3616d82e41fef7e",
+    "tris": 5684,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 32,
+    "size": [
+      2.35,
+      1.92,
+      0.91
+    ],
+    "min": [
+      -1.18,
+      0,
+      -0.45
+    ],
+    "max": [
+      1.18,
+      1.92,
+      0.45
+    ],
+    "clips": [
+      "Death",
+      "Duck",
+      "HitReact",
+      "Idle",
+      "Punch",
+      "Run",
+      "Sword",
+      "Walk",
+      "Wave",
+      "Yes"
+    ],
+    "built": "2026-09-24"
+  },
+  "sailor-b": {
+    "file": "/assets/fleet/sailor-b.glb",
+    "bytes": 343672,
+    "sha256": "a2a1eeedc7959426af7984faabf9dd32e2eaf161c33e860607ad0d02566eda35",
+    "sourceSha256": "9eafbfc1250652bbfd338cfd29c258ba0e0fee31586162696ee4bc3217ac3485",
+    "tris": 5684,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 32,
+    "size": [
+      2.25,
+      1.92,
+      0.92
+    ],
+    "min": [
+      -1.12,
+      0,
+      -0.46
+    ],
+    "max": [
+      1.12,
+      1.92,
+      0.46
+    ],
+    "clips": [
+      "Death",
+      "Duck",
+      "HitReact",
+      "Idle",
+      "Punch",
+      "Run",
+      "Sword",
+      "Walk",
+      "Wave",
+      "Yes"
+    ],
+    "built": "2026-09-24"
+  },
+  "sailor-c": {
+    "file": "/assets/fleet/sailor-c.glb",
+    "bytes": 344032,
+    "sha256": "eab29c7f0da74c9e9092bace01c9db0269b458e1ed0c33759de97289e84fae4c",
+    "sourceSha256": "fc52c1ea8b87a8c24e1710a75290e9f0b520d3f30d2e4be6d3616d82e41fef7e",
+    "tris": 5684,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 32,
+    "size": [
+      2.35,
+      1.92,
+      0.91
+    ],
+    "min": [
+      -1.18,
+      0,
+      -0.45
+    ],
+    "max": [
+      1.18,
+      1.92,
+      0.45
+    ],
+    "clips": [
+      "Death",
+      "Duck",
+      "HitReact",
+      "Idle",
+      "Punch",
+      "Run",
+      "Sword",
+      "Walk",
+      "Wave",
+      "Yes"
+    ],
+    "built": "2026-09-24"
+  },
+  "admiralty-sailor": {
+    "file": "/assets/fleet/admiralty-sailor.glb",
+    "bytes": 344032,
+    "sha256": "a88793ff2c66286f59bf0393538e8939793565df8210e61d00ed1f37cc967aad",
+    "sourceSha256": "fc52c1ea8b87a8c24e1710a75290e9f0b520d3f30d2e4be6d3616d82e41fef7e",
+    "tris": 5684,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 32,
+    "size": [
+      2.35,
+      1.92,
+      0.91
+    ],
+    "min": [
+      -1.18,
+      0,
+      -0.45
+    ],
+    "max": [
+      1.18,
+      1.92,
+      0.45
+    ],
+    "clips": [
+      "Death",
+      "Duck",
+      "HitReact",
+      "Idle",
+      "Punch",
+      "Run",
+      "Sword",
+      "Walk",
+      "Wave",
+      "Yes"
+    ],
+    "built": "2026-09-24"
+  },
+  "corsair": {
+    "file": "/assets/fleet/corsair.glb",
+    "bytes": 300776,
+    "sha256": "a8f23edbf48d103a63dde56365c65dfe76946d33e9042ca01c68cd6ee866f293",
+    "sourceSha256": "db9499c91a143750031bcff287cab6c9b63a0682801bb120c128e244f0d6d5c4",
+    "tris": 5396,
+    "materials": 1,
+    "draws": 3,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      2.2,
+      1.95,
+      1.63
+    ],
+    "min": [
+      -1.1,
+      0,
+      -0.81
+    ],
+    "max": [
+      1.1,
+      1.95,
+      0.81
+    ],
+    "clips": [
+      "Death",
+      "Duck",
+      "HitReact",
+      "Idle",
+      "Punch",
+      "Run",
+      "Sword",
+      "Walk",
+      "Wave",
+      "Yes"
+    ],
+    "built": "2026-09-24"
+  },
+  "wraith-crew": {
+    "file": "/assets/fleet/wraith-crew.glb",
+    "bytes": 368576,
+    "sha256": "fa44b57c141886d17d4928f6eb08ab9272d1a69fe29216a8d9b5a4e877290392",
+    "sourceSha256": "c4f060ac42cd3e761a0726dbd339b6e9ae10e153ff10540dffefc44c6270092b",
+    "tris": 5952,
+    "materials": 1,
+    "draws": 2,
+    "textures": 1,
+    "maxTexture": 32,
+    "size": [
+      2.48,
+      1.93,
+      1.56
+    ],
+    "min": [
+      -1.24,
+      0,
+      -0.78
+    ],
+    "max": [
+      1.24,
+      1.94,
+      0.78
+    ],
+    "clips": [
+      "Death",
+      "Duck",
+      "HitReact",
+      "Idle",
+      "Punch",
+      "Run",
+      "Sword",
+      "Walk",
+      "Wave",
+      "Yes"
+    ],
+    "built": "2026-09-24"
   }
 }

@@ -98,6 +98,43 @@ export const JOBS = [
     source: SKETCHFAB('31f365301da8410d83dce11d3ace5813', 'Ghost ship', 'Sololopenko'),
     notes: 'Gloam Wraith: whole hull shifted to spectral teal, purple sails re-mapped to torn pale-teal canvas with a spiral sigil, lanterns keep a teal emissive glow (material wraith-light). Decimated from 105k tris.',
   },
+  // ───────────── Crew (Quaternius Pirate Kit, CC0; rigged + animated) ─────────────
+  {
+    key: 'sailor-a', role: 'crew', src: 'quaternius/pirate/Characters_Henry.gltf', yaw: 180, height: 1.75, poseScale: 1.1, tris: 5800, tex: 256,
+    exclude: /^Weapon_/, keepAnimations: ['Idle', 'Wave', 'Yes', 'Punch', 'Duck', 'HitReact', 'Death', 'Run', 'Walk', 'Sword'],
+    source: QUATERNIUS('Characters_Henry.gltf'),
+    notes: 'Deckhand with a red bandana. Lute removed. Skinned; clips Idle/Wave/Yes (cheer)/Punch (haul)/Duck (brace)/HitReact/Death/Run/Walk/Sword. Faces −Z.',
+  },
+  {
+    key: 'sailor-b', role: 'crew', src: 'quaternius/pirate/Characters_Anne.gltf', yaw: 180, height: 1.75, poseScale: 1.1, tris: 5800, tex: 256,
+    exclude: /^Weapon_/, keepAnimations: ['Idle', 'Wave', 'Yes', 'Punch', 'Duck', 'HitReact', 'Death', 'Run', 'Walk', 'Sword'],
+    source: QUATERNIUS('Characters_Anne.gltf'),
+    notes: 'Deckhand (woman, braided hair). Axe removed. Same clip set as sailor-a.',
+  },
+  {
+    key: 'sailor-c', role: 'crew', src: 'quaternius/pirate/Characters_Henry.gltf', yaw: 180, height: 1.75, poseScale: 1.1, tris: 5800, tex: 256,
+    exclude: /^Weapon_/, keepAnimations: ['Idle', 'Wave', 'Yes', 'Punch', 'Duck', 'HitReact', 'Death', 'Run', 'Walk', 'Sword'], recolor: (ctx) => RECOLOR.sailorC(ctx),
+    source: QUATERNIUS('Characters_Henry.gltf'),
+    notes: 'sailor-a with a blue bandana, red vest and brown trousers (palette swap) for crowd variety.',
+  },
+  {
+    key: 'admiralty-sailor', role: 'crew', src: 'quaternius/pirate/Characters_Henry.gltf', yaw: 180, height: 1.75, poseScale: 1.1, tris: 5800, tex: 256,
+    exclude: /^Weapon_/, keepAnimations: ['Idle', 'Wave', 'Yes', 'Punch', 'Duck', 'HitReact', 'Death', 'Run', 'Walk', 'Sword'], recolor: (ctx) => RECOLOR.admiraltySailor(ctx),
+    source: QUATERNIUS('Characters_Henry.gltf'),
+    notes: 'Admiralty deckhand: navy bandana and trousers, white vest and sleeves (palette swap of the CC0 character).',
+  },
+  {
+    key: 'corsair', role: 'crew', src: 'quaternius/pirate/Characters_Captain_Barbarossa.gltf', yaw: 180, height: 1.8, poseScale: 1.084, tris: 6000, tex: 256,
+    keepAnimations: ['Idle', 'Wave', 'Yes', 'Punch', 'Duck', 'HitReact', 'Death', 'Run', 'Walk', 'Sword'],
+    source: QUATERNIUS('Characters_Captain_Barbarossa.gltf'),
+    notes: 'Redtide corsair captain with red tricorn, hook, cutlass and a parrot (second skinned mesh). Enemy decks / cutscenes.',
+  },
+  {
+    key: 'wraith-crew', role: 'crew', src: 'quaternius/pirate/Characters_Skeleton.gltf', yaw: 180, height: 1.75, poseScale: 1.108, tris: 6000, tex: 256,
+    keepAnimations: ['Idle', 'Wave', 'Yes', 'Punch', 'Duck', 'HitReact', 'Death', 'Run', 'Walk', 'Sword'],
+    source: QUATERNIUS('Characters_Skeleton.gltf'),
+    notes: 'Extra: skeleton deckhand with dagger for Gloam Wraith ships (tint teal/emissive at runtime).',
+  },
 ];
 
 export { RECOLOR };

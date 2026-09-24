@@ -82,7 +82,21 @@ export async function hslMaterial(mat, f) {
   await L.editTexture(t, (r, g, b, a) => { const [h, s, l] = L.rgb2hsl(r, g, b); const o = f(h, s, l, r, g, b); return o ? [...L.hsl2rgb(...o), a] : null; });
 }
 
+/** Swap flat swatch colours in every albedo texture of the document (palette atlases such as Quaternius'). */
+export async function swapColors(doc, pairs, tol = 6) {
+  for (const t of doc.getRoot().listTextures()) await remapPalette(t, pairs, tol);
+}
+
 export const RECOLOR = {
+  /** Quaternius Henry → Admiralty deckhand: navy bandana and trousers, white vest and sleeves, gold buckle kept. */
+  async admiraltySailor({ doc }) {
+    await swapColors(doc, [['#8c1e20', '#1d2b53'], ['#c8c8c8', '#f1eee6'], ['#45443b', '#f1eee6'], ['#84785e', '#e4e0d6'], ['#3b5d62', '#1d2b53'], ['#563c23', '#141d3b']], 2);
+  },
+  /** Quaternius Henry → second deckhand look: blue bandana, brown trousers. */
+  async sailorC({ doc }) {
+    await swapColors(doc, [['#8c1e20', '#2f6fb0'], ['#3b5d62', '#6b5a3a'], ['#45443b', '#7a2f2a']], 2);
+  },
+
   /** Nik_kale "Stylized Pirate Ship" → Redtide fire ship: charred hull, ember-orange swirls, red sails. */
   async fireship({ doc }) {
     await L.sailify(doc, { name: 'redtide-sail', svg: SVG('redtide-sail'), select: (t, i) => i.texel && i.texel[0] > 150 && i.texel[2] > 130 && i.texel[1] < i.texel[0] - 12 && t.centroid[1] > 3 });

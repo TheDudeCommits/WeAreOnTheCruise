@@ -71,7 +71,7 @@ async function build(job) {
   const R = (job.rotate || []).reduce((m, [axis, deg]) => L.mul(axis === 'x' ? L.rotX(deg) : axis === 'z' ? L.rotZ(deg) : L.rotY(deg), m), L.rotY(job.yaw || 0));
   if (!skinned) await doc.transform(fn.flatten());
   const b = L.boundsWith(doc, R);
-  const s = job.length ? job.length / b.size[2] : job.height ? job.height / b.size[1] : job.longest ? job.longest / Math.max(...b.size) : job.scale || 1;
+  const s = (job.length ? job.length / b.size[2] : job.height ? job.height / b.size[1] : job.longest ? job.longest / Math.max(...b.size) : job.scale || 1) * (job.poseScale || 1);
   const isShip = SHIP_ROLES.has(job.role) && job.origin !== 'ground';
   const ty = isShip ? -(job.draft ?? 0) - b.min[1] * s : -(b.min[1] * s) + (job.lift || 0);
   const M = L.mul(L.translate(-b.center[0] * s, ty, -b.center[2] * s), L.mul(L.scale(s), R));
@@ -185,8 +185,8 @@ function writeManifest() {
     if (!st || !fs.existsSync(path.join(OUT_DIR, `${job.key}.glb`))) { if (prev[job.key]) models[job.key] = prev[job.key]; continue; }
     models[job.key] = {
       file: st.file,
-      length: job.role === 'crew' || job.role === 'prop' || job.role === 'nature' || job.role === 'pickup' ? +Math.max(st.size[0], st.size[2]).toFixed(2) : job.length,
-      ...(job.role === 'crew' || job.role === 'prop' || job.role === 'nature' || job.role === 'pickup' ? { height: +st.size[1].toFixed(2) } : { draft: job.draft ?? 0, beam: +st.size[0].toFixed(2), height: +st.max[1].toFixed(2) }),
+      length: job.role === 'crew' ? job.height : job.role === 'prop' || job.role === 'nature' || job.role === 'pickup' ? +Math.max(st.size[0], st.size[2]).toFixed(2) : job.length,
+      ...(job.role === 'crew' ? { height: job.height } : job.role === 'prop' || job.role === 'nature' || job.role === 'pickup' ? { height: +st.size[1].toFixed(2) } : { draft: job.draft ?? 0, beam: +st.size[0].toFixed(2), height: +st.max[1].toFixed(2) }),
       tris: st.tris,
       materials: st.materials,
       role: job.role,
@@ -201,7 +201,7 @@ function writeManifest() {
   const manifest = {
     version: 1,
     generated: new Date().toLocaleDateString('en-CA'),
-    conventions: 'Y up, bow/forward toward -Z, metres. Ships: origin at the waterline centre, keel at -draft, `length` = bow-to-stern extent incl. bowsprit. Props/crew/nature: origin at ground centre, `height` in metres. Meshopt-compressed (EXT_meshopt_compression + KHR_mesh_quantization), WebP textures (EXT_texture_webp); plain PBR albedo materials for toonifyObject.',
+    conventions: 'Y up, bow/forward toward -Z, metres. Ships: origin at the waterline centre, keel at -draft, `length` = bow-to-stern extent incl. bowsprit. Props/crew/nature: origin at ground centre, `height` in metres (crew: rest-pose standing height, also used as `length`; crew face -Z). Meshopt-compressed (EXT_meshopt_compression + KHR_mesh_quantization), WebP textures (EXT_texture_webp); plain PBR albedo materials for toonifyObject.',
     models,
   };
   fs.writeFileSync(path.join(OUT_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');

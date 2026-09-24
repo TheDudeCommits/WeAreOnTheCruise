@@ -33,7 +33,7 @@ export function meshNodes(doc) {
 export function boundsWith(doc, pre = I4()) {
   const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
   for (const node of meshNodes(doc)) {
-    const m = mul(pre, node.getWorldMatrix());
+    const m = mul(pre, bindMatrix(node));
     for (const prim of node.getMesh().listPrimitives()) {
       const pos = prim.getAttribute('POSITION'); if (!pos) continue;
       const v = [0, 0, 0];
@@ -44,6 +44,16 @@ export function boundsWith(doc, pre = I4()) {
     }
   }
   return { min, max, size: [max[0] - min[0], max[1] - min[1], max[2] - min[2]], center: [(min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2] };
+}
+
+/** World matrix that places a mesh's vertices in bind pose (skinned meshes ignore their node transform in glTF). */
+export function bindMatrix(node) {
+  const skin = node.getSkin && node.getSkin();
+  if (!skin) return node.getWorldMatrix();
+  const joint = skin.listJoints()[0]; const ibm = skin.getInverseBindMatrices();
+  if (!joint || !ibm) return node.getWorldMatrix();
+  const inv = new Array(16).fill(0); ibm.getElement(0, inv);
+  return mul(joint.getWorldMatrix(), inv);
 }
 
 /** Bake `pre × world` into every static mesh; leaves identity node transforms. Shared meshes are cloned. */
