@@ -213,7 +213,8 @@ export class WakeSystem {
     // Sinking: spinning foam whirl + depression; deposits persistent foam that outlives the hull.
     if (src.sink > 0) {
       const env = smooth(0, 0.12, src.sink) * (1 - smooth(0.82, 1, src.sink));
-      const radius = src.length * (0.32 + 0.36 * src.sink) + 4;
+      // Capped: a 120 m flagship's whirl used to spin 170 m of foam arms (a sinking carpet on its own).
+      const radius = Math.min(src.length * (0.32 + 0.36 * src.sink) + 4, 44);
       f.transientBatch.push(
         f.relX(src.x), f.relZ(src.z), 1, 0, radius, radius, SHAPE_WHIRL,
         this.time * (1.4 + src.sink * 1.2) + src.key * 1.7, 3, (0.5 + 0.022 * src.length) * env, 2.2, 0,

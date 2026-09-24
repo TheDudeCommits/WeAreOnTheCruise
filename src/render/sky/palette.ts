@@ -96,7 +96,7 @@ const KEYS: readonly [number, LookSpec][] = [
   // Dusk (round 2): amber, not magenta. A golden key that still lights the hero (it read as a purple silhouette), a
   // bluer zenith (the tactical camera's water reflects it) and a peach haze instead of mauve.
   [18.9, {
-    zenith: 0x2a3a7c, horizon: 0xffa060, haze: 0xd89a82, key: [1.0, 0.63, 0.4], keyIntensity: 0.96,
+    zenith: 0x2a3a7c, horizon: 0xffa060, haze: 0xe2aa7e, key: [1.0, 0.63, 0.4], keyIntensity: 0.96,
     shadow: [0.37, 0.33, 0.53], rim: [1.0, 0.6, 0.38], cloudLit: 0xffb488, cloudShade: 0x57508f, ink: 0x1a1838,
     fogNear: 280, fogFar: 2300, stars: 0.1,
   }],

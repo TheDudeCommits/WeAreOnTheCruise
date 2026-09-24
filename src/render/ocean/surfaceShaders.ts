@@ -193,8 +193,8 @@ void main() {
     vec4 trRaw = texture(uTransient, vRtUv);
     pr = texture(uPersist, vRtUv) * rtEdge;
     tr = trRaw * rtEdge;
-    // Neighbourhood foam coverage (~12-24 m): high = a pile-up, drawn as aerated turquoise + lace.
-    crowd = textureLod(uCoverage, vRtUv, 1.0).r * rtEdge;
+    // Neighbourhood foam coverage (~12-24 m, smoothed over time): high = a pile-up, drawn as turquoise + lace.
+    crowd = textureLod(uCoverage, vRtUv, 1.0).b * rtEdge;
     float h0 = trRaw.r - trRaw.g;
     lift = h0 * rtEdge;
     if (pix < 4.0) {

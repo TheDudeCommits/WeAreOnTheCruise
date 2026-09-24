@@ -8,8 +8,9 @@
  * RGB. Per-instance channel weights scale the four profiles.
  *
  * Coverage-aware foam: the foam profile is scaled by the neighbourhood's existing persistent foam (last frame's
- * coverage target, mip 2): persistent deposits by (1 − c) with a shaped cutoff, transient stamps (except the hull
- * contact, which must always read) more gently. A pile-up therefore stops growing instead of carpeting the sea.
+ * coverage target, mip 2): persistent deposits by (1 − c) on the persistent coverage with a shaped cutoff, transient
+ * stamps (except the hull contact, which must always read) on the time-smoothed total. A pile-up therefore stops
+ * growing instead of carpeting the sea.
  */
 import * as THREE from 'three';
 
@@ -203,13 +204,15 @@ void main() {
     prof = vec4(0.0, 0.0, clamp(max(streak, churn), 0.0, 1.0), max(inside, streak));
   }
   prof = max(prof, vec4(0.0)) * vChan;
-  // Neighbourhood persistent foam (~25-50 m): crowded water takes less new foam.
-  float cov = textureLod(uCoverage, vCovUv, 2.0).g;
+  // Neighbourhood foam (~25-50 m): crowded water takes less new foam.
+  vec4 cov = textureLod(uCoverage, vCovUv, 2.0);
 #ifdef PERSISTENT
-  prof.z *= (1.0 - cov) * (1.0 - smoothstep(uCovGain.x, uCovGain.y, cov));
+  // Persistent deposits: strength × (1 − c) on the persistent coverage, with a shaped cutoff.
+  prof.z *= (1.0 - cov.g) * (1.0 - smoothstep(uCovGain.x, uCovGain.y, cov.g));
   gl_FragColor = vec4(prof.z, prof.w, prof.z, 0.0);
 #else
-  if (shape != 2) prof.z *= 1.0 - 0.6 * smoothstep(uCovGain.z, uCovGain.w, cov);
+  // Transient stamps (rings, Kelvin arms, whirls, fronts; not the hull contact) on the smoothed total.
+  if (shape != 2) prof.z *= 1.0 - 0.65 * smoothstep(uCovGain.z, uCovGain.w, cov.b);
   gl_FragColor = prof;
 #endif
 }
@@ -250,7 +253,7 @@ export class StampBatch {
         uHullHole: { value: 1.5 },
         uCoverage: { value: null },
         uCovShift: { value: new THREE.Vector2(4, 4) },
-        uCovGain: { value: new THREE.Vector4(0.14, 0.42, 0.18, 0.5) },
+        uCovGain: { value: new THREE.Vector4(0.14, 0.42, 0.12, 0.34) },
       },
       blending: THREE.CustomBlending,
       blendEquation: THREE.MaxEquation,
