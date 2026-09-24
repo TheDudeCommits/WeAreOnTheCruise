@@ -312,8 +312,6 @@ export class CardsModal {
     this.rewards.replaceChildren(...this.rewardEls);
     this.chest.classList.remove('is-open', 'is-done');
     this.chestPrompt.classList.remove('is-on');
-    this.chestBox.classList.add('is-shake');
-    for (const a of this.chestBox.getAnimations()) a.cancel?.();
     this.chestBox.classList.remove('is-shake');
     requestAnimationFrame(() => this.chestBox.classList.add('is-shake'));
   }

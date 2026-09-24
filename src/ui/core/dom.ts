@@ -78,12 +78,15 @@ export class StyleCell {
   }
 }
 
+/** Last one-shot animation per element (cancelled on restart without calling getAnimations(), which flushes style). */
+const oneShots = new WeakMap<Element, Animation>();
+
 /** Restartable one-shot animation (Web Animations API; compositor-friendly when it only animates transform/opacity). */
 export function play(el: Element, keyframes: Keyframe[], options: number | KeyframeAnimationOptions): Animation | null {
   if (typeof (el as HTMLElement).animate !== 'function') return null;
-  for (const a of el.getAnimations()) if ((a as Animation & { __crOneShot?: boolean }).__crOneShot) a.cancel();
+  oneShots.get(el)?.cancel();
   const anim = (el as HTMLElement).animate(keyframes, options);
-  (anim as Animation & { __crOneShot?: boolean }).__crOneShot = true;
+  oneShots.set(el, anim);
   return anim;
 }
 
