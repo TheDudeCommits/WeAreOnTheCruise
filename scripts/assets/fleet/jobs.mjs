@@ -9,7 +9,7 @@ import { RECOLOR, buildFlag } from './recolor.mjs';
 export const SRC = process.env.CRUISE_ASSET_SRC || '/tmp/cruise-asset-work';
 
 const MESHY = (task, title) => ({ kind: 'meshy', uid: task, author: 'Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)', title, license: 'Meshy (owner-generated)', url: '' });
-const SKETCHFAB = (uid, title, author, license = 'CC-BY-4.0') => ({ kind: 'sketchfab', uid, author, title, license, url: `https://sketchfab.com/3d-models/${uid}` });
+const SKETCHFAB = (uid, title, author, license = 'CC-BY-4.0') => ({ kind: 'sketchfab', uid, author, authorUrl: `https://sketchfab.com/${author}`, title, license, url: `https://sketchfab.com/3d-models/${uid}` });
 const KENNEY = (file) => ({ kind: 'cc0-kit', uid: `kenney-pirate-kit/${file}`, author: 'Kenney (kenney.nl)', title: `Pirate Kit 2.1 — ${file}`, license: 'CC0-1.0', url: 'https://kenney.nl/assets/pirate-kit' });
 const QUATERNIUS = (file) => ({ kind: 'cc0-kit', uid: `quaternius-pirate-kit/${file}`, author: 'Quaternius (quaternius.com)', title: `Pirate Kit — ${file}`, license: 'CC0-1.0', url: 'https://quaternius.com/packs/piratekit.html' });
 

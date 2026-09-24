@@ -55,6 +55,7 @@ async function build(job) {
   if (!src) { doc.createBuffer(); doc.createScene('scene'); await job.procedural({ doc, L, core, fn, sharp, job }); }
   const root = doc.getRoot();
   const skinned = root.listSkins().length > 0;
+  const sourceTris = countTris(doc);
 
   // 1. drop unwanted parts
   if (job.exclude) {
@@ -137,6 +138,7 @@ async function build(job) {
     sha256: crypto.createHash('sha256').update(buf).digest('hex'),
     sourceSha256: src ? crypto.createHash('sha256').update(fs.readFileSync(src)).digest('hex') : null,
     tris: countTris(check),
+    sourceTris,
     materials: check.getRoot().listMaterials().length,
     draws: check.getRoot().listMeshes().reduce((n, m) => n + m.listPrimitives().length, 0),
     textures: texSizes.length,
@@ -191,11 +193,13 @@ function writeManifest() {
   for (const job of JOBS) {
     const st = stats[job.key];
     if (!st || !fs.existsSync(path.join(OUT_DIR, `${job.key}.glb`))) { if (prev[job.key]) models[job.key] = prev[job.key]; continue; }
+    const ship = (job.role === 'enemy' || job.role === 'boss') && job.origin !== 'ground';
     models[job.key] = {
       file: st.file,
-      length: job.role === 'crew' ? job.height : job.role === 'prop' || job.role === 'nature' || job.role === 'pickup' ? +Math.max(st.size[0], st.size[2]).toFixed(2) : job.length,
-      ...(job.role === 'crew' ? { height: job.height } : job.role === 'prop' || job.role === 'nature' || job.role === 'pickup' ? { height: +st.size[1].toFixed(2) } : { draft: job.draft ?? 0, beam: +st.size[0].toFixed(2), height: +st.max[1].toFixed(2) }),
+      length: job.role === 'crew' ? job.height : ship ? job.length : +Math.max(st.size[0], st.size[2]).toFixed(2),
+      ...(job.role === 'crew' ? { height: job.height } : ship ? { draft: job.draft ?? 0, beam: +st.size[0].toFixed(2), height: +st.max[1].toFixed(2) } : { height: +st.size[1].toFixed(2) }),
       tris: st.tris,
+      sourceTris: st.sourceTris,
       materials: st.materials,
       role: job.role,
       source: job.source,
