@@ -210,6 +210,9 @@ export class MusicDirector {
     };
   }
 
+  /** The run layer the heat asks for (calm / combat / horde), whatever is playing right now. */
+  get runLayer(): RunLayer { return this.runState; }
+
   /** Streams the run layers of a sea ahead of need. */
   warmSea(sea: SeaId, layers: readonly RunLayer[] = ['calm', 'combat']): void {
     for (const l of layers) { const k = this.keyFor(l, sea); if (k) this.track(k); }

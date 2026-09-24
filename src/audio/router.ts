@@ -9,6 +9,7 @@ import type { AppScreen } from '../render/frame';
 import type { CueId } from './generated/cueIds';
 import type { ListenerFrame } from './spatial';
 import type { DuckSpec, PlayOptions } from './types';
+import { WorldWatch, type WatchMoment } from './watch';
 
 export interface RouterHooks {
   play(cue: CueId, opts?: PlayOptions): boolean;
@@ -17,7 +18,15 @@ export interface RouterHooks {
   cueLength(cue: CueId): number;
   /** Evidence log: every mapped request, played or not. */
   note(source: string, cue: CueId): void;
+  /** Notable moments for the crew barks (optional). */
+  moment?(kind: RouterMoment, x?: number, z?: number): void;
 }
+
+/** Moments the crew may shout about (barks.ts). */
+export type RouterMoment =
+  | WatchMoment | 'broadside' | 'brace' | 'boost' | 'level-up' | 'boss-warning' | 'boss-defeated' | 'elite-spawned' | 'elite-killed'
+  | 'low-hull' | 'kill-streak' | 'kraken' | 'rogue-wave' | 'maelstrom' | 'ghost-fleet' | 'blockade' | 'eruption' | 'treasure'
+  | 'chest' | 'victory' | 'run-start' | 'captain-sunk' | 'beacon' | 'wave-rider';
 
 type Pos = { x: number; z: number };
 
@@ -47,7 +56,7 @@ const PICKUP_CUE: Record<PickupKind, CueId> = {
 const HAZARD_SPAWN_CUE: Partial<Record<HazardKind, CueId>> = {
   'fire-patch': 'fire-ignite', barrel: 'barrel-drop', 'powder-keg': 'barrel-drop', mine: 'mine-drop', whirlpool: 'whirlpool-cast',
   'storm-cloud': 'thunder-far', shockwave: 'shockwave', 'wave-front': 'wave-roar', 'lightning-strike': 'thunder-near',
-  'burning-wreck': 'fire-ignite', 'escort-skiff': 'splash-small',
+  'burning-wreck': 'fire-ignite', 'escort-skiff': 'splash-small', 'smoke-screen': 'smoke-pot',
 };
 
 const HAZARD_TRIGGER_CUE: Partial<Record<HazardKind, CueId>> = {
@@ -62,7 +71,7 @@ const ENEMY_FIRE_CUE: Record<ProjectileKind, CueId> = {
   'mortar-shell': 'mortar-launch', bomblet: 'mortar-launch', 'swivel-shot': 'swivel-shot', grapeshot: 'swivel-shot', harpoon: 'harpoon-throw',
   rocket: 'rocket-launch', torpedo: 'rocket-launch', 'skiff-shot': 'swivel-shot',
   'enemy-cannonball': 'cannon-near', 'enemy-chaser': 'bow-chaser', 'enemy-mortar': 'mortar-launch', 'water-bolt': 'water-bolt', 'boss-shell': 'heavy-shot',
-  'enemy-harpoon': 'harpoon-throw', 'enemy-bomb': 'mortar-launch', 'enemy-flare': 'rocket-launch',
+  'enemy-harpoon': 'harpoon-throw', 'enemy-bomb': 'mortar-launch', 'enemy-flare': 'flare',
 };
 
 /** Ship hit by a projectile kind (non-boss targets). */
@@ -97,8 +106,15 @@ export class EventRouter {
   private manualUntil = -1;
   /** Router-side budgets: at most `n` cues of a kind per window (impacts, kills). */
   private readonly budgets = new Map<string, { t: number; n: number }>();
+  /** State-diff cues for the round-1 foes and set pieces (watch.ts). */
+  readonly watch: WorldWatch;
 
-  constructor(private readonly h: RouterHooks) {}
+  constructor(private readonly h: RouterHooks) {
+    this.watch = new WorldWatch({
+      play: (source, cue, opts) => this.p(source, cue, opts),
+      moment: (kind) => this.h.moment?.(kind),
+    });
+  }
 
   /** Handles one frame: screen/status diffs first, then every SimEvent in order. */
   route(now: number, screen: AppScreen, run: Readonly<RunState> | null, events: readonly SimEvent[], listener: ListenerFrame): void {
@@ -106,6 +122,8 @@ export class EventRouter {
     this.run = run;
     this.listener = listener;
     this.diffs(screen, run, events);
+    if (run && screen === 'run') this.watch.update(run, now);
+    else this.watch.reset();
     for (const e of events) this.handle(e);
   }
 
@@ -121,7 +139,10 @@ export class EventRouter {
         return;
       case 'player-hit': return this.playerHit(e);
       case 'enemy-spawned':
-        if (e.elite) this.p('enemy-spawned', 'elite-spawn', { x: e.x, z: e.z });
+        if (e.elite) {
+          this.p('enemy-spawned', 'elite-spawn', { x: e.x, z: e.z });
+          if (this.dist(e.x, e.z) < 420) this.h.moment?.('elite-spawned', e.x, e.z);
+        }
         return;
       case 'enemy-killed': return this.enemyKilled(e);
       case 'enemy-sunk':
@@ -134,6 +155,7 @@ export class EventRouter {
       case 'level-up':
         // Early level-ups come every 15–20 s: a short sting and a light dip, not a fanfare.
         this.p('level-up', 'level-up');
+        this.h.moment?.('level-up');
         this.h.duck({ target: 'music', depth: -5, hold: 0.7, attack: 0.06, release: 0.8 });
         return;
       case 'card-chosen': {
@@ -190,6 +212,12 @@ export class EventRouter {
       case 'hazard-spawned': {
         const cue = HAZARD_SPAWN_CUE[e.kind];
         if (cue) this.p('hazard-spawned', cue, { x: e.x, z: e.z, gain: e.kind === 'escort-skiff' ? 0.5 : 1 });
+        if (e.kind === 'lava-bomb' && this.allow('lava', 1, 0.7)) {
+          // Launched from the vent (the eruption's anchor); the telegraph whistle brings it down on its circle.
+          const we = this.run?.worldEvent;
+          this.p('hazard-spawned', 'lava-launch', { x: we?.x ?? e.x, z: we?.z ?? e.z });
+        }
+        if (e.kind === 'beacon') this.p('hazard-spawned', 'ship-bell', { x: e.x, z: e.z, gain: 0.5 });
         if (e.kind === 'powder-keg') this.p('hazard-spawned', 'fuse', { x: e.x, z: e.z, delay: 0.2 });
         if (e.kind === 'wave-front') this.h.duck({ target: 'sfx', depth: -3, hold: 0.6 });
         if (e.kind === 'lightning-strike') this.p('hazard-spawned', 'lightning-zap', { x: e.x, z: e.z, gain: 0.7 });
@@ -198,6 +226,14 @@ export class EventRouter {
       case 'hazard-triggered': {
         const cue = HAZARD_TRIGGER_CUE[e.kind];
         if (cue) this.p('hazard-triggered', cue, { x: e.x, z: e.z });
+        if (e.kind === 'salvage') this.p('hazard-triggered', 'salvage-haul', { x: e.x, z: e.z });
+        if (e.kind === 'beacon') {
+          // The keeper's blessing: its bell + shimmer covers the banner that follows in the same tick.
+          this.outcomeAt = this.now;
+          this.p('hazard-triggered', 'beacon-bell', { x: e.x, z: e.z });
+          this.h.duck({ target: 'music', depth: -4, hold: 1.2, release: 1 });
+          this.h.moment?.('beacon');
+        }
         if (e.kind === 'mine') this.p('hazard-triggered', 'splash-large', { x: e.x, z: e.z, delay: 0.1 });
         if (e.kind === 'powder-keg') this.h.duck({ target: 'sfx', depth: -5, hold: 0.3 });
         return;
@@ -206,6 +242,7 @@ export class EventRouter {
       case 'boss-warning':
         if (e.boss === 'tidewyrm') this.p('boss-warning', 'serpent-roar', { pitch: -4, gain: 0.9, category: 'alert' });
         else this.p('boss-warning', 'boss-horn', { category: 'alert' });
+        this.h.moment?.('boss-warning');
         this.h.duck({ target: 'music', depth: -8, hold: 2.4, release: 1.5 });
         return;
       case 'boss-spawned':
@@ -237,6 +274,7 @@ export class EventRouter {
         this.p('boss-defeated', 'explosion-large', { x: e.x, z: e.z, delay: 0.55, pitch: -3, force: true });
         this.p('boss-defeated', 'ship-sink', { x: e.x, z: e.z, delay: 0.9, pitch: -5, gain: 1.4 });
         this.p('boss-defeated', 'crew-cheer', { delay: 1.3, force: true });
+        this.h.moment?.(final ? 'victory' : 'boss-defeated');
         if (!final) {
           this.p('boss-defeated', 'stinger-boss-defeated', { delay: 0.6 });
           this.h.duck({ target: 'music', depth: -12, hold: 3.2, release: 2 });
@@ -247,13 +285,17 @@ export class EventRouter {
       case 'world-event':
         // 'start' is voiced by its director-event banner; outcomes get their own sting (and mute their banner).
         if (e.phase === 'success' || e.phase === 'fail') this.outcomeAt = this.now;
-        if (e.phase === 'success') { this.p('world-event', 'crew-cheer', { gain: 0.9 }); this.p('world-event', 'treasure-sparkle', { delay: 0.25 }); }
+        if (e.phase === 'success') {
+          this.p('world-event', 'crew-cheer', { gain: 0.9 }); this.p('world-event', 'treasure-sparkle', { delay: 0.25 });
+          if (e.id === 'rogue-wave') this.h.moment?.('wave-rider');
+        }
         else if (e.phase === 'fail') this.p('world-event', 'boss-horn', { pitch: -4, gain: 0.45 });
         return;
       case 'captain-joined': this.p('captain-joined', 'ship-bell', { gain: 0.55 }); return;
       case 'captain-respawned': this.p('captain-respawned', 'ship-bell', { pitch: 2, gain: 0.45 }); return;
       case 'captain-sunk':
         if (this.dist(e.x, e.z) < 320) { this.p('captain-sunk', 'ship-break', { x: e.x, z: e.z, gain: 0.8 }); this.p('captain-sunk', 'hull-creak', { x: e.x, z: e.z, delay: 0.4, gain: 0.7 }); }
+        this.h.moment?.('captain-sunk');
         return;
       case 'captain-kill': return; // Their sinkings already sound through enemy-killed.
       case 'weather-changed':
@@ -467,10 +509,22 @@ export class EventRouter {
         this.p('explosion', 'splash-large', { ...pos, delay: 0.02, gain: 0.7 });
         return;
       case 'lightning':
+        // A lantern wisp spending itself on a hull bursts like glass, not thunder.
+        if (e.team === 'enemy' && this.wispAt(e.x, e.z)) { this.p('explosion', 'wisp-burst', { ...pos, gain: 1.1 }); return; }
         this.p('explosion', 'thunder-near', { ...pos, gain: 0.8 });
         this.p('explosion', 'lightning-zap', pos);
         return;
-      case 'water': this.p('explosion', 'explosion-water', { ...pos, gain: scale }); return;
+      case 'water':
+        // Eruption gold bombs land harmlessly and leave treasure: coins, not a blast.
+        if (e.team === 'player' && e.radius <= 8) {
+          this.p('explosion', 'coin-shower', pos);
+          this.p('explosion', 'splash-small', { ...pos, delay: 0.02, gain: 0.7 });
+          return;
+        }
+        // A drowned galleon's breach already sounds through 'galleon-breach' (watch.ts).
+        for (const b of this.watch.breaches) if (Math.hypot(b.x - e.x, b.z - e.z) < 6) return;
+        this.p('explosion', 'explosion-water', { ...pos, gain: scale });
+        return;
     }
   }
 
@@ -485,11 +539,17 @@ export class EventRouter {
     if (e.braced) { this.p('player-hit', 'brace-hit', { gain: Math.min(1.1, 0.6 + frac * 4) }); return; }
     this.p('player-hit', 'player-hit', { gain: Math.min(1.25, 0.6 + frac * 5) });
     if (frac > 0.08) this.p('player-hit', 'splinters', { delay: 0.03, gain: 0.8 });
-    if (p && p.hp < p.maxHp * 0.3) this.p('player-hit', 'hull-creak', { delay: 0.15, pitch: -3, gain: 0.8 });
+    if (p && p.hp < p.maxHp * 0.3) { this.p('player-hit', 'hull-creak', { delay: 0.15, pitch: -3, gain: 0.8 }); this.h.moment?.('low-hull'); }
   }
 
   private enemyKilled(e: Extract<SimEvent, { type: 'enemy-killed' }>): void {
     const d = this.dist(e.x, e.z);
+    if (e.defId === 'lantern-wisp') { if (this.allow('wisp', 2, 0.3)) this.p('enemy-killed', 'wisp-burst', { x: e.x, z: e.z }); return; }
+    if (e.defId === 'kraken-arm') {
+      this.p('enemy-killed', 'ink-splash', { x: e.x, z: e.z });
+      this.p('enemy-killed', 'splash-large', { x: e.x, z: e.z, delay: 0.15, pitch: -3 });
+      return;
+    }
     const small = SMALL_HULL.has(e.defId) && !e.elite;
     // Kill budget: a sweep of kills gets two or three full wrecks a second; the rest (and far ones) a lighter crunch.
     if (e.elite || (d < 320 && this.allow(small ? 'kill-s' : 'kill', small ? 2 : 3, 1))) {
@@ -509,9 +569,11 @@ export class EventRouter {
     if (e.elite) {
       this.p('enemy-killed', 'explosion-large', { x: e.x, z: e.z, delay: 0.08 });
       if (now - this.lastCheer > 5) { this.lastCheer = now; this.p('enemy-killed', 'crew-cheer', { delay: 0.5 }); }
+      if (d < 400) this.h.moment?.('elite-killed');
     } else if (this.killTimes.length >= 6 && now - this.lastCheer > 12) {
       this.lastCheer = now;
       this.p('enemy-killed', 'crew-cheer', { delay: 0.3, gain: 0.7 });
+      this.h.moment?.('kill-streak');
     }
   }
 
@@ -521,7 +583,9 @@ export class EventRouter {
       const now = this.now;
       this.coinStreak = now - this.lastCoin < 0.45 ? this.coinStreak + 1 : 0;
       this.lastCoin = now;
-      this.p('pickup-collected', cue, { pitch: Math.min(7, this.coinStreak * 0.5) });
+      // The 140 m magnet pulls bursts: the chime climbs, then thins out and softens instead of machine-gunning.
+      if (this.coinStreak > 10 && this.coinStreak % 2 === 1) return;
+      this.p('pickup-collected', cue, { pitch: Math.min(7, this.coinStreak * 0.5), gain: this.coinStreak > 6 ? 0.7 : 1 });
       return;
     }
     this.p('pickup-collected', cue);
@@ -530,15 +594,21 @@ export class EventRouter {
       this.p('pickup-collected', 'shockwave', { delay: 0.05 });
       this.h.duck({ target: 'sfx', depth: -5, hold: 0.4, attack: 0.02 });
     }
-    if (e.kind === 'chest') this.p('pickup-collected', 'treasure-sparkle', { delay: 0.35 });
+    if (e.kind === 'chest') { this.p('pickup-collected', 'treasure-sparkle', { delay: 0.35 }); this.h.moment?.('chest'); }
   }
 
   private skillUsed(e: Extract<SimEvent, { type: 'skill-used' }>): void {
     const skill = e.skill;
     switch (skill) {
-      case 'brace': this.p('skill-used', 'brace'); return;
-      case 'boost': this.p('skill-used', 'boost'); return;
-      case 'broadside': this.manualUntil = this.now + 0.6; return; // the volley's 'weapon-fired' guns carry it (volley-full)
+      case 'brace': this.p('skill-used', 'brace'); this.h.moment?.('brace'); return;
+      case 'boost': {
+        // Trade Winds / Storm Sails store extra boosts: with one to spare, a lighter gust.
+        const left = this.run?.director.scratch['pace:boostCharges'] ?? 0;
+        this.p('skill-used', left >= 1 ? 'boost-light' : 'boost');
+        this.h.moment?.('boost');
+        return;
+      }
+      case 'broadside': this.manualUntil = this.now + 0.6; this.h.moment?.('broadside'); return; // the guns carry it (volley-full)
       case 'special': case 'ultimate': return; // slot names only; ids below
     }
     if (e.slot === 'ultimate') {
@@ -564,6 +634,7 @@ export class EventRouter {
   }
 
   private statusChanged(e: Extract<SimEvent, { type: 'status-changed' }>): void {
+    if (e.status === 'momentum' && e.target === 0) { this.p('status-changed', e.on ? 'momentum-swell' : 'momentum-luff'); return; }
     if (!e.on) return;
     const pos = e.target === 0 ? null : this.refPos(e.target);
     switch (e.status) {
@@ -647,15 +718,15 @@ export class EventRouter {
     if (this.now - this.outcomeAt < 0.25) return;
     const n = name.toLowerCase();
     // Round-1 set pieces and bounty captains (matched by name so new events stay data-driven).
-    if (n.includes('kraken')) { this.p('director-event', 'serpent-roar', { pitch: -5, gain: 1.1 }); this.p('director-event', 'wave-roar', { delay: 0.5 }); return; }
-    if (n.includes('rogue') || n.includes('wave')) { this.p('director-event', 'wave-roar', { gain: 1.2 }); this.p('director-event', 'alarm-bell', { delay: 0.2, gain: 0.6 }); return; }
-    if (n.includes('maelstrom') || n.includes('whirl')) { this.p('director-event', 'whirlpool-cast', { gain: 1.1 }); this.p('director-event', 'wave-roar', { delay: 0.4, gain: 0.7 }); return; }
-    if (n.includes('blockade') || n.includes('armada')) { this.p('director-event', 'war-horn'); this.p('director-event', 'alarm-bell', { delay: 0.5, gain: 0.7 }); return; }
-    if (n.includes('ghost') || n.includes('drowned')) { this.p('director-event', 'boss-horn', { pitch: 4, gain: 0.55 }); this.p('director-event', 'hull-creak', { delay: 0.6 }); return; }
-    if (n.includes('erupt') || n.includes('volcan')) { this.p('director-event', 'explosion-large', { gain: 0.9 }); this.p('director-event', 'thunder-far', { delay: 0.3 }); return; }
+    if (n.includes('kraken')) { this.p('director-event', 'serpent-roar', { pitch: -5, gain: 1.1 }); this.p('director-event', 'wave-roar', { delay: 0.5 }); this.h.moment?.('kraken'); return; }
+    if (n.includes('rogue') || n.includes('wave')) { this.p('director-event', 'wave-roar', { gain: 0.8, pitch: -3 }); this.p('director-event', 'alarm-bell', { delay: 0.2, gain: 0.6 }); this.h.moment?.('rogue-wave'); return; }
+    if (n.includes('maelstrom') || n.includes('whirl')) { this.p('director-event', 'whirlpool-cast', { gain: 1.1 }); this.p('director-event', 'wave-roar', { delay: 0.4, gain: 0.7 }); this.h.moment?.('maelstrom'); return; }
+    if (n.includes('blockade') || n.includes('armada')) { this.p('director-event', 'war-horn'); this.p('director-event', 'alarm-bell', { delay: 0.5, gain: 0.7 }); this.h.moment?.('blockade'); return; }
+    if (n.includes('ghost') || n.includes('drowned')) { this.p('director-event', 'boss-horn', { pitch: 4, gain: 0.55 }); this.p('director-event', 'hull-creak', { delay: 0.6 }); this.h.moment?.('ghost-fleet'); return; }
+    if (n.includes('erupt') || n.includes('volcan')) { this.p('director-event', 'explosion-large', { gain: 0.9 }); this.p('director-event', 'thunder-far', { delay: 0.3 }); this.h.moment?.('eruption'); return; }
     if (n.includes('claimed') || n.includes('complete')) { this.p('director-event', 'doubloon'); this.p('director-event', 'ship-bell', { delay: 0.2 }); return; }
     if (n.includes('bounty') || n.includes('contract') || n.includes('wanted')) { this.p('director-event', 'war-horn', { pitch: 2, gain: 0.7 }); this.p('director-event', 'elite-spawn', { delay: 0.3 }); return; }
-    if (n.includes('sunken') || n.includes('dig')) { this.p('director-event', 'compass'); this.p('director-event', 'treasure-sparkle', { delay: 0.3 }); return; }
+    if (n.includes('sunken') || n.includes('dig')) { this.p('director-event', 'compass'); this.p('director-event', 'treasure-sparkle', { delay: 0.3 }); this.h.moment?.('treasure'); return; }
     if (n.includes('treasure') || n.includes('convoy')) { this.p('director-event', 'ship-bell'); this.p('director-event', 'treasure-sparkle', { delay: 0.3 }); return; }
     if (n.includes('storm')) { this.p('director-event', 'thunder-far', { gain: 1.1 }); return; }
     if (n.includes('fog')) { this.p('director-event', 'boss-horn', { pitch: 3, gain: 0.4 }); return; }
@@ -667,7 +738,7 @@ export class EventRouter {
   private diffs(screen: AppScreen, run: Readonly<RunState> | null, events: readonly SimEvent[]): void {
     const prev = this.prevScreen;
     if (prev !== null && prev !== screen) {
-      if (screen === 'run') this.p('screen', 'set-sail');
+      if (screen === 'run') { this.p('screen', 'set-sail'); this.h.moment?.('run-start'); }
       else if ((prev === 'title' && screen === 'harbor') || (prev === 'results' && screen === 'harbor')) this.p('screen', 'ui-transition');
     }
     this.prevScreen = screen;
@@ -688,6 +759,14 @@ export class EventRouter {
   private p(source: string, cue: CueId, opts?: PlayOptions): void {
     this.h.note(source, cue);
     this.h.play(cue, opts);
+  }
+
+  /** True if a lantern wisp sits at (x, z) (its burst explosion is emitted at its own position). */
+  private wispAt(x: number, z: number): boolean {
+    const run = this.run;
+    if (!run) return false;
+    for (const e of run.enemies) if (e.defId === 'lantern-wisp' && Math.abs(e.x - x) < 1 && Math.abs(e.z - z) < 1) return true;
+    return false;
   }
 
   private dist(x: number, z: number): number {

@@ -13,8 +13,14 @@ export const CUE_IDS = [
   'hull-creak', 'gull', 'ship-bell', 'alarm-bell', 'warning', 'player-hit', 'brace', 'brace-hit', 'parry', 'boost',
   'heal', 'shield-up', 'dash-whoosh', 'dive', 'crew-cheer', 'ultimate-sting', 'war-horn', 'boss-horn', 'serpent-roar',
   'elite-spawn', 'metal-groan', 'coin-copper', 'coin-silver', 'coin-gold', 'doubloon', 'chest-open', 'compass',
-  'treasure-sparkle', 'repair', 'amb-ocean', 'amb-bow-wash', 'amb-wind', 'amb-rain', 'amb-fire', 'amb-whirlpool',
-  'amb-harbor',
+  'treasure-sparkle', 'repair', 'marked', 'flare-pop', 'flare-hang', 'steam-whistle', 'rope-snap', 'wisp-latch',
+  'wisp-burst', 'galleon-rise', 'galleon-breach', 'shield-shatter', 'vamp-siphon', 'smoke-pot', 'kraken-squeeze',
+  'ink-splash', 'lava-launch', 'coin-shower', 'salvage-haul', 'beacon-bell', 'wind-gust', 'momentum-swell',
+  'momentum-luff', 'boost-light', 'bark-fire', 'bark-brace', 'bark-boss', 'bark-sink', 'bark-level', 'bark-water',
+  'bark-harpoon', 'bark-kraken', 'bark-grab', 'bark-whirlpool', 'bark-blockade', 'bark-victory', 'bark-guns',
+  'bark-marked', 'bark-wisps', 'bark-wave', 'bark-ghosts', 'bark-eruption', 'bark-treasure', 'bark-rising',
+  'bark-captain-down', 'bark-rider', 'bark-beacon', 'bark-elite', 'amb-ocean', 'amb-bow-wash', 'amb-wind', 'amb-rain',
+  'amb-fire', 'amb-whirlpool', 'amb-harbor', 'amb-rope', 'amb-wisp', 'amb-maelstrom', 'amb-surf',
 ] as const;
 
 export type CueId = (typeof CUE_IDS)[number];

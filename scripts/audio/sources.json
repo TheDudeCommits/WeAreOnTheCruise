@@ -2585,5 +2585,266 @@
   "host": "freesound (HQ preview)",
   "duration": 1.47447,
   "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "gen-crew-fire-2": {
+  "title": "Crew bark: “Fire as she bears!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-fire-2.ogg",
+  "host": "generated",
+  "job": "cf6fa204-6897-4a6f-8548-0a43029cbbf2"
+ },
+ "gen-crew-fire-1": {
+  "title": "Crew bark: “Fire!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-fire-1.ogg",
+  "host": "generated",
+  "job": "ce670840-bd43-49a8-8a86-c294603d02ea"
+ },
+ "gen-crew-fire-3": {
+  "title": "Crew bark: “Give 'em a broadside!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-fire-3.ogg",
+  "host": "generated",
+  "job": "1c83cc11-43a5-4b59-ab92-3a12f81a397d"
+ },
+ "gen-crew-brace-1": {
+  "title": "Crew bark: “Brace! Brace!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-brace-1.ogg",
+  "host": "generated",
+  "job": "c6830236-444d-4f63-8246-959938087987"
+ },
+ "gen-crew-brace-2": {
+  "title": "Crew bark: “Hold fast, lads!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-brace-2.ogg",
+  "host": "generated",
+  "job": "3c055a27-d9d3-4561-b502-4e0a5d3519ee"
+ },
+ "gen-crew-boss": {
+  "title": "Crew bark: “Boss off the bow! Stand to your guns!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-boss.ogg",
+  "host": "generated",
+  "job": "6297fddd-3678-4153-bcd5-43d107ae8d09"
+ },
+ "gen-crew-sink-1": {
+  "title": "Crew bark: “She's going down!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-sink-1.ogg",
+  "host": "generated",
+  "job": "97891c63-48b3-41a4-b364-8453f640c54e"
+ },
+ "gen-crew-sink-2": {
+  "title": "Crew bark: “Down she goes!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-sink-2.ogg",
+  "host": "generated",
+  "job": "07b04120-c1a9-49dd-a56f-11b050d50ffc"
+ },
+ "gen-crew-level": {
+  "title": "Crew bark: “Level up, captain!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-level.ogg",
+  "host": "generated",
+  "job": "61c1ec85-2177-42d4-af43-3f6d1834171b"
+ },
+ "gen-crew-water-1": {
+  "title": "Crew bark: “We're taking water!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-water-1.ogg",
+  "host": "generated",
+  "job": "4049ddd0-8131-453b-8c54-4b17195fa5e6"
+ },
+ "gen-crew-water-2": {
+  "title": "Crew bark: “Hull's breached! Patch her up!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-water-2.ogg",
+  "host": "generated",
+  "job": "9c0c6b74-9c02-4122-906e-499927a1d55b"
+ },
+ "gen-crew-harpoon": {
+  "title": "Crew bark: “Harpoon on the hull! Boost to snap the line!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-harpoon.ogg",
+  "host": "generated",
+  "job": "b908c7c4-3c78-4fc2-b754-53d686d8e0c2"
+ },
+ "gen-crew-kraken": {
+  "title": "Crew bark: “Kraken! All hands!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-kraken.ogg",
+  "host": "generated",
+  "job": "53929989-2a0f-4fb1-87cd-39f5f58752d7"
+ },
+ "gen-crew-grab": {
+  "title": "Crew bark: “It's got us! Boost free!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-grab.ogg",
+  "host": "generated",
+  "job": "7812269d-2300-4253-851b-a0855551af02"
+ },
+ "gen-crew-whirlpool": {
+  "title": "Crew bark: “Whirlpool off the bow!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-whirlpool.ogg",
+  "host": "generated",
+  "job": "649542af-831e-4298-947e-777f6432bd2d"
+ },
+ "gen-crew-blockade": {
+  "title": "Crew bark: “Blockade ahead! Run out the guns!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-blockade.ogg",
+  "host": "generated",
+  "job": "239f2886-2f64-4836-b6b3-ce5cf3a20165"
+ },
+ "gen-crew-victory": {
+  "title": "Crew bark: “Victory! The sea is ours!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-victory.ogg",
+  "host": "generated",
+  "job": "09f54f90-b188-4cb5-88f0-2920af982f3f"
+ },
+ "gen-crew-guns": {
+  "title": "Crew bark: “Man the guns!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-guns.ogg",
+  "host": "generated",
+  "job": "498a95bd-c811-49ab-bd8b-00c2b0ec552b"
+ },
+ "gen-crew-marked": {
+  "title": "Crew bark: “They've marked us! Here they come!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-marked.ogg",
+  "host": "generated",
+  "job": "5e836a14-becd-488a-94f4-a94ee9db0d9a"
+ },
+ "gen-crew-wisps": {
+  "title": "Crew bark: “Wisps on the hull! Brace to shake 'em off!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-wisps.ogg",
+  "host": "generated",
+  "job": "d37cc442-2c5c-43a7-94bf-0eb314232c66"
+ },
+ "gen-crew-wave": {
+  "title": "Crew bark: “Rogue wave! Boost through it!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-wave.ogg",
+  "host": "generated",
+  "job": "e72af7f5-0978-48eb-b273-516bcb380cb6"
+ },
+ "gen-crew-ghosts": {
+  "title": "Crew bark: “Ghost ships rising!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-ghosts.ogg",
+  "host": "generated",
+  "job": "01543c86-1596-44f7-b504-d8b7c101d0fb"
+ },
+ "gen-crew-eruption": {
+  "title": "Crew bark: “Eruption! Watch the sky!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-eruption.ogg",
+  "host": "generated",
+  "job": "672e43fe-a89a-424b-9dc8-eee3fd882d8b"
+ },
+ "gen-crew-treasure": {
+  "title": "Crew bark: “Treasure ho!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-treasure.ogg",
+  "host": "generated",
+  "job": "24d94ee0-b751-4801-9484-250afa38e6e8"
+ },
+ "gen-crew-rising": {
+  "title": "Crew bark: “Something's rising below us!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-rising.ogg",
+  "host": "generated",
+  "job": "717ae16f-3f68-451c-8355-b106557bef49"
+ },
+ "gen-crew-captain-down": {
+  "title": "Crew bark: “Captain down! Cover them!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-captain-down.ogg",
+  "host": "generated",
+  "job": "6646c83f-d77d-4cf9-8a65-ea6a383961b0"
+ },
+ "gen-crew-rider": {
+  "title": "Crew bark: “Wave rider! Ha ha!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-rider.ogg",
+  "host": "generated",
+  "job": "f1edca87-d262-4312-a010-713f0b6d03cd"
+ },
+ "gen-crew-beacon": {
+  "title": "Crew bark: “The lighthouse blesses us, captain!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-beacon.ogg",
+  "host": "generated",
+  "job": "a6e4ab03-000e-48f7-9edc-72975c8f58c0"
+ },
+ "gen-crew-elite": {
+  "title": "Crew bark: “Elite sighted! Mind her guns!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-elite.ogg",
+  "host": "generated",
+  "job": "ebbdbc19-49f5-4adb-ac1e-9e950b6e5b14"
  }
 }

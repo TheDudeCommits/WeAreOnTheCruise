@@ -139,7 +139,11 @@ async function resolveSource(id) {
   const s = SOURCES[id];
   if (!s) throw new Error(`unknown source ${id}`);
   let path;
-  if (s.zip) {
+  if (s.local) {
+    // Project-owned masters kept in the repo (generated barks): scripts/audio/generated/…
+    path = join(ROOT, s.local);
+    if (!existsSync(path)) throw new Error(`missing local source ${s.local}`);
+  } else if (s.zip) {
     const dir = await ensureZip(s.zip);
     path = findInDir(dir, s.member);
   } else {
@@ -277,6 +281,7 @@ async function renderRaw(spec, channels, tmpWav) {
     const end = e === null || e === undefined ? null : e + (layers.length === 1 ? loopX : 0);
     f.push(`atrim=start=${s}${end !== null ? `:end=${end}` : ''}`, 'asetpts=PTS-STARTPTS', 'aresample=48000');
     f.push(`aformat=sample_fmts=fltp:channel_layouts=${channels === 1 ? 'mono' : 'stereo'}`);
+    if (L.reverse) f.push('areverse');
     const rate = L.rate ?? (L.semis !== undefined ? semisToRate(L.semis) : 1);
     if (Math.abs(rate - 1) > 1e-4) f.push(`asetrate=${Math.round(48000 * rate)}`, 'aresample=48000');
     if (L.highpass) f.push(`highpass=f=${L.highpass}`);
@@ -464,6 +469,7 @@ export type MusicKey = (typeof MUSIC_KEYS)[number];
 }
 
 const LICENSE_URL = {
+  'Owner-generated': 'generation-log.json',
   'CC0-1.0': 'https://creativecommons.org/publicdomain/zero/1.0/',
   'CC-BY-3.0': 'https://creativecommons.org/licenses/by/3.0/',
   'CC-BY-4.0': 'https://creativecommons.org/licenses/by/4.0/',
@@ -476,6 +482,7 @@ function describeChanges(spec) {
     if (L.trim) p.push(`${L._auto ? 'event' : 'trim'} ${L.trim[0]}–${L.trim[1] ?? 'end'} s`);
     if (L.semis) p.push(`pitch ${L.semis > 0 ? '+' : ''}${L.semis} st`);
     if (L.rate) p.push(`rate ×${L.rate}`);
+    if (L.reverse) p.push('reversed');
     if (L.lowpass) p.push(`low-pass ${L.lowpass} Hz`);
     if (L.highpass) p.push(`high-pass ${L.highpass} Hz`);
     if (L.delay) p.push(`delayed ${L.delay} s`);
@@ -509,11 +516,13 @@ function creditsMd(manifest) {
   const srcRows = [...usedSources.keys()].sort().map((s) => {
     const S = SOURCES[s];
     const info = sourceInfo.get(s);
-    return `| ${s} | [${S.title.replace(/\|/g, '/')}](${S.page}) | ${S.author} | [${S.license}](${LICENSE_URL[S.license]}) | ${S.download ? `[file](${S.download})` : `${S.zip ? `[zip](${S.zip}) → \`${S.member}\`` : ''}`} | \`${info?.sha256 ?? '?'}\` |`;
+    const original = S.download ? `[file](${S.download})` : S.zip ? `[zip](${S.zip}) → \`${S.member}\`` : S.local ? `\`${S.local}\` (job \`${S.job ?? '?'}\`)` : '';
+    const page = S.local ? `../../${S.page}` : S.page;
+    return `| ${s} | [${S.title.replace(/\|/g, '/')}](${page}) | ${S.author} | [${S.license}](${S.local ? '../../scripts/audio/generation-log.json' : LICENSE_URL[S.license]}) | ${original} | \`${info?.sha256 ?? '?'}\` |`;
   });
   const byLicense = {};
   for (const s of usedSources.keys()) byLicense[SOURCES[s].license] = (byLicense[SOURCES[s].license] ?? 0) + 1;
-  const attributions = [...usedSources.keys()].filter((s) => SOURCES[s].license !== 'CC0-1.0').sort().map((s) => {
+  const attributions = [...usedSources.keys()].filter((s) => SOURCES[s].license.startsWith('CC-BY')).sort().map((s) => {
     const S = SOURCES[s];
     return `- "${S.title}" by ${S.author} — ${S.page} — licensed under ${S.license.replace('CC-BY-', 'CC BY ')} (${LICENSE_URL[S.license]}). Changes: trimmed/processed and re-encoded as described below.`;
   });
@@ -528,6 +537,10 @@ Freesound originals were fetched as the site's public HQ preview encodes (no API
 the official kenney.nl pack zips (member path shown); OpenGameArt files are the uploads linked on each page.
 
 Totals: ${Object.keys(manifest.files).length} shipped files, ${(total / 1048576).toFixed(2)} MB; ${usedSources.size} sources (${Object.entries(byLicense).map(([k, v]) => `${v} ${k}`).join(', ')}).
+
+Owner-generated sources are the crew barks: lines written for this game and voiced with Higgsfield Seed Audio 1.0 built-in
+preset voices (no real person's voice imitated or cloned), with the owner's approval and credit cap; job ids and the
+exact text are in \`scripts/audio/generation-log.json\`, the masters in \`scripts/audio/generated/barks/\`.
 
 ## Attribution (CC BY)
 

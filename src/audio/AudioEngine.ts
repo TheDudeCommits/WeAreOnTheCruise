@@ -11,6 +11,7 @@
 import type { RunState, Settings, SimEvent } from '../game/types';
 import type { AppScreen } from '../render/frame';
 import { AmbienceController, type OneShotCue } from './ambience';
+import { CrewBarks } from './barks';
 import { SampleBank, type LoadTier } from './bank';
 import { CATEGORIES, CATEGORY_IDS } from './categories';
 import type { AudioFrame, AudioSystem } from './contracts';
@@ -49,6 +50,8 @@ export interface AudioStatsSnapshot {
   musicTransitions: { t: number; from: MusicState; to: MusicState }[];
   loops: Record<string, number>;
   ducks: { music: number; sfx: number; ambience: number };
+  /** Crew barks spoken since the run started. */
+  barks: Record<string, number>;
 }
 
 export interface AudioLogEntry { t: number; cue: CueId; src: string; played: boolean; reason?: DropReason; gain?: number; d?: number; pan?: number }
@@ -63,6 +66,7 @@ export class AudioEngine implements AudioSystem {
   private director: MusicDirector | null = null;
   private ambience: AmbienceController | null = null;
   private readonly router: EventRouter;
+  private readonly barks: CrewBarks;
   private readonly ui: UiSounds;
   private readonly bank: SampleBank;
   private readonly baseUrl: string;
@@ -97,11 +101,17 @@ export class AudioEngine implements AudioSystem {
     this.baseUrl = options.baseUrl ?? '/audio/';
     this.bank = new SampleBank(this.baseUrl);
     for (const id of CATEGORY_IDS) this.peakVoices[id] = 0;
+    this.barks = new CrewBarks({
+      play: (cue, opts) => { this.noteSource = 'bark'; this.bySource.bark = (this.bySource.bark ?? 0) + 1; return this.play(cue, opts); },
+      duck: (spec) => this.duck(spec),
+      cueLength: (cue) => this.cueLength(cue),
+    });
     this.router = new EventRouter({
       play: (cue, opts) => this.play(cue, opts),
       duck: (spec) => this.duck(spec),
       cueLength: (cue) => this.cueLength(cue),
       note: (source) => { this.noteSource = source; this.bySource[source] = (this.bySource[source] ?? 0) + 1; },
+      moment: (kind) => { if (this.ctx) this.barks.moment(kind, this.ctx.currentTime, this.run); },
     });
     this.ui = new UiSounds((cue, gain) => { this.noteSource = 'ui'; this.play(cue, { gain }); });
     if (typeof window !== 'undefined' && typeof document !== 'undefined') {
@@ -174,12 +184,15 @@ export class AudioEngine implements AudioSystem {
     this.frameCounts.clear();
     if (screenChanged && this.director && frame.screen === 'harbor') this.director.warm(['run-calm', 'run-combat']);
     if (screenChanged && this.director && frame.screen === 'run' && frame.run) { this.director.warmSea(frame.run.seaId); this.warmedLate = false; }
+    if (screenChanged && frame.screen === 'run') this.barks.resetRun();
     if (screenChanged && frame.screen === 'run' && frame.run && frame.run.time > 690) this.warmedFinal = false;
     this.mixer.update(now);
     this.mixer.setPauseMode(this.pauseMode(frame));
     if (frame.run?.status === 'paused' && frame.screen === 'run') this.mixer.duck({ target: 'music', depth: -6, hold: 0.2, attack: 0.15, release: 0.5 }, now);
     this.router.route(now, frame.screen, frame.run, frame.events, this.listener);
     this.director?.update({ now, dt: frame.dt, screen: frame.screen, run: frame.run, events: frame.events });
+    if (frame.screen === 'run') this.barks.update(now, frame.run, this.director?.runLayer ?? null);
+    this.ambience?.setHullLoops(this.router.watch.ropeLevel, this.router.watch.wispLevel);
     this.ambience?.update(now, frame.dt, frame.screen, frame.run, this.listener);
     if (this.pool) {
       const active = this.pool.activeAll(now, this.activeScratch);
@@ -266,6 +279,7 @@ export class AudioEngine implements AudioSystem {
       musicTransitions: this.director ? [...this.director.transitions] : [],
       loops: { ...(this.ambience?.levels ?? {}) },
       ducks: { ...(this.mixer?.duckLevels ?? { music: 1, sfx: 1, ambience: 1 }) },
+      barks: { ...this.barks.spoken },
     };
   }
 

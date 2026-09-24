@@ -4,7 +4,7 @@
  *
  * File spec keys: src (source id in sources.json) · hit (event index or 'loudest', auto-trimmed at the build) ·
  * trim [s, e] · maxLen · semis (pitch) · lowpass/highpass (Hz) · gainDb · fadeIn/fadeOut · delay (layers) ·
- * pan (−1..1, stereo outputs) · layers [...] (mixed) · loop { xfade } (seamless bed) · channels · norm · trimDb.
+ * pan (−1..1, stereo outputs) · reverse · layers [...] (mixed) · loop { xfade } (seamless bed) · channels · norm · trimDb.
  * Cue keys (copied to the manifest): category · gain · pitch (± semitones) · gainJitter (± dB) · priority ·
  * minInterval · maxPerFrame · desc.
  */
@@ -53,6 +53,11 @@ const ripple = (n, step, rot, extra = [], opts = {}) => ({
 /** Low rolling tail for the bigger volleys: the report rolling away across the water. */
 const GUN_TAIL = (delay, gainDb) => F(187767, { trim: [6.35, 9.3], lowpass: 650, delay, gainDb, fadeOut: 1.2 });
 const HEAVY_BOOM = (delay, gainDb) => F(853280, { trim: [0, 3.2], delay, gainDb, fadeOut: 0.8 });
+
+/** Crew barks: owner-generated masters (scripts/audio/generated/barks), cut at the end of speech, band-limited to sit
+ * under the guns like a shout across the deck. One voice at a time (category 'voice'); barks.ts rate-limits them. */
+const G = (id, end, extra = {}) => ({ src: `gen-crew-${id}`, trim: [0, end], highpass: 110, lowpass: 7500, fadeOut: 0.12, ...extra });
+const BARK = { category: 'voice', gain: 0.55, priority: 85, minInterval: 1.5, maxPerFrame: 1 };
 
 export const CUES = {
   // ───────────── UI (Kenney CC0 packs) ─────────────
@@ -183,6 +188,60 @@ export const CUES = {
   'treasure-sparkle': { category: 'pickup', gain: 0.4, minInterval: 0.15, desc: 'glint / reward sparkle', files: [F(545238), F(511485, { trim: [0, 1.0], fadeOut: 0.3 })] },
   repair: { category: 'pickup', gain: 0.5, minInterval: 0.3, desc: 'repair crate: hammering', files: [F(17012, { trim: [0, 1.5], fadeOut: 0.3 }), F(207782, { trim: [0.15, 2.1], fadeOut: 0.4 })] },
 
+  // ───────────── round 2: FOES (state diffs in watch.ts, events in router.ts) ─────────────
+  'marked': { category: 'alert', gain: 0.6, priority: 95, minInterval: 2, maxPerFrame: 1, desc: 'Marked! a signal flare has you: quick double bell', files: [{ layers: [F(353233, { trim: [0.1, 1.1], semis: 5 }), F(353233, { trim: [0.1, 1.4], semis: 5, delay: 0.2, gainDb: -1 }), K('interface-sounds', 'glass_005', { semis: 2, gainDb: -6 })], fadeOut: 0.5 }] },
+  'flare-pop': { category: 'weapon', gain: 0.6, pitch: 1, priority: 55, minInterval: 0.3, maxPerFrame: 1, desc: 'signal flare bursts overhead', files: [{ layers: [F(140711, { trim: [0.04, 0.29] }), F(348766, { trim: [0, 0.7], delay: 0.03, gainDb: -6 })], fadeOut: 0.25 }] },
+  'flare-hang': { category: 'weapon', gain: 0.35, minInterval: 0.5, maxPerFrame: 1, desc: 'flare hangs and fizzes', files: [F(348766, { trim: [2.4, 6.6], fadeIn: 0.15, fadeOut: 1.8 })] },
+  'steam-whistle': { category: 'world', gain: 0.55, pitch: 0.5, priority: 70, minInterval: 1.5, maxPerFrame: 1, ref: 120, desc: 'ironclad steam whistle before its charge', files: [F(71778, { trim: [0.05, 2.6], fadeOut: 0.6 })] },
+  'rope-snap': { category: 'weapon', gain: 0.65, pitch: 1, priority: 60, minInterval: 0.3, maxPerFrame: 1, desc: 'harpoon line snaps', files: [{ layers: [F(529925, { trim: [0, 0.26] }), F(540266, { trim: [0, 0.3], delay: 0.012, gainDb: -2 }), K('impact-sounds', 'impactMetal_light_000', { delay: 0.02, semis: 3, gainDb: -9 })], fadeOut: 0.12 }] },
+  'wisp-latch': { category: 'world', gain: 0.5, pitch: 1.5, priority: 60, minInterval: 0.25, maxPerFrame: 1, desc: 'lantern wisp latches on: eerie chime', files: [{ layers: [K('interface-sounds', 'glass_003', { semis: -5 }), K('impact-sounds', 'impactBell_heavy_001', { semis: 7, delay: 0.03, gainDb: -8 }), F(752478, { trim: [2, 3.2], delay: 0.05, gainDb: -10 })], fadeOut: 0.6 }] },
+  'wisp-burst': { category: 'explosion', gain: 0.6, pitch: 1.5, priority: 60, minInterval: 0.12, maxPerFrame: 2, desc: 'lantern wisp bursts: glassy shatter + spectral puff', files: [{ layers: [F(202093, { trim: [0.3, 1.11], semis: 4 }), K('interface-sounds', 'glass_005', { semis: -4, gainDb: -4 }), F(807221, { trim: [0.07, 1.6], delay: 0.02, gainDb: -8, fadeOut: 0.8 })], fadeOut: 0.5 }] },
+  'galleon-rise': { category: 'boss', gain: 0.75, pitch: 0.5, priority: 80, minInterval: 1, maxPerFrame: 1, desc: 'drowned galleon rising: deep groan + bubbles', files: [{ layers: [F(496836, { trim: [0.38, 4.5], semis: -6, fadeIn: 0.6 }), F(423959, { trim: [1.6, 5.0], delay: 0.3, gainDb: -3, fadeIn: 0.5 }), F(31574, { trim: [3.2, 5.3], semis: -5, delay: 1, gainDb: -6 })], fadeOut: 0.8 }] },
+  'galleon-breach': { category: 'explosion', gain: 0.9, pitch: 0.5, priority: 80, minInterval: 0.5, maxPerFrame: 1, desc: 'drowned galleon breaches: surge, splash and its drowned bell', files: [{ layers: [F(442773, { trim: [0, 2.17] }), F(212689, { trim: [0, 2.5], delay: 0.05, gainDb: -3 }), F(353233, { trim: [0.1, 2.9], semis: -7, delay: 0.35, gainDb: -3 })], fadeOut: 0.9 }] },
+  'shield-shatter': { category: 'impact', gain: 0.6, pitch: 1.5, priority: 60, minInterval: 0.25, maxPerFrame: 1, desc: "an elite's ward bubble shatters", files: [{ layers: [F(221528, { trim: [0.3, 1.5] }), K('sci-fi-sounds', 'forceField_001', { semis: 5, gainDb: -8 })], fadeOut: 0.4 }] },
+  'vamp-siphon': { category: 'world', gain: 0.5, pitch: 1, minInterval: 0.8, maxPerFrame: 1, desc: 'vampiric elite siphons hull: reversed rush + spectral breath', files: [{ layers: [F(683101, { trim: [0, 1.2], reverse: true, semis: -3 }), F(807221, { trim: [0.07, 1.4], delay: 0.35, gainDb: -8 })], fadeOut: 0.3 }] },
+  'smoke-pot': { category: 'world', gain: 0.55, pitch: 1.5, minInterval: 0.3, maxPerFrame: 1, desc: 'smoke pot: low whoomph + hiss', files: [{ layers: [F(244926, { trim: [0, 1.9], semis: -5, lowpass: 1800 }), F(234782, { trim: [0, 1.47], delay: 0.08, gainDb: -5 })], fadeOut: 0.5 }] },
+  'kraken-squeeze': { category: 'player', gain: 0.75, pitch: 1, priority: 90, minInterval: 1, maxPerFrame: 1, desc: 'kraken grips the hull: timbers groan, wet squeeze', files: [{ layers: [F(31574, { trim: [3.2, 5.3], semis: -3 }), K('rpg-audio', 'creak1', { semis: -6, delay: 0.1, gainDb: -2 }), F(447929, { trim: [0.04, 0.87], semis: -5, delay: 0.05, gainDb: -4 })], fadeOut: 0.5 }] },
+  'ink-splash': { category: 'impact', gain: 0.65, pitch: 1.5, priority: 55, minInterval: 0.2, maxPerFrame: 1, desc: 'kraken arm sinks: ink splat + splash', files: [{ layers: [F(445118, { trim: [0, 0.78], semis: -4 }), F(442773, { trim: [0, 1.7], delay: 0.08, gainDb: -5 })], fadeOut: 0.4 }] },
+
+  // ───────────── round 2: EVENTS and points of interest ─────────────
+  'lava-launch': { category: 'explosion', gain: 0.55, pitch: 1.5, minInterval: 0.25, maxPerFrame: 1, ref: 150, desc: 'eruption hurls a lava bomb', files: [{ layers: [F(529239, { trim: [0, 2.2], semis: -4 }), F(267887, { trim: [0, 1.1], delay: 0.05, gainDb: -4 })], fadeOut: 0.6 }] },
+  'coin-shower': { category: 'pickup', gain: 0.5, pitch: 0.5, priority: 45, minInterval: 0.3, maxPerFrame: 1, desc: 'gold bomb lands: a shower of coins', files: [{ layers: [K('rpg-audio', 'handleCoins'), F(338260, { trim: [0.2, 1.2], delay: 0.08, gainDb: -2 }), F(248143, { trim: [0, 0.6], delay: 0.2, semis: 2, gainDb: -3 }), F(545238, { delay: 0.12, gainDb: -6 })], fadeOut: 0.3 }] },
+  'salvage-haul': { category: 'pickup', gain: 0.55, priority: 45, minInterval: 0.5, maxPerFrame: 1, desc: 'salvage hauled aboard: crate thump + coins', files: [{ layers: [K('impact-sounds', 'impactPlank_medium_000', { semis: -4 }), K('rpg-audio', 'creak2', { delay: 0.05, semis: -2, gainDb: -5 }), K('rpg-audio', 'handleCoins2', { delay: 0.28, gainDb: -1 })], fadeOut: 0.3 }] },
+  'beacon-bell': { category: 'world', gain: 0.6, priority: 60, minInterval: 1, maxPerFrame: 1, ref: 150, desc: "lighthouse keeper's bell + blessing shimmer", files: [{ layers: [F(353233, { trim: [0.1, 2.9] }), F(353233, { trim: [0.1, 2.9], delay: 0.45, semis: 5, gainDb: -4 }), F(511485, { trim: [0, 1.0], delay: 0.3, gainDb: -3 }), F(545238, { delay: 0.7, gainDb: -4 })], fadeOut: 0.8 }] },
+  'wind-gust': { category: 'player', gain: 0.5, minInterval: 3, maxPerFrame: 1, desc: 'trade wind fills the sails: gust', files: [{ layers: [F(344887, { trim: [2, 5.5], fadeIn: 0.8 }), F(683101, { trim: [0, 1.6], delay: 0.3, gainDb: -5 }), F(428337, { trim: [0.06, 0.8], delay: 0.45, gainDb: -8 })], fadeOut: 1.2 }] },
+
+  // ───────────── round 2: PACE ─────────────
+  'momentum-swell': { category: 'player', gain: 0.5, minInterval: 1.5, maxPerFrame: 1, desc: 'Momentum: sails snap full, a swell of wind', files: [{ layers: [F(428337, { trim: [0.06, 0.8] }), F(683101, { trim: [0, 1.6], delay: 0.04, gainDb: -3 }), F(237980, { trim: [0.2, 1.6], delay: 0.1, gainDb: -9 })], fadeOut: 0.4 }] },
+  'momentum-luff': { category: 'player', gain: 0.4, minInterval: 1.5, maxPerFrame: 1, desc: 'Momentum spent: the sails luff softly', files: [{ layers: [K('rpg-audio', 'cloth1', { semis: -5 }), K('rpg-audio', 'cloth3', { semis: -7, delay: 0.16, gainDb: -3 }), F(344887, { trim: [6, 8], fadeIn: 0.2, gainDb: -10 })], fadeOut: 0.8 }] },
+  'boost-light': { category: 'player', gain: 0.45, pitch: 0.8, minInterval: 0.3, desc: 'boost with a charge to spare: a lighter gust', files: [{ layers: [F(683101, { trim: [0, 1.1], semis: 2 }), F(428337, { trim: [0.06, 0.6], delay: 0.04, semis: 1, gainDb: -7 })], fadeOut: 0.3 }] },
+
+  // ───────────── round 2: crew barks (owner-generated voices, barks.ts decides when anyone shouts) ─────────────
+  'bark-fire': { ...BARK, desc: 'bosun: "Fire!" / "Fire as she bears!" / "Give \'em a broadside!"', files: [G('fire-1', 1.35), G('fire-2', 3.0), G('fire-3', 3.2)] },
+  'bark-brace': { ...BARK, desc: 'bosun: "Brace! Brace!" / "Hold fast, lads!"', files: [G('brace-1', 2.2), G('brace-2', 1.9)] },
+  'bark-boss': { ...BARK, desc: 'bosun: "Boss off the bow! Stand to your guns!"', files: [G('boss', 4.75)] },
+  'bark-sink': { ...BARK, desc: 'bosun: "She\'s going down!" / "Down she goes!"', files: [G('sink-1', 2.6), G('sink-2', 2.78)] },
+  'bark-level': { ...BARK, desc: 'bosun: "Level up, captain!"', files: [G('level', 3.0)] },
+  'bark-water': { ...BARK, desc: 'bosun: "We\'re taking water!" / "Hull\'s breached! Patch her up!"', files: [G('water-1', 2.78), G('water-2', 4.0)] },
+  'bark-harpoon': { ...BARK, desc: 'bosun: "Harpoon on the hull! Boost to snap the line!"', files: [G('harpoon', 5.5)] },
+  'bark-kraken': { ...BARK, desc: 'bosun: "Kraken! All hands!"', files: [G('kraken', 2.78)] },
+  'bark-grab': { ...BARK, desc: 'bosun: "It\'s got us! Boost free!"', files: [G('grab', 3.58)] },
+  'bark-whirlpool': { ...BARK, desc: 'bosun: "Whirlpool off the bow!"', files: [G('whirlpool', 2.7)] },
+  'bark-blockade': { ...BARK, desc: 'bosun: "Blockade ahead! Run out the guns!"', files: [G('blockade', 4.4)] },
+  'bark-victory': { ...BARK, desc: 'bosun: "Victory! The sea is ours!"', files: [G('victory', 3.4)] },
+  'bark-guns': { ...BARK, desc: 'bosun: "Man the guns!"', files: [G('guns', 2.78)] },
+  'bark-marked': { ...BARK, desc: 'lookout: "They\'ve marked us! Here they come!"', files: [G('marked', 3.0)] },
+  'bark-wisps': { ...BARK, desc: 'lookout: "Wisps on the hull! Brace to shake \'em off!"', files: [G('wisps', 3.9)] },
+  'bark-wave': { ...BARK, desc: 'lookout: "Rogue wave! Boost through it!"', files: [G('wave', 3.5)] },
+  'bark-ghosts': { ...BARK, desc: 'lookout: "Ghost ships rising!"', files: [G('ghosts', 2.0)] },
+  'bark-eruption': { ...BARK, desc: 'lookout: "Eruption! Watch the sky!"', files: [G('eruption', 2.1)] },
+  'bark-treasure': { ...BARK, desc: 'lookout: "Treasure ho!"', files: [G('treasure', 1.55)] },
+  'bark-rising': { ...BARK, desc: 'lookout: "Something\'s rising below us!"', files: [G('rising', 3.5)] },
+  'bark-captain-down': { ...BARK, desc: 'lookout: "Captain down! Cover them!"', files: [G('captain-down', 3.9)] },
+  'bark-rider': { ...BARK, desc: 'lookout: "Wave rider! Ha ha!"', files: [G('rider', 3.1)] },
+  'bark-beacon': { ...BARK, desc: 'lookout: "The lighthouse blesses us, captain!"', files: [G('beacon', 2.2)] },
+  'bark-elite': { ...BARK, desc: 'lookout: "Elite sighted! Mind her guns!"', files: [G('elite', 4.4)] },
+
   // ───────────── ambience beds (loops) ─────────────
   'amb-ocean': { category: 'ambience', gain: 1, desc: 'open-sea wash', files: [F(176617, { trim: [118, 148], loop: { xfade: 3 }, norm: 'bed' })] },
   'amb-bow-wash': { category: 'ambience', gain: 1, desc: 'bow wave along the hull (rate follows speed)', files: [F(360631, { trim: [20, 38], loop: { xfade: 3 }, norm: 'bed' })] },
@@ -191,6 +250,10 @@ export const CUES = {
   'amb-fire': { category: 'ambience', gain: 1, desc: 'burning ship crackle (positional)', files: [F(364992, { trim: [2, 16], loop: { xfade: 3 }, norm: 'bed', channels: 1, limitDb: 10 })] },
   'amb-whirlpool': { category: 'ambience', gain: 1, desc: 'whirlpool churn (positional)', files: [F(193755, { trim: [7, 21], loop: { xfade: 3 }, norm: 'bed', channels: 1, limitDb: 10 })] },
   'amb-harbor': { category: 'ambience', gain: 1, desc: 'harbour: water lapping, boats, rigging', files: [F(254125, { trim: [2, 42], loop: { xfade: 4 }, norm: 'bed' })] },
+  'amb-rope': { category: 'ambience', gain: 0.8, desc: 'tow line creaking under strain (harpoon tether on the player)', files: [F(559079, { trim: [2.4, 10.4], loop: { xfade: 1.5 }, norm: 'bed', channels: 1, limitDb: 8 })] },
+  'amb-wisp': { category: 'ambience', gain: 0.8, desc: 'wisps draining the hull: ghostly harmonic hum', files: [F(752478, { trim: [2, 14], loop: { xfade: 2 }, norm: 'bed', channels: 1, limitDb: 6 })] },
+  'amb-maelstrom': { category: 'ambience', gain: 1, desc: 'the Maelstrom: deep churning drone (positional)', files: [{ layers: [F(193755, { trim: [7, 21], semis: -5 }), F(412308, { trim: [200, 214], lowpass: 380, gainDb: 2 })], loop: { xfade: 3 }, norm: 'bed', channels: 1, limitDb: 10 }] },
+  'amb-surf': { category: 'ambience', gain: 1, desc: 'rogue wave approaching: roaring surf (follows the wave front)', files: [F(412308, { trim: [259, 271], lowpass: 5000, loop: { xfade: 2 }, norm: 'bed', channels: 1, limitDb: 8 })] },
 };
 
 /** Streamed music (MusicDirector). bpm values are estimates used only for bar-ish crossfade timing. */

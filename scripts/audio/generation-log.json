@@ -1,0 +1,201 @@
+{
+ "note": "Owner-approved generated audio (round 2: crew barks, cap 10 Higgsfield credits). Job ids only; result URLs are account-scoped and never stored in the repo. Masters: scripts/audio/generated/barks/*.ogg (mono Opus 96 kb/s transcodes of the 48 kHz WAV results). The voices are Higgsfield built-in preset voices; no real person's or voice actor's voice was imitated or cloned.",
+ "tool": "Higgsfield MCP generate_audio_batch",
+ "model": "seed_audio (Seed Audio 1.0, ByteDance)",
+ "params": {
+  "format": "wav",
+  "sample_rate": 48000
+ },
+ "date": "2026-09-24",
+ "credits": {
+  "cap": 10,
+  "spent": 5.9,
+  "detail": "29 Seed Audio 1.0 spends of 0.1–0.3 credits each (longer lines cost more), per the account's transaction list; a Qwen TTS attempt was refused at submission (no charge)."
+ },
+ "voices": {
+  "bosun": {
+   "preset": "Barrett",
+   "voice_id": "d603a8cd-3fe1-55e0-9245-617a2589131e"
+  },
+  "lookout": {
+   "preset": "Callan",
+   "voice_id": "d8061b90-ff25-5882-8384-7a6a28806f30"
+  }
+ },
+ "lines": [
+  {
+   "file": "scripts/audio/generated/barks/crew-fire-2.ogg",
+   "text": "Fire as she bears!",
+   "voice": "Barrett",
+   "job_id": "cf6fa204-6897-4a6f-8548-0a43029cbbf2"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-fire-1.ogg",
+   "text": "Fire!",
+   "voice": "Barrett",
+   "job_id": "ce670840-bd43-49a8-8a86-c294603d02ea"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-fire-3.ogg",
+   "text": "Give 'em a broadside!",
+   "voice": "Barrett",
+   "job_id": "1c83cc11-43a5-4b59-ab92-3a12f81a397d"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-brace-1.ogg",
+   "text": "Brace! Brace!",
+   "voice": "Barrett",
+   "job_id": "c6830236-444d-4f63-8246-959938087987"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-brace-2.ogg",
+   "text": "Hold fast, lads!",
+   "voice": "Barrett",
+   "job_id": "3c055a27-d9d3-4561-b502-4e0a5d3519ee"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-boss.ogg",
+   "text": "Boss off the bow! Stand to your guns!",
+   "voice": "Barrett",
+   "job_id": "6297fddd-3678-4153-bcd5-43d107ae8d09"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-sink-1.ogg",
+   "text": "She's going down!",
+   "voice": "Barrett",
+   "job_id": "97891c63-48b3-41a4-b364-8453f640c54e"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-sink-2.ogg",
+   "text": "Down she goes!",
+   "voice": "Barrett",
+   "job_id": "07b04120-c1a9-49dd-a56f-11b050d50ffc"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-level.ogg",
+   "text": "Level up, captain!",
+   "voice": "Barrett",
+   "job_id": "61c1ec85-2177-42d4-af43-3f6d1834171b"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-water-1.ogg",
+   "text": "We're taking water!",
+   "voice": "Barrett",
+   "job_id": "4049ddd0-8131-453b-8c54-4b17195fa5e6"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-water-2.ogg",
+   "text": "Hull's breached! Patch her up!",
+   "voice": "Barrett",
+   "job_id": "9c0c6b74-9c02-4122-906e-499927a1d55b"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-harpoon.ogg",
+   "text": "Harpoon on the hull! Boost to snap the line!",
+   "voice": "Barrett",
+   "job_id": "b908c7c4-3c78-4fc2-b754-53d686d8e0c2"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-kraken.ogg",
+   "text": "Kraken! All hands!",
+   "voice": "Barrett",
+   "job_id": "53929989-2a0f-4fb1-87cd-39f5f58752d7"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-grab.ogg",
+   "text": "It's got us! Boost free!",
+   "voice": "Barrett",
+   "job_id": "7812269d-2300-4253-851b-a0855551af02"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-whirlpool.ogg",
+   "text": "Whirlpool off the bow!",
+   "voice": "Barrett",
+   "job_id": "649542af-831e-4298-947e-777f6432bd2d"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-blockade.ogg",
+   "text": "Blockade ahead! Run out the guns!",
+   "voice": "Barrett",
+   "job_id": "239f2886-2f64-4836-b6b3-ce5cf3a20165"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-victory.ogg",
+   "text": "Victory! The sea is ours!",
+   "voice": "Barrett",
+   "job_id": "09f54f90-b188-4cb5-88f0-2920af982f3f"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-guns.ogg",
+   "text": "Man the guns!",
+   "voice": "Barrett",
+   "job_id": "498a95bd-c811-49ab-bd8b-00c2b0ec552b"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-marked.ogg",
+   "text": "They've marked us! Here they come!",
+   "voice": "Callan",
+   "job_id": "5e836a14-becd-488a-94f4-a94ee9db0d9a"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-wisps.ogg",
+   "text": "Wisps on the hull! Brace to shake 'em off!",
+   "voice": "Callan",
+   "job_id": "d37cc442-2c5c-43a7-94bf-0eb314232c66"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-wave.ogg",
+   "text": "Rogue wave! Boost through it!",
+   "voice": "Callan",
+   "job_id": "e72af7f5-0978-48eb-b273-516bcb380cb6"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-ghosts.ogg",
+   "text": "Ghost ships rising!",
+   "voice": "Callan",
+   "job_id": "01543c86-1596-44f7-b504-d8b7c101d0fb"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-eruption.ogg",
+   "text": "Eruption! Watch the sky!",
+   "voice": "Callan",
+   "job_id": "672e43fe-a89a-424b-9dc8-eee3fd882d8b"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-treasure.ogg",
+   "text": "Treasure ho!",
+   "voice": "Callan",
+   "job_id": "24d94ee0-b751-4801-9484-250afa38e6e8"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-rising.ogg",
+   "text": "Something's rising below us!",
+   "voice": "Callan",
+   "job_id": "717ae16f-3f68-451c-8355-b106557bef49"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-captain-down.ogg",
+   "text": "Captain down! Cover them!",
+   "voice": "Callan",
+   "job_id": "6646c83f-d77d-4cf9-8a65-ea6a383961b0"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-rider.ogg",
+   "text": "Wave rider! Ha ha!",
+   "voice": "Callan",
+   "job_id": "f1edca87-d262-4312-a010-713f0b6d03cd"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-beacon.ogg",
+   "text": "The lighthouse blesses us, captain!",
+   "voice": "Callan",
+   "job_id": "a6e4ab03-000e-48f7-9edc-72975c8f58c0"
+  },
+  {
+   "file": "scripts/audio/generated/barks/crew-elite.ogg",
+   "text": "Elite sighted! Mind her guns!",
+   "voice": "Callan",
+   "job_id": "ebbdbc19-49f5-4adb-ac1e-9e950b6e5b14"
+  }
+ ]
+}
