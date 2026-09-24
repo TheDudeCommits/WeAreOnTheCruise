@@ -44,6 +44,8 @@ export class GameApp {
   readonly audio = new AudioEngine();
   readonly input: Input;
   world: IslandField;
+  /** Title/harbor field: includes the hand-placed harbour set as collision and shore geometry. */
+  private readonly menuWorld: IslandField;
   sim: Sim | null = null;
   profile: MetaProfile;
   settings: Settings;
@@ -79,7 +81,8 @@ export class GameApp {
     this.profile = loadProfile();
     this.settings = loadSettings();
     this.selectedShip = this.profile.lastShip;
-    this.world = new IslandField(config.seed);
+    this.menuWorld = new IslandField(config.seed, { menuHarbor: true });
+    this.world = this.menuWorld;
     this.input = new Input(this.host.renderer.domElement);
     this.systems = [this.sky, this.ocean, this.worldVisuals, this.ships, this.fx, this.camera];
     this.services = {
@@ -123,7 +126,7 @@ export class GameApp {
     this.profile.lastShip = shipId;
     this.profile.lastSea = seaId;
     saveProfile(this.profile);
-    this.world = new IslandField(`${this.config.seed}:${this.profile.runs}`);
+    this.world = new IslandField(`${this.config.seed}:${this.profile.runs}`, { sea: seaId });
     this.sim = new Sim({ seed: this.world.seed, shipId, seaId, meta: this.profile, world: this.world });
     if (this.config.god) this.sim.debug.god(true);
     this.result = null;
@@ -153,7 +156,7 @@ export class GameApp {
       onBanish: (index) => { this.sim?.banish(index); },
       onPause: (paused) => { this.paused = paused; this.sim?.setPaused(paused); },
       onRetire: () => { this.sim?.retire(); },
-      onReturnToHarbor: () => { this.sim = null; this.setScreen('harbor'); },
+      onReturnToHarbor: () => { this.sim = null; this.world = this.menuWorld; this.setScreen('harbor'); },
       onPurchaseUpgrade: (id: MetaUpgradeId) => { if (purchaseUpgrade(this.profile, id)) saveProfile(this.profile); },
       onUnlockShip: (id) => { if (unlockShip(this.profile, id)) { this.selectedShip = id; saveProfile(this.profile); } },
       onSettingsChange: (settings) => { this.settings = settings; saveSettings(settings); this.audio.setSettings(settings); },

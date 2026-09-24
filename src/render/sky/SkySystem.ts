@@ -313,6 +313,8 @@ export class SkySystem implements RenderSystem {
     }
     const size = Math.ceil(Math.max(maxX - minX, maxY - minY, 120) / 32) * 32;
     const texel = size / this.sun.shadow.mapSize.x;
+    // Normal offset of ~1.2 texels keeps steep cliffs free of acne at any fitted frustum size.
+    this.sun.shadow.normalBias = Math.max(0.12, texel * 1.2);
     const cx = Math.round((minX + maxX) * 0.5 / texel) * texel;
     const cy = Math.round((minY + maxY) * 0.5 / texel) * texel;
     const sc = this.sun.shadow.camera;
