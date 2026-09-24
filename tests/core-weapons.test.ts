@@ -288,7 +288,7 @@ describe('CORE weapons: branches and overdrives', () => {
   it('mines arm then blow; magnets home; depth charges blast wide; Minefield seeds itself', () => {
     const anchored = (seed: string) => { const s = makeSim(seed); s.press('gear-down'); return s; };
     const sim = anchored('tm'); sim.debug.giveWeapon('tide-mines', 1);
-    const near = dummies(sim, [[0, 46]]);
+    const near = dummies(sim, [[0, 40]]);
     let dropTick = -1, blastTick = -1;
     const t: Trace = { events: [], kinds: new Set(), maxHazards: new Map(), projectiles: [] };
     for (let tick = 0; tick < 360; tick++) {
@@ -308,7 +308,7 @@ describe('CORE weapons: branches and overdrives', () => {
     expect(has(ta, (e) => e.type === 'explosion' && e.kind === 'mine')).toBe(true);
 
     const b = anchored('tm-b'); b.debug.giveWeapon('tide-mines', 3, 'B');
-    const tb = run(b, 6, dummies(b, [[0, 46]]));
+    const tb = run(b, 6, dummies(b, [[0, 40]])); // well inside the trigger reach of both stern mines
     const wet = tb.events.find((e) => e.type === 'explosion' && e.kind === 'water');
     expect(wet?.type === 'explosion' && wet.radius).toBeGreaterThan(30);
 
