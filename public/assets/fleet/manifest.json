@@ -20,8 +20,8 @@
         "license": "Meshy (owner-generated)",
         "url": ""
       },
-      "bytes": 994620,
-      "sha256": "155732e8640af548fd1b1eae42c9b81c85920d2b7881dc932f94e9b2a868942e",
+      "bytes": 1000460,
+      "sha256": "6f1c9638832cabb5b30159ccbe04044e60442b549f299b30e232cf3972fa0888",
       "sourceSha256": "598184016ed347593a9fb6fbd503ba0157b7a3c434d92aafc651c86e7d328839",
       "notes": "Three-decker ship of the line: white hull, navy bands, gold rails, white sails with the gold wave-crest emblem. Single mesh, single 1024² atlas."
     },
@@ -42,8 +42,8 @@
         "license": "Meshy (owner-generated)",
         "url": ""
       },
-      "bytes": 680240,
-      "sha256": "6c411ae8fd1da2c7821124445c59a7a139bbd4ab7d470c8eebe18566f0eb8341",
+      "bytes": 686776,
+      "sha256": "45b392ce9fa7043a5d7a324b8ed5959cad481b0200fd0118318fb152b83b1614",
       "sourceSha256": "bc61a3fc1b11e162a365db72837677e0347219174a971c06797e4d325327b2e8",
       "notes": "Boxy armoured barge; the siege mortar sits on a turntable amidships (about z = 0, y ≈ 3 m) — a good muzzle anchor for the lob FX."
     },
@@ -64,8 +64,8 @@
         "license": "Meshy (owner-generated)",
         "url": ""
       },
-      "bytes": 1980332,
-      "sha256": "3add7c7e2fd0b9d2fcec6653583c99b65855a3a29bf87e532c0f70f507b66350",
+      "bytes": 1977116,
+      "sha256": "2a283994f3b083508d4167f0b72d7163a06612142438c6a9dd5d42527ca19474",
       "sourceSha256": "6423f6ba3d05f24f59ceacf77ac0bef6b4f24795a0d985f8a630ef459fd02c8d",
       "notes": "Commodore's ironclad for the Iron Warden boss: riveted steel over a white/navy hull, bow ram, two turrets, smokestack, gold wave-crest on the bow. Phase-2 'plates off' is left to shaders/FX (single mesh)."
     },
@@ -86,8 +86,8 @@
         "license": "Meshy (owner-generated)",
         "url": ""
       },
-      "bytes": 2746284,
-      "sha256": "e6846fb4147212947860e191dd735e794efed65cfb6dc38148ca3429146ecfc3",
+      "bytes": 2747948,
+      "sha256": "bc848bef2bbb46af4719b7cd6ff59665e8d8f6243070c30c854f69b2573df479",
       "sourceSha256": "f1fd1f6ff834606eb5f711d37e187aae85c867432725824facace908304ad419",
       "notes": "Fleet Admiral's four-masted flagship: white hull, navy bands, gold filigree, gold eagle figurehead, wave-crest sails, lantern-lit stern castle."
     },
@@ -108,8 +108,8 @@
         "license": "Meshy (owner-generated)",
         "url": ""
       },
-      "bytes": 612012,
-      "sha256": "7756836c0549967c19fce4011be3e2efa198e58fb096f8b1a576c4db596b7156",
+      "bytes": 617836,
+      "sha256": "0d5ae473b89d1de51fada9089660e76f3490b0c50fcca1baae1ff8e4f5077fa2",
       "sourceSha256": "e8b024c616b89d6e4efc839766b8aeb53f1b6f4a0b2f175f7add129cae7d2338",
       "notes": "Round stone bastion on a rock base with cannon embrasures and an Admiralty flag. Origin at base centre, base sunk 1.2 m so it can sit on an island or reef."
     },
@@ -129,8 +129,8 @@
         "license": "Meshy (owner-generated)",
         "url": ""
       },
-      "bytes": 1349868,
-      "sha256": "0de6d9a01616395819c054a143f03d2a83cd1ad741b26c46f066764fa1792e80",
+      "bytes": 1339860,
+      "sha256": "5f2e5508e19e3e86f3215845fde90dd51c9c0fc14971c94dee2e6dda4fb4ae27",
       "sourceSha256": "64238c352843274556f1c7e0d2304aa3df5f35b5d6745b498f438d77f055a8dc",
       "notes": "Head + upper neck of the Tidewyrm, facing −Z, origin at the neck cut (y = 0). Attach to the procedural serpent body; scale freely."
     },
@@ -151,8 +151,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/1c62191534174bf7a67470fb02b97db1"
       },
-      "bytes": 704264,
-      "sha256": "e7b328e8a3ee6ad147f49ebbb986913b5101466463cbf48aff306977ebae587d",
+      "bytes": 708008,
+      "sha256": "3fcbdd75a0df9e0df874439900cd9136c50b1a786c598cf7d7a21b605e09793e",
       "sourceSha256": "87b11caf397171abdc5dfe80c79358ee2a2c80736d07a0a87370ce9af3875ffa",
       "notes": "Redtide brig: hull and rails recoloured black, new red sails with the original cutlass-and-sun emblem, black flags. Water plane and hold props removed; deck cannons kept."
     },
@@ -195,8 +195,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/1b27f1f60e0e49f886984ea099977757"
       },
-      "bytes": 160996,
-      "sha256": "1a9180242be4125afe5e79cd210941eea94263c26ce25491b9215a232a3a2b64",
+      "bytes": 162612,
+      "sha256": "8de6d326624be79a0b76f1237e718dbc0914925f9c359fc92332fe975ec3555d",
       "sourceSha256": "47e1b1ed42ea2bc66695667dbcf12ca87eb682b694f2b0ae361c9382388612c5",
       "notes": "Admiralty Cutter (enemy id cutter uses modelKey sloop): palette swapped to white topsides / navy bottom / gold stripe; skull sail replaced by white canvas with the original gold wave-crest."
     },
@@ -217,8 +217,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/d9953f66583340c4879a3770f6d09a37"
       },
-      "bytes": 289368,
-      "sha256": "7e636bd4bb2bd62ec218f1886fdd7ceac95affffd57570f80b02c4755b19cb4f",
+      "bytes": 295896,
+      "sha256": "9761433e54af573871b557ad5d4806ad85daf784ac0540341f13b105a011fe3c",
       "sourceSha256": "6b12d15106dab8f727d9d99395a96c6b80a28d9f030db35d5202114a09063082",
       "notes": "Admiralty Brig: hull sides repainted white with a navy boot-top (texture copies through luminance ramps), sails re-mapped to white canvas with the original gold wave-crest."
     },
@@ -337,8 +337,8 @@
         "Wave",
         "Yes"
       ],
-      "bytes": 344032,
-      "sha256": "bf424520a990b756db3363c8b1f08e366eb7d5822226afbf5cdcda4a3f1442f8",
+      "bytes": 344120,
+      "sha256": "731114c430015b6901f2187b7571a300b84533b60ade61081a9aaa74b9bd4537",
       "sourceSha256": "fc52c1ea8b87a8c24e1710a75290e9f0b520d3f30d2e4be6d3616d82e41fef7e",
       "notes": "Deckhand with a red bandana. Lute removed. Skinned; clips Idle/Wave/Yes (cheer)/Punch (haul)/Duck (brace)/HitReact/Death/Run/Walk/Sword. Faces −Z."
     },
@@ -369,8 +369,8 @@
         "Wave",
         "Yes"
       ],
-      "bytes": 343672,
-      "sha256": "a2a1eeedc7959426af7984faabf9dd32e2eaf161c33e860607ad0d02566eda35",
+      "bytes": 343744,
+      "sha256": "bcd000f5d8acf84d96b10916b1f6ca6e2f9adfda094b22f2140181450800e72d",
       "sourceSha256": "9eafbfc1250652bbfd338cfd29c258ba0e0fee31586162696ee4bc3217ac3485",
       "notes": "Deckhand (woman, braided hair). Axe removed. Same clip set as sailor-a."
     },
@@ -401,8 +401,8 @@
         "Wave",
         "Yes"
       ],
-      "bytes": 344032,
-      "sha256": "eab29c7f0da74c9e9092bace01c9db0269b458e1ed0c33759de97289e84fae4c",
+      "bytes": 344120,
+      "sha256": "330c8b5ed82643c6f64f3b0fcdab6ef044fcaa862ec8a173e37849d489704698",
       "sourceSha256": "fc52c1ea8b87a8c24e1710a75290e9f0b520d3f30d2e4be6d3616d82e41fef7e",
       "notes": "sailor-a with a blue bandana, red vest and brown trousers (palette swap) for crowd variety."
     },
@@ -433,8 +433,8 @@
         "Wave",
         "Yes"
       ],
-      "bytes": 344032,
-      "sha256": "a88793ff2c66286f59bf0393538e8939793565df8210e61d00ed1f37cc967aad",
+      "bytes": 344120,
+      "sha256": "f50f6caa8427a8defe85654a2278a1a17d96a726f752c5a2a8ec099ce6239c6d",
       "sourceSha256": "fc52c1ea8b87a8c24e1710a75290e9f0b520d3f30d2e4be6d3616d82e41fef7e",
       "notes": "Admiralty deckhand: navy bandana and trousers, white vest and sleeves (palette swap of the CC0 character)."
     },
@@ -465,8 +465,8 @@
         "Wave",
         "Yes"
       ],
-      "bytes": 300776,
-      "sha256": "a8f23edbf48d103a63dde56365c65dfe76946d33e9042ca01c68cd6ee866f293",
+      "bytes": 300584,
+      "sha256": "4ea3d4e662a84082c61bc4caf817654040669311ca2e46b313d60e4329f8f604",
       "sourceSha256": "db9499c91a143750031bcff287cab6c9b63a0682801bb120c128e244f0d6d5c4",
       "notes": "Redtide corsair captain with red tricorn, hook, cutlass and a parrot (second skinned mesh). Enemy decks / cutscenes."
     },
@@ -497,8 +497,8 @@
         "Wave",
         "Yes"
       ],
-      "bytes": 368576,
-      "sha256": "fa44b57c141886d17d4928f6eb08ab9272d1a69fe29216a8d9b5a4e877290392",
+      "bytes": 368656,
+      "sha256": "bcb669c148ca3b62f57feecb214088d0700d13738f6c5144b37a58c4748dbb68",
       "sourceSha256": "c4f060ac42cd3e761a0726dbd339b6e9ae10e153ff10540dffefc44c6270092b",
       "notes": "Extra: skeleton deckhand with dagger for Gloam Wraith ships (tint teal/emissive at runtime)."
     },
@@ -517,8 +517,8 @@
         "license": "CC0-1.0",
         "url": "https://quaternius.com/packs/piratekit.html"
       },
-      "bytes": 25440,
-      "sha256": "37acdf03a916f0f9777d82d56e354abba77be01f34cf237fe54d3055f6eed2e2",
+      "bytes": 25496,
+      "sha256": "7e326f6a54803c9c075d7a70f43cbd225535dff563c210569caf3c78b23051dc",
       "sourceSha256": "3461566b94dd978a52d27461d687d086db10abb932c812d332d38620f9141695",
       "notes": "Deck cannon on a wooden carriage; muzzle toward −Z. Broadside/bow-chaser mounts."
     },
@@ -717,8 +717,8 @@
         "license": "CC0-1.0",
         "url": "https://quaternius.com/packs/piratekit.html"
       },
-      "bytes": 10424,
-      "sha256": "5700a2ffe41f2f69e7436844daf4b413abf226cef3f802cedf64890e5c3520e4",
+      "bytes": 10480,
+      "sha256": "109c5c9218d0f4f2311d2a89da9fb877b049471611b70413e3cad40a56af11fb",
       "sourceSha256": "5180ba3e2dd3a3485bf24a2e309dc5e24ec22deb2a2da15a516a02085fef66c4",
       "notes": "Wooden barrel (fire-barrels drops, deck clutter, floating debris)."
     },
@@ -737,8 +737,8 @@
         "license": "CC0-1.0",
         "url": "https://quaternius.com/packs/piratekit.html"
       },
-      "bytes": 28088,
-      "sha256": "aea92646121cba0be96b7cf478da5471e854f76efec443470f04699b1a6840d5",
+      "bytes": 28144,
+      "sha256": "c31d4e999ca3fcd5ed88ec02999b65a53b22e2e3ea50113b692e9e7ae780075d",
       "sourceSha256": "18e2bcb8be38d7f1922079c7138ec9559dd423cb6688dee3ccccaba76f3f204c",
       "notes": "Closed treasure chest (elite/boss chest pickup), front toward −Z."
     },
@@ -757,8 +757,8 @@
         "license": "CC0-1.0",
         "url": "https://quaternius.com/packs/piratekit.html"
       },
-      "bytes": 42896,
-      "sha256": "5bb2d92954bbd48facd574423f2eb4cda0a883e873ef88b93343324373d7e5de",
+      "bytes": 42952,
+      "sha256": "752c8a6b3ac76ea7d83686a981d4a3f983b61e205fe3fee8404dc137b894de82",
       "sourceSha256": "6810efd30cd1a072c2f272ee76a046b278984f3f050e4d9b256d50242d958811",
       "notes": "Extra: open chest spilling gold (chest reveal)."
     },
@@ -777,8 +777,8 @@
         "license": "CC0-1.0",
         "url": "https://kenney.nl/assets/pirate-kit"
       },
-      "bytes": 5576,
-      "sha256": "a997f687d7b14ac6a3ebe8bd66af7eb4bf1e200afd466ca574adc0aba6ca3bbd",
+      "bytes": 5448,
+      "sha256": "82fc49c13f7573a5b5f3a819b529692944d038b9f02ea44e3aaf6d81e46862c6",
       "sourceSha256": "b525674e07c8b83667512a8dd93be0d7684358347d0e64d2bb16b156ac382ed1",
       "notes": "Open wooden crate (repair crate pickup / deck cargo)."
     },
@@ -797,8 +797,8 @@
         "license": "CC0-1.0",
         "url": "https://quaternius.com/packs/piratekit.html"
       },
-      "bytes": 9612,
-      "sha256": "444e97d92db648ce1c3f2bb243aa1919aef6040dd7edb1ff9bee241933bd2207",
+      "bytes": 9668,
+      "sha256": "71c0f28bc85719143049e1282de0fed7591ce745afb3907c07a17b160d4bd7c7",
       "sourceSha256": "98504894d03160b86f8b4a34d6e1b9b31bac173ce424378100f13143fd0223fc",
       "notes": "Upright iron anchor (stood up from the flat source)."
     },
@@ -817,8 +817,8 @@
         "license": "CC0-1.0",
         "url": "https://quaternius.com/packs/piratekit.html"
       },
-      "bytes": 23540,
-      "sha256": "78c66e8edec7dd649b056e1204b08aa26cad46578e2f9b3be83012ec06465684",
+      "bytes": 23596,
+      "sha256": "039d7ee23599394ccf76ec086c4e0a447168bf3351497cfac31ffc3e0cdab98c",
       "sourceSha256": "13ab5a39537fc661731b2053fb00c7f2799f3ab0d542a36c1c413eae60ebdf4d",
       "notes": "Extra: stacks of gold coins (treasure / doubloon pickups)."
     },
@@ -837,8 +837,8 @@
         "license": "CC0-1.0",
         "url": "https://quaternius.com/packs/piratekit.html"
       },
-      "bytes": 30792,
-      "sha256": "18ced838faf5000c8bc69cadf54f4b518e96debbdbceca456230ed181d651d6b",
+      "bytes": 30848,
+      "sha256": "3310b5033f4869ef181e2aad5d864a1042c0ae7174709555ca6e83b3bf7033fb",
       "sourceSha256": "cb9bfa79277c5da163ce94c5c2ab9b2567aa4b59ff02776b277b53570c2dfc00",
       "notes": "Extra: sack of gold coins (big treasure pickup)."
     },
@@ -897,8 +897,8 @@
         "license": "CC0-1.0",
         "url": "https://quaternius.com/packs/piratekit.html"
       },
-      "bytes": 34772,
-      "sha256": "540872d403b139db1ab6ad6703ee127f87f8530c3da52f68f6ad69c86567d633",
+      "bytes": 34828,
+      "sha256": "8ae9dd8f073aa768385008078b82a8cdd2544b97ebc16072bc06d75838c84efe",
       "sourceSha256": "c38f9ee0f5385422a69863a0948d088b1119611b017e872417fceefdaf20ed94",
       "notes": "Straight palm, 10 m. Scale 0.7–1.3× for variety."
     },
@@ -917,8 +917,8 @@
         "license": "CC0-1.0",
         "url": "https://quaternius.com/packs/piratekit.html"
       },
-      "bytes": 36200,
-      "sha256": "88c54b78d3902e4cb2e25dcc869bb691e61d16a5622d702d655e3b99dae0670f",
+      "bytes": 36256,
+      "sha256": "33d622d5b6060ea5e4d9a552da2f024eb6239170f2a983a3639a94f0c7554e82",
       "sourceSha256": "5bc795e2010d4ee0a6ed8e1a96446478151f804c2ac2ddeb5a01b1dadea632ca",
       "notes": "Leaning palm, 8 m."
     },
@@ -937,8 +937,8 @@
         "license": "CC0-1.0",
         "url": "https://quaternius.com/packs/piratekit.html"
       },
-      "bytes": 41340,
-      "sha256": "24e448160a67403a96580219c11fdc2a3db091c23c8b0cc24c0aed930c28bd01",
+      "bytes": 41396,
+      "sha256": "249b3e03d710a7203352916a5d5ee69d795356cfbd25a4428e1e15bdbe79cf9d",
       "sourceSha256": "c5c022324a365158e1f2df9b53efde31cd0c2bb27fa4ec198665714c928d2826",
       "notes": "Sea stack / rock cluster, 12 m tall, origin at its lowest point — sink ~1 m into water or ground."
     },
@@ -957,8 +957,8 @@
         "license": "CC0-1.0",
         "url": "https://quaternius.com/packs/piratekit.html"
       },
-      "bytes": 22228,
-      "sha256": "48b70e7a85ca330b369140bb062ec8dae916e1174c7d04a29373d28946714f75",
+      "bytes": 22284,
+      "sha256": "693f49de46a13032d022a62f7f3caca3d86f9d7d64efbea4faceeff2fcb38079",
       "sourceSha256": "06c5012110d3a513ebb05c2f9080a3232c457e19cfd4246b63311a1ee2c1518b",
       "notes": "Tall boulder, 5 m."
     },
@@ -977,8 +977,8 @@
         "license": "CC0-1.0",
         "url": "https://kenney.nl/assets/pirate-kit"
       },
-      "bytes": 6604,
-      "sha256": "e841a1d30b96be635d83e704b231c397e2932de1bffd789643e5836d91a5aa73",
+      "bytes": 6476,
+      "sha256": "846b6dc90d0bffb898939dffbeecfaa7bd671fc77c47240e820786d5c6b8f629",
       "sourceSha256": "f422f991fdf75df2b7bd7cd642d67f9ec884279590130e7a213e2ddaea5d0a54",
       "notes": "Chunky tropical shrub, 1.2 m."
     },
@@ -997,8 +997,8 @@
         "license": "CC0-1.0",
         "url": "https://quaternius.com/packs/piratekit.html"
       },
-      "bytes": 90756,
-      "sha256": "21629937be60c45ba8537f3b16f6c6c4134ba8a166b18a467e6b7c1001680a03",
+      "bytes": 90812,
+      "sha256": "b97f9d13bf64e3b555602f2d978f831537101de32f06292309fcbbe7f15eaa3a",
       "sourceSha256": "d4da178f124de86a7c21a66e009689dff7ad1b9a19c7a70777782343ca2511a2",
       "notes": "Stilt house built from an upturned hull with a mast and striped sail (harbor/shore dressing), 11 m tall."
     },
@@ -1017,8 +1017,8 @@
         "license": "CC0-1.0",
         "url": "https://quaternius.com/packs/piratekit.html"
       },
-      "bytes": 23216,
-      "sha256": "5243da28ac743063e2083c90ac2cd3411c601fd5b6d43e6e5504c88a16db5c59",
+      "bytes": 23272,
+      "sha256": "5b105bd13c41262b62c0307e879431538909a242477c26e6aa2ddf7edb4169a5",
       "sourceSha256": "cdbcd1dc78b7adb0a83f9ef475e61c5df5302c2cac9a340266b986165636d940",
       "notes": "Modular dock segment on stilts (deck ≈ 2.9 × 3.5 m, 4 m tall incl. mooring post); origin at the stilt feet, deck top ≈ 2.6 m — sink the stilts into the water."
     },
@@ -1037,8 +1037,8 @@
         "license": "CC0-1.0",
         "url": "https://kenney.nl/assets/pirate-kit"
       },
-      "bytes": 11392,
-      "sha256": "cb2c69ee40d37b593e2ebe8168d7a5ecba12fd2e1f854dfe2c8efddc65523ea5",
+      "bytes": 11264,
+      "sha256": "3aecfa02fccdc68f8ca81383232d230b71d08caa160521e9cd8d19640e5bf830",
       "sourceSha256": "3e65bcb990840a59c0b7c0c1237ba41da5a2b5434cab65d6f904a732d4899eb0",
       "notes": "Stone watchtower with a blue conical roof, 14 m (Admiralty outposts / lighthouse stand-in)."
     }

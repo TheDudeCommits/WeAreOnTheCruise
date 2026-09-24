@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, '..', '..');
 const args = process.argv.slice(2);
-const opt = { out: 'output/ovh-assets/sheet.png', cols: 4, views: 'side,34,top', size: 340, bg: '#d9e2e6', files: [] };
+const opt = { out: 'output/ovh-assets/sheet.png', cols: 4, views: 'side,34,top', size: 340, bg: '#d9e2e6', files: [], lineup: false };
 for (let i = 0; i < args.length; i++) {
   const a = args[i];
   if (a === '--out') opt.out = args[++i];
@@ -29,6 +29,7 @@ for (let i = 0; i < args.length; i++) {
   else if (a === '--views') opt.views = args[++i];
   else if (a === '--size') opt.size = Number(args[++i]);
   else if (a === '--bg') opt.bg = args[++i];
+  else if (a === '--lineup') opt.lineup = true;
   else opt.files.push(a);
 }
 if (!opt.files.length) { console.error('no GLB files given'); process.exit(1); }
@@ -46,11 +47,13 @@ const page = `<!doctype html><html><head><script type="importmap">{"imports":{"t
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-const cfg = ${JSON.stringify({ models: models.map(({ url, label }) => ({ url, label })), views: opt.views.split(','), size: opt.size, cols: opt.cols, bg: opt.bg })};
+const cfg = ${JSON.stringify({ models: models.map(({ url, label }) => ({ url, label })), views: opt.views.split(','), size: opt.size, cols: opt.cols, bg: opt.bg, lineup: opt.lineup })};
 const S = cfg.size, V = cfg.views.length, LH = 58;
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setSize(S, S); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
 const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
+if (cfg.lineup) { try { await lineup(); } catch (e) { window.__done = { png: '', report: [{ label: 'lineup', error: String(e) }] }; } }
+if (!cfg.lineup) {
 const tileW = S * V, tileH = S + LH;
 const cols = Math.min(cfg.cols, cfg.models.length), rows = Math.ceil(cfg.models.length / cols);
 const sheet = document.createElement('canvas'); sheet.width = cols * tileW; sheet.height = rows * tileH;
@@ -101,7 +104,29 @@ for (let m = 0; m < cfg.models.length; m++) {
   const line = info.error ? info.error.slice(0, 90) : 'X ' + info.size[0] + '  Y ' + info.size[1] + '  Z ' + info.size[2] + ' m   y ' + info.min[1] + '..' + info.max[1] + '   ' + info.tris + ' tris  ' + info.materials + ' mats' + (info.clips.length ? '  clips: ' + info.clips.join(',') : '');
   g.fillText(line, x + 8, y + 44);
 }
-window.__done = { png: sheet.toDataURL('image/png'), report };
+window.__done = window.__done || { png: sheet.toDataURL('image/png'), report };
+}
+async function lineup() {
+  // every model side by side along +X at true scale, bows toward -Z, one wide 3/4 render with labels
+  const W = 2400, H = 900; renderer.setSize(W, H);
+  const scene = new THREE.Scene(); scene.background = new THREE.Color(cfg.bg);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x5a6470, 1.6));
+  const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(40, 80, -30); scene.add(sun);
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(4000, 400), new THREE.MeshBasicMaterial({ color: 0x7fa7c4, transparent: true, opacity: 0.35 })); water.rotation.x = -Math.PI / 2; scene.add(water);
+  let x = 0; const labels = [];
+  for (const spec of cfg.models) {
+    const g = await loader.loadAsync(spec.url); const box = new THREE.Box3().setFromObject(g.scene, true); const sz = box.getSize(new THREE.Vector3());
+    x += sz.x / 2; g.scene.position.x = x; scene.add(g.scene); labels.push({ x, y: box.max.y, label: spec.label }); x += sz.x / 2 + 8;
+  }
+  water.position.x = x / 2;
+  const cam = new THREE.PerspectiveCamera(22, W / H, 1, 20000);
+  cam.position.set(x * 0.5 + x * 0.05, x * 0.33, -x * 1.35); cam.lookAt(x * 0.5, 12, 0); cam.updateProjectionMatrix();
+  renderer.render(scene, cam);
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const g2 = c.getContext('2d'); g2.drawImage(renderer.domElement, 0, 0);
+  g2.font = 'bold 18px Helvetica'; g2.textAlign = 'center';
+  for (const l of labels) { const p = new THREE.Vector3(l.x, l.y + 4, 0).project(cam); const sx = (p.x * 0.5 + 0.5) * W, sy = (-p.y * 0.5 + 0.5) * H; g2.fillStyle = '#000'; g2.fillText(l.label, sx + 1, sy + 1); g2.fillStyle = '#fff'; g2.fillText(l.label, sx, sy); }
+  window.__done = { png: c.toDataURL('image/png'), report: [] };
+}
 </script></body></html>`;
 
 const server = http.createServer((req, res) => {

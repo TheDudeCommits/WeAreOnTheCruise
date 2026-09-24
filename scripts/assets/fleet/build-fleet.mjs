@@ -156,9 +156,16 @@ async function compressTextures(doc, maxSize, quality) {
     const img = sharp(Buffer.from(tex.getImage()));
     const meta = await img.metadata();
     const small = /^Palette/.test(tex.getName()) || Math.max(meta.width, meta.height) <= 256;
+    // flat-colour swatch atlases (Quaternius 32² atlas, Kenney colormap, gltf-transform palettes): sample with NEAREST and
+    // no mipmaps so neighbouring swatches never bleed at a distance; tiny atlases are upscaled so swatches are 8×8 texels
+    const swatches = /^Palette|colormap|^Atlas/i.test(tex.getName()) || Math.max(meta.width, meta.height) <= 64;
     const scaleDown = Math.min(1, maxSize / Math.max(meta.width, meta.height));
     let pipe = sharp(Buffer.from(tex.getImage()));
-    if (scaleDown < 1) pipe = pipe.resize(Math.round(meta.width * scaleDown), Math.round(meta.height * scaleDown), { kernel: 'lanczos3' });
+    if (swatches && Math.max(meta.width, meta.height) <= 64) pipe = pipe.resize(meta.width * 8, meta.height * 8, { kernel: 'nearest' });
+    else if (scaleDown < 1) pipe = pipe.resize(Math.round(meta.width * scaleDown), Math.round(meta.height * scaleDown), { kernel: swatches ? 'nearest' : 'lanczos3' });
+    if (swatches) for (const m of root.listMaterials()) for (const [get, info] of [['getBaseColorTexture', 'getBaseColorTextureInfo'], ['getEmissiveTexture', 'getEmissiveTextureInfo']]) {
+      if (m[get]() === tex) m[info]().setMinFilter(core.TextureInfo.MinFilter.NEAREST).setMagFilter(core.TextureInfo.MagFilter.NEAREST);
+    }
     const out = await pipe.webp(small ? { lossless: true } : { quality, effort: 5, smartSubsample: true }).toBuffer();
     tex.setImage(new Uint8Array(out)).setMimeType('image/webp');
     if (tex.getURI()) tex.setURI(tex.getURI().replace(/\.(png|jpe?g|webp)$/i, '') + '.webp');
