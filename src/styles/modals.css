@@ -7,7 +7,8 @@
 @keyframes cr-fade-out { to { opacity: 0; } }
 .cr-modal__shade.is-cards { background: radial-gradient(ellipse at 50% 55%, rgba(8, 16, 44, .45), rgba(3, 6, 18, .86) 75%); }
 .cr-levelup { position: relative; display: flex; flex-direction: column; align-items: center; gap: calc(18 * var(--u)); }
-.cr-levelup__burst { position: absolute; left: 50%; top: 50%; width: calc(1500 * var(--u)); height: calc(1500 * var(--u)); transform: translate(-50%, -50%); background: url('/ui/speedlines.svg') center / cover no-repeat; opacity: .22; animation: cr-spin 60s linear infinite; pointer-events: none; }
+.cr-levelup__burst { position: absolute; left: 50%; top: 50%; width: calc(1700 * var(--u)); height: calc(1700 * var(--u)); translate: -50% -50%; background: url('/ui/speedlines.svg') center / cover no-repeat; opacity: .12; animation: cr-rot 90s linear infinite; pointer-events: none; }
+@keyframes cr-rot { from { rotate: 0deg; } to { rotate: 360deg; } }
 .cr-levelup__head { position: relative; display: flex; align-items: baseline; gap: calc(18 * var(--u)); }
 .cr-levelup__title { display: inline-block; font: 400 var(--fs-96)/1 var(--f-brush); text-transform: uppercase; color: var(--gold); -webkit-text-stroke: var(--stroke-xl) var(--ink); paint-order: stroke fill; text-shadow: 0 calc(8 * var(--u)) 0 var(--red-2), 0 calc(13 * var(--u)) 0 var(--ink); transform: rotate(-3deg); }
 .cr-levelup__lv { font: 400 var(--fs-48)/1 var(--f-comic); letter-spacing: .06em; color: var(--white); -webkit-text-stroke: var(--stroke-l) var(--ink); paint-order: stroke fill; }
@@ -58,11 +59,10 @@
 
 /* ── Chest reveal ── */
 .cr-chest { position: relative; display: flex; flex-direction: column; align-items: center; gap: calc(14 * var(--u)); cursor: pointer; }
-.cr-chest__rays { position: absolute; left: 50%; top: calc(210 * var(--u)); width: calc(1200 * var(--u)); height: calc(1200 * var(--u)); transform: translate(-50%, -50%) scale(.2); background: repeating-conic-gradient(rgba(255, 213, 74, .5) 0 6deg, transparent 6deg 16deg); -webkit-mask: radial-gradient(circle, #000 10%, transparent 60%); mask: radial-gradient(circle, #000 10%, transparent 60%); opacity: 0; transition: opacity .5s, transform .6s var(--ease-out); pointer-events: none; }
-.cr-chest.is-open .cr-chest__rays { opacity: 1; transform: translate(-50%, -50%) scale(1); animation: cr-spin-c 30s linear infinite; }
-@keyframes cr-spin-c { from { rotate: 0deg; } to { rotate: 360deg; } }
+.cr-chest__rays { position: absolute; left: 50%; top: calc(250 * var(--u)); width: calc(1200 * var(--u)); height: calc(1200 * var(--u)); translate: -50% -50%; scale: .2; background: repeating-conic-gradient(rgba(255, 213, 74, .42) 0 6deg, transparent 6deg 16deg); -webkit-mask: radial-gradient(circle, #000 10%, transparent 60%); mask: radial-gradient(circle, #000 10%, transparent 60%); opacity: 0; transition: opacity .5s, scale .6s var(--ease-out); pointer-events: none; }
+.cr-chest.is-open .cr-chest__rays { opacity: 1; scale: 1; animation: cr-rot 40s linear infinite; }
 .cr-chest__title { position: relative; font: 400 var(--fs-96)/1 var(--f-brush); text-transform: uppercase; color: var(--gold); -webkit-text-stroke: var(--stroke-xl) var(--ink); paint-order: stroke fill; text-shadow: 0 calc(8 * var(--u)) 0 var(--gold-3), 0 calc(13 * var(--u)) 0 var(--ink); transform: rotate(-3deg); animation: cr-sub-in .5s var(--ease-pop) both; }
-.cr-chestbox { position: relative; width: calc(200 * var(--u)); height: calc(170 * var(--u)); }
+.cr-chestbox { position: relative; width: calc(200 * var(--u)); height: calc(170 * var(--u)); margin-top: calc(30 * var(--u)); }
 .cr-chestbox.is-shake { animation: cr-chest-shake .75s ease-in-out both; }
 @keyframes cr-chest-shake { 0% { transform: scale(.3) translateY(calc(80 * var(--u))); } 25% { transform: scale(1.05); } 35% { transform: rotate(-6deg); } 45% { transform: rotate(6deg); } 55% { transform: rotate(-8deg) scale(1.04); } 65% { transform: rotate(8deg) scale(1.06); } 80% { transform: rotate(0) scale(1.1); } 100% { transform: none; } }
 .cr-chestbox__glow { position: absolute; left: 50%; top: 40%; width: 10%; height: 10%; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle, #fffbe0, rgba(255, 213, 74, .8) 40%, transparent 70%); opacity: 0; transition: all .4s var(--ease-out); }
@@ -70,7 +70,7 @@
 .cr-chestbox__body { position: absolute; left: 0; right: 0; bottom: 0; height: 58%; border-radius: calc(10 * var(--u)); border: calc(5 * var(--u)) solid var(--ink); background: linear-gradient(90deg, transparent 12%, #e0a52a 12% 17%, transparent 17% 83%, #e0a52a 83% 88%, transparent 88%), linear-gradient(180deg, #a35a1c, #6b3410); box-shadow: inset 0 calc(-10 * var(--u)) 0 rgba(0, 0, 0, .25); }
 .cr-chestbox__lock { position: absolute; left: 50%; top: calc(-6 * var(--u)); transform: translateX(-50%); width: calc(34 * var(--u)); height: calc(40 * var(--u)); border-radius: calc(6 * var(--u)); background: linear-gradient(180deg, #ffe27a, #d99a1a); border: calc(4 * var(--u)) solid var(--ink); }
 .cr-chestbox__lid { position: absolute; left: 0; right: 0; top: 0; height: 48%; border-radius: calc(60 * var(--u)) calc(60 * var(--u)) calc(8 * var(--u)) calc(8 * var(--u)); border: calc(5 * var(--u)) solid var(--ink); background: linear-gradient(90deg, transparent 12%, #e0a52a 12% 17%, transparent 17% 83%, #e0a52a 83% 88%, transparent 88%), linear-gradient(180deg, #c06a22, #7a3c12); transform-origin: 50% 100%; transition: transform .35s var(--ease-pop); z-index: 1; }
-.cr-chest.is-open .cr-chestbox__lid { transform: translateY(calc(-40 * var(--u))) rotate(-24deg); }
+.cr-chest.is-open .cr-chestbox__lid { transform: translateY(calc(-22 * var(--u))) rotate(-16deg); }
 .cr-chest__rewards { position: relative; display: flex; gap: calc(18 * var(--u)); min-height: calc(250 * var(--u)); }
 .cr-chest__rewards .cr-card.is-hidden { visibility: hidden; }
 .cr-chest__prompt { display: flex; align-items: center; gap: calc(12 * var(--u)); font: 400 var(--fs-32)/1 var(--f-comic); letter-spacing: .1em; text-transform: uppercase; color: var(--white); -webkit-text-stroke: var(--stroke-m) var(--ink); paint-order: stroke fill; opacity: 0; transition: opacity .3s; }

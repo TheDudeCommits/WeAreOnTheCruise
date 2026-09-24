@@ -58,7 +58,10 @@ export class Markers {
       list[j + 1] = t;
     }
     const W = this.width, H = this.height;
-    const L = 56, T = 118, R = W - 56, B = H - 170;
+    const u = Math.max(0.72, Math.min(1.7, Math.min(W / 1600, H / 900)));
+    let bossUp = false;
+    for (const b of run.bosses) if (b.life !== 'dead') { bossUp = true; break; }
+    const L = 56 * u, T = (bossUp ? 200 : 124) * u, R = W - 56 * u, B = H - 214 * u;
     let used = 0;
     for (let i = 0; i < n && used < MAX; i++) {
       const t = list[i]!;
@@ -76,8 +79,13 @@ export class Markers {
       if (dy > 1e-6) s = Math.min(s, (B - oy) / dy);
       if (dy < -1e-6) s = Math.min(s, (T - oy) / dy);
       if (!Number.isFinite(s)) continue;
+      let x = ox + dx * s, y = oy + dy * s;
+      // Keep clear of the fixed HUD blocks (minimap, ship ring + statuses, loadout).
+      if (x > W - 260 * u && y < 262 * u) y = 262 * u;
+      if (x < 430 * u && y > H - 330 * u) y = H - 330 * u;
+      if (x > W - 460 * u && y > H - 214 * u) y = H - 214 * u;
       const m = this.pool[used++]!;
-      this.place(m, t, ox + dx * s, oy + dy * s, Math.atan2(dx, -dy));
+      this.place(m, t, x, y, Math.atan2(dx, -dy));
     }
     for (let i = used; i < MAX; i++) { const m = this.pool[i]!; if (m.on) { m.on = false; m.el.hidden = true; } }
   }

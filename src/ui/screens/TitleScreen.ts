@@ -49,7 +49,8 @@ export class TitleScreen {
     const promptLine = h('div', 'cr-title__prompt',
       h('span', 'cr-title__press', 'Press any key'),
       h('span', 'cr-title__inputs',
-        keycap('ANY KEY'), h('span', 'cr-title__dot', '·'), h('span', 'cr-title__mouse', 'CLICK'), h('span', 'cr-title__dot', '·'), padButton('A')),
+        keycap('ANY KEY'), h('span', 'cr-title__dot', '·'), h('span', 'cr-title__mouse', 'CLICK'),
+        h('span', 'cr-title__padpart', h('span', 'cr-title__dot', '·'), padButton('A'))),
     );
     const credits = h('a', 'cr-title__credits', 'Credits');
     credits.href = '/credits.html';

@@ -2,7 +2,7 @@
 
 .cr-results { pointer-events: auto; }
 .cr-results__shade { position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 50%, rgba(8, 16, 44, .55), rgba(3, 6, 18, .88) 70%); }
-.cr-results__rays { position: absolute; left: 27%; top: 50%; width: calc(1400 * var(--u)); height: calc(1400 * var(--u)); transform: translate(-50%, -50%); background: repeating-conic-gradient(rgba(255, 213, 74, .10) 0 6deg, transparent 6deg 18deg); -webkit-mask: radial-gradient(circle, #000 15%, transparent 62%); mask: radial-gradient(circle, #000 15%, transparent 62%); animation: cr-spin 80s linear infinite; }
+.cr-results__rays { position: absolute; left: 22%; top: 50%; width: calc(1400 * var(--u)); height: calc(1400 * var(--u)); translate: -50% -50%; background: repeating-conic-gradient(rgba(255, 213, 74, .10) 0 6deg, transparent 6deg 18deg); -webkit-mask: radial-gradient(circle, #000 15%, transparent 62%); mask: radial-gradient(circle, #000 15%, transparent 62%); animation: cr-rot 80s linear infinite; }
 .cr-results[data-outcome='defeat'] .cr-results__rays { background: repeating-conic-gradient(rgba(255, 74, 61, .08) 0 6deg, transparent 6deg 18deg); }
 .cr-results__left { position: absolute; left: calc(110 * var(--u)); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: calc(18 * var(--u)); }
 .cr-wanted.is-results { width: calc(400 * var(--u)); transform: rotate(-2.5deg); }

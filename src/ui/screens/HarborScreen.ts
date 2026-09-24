@@ -42,6 +42,7 @@ export class HarborScreen {
   private shownDoubloons = -1;
   private targetDoubloons = 0;
   private visible = false;
+  private needsFocus = false;
 
   private readonly tabButtons = new Map<Tab, HTMLButtonElement>();
   private readonly panes = new Map<Tab, HTMLElement>();
@@ -112,11 +113,10 @@ export class HarborScreen {
       const status = h('span', 'cr-shipcard__status');
       const cost = h('span', 'cr-shipcard__cost');
       const card = navButton('cr-shipcard',
-        h('span', 'cr-shipcard__art', img, h('span', 'cr-shipcard__lock', glyph('lock'))),
+        h('span', 'cr-shipcard__art', img, h('span', 'cr-shipcard__lock', glyph('lock')), cost),
         h('span', 'cr-shipcard__plate',
           h('span', 'cr-shipcard__name', ship.name),
           status,
-          cost,
         ),
         h('span', 'cr-shipcard__check', glyph('star')),
       );
@@ -145,8 +145,8 @@ export class HarborScreen {
     this.dSpecialIcon = icon(null, 'burst', 'cr-skillinfo__icon');
     this.dUltIcon = icon(null, 'sun', 'cr-skillinfo__icon is-ult');
     const skills = h('div', 'cr-skillinfo',
-      h('div', 'cr-skillinfo__row', this.dSpecialIcon, h('span', 'cr-skillinfo__key', prompt(['E'], 'LB', '')), h('span', 'cr-skillinfo__body', h('span', 'cr-skillinfo__kind', 'Special'), spName, spText)),
-      h('div', 'cr-skillinfo__row', this.dUltIcon, h('span', 'cr-skillinfo__key', prompt(['R'], 'RB', '')), h('span', 'cr-skillinfo__body', h('span', 'cr-skillinfo__kind is-ult', 'Ultimate'), ulName, ulText)),
+      h('div', 'cr-skillinfo__row', this.dSpecialIcon, h('span', 'cr-skillinfo__body', h('span', 'cr-skillinfo__kind', prompt(['E'], 'LB', ''), 'Special'), spName, spText)),
+      h('div', 'cr-skillinfo__row', this.dUltIcon, h('span', 'cr-skillinfo__body', h('span', 'cr-skillinfo__kind is-ult', prompt(['R'], 'RB', ''), 'Ultimate'), ulName, ulText)),
     );
     const lockText = h('span', 'cr-details__locktext');
     const unlockCost = h('span', 'cr-unlock__cost');
@@ -280,7 +280,7 @@ export class HarborScreen {
     void this.el.offsetWidth;
     this.el.classList.add('is-enter');
     this.setTab(this.tab, false);
-    requestAnimationFrame(() => { if (this.visible) this.focusTab(); });
+    this.needsFocus = true;
   }
 
   hide(): void { this.visible = false; this.el.hidden = true; }
@@ -291,6 +291,7 @@ export class HarborScreen {
   update(f: UiFrame): void {
     this.selectedShip = f.selectedShip;
     this.sync(f);
+    if (this.needsFocus) { this.needsFocus = false; this.focusTab(); }
     // Doubloon balance count animation.
     if (this.shownDoubloons !== this.targetDoubloons) {
       const diff = this.targetDoubloons - this.shownDoubloons;
