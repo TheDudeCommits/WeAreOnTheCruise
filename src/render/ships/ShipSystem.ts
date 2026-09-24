@@ -1,161 +1,160 @@
 /**
- * Ships (SHIPS-owned; RenderSystem + ShipServices surface is contract): the hero ship, enemy fleets (instanced
- * per class in the real implementation), bosses, upgrade attachments, crew, damage and sinking.
- * Stub: hero GLB scaled to its gameplay length; enemies/bosses are pooled placeholder hulls.
+ * Ships (SHIPS-owned; the RenderSystem + ShipServices surface is contract): the hero ship with visible growth, the
+ * instanced enemy fleet, sea serpents, bosses, escort skiffs, crew, damage and sinking.
+ *
+ * Extra (non-contract) surface for other modules, documented in the SHIPS report:
+ *   - `pendingGrowth()`: growth/phase events of this frame in world space (FX turns them into sparkles); the same
+ *     events are also dispatched as `window` CustomEvent('cruise:ship-growth', { detail }).
+ *   - `smokePoints(shipId, out)`: low-HP smoke emitter positions (measured deck points on the hero).
  */
 import * as THREE from 'three';
 import { SHIPS } from '../../game/content';
-import type { Faction, HeroModelKey } from '../../game/ids';
-import type { BossState, EnemyState } from '../../game/types';
+import type { HeroModelKey, ShipId } from '../../game/ids';
+import type { BossState, EnemyState, HazardState, WeaponSlot } from '../../game/types';
 import type { FrameContext, RenderHostHandles, RenderSystem, ShipAnchor, ShipServices } from '../frame';
+import { FleetAssets } from '../loaders/FleetAssets';
 import { SketchfabShipAssets } from '../loaders/SketchfabShipAssets';
-import { createToonMaterial, markInk } from '../materials/toon';
+import { Bosses } from './fleet/Bosses';
+import { EnemyFleet } from './fleet/EnemyFleet';
+import { EscortSkiffs } from './fleet/EscortSkiffs';
+import { Serpents, type SerpentPose } from './fleet/Serpents';
+import type { GrowthInput, ShipGrowthEvent } from './hero/HeroGrowth';
+import { HeroShip, type HeroPose } from './hero/HeroShip';
 
-/** Lengths the downloaded GLBs were normalized to during intake (metres). */
-const SOURCE_LENGTH: Record<HeroModelKey, number> = {
-  'going-merry': 34, 'thousand-sunny': 56, 'polar-tang': 52, baratie: 74, 'navy-galleon': 70, 'moby-dick': 122,
-};
-
-const FACTION_COLORS: Record<Faction, { hull: number; sail: number }> = {
-  player: { hull: 0x7b4a2a, sail: 0xf2e6c8 },
-  admiralty: { hull: 0xe9eef2, sail: 0xf7f8fb },
-  corsair: { hull: 0x2b2021, sail: 0xb3262b },
-  wraith: { hull: 0x1d3a3a, sail: 0x5ee6c8 },
-  deep: { hull: 0x2f6f63, sail: 0x3aa58e },
-};
-
-interface Visual { root: THREE.Group; kind: string }
+const NO_ENEMIES: readonly EnemyState[] = [];
+const NO_BOSSES: readonly BossState[] = [];
+const NO_HAZARDS: readonly HazardState[] = [];
+const NO_WEAPONS: readonly WeaponSlot[] = [];
+const CREW_KEYS = ['sailor-a', 'sailor-b', 'sailor-c'] as const;
 
 export class ShipSystem implements RenderSystem, ShipServices {
   readonly name = 'ships';
   private scene!: THREE.Scene;
   private readonly assets = new SketchfabShipAssets();
-  private readonly hero = new THREE.Group();
-  private heroKey: HeroModelKey | null = null;
-  private heroLength = 34;
-  private readonly visuals = new Map<number, Visual>();
-  private readonly pool = new Map<string, THREE.Group[]>();
-  private readonly materials = new Map<string, THREE.Material>();
-  private readonly box = new THREE.BoxGeometry(1, 1, 1);
-  private readonly sailGeo = new THREE.PlaneGeometry(1, 1);
-  private readonly tmp = new THREE.Vector3();
-  private readonly seen = new Set<number>();
+  readonly fleetAssets = new FleetAssets();
+  readonly heroShip = new HeroShip(this.assets, this.fleetAssets);
+  readonly fleet = new EnemyFleet(this.fleetAssets);
+  readonly serpents = new Serpents(24);
+  readonly bosses = new Bosses(this.fleetAssets, this.fleet.fleetMaterial);
+  readonly skiffs = new EscortSkiffs(this.fleet.fleetMaterial);
+  private readonly growthEvents: ShipGrowthEvent[] = [];
+  private readonly wyrmPoses: SerpentPose[] = [];
+  private readonly pose: HeroPose = { x: 0, z: 0, heading: 0, speed: 0, roll: 0, airborne: 0, submerged: 0, invulnerable: 0, sinceHit: 99, hpFraction: 1, alive: true };
+  private readonly growthInput: GrowthInput = { tier: 0, weapons: NO_WEAPONS };
+  private readonly wind = { dir: 0.6, strength: 0.5 };
+  private readonly skiffPlayer = { x: 0, z: 0, heading: 0, weapons: NO_WEAPONS };
+  /** QA: last update cost (ms) and the last frame context (for isolated allocation checks). */
+  lastUpdateMs = 0;
+  lastContext: FrameContext | null = null;
 
   init(host: RenderHostHandles): void {
     this.scene = host.scene;
-    this.hero.name = 'hero-ship';
-    this.scene.add(this.hero);
+    this.scene.add(this.heroShip.root, this.fleet.group, this.serpents.group, this.bosses.group, this.skiffs.group);
+    this.fleet.prebuild();
+    this.bosses.preload();
+    for (const key of CREW_KEYS) void this.fleetAssets.request(key);
+    if (typeof window !== 'undefined') (window as unknown as { __SHIPS__?: ShipSystem }).__SHIPS__ = this;
   }
 
-  async preload(key: HeroModelKey): Promise<void> { await this.assets.prepare(key); }
-
-  private setHero(key: HeroModelKey, length: number): void {
-    if (this.heroKey === key) return;
-    this.heroKey = key;
-    this.heroLength = length;
-    this.hero.clear();
-    const holder = new THREE.Group();
-    holder.scale.setScalar(length / SOURCE_LENGTH[key]);
-    this.hero.add(holder);
-    void this.assets.mount(key, 'high', holder, () => this.heroKey === key, true, (instance) => markInk(instance));
+  /** Awaited by GameApp before the first frame: the selected hero model (+ crew models when the manifest has them). */
+  async preload(key: HeroModelKey): Promise<void> {
+    await Promise.all([this.assets.prepare(key), ...CREW_KEYS.map((k) => this.fleetAssets.request(k))]);
   }
 
   update(ctx: FrameContext): void {
-    const oceanY = (x: number, z: number) => ctx.services.ocean.heightAt(x, z);
-    // Hero.
+    const started = performance.now();
+    this.lastContext = ctx;
+    this.growthEvents.length = 0;
     const run = ctx.run;
-    const shipId = run?.shipId ?? (ctx.menuShip as keyof typeof SHIPS | null) ?? 'dawn-ram';
-    const def = SHIPS[shipId as keyof typeof SHIPS] ?? SHIPS['dawn-ram'];
-    this.setHero(def.modelKey, def.length);
-    const px = run ? run.player.x : ctx.focus.x, pz = run ? run.player.z : ctx.focus.z;
-    const heading = run ? run.player.heading : ctx.focus.heading;
-    this.hero.visible = !run || run.player.alive || run.status === 'dead';
-    this.hero.position.set(px, oceanY(px, pz) - (run?.player.submerged ?? 0) * 18 + (run?.player.airborne ?? 0) * 26, pz);
-    this.hero.rotation.set(0, heading, 0);
-    this.hero.rotateZ(run?.player.roll ?? 0);
+    const ocean = ctx.services.ocean;
+    const shipId = (run?.shipId ?? (ctx.menuShip as ShipId | null) ?? 'dawn-ram') as ShipId;
+    const def = SHIPS[shipId] ?? SHIPS['dawn-ram'];
+    this.heroShip.setModel(def.modelKey, def.length, def.accent);
 
-    // Enemies and bosses.
-    this.seen.clear();
-    if (run) {
-      for (const e of run.enemies) this.place(e, 'enemy', oceanY);
-      for (const b of run.bosses) this.place(b, 'boss', oceanY);
+    // Hero.
+    const p = run?.player;
+    const pose = this.pose;
+    pose.x = p ? p.x : ctx.focus.x; pose.z = p ? p.z : ctx.focus.z; pose.heading = p ? p.heading : ctx.focus.heading;
+    pose.speed = p ? p.speed : 0; pose.roll = p?.roll ?? 0; pose.airborne = p?.airborne ?? 0; pose.submerged = p?.submerged ?? 0;
+    pose.invulnerable = p?.invulnerable ?? 0; pose.sinceHit = p?.sinceHit ?? 99; pose.hpFraction = p ? p.hp / Math.max(1, p.maxHp) : 1;
+    pose.alive = p?.alive ?? true;
+    this.growthInput.tier = p?.tier ?? 0;
+    this.growthInput.weapons = p?.weapons ?? NO_WEAPONS;
+    this.wind.dir = ctx.sea.windDir; this.wind.strength = ctx.sea.windStrength;
+    for (const e of ctx.events) if (e.type === 'player-hit') this.heroShip.hit(e.parried ? 'parried' : e.braced ? 'braced' : 'hit', e.amount);
+    this.heroShip.update(ctx.dt, ctx.time, pose, this.growthInput, ctx.atmosphere.night, ocean, this.wind);
+    this.heroShip.drainGrowthEvents(this.growthEvents);
+
+    // Fleet and sea serpents.
+    const enemies = run?.enemies ?? NO_ENEMIES;
+    this.fleet.update(ctx.dt, ctx.time, enemies, ocean);
+    let w = 0;
+    for (const e of enemies) {
+      if (e.defId !== 'wyrmling' || e.life === 'dead') continue;
+      let sp = this.wyrmPoses[w];
+      if (!sp) { sp = { id: 0, x: 0, z: 0, heading: 0, speed: 0, submerged: 0, rear: 0, sink: 0, flash: 0 }; this.wyrmPoses[w] = sp; }
+      const dist = p ? Math.hypot(p.x - e.x, p.z - e.z) : 999;
+      sp.id = e.id; sp.x = e.x; sp.z = e.z; sp.heading = e.heading; sp.speed = e.speed;
+      sp.submerged = e.life === 'sinking' ? 0 : THREE.MathUtils.clamp((dist - 60) / 220, 0.05, 0.45);
+      sp.rear = e.life === 'sinking' ? 0 : THREE.MathUtils.clamp((75 - dist) / 45, 0, 1);
+      sp.sink = e.life === 'sinking' ? e.sink : 0;
+      sp.flash = e.hitFlash;
+      w++;
     }
-    for (const [id, v] of this.visuals) if (!this.seen.has(id)) { this.release(v); this.visuals.delete(id); }
+    this.serpents.updateWyrmlings(ctx.time, this.wyrmPoses, w, ocean);
+
+    // Bosses and escorts.
+    this.bosses.update(ctx.dt, ctx.time, run?.bosses ?? NO_BOSSES, ocean);
+    this.bosses.drainEvents(this.growthEvents);
+    let skiffPlayer: typeof this.skiffPlayer | null = null;
+    if (p) { skiffPlayer = this.skiffPlayer; skiffPlayer.x = p.x; skiffPlayer.z = p.z; skiffPlayer.heading = p.heading; skiffPlayer.weapons = p.weapons; }
+    this.skiffs.update(ctx.dt, ctx.time, run?.hazards ?? NO_HAZARDS, skiffPlayer, def.length, def.accent, ocean);
+
+    if (this.growthEvents.length && typeof window !== 'undefined') {
+      for (const e of this.growthEvents) window.dispatchEvent(new CustomEvent('cruise:ship-growth', { detail: e }));
+    }
+    this.lastUpdateMs = performance.now() - started;
   }
 
-  private place(s: EnemyState | BossState, kind: 'enemy' | 'boss', oceanY: (x: number, z: number) => number): void {
-    this.seen.add(s.id);
-    const faction: Faction = 'faction' in s ? s.faction : 'admiralty';
-    const key = `${kind}:${faction}:${Math.round(s.length)}`;
-    let v = this.visuals.get(s.id);
-    if (!v) { v = { root: this.acquire(key, s.length, faction), kind: key }; this.visuals.set(s.id, v); }
-    const sinkDepth = s.sink * s.length * 0.4;
-    v.root.position.set(s.x, oceanY(s.x, s.z) - sinkDepth, s.z);
-    v.root.rotation.set(s.sink * 0.5, s.heading, s.roll + s.sink * 0.3);
-    const flash = s.hitFlash;
-    v.root.scale.setScalar(1 + flash * 0.04);
-  }
+  /** Growth / boss-phase events produced this frame (world space). */
+  pendingGrowth(): readonly ShipGrowthEvent[] { return this.growthEvents; }
 
-  private acquire(key: string, length: number, faction: Faction): THREE.Group {
-    const list = this.pool.get(key);
-    const reused = list?.pop();
-    if (reused) { reused.visible = true; return reused; }
-    const colors = FACTION_COLORS[faction];
-    const hullMat = this.material(`hull:${faction}`, colors.hull);
-    const sailMat = this.material(`sail:${faction}`, colors.sail, true);
-    const root = new THREE.Group();
-    const hull = new THREE.Mesh(this.box, hullMat);
-    hull.scale.set(length * 0.28, length * 0.16, length);
-    hull.position.y = length * 0.04;
-    const mast = new THREE.Mesh(this.box, hullMat);
-    mast.scale.set(0.8, length * 0.6, 0.8);
-    mast.position.y = length * 0.34;
-    const sail = new THREE.Mesh(this.sailGeo, sailMat);
-    sail.scale.set(length * 0.4, length * 0.35, 1);
-    sail.position.set(0, length * 0.38, -0.8);
-    root.add(hull, mast, sail);
-    root.traverse((o) => { if (o instanceof THREE.Mesh) o.castShadow = true; });
-    markInk(root);
-    root.userData.poolKey = key;
-    this.scene.add(root);
-    return root;
-  }
-
-  private release(v: Visual): void {
-    v.root.visible = false;
-    const list = this.pool.get(v.kind) ?? [];
-    list.push(v.root);
-    this.pool.set(v.kind, list);
-  }
-
-  private material(key: string, color: number, doubleSided = false): THREE.Material {
-    let m = this.materials.get(key);
-    if (!m) { m = createToonMaterial({ color, side: doubleSided ? THREE.DoubleSide : THREE.FrontSide, name: key }); this.materials.set(key, m); }
-    return m;
+  /** Low-HP smoke emitters for a ship (hero: measured deck points; others: the deck anchor). Returns the count. */
+  smokePoints(shipId: number, out: THREE.Vector3[]): number {
+    if (shipId === 0) return this.heroShip.smokePoints(out);
+    const first = out[0];
+    return first && this.anchor(shipId, 'deck', first) ? 1 : 0;
   }
 
   anchor(shipId: number, name: ShipAnchor, out: THREE.Vector3): boolean {
-    const root = shipId === 0 ? this.hero : this.visuals.get(shipId)?.root;
-    if (!root) return false;
-    const len = shipId === 0 ? this.heroLength : 20;
-    const local = name === 'bow' ? this.tmp.set(0, 3, -len * 0.5) : name === 'stern' ? this.tmp.set(0, 3, len * 0.5)
-      : name === 'port' ? this.tmp.set(-len * 0.15, 3, 0) : name === 'starboard' ? this.tmp.set(len * 0.15, 3, 0)
-      : name === 'mast' ? this.tmp.set(0, len * 0.6, 0) : this.tmp.set(0, 4, 0);
-    out.copy(local).applyMatrix4(root.matrixWorld);
-    return true;
+    if (shipId === 0) return this.heroShip.anchor(name, out);
+    if (this.fleet.has(shipId)) return this.fleet.anchor(shipId, name, out);
+    if (this.bosses.has(shipId)) return this.bosses.anchor(shipId, name, out);
+    const head = this.serpents.headOf(shipId);
+    if (head) { out.setFromMatrixPosition(head); return true; }
+    return false;
   }
 
   transform(shipId: number, out: THREE.Matrix4): boolean {
-    const root = shipId === 0 ? this.hero : this.visuals.get(shipId)?.root;
-    if (!root) return false;
-    out.copy(root.matrixWorld);
-    return true;
+    if (shipId === 0) return this.heroShip.transform(out);
+    if (this.fleet.has(shipId)) return this.fleet.transform(shipId, out);
+    if (this.bosses.has(shipId)) return this.bosses.transform(shipId, out);
+    const head = this.serpents.headOf(shipId);
+    if (head) { out.copy(head); return true; }
+    return false;
   }
 
+  /** QA: which source renders each enemy/boss key. */
+  sources(): Record<string, string> { return { ...this.fleet.sources(), ...this.bosses.sources() }; }
+
   dispose(): void {
+    this.scene.remove(this.heroShip.root, this.fleet.group, this.serpents.group, this.bosses.group, this.skiffs.group);
+    this.heroShip.dispose();
+    this.fleet.dispose();
+    this.serpents.dispose();
+    this.bosses.dispose();
+    this.skiffs.dispose();
     this.assets.dispose();
-    this.box.dispose(); this.sailGeo.dispose();
-    for (const m of this.materials.values()) m.dispose();
-    this.scene.remove(this.hero);
+    this.fleetAssets.dispose();
   }
 }
