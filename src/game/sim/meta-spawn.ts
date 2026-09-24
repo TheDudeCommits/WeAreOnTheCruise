@@ -47,6 +47,16 @@ export function bossDamage(c: SimContext, base: number): number {
   return base * (1 + (enemyDamageScale(c) - 1) * 0.5);
 }
 
+/**
+ * Hull-contact damage an enemy deals when it touches the player (for CORE's collisions.ts), after time/difficulty
+ * and elite scaling. Fire ships return 0: their contact IS the blast, resolved by the AI before collisions run.
+ */
+export function enemyContactDamage(c: SimContext, e: EnemyState): number {
+  const def = c.content.enemies[e.defId];
+  if (def.behavior === 'kamikaze') return 0;
+  return def.contactDamage * enemyDamageScale(c) * (e.elite ? DIRECTOR.eliteDamage : 1);
+}
+
 export function countAliveEnemies(c: SimContext): number {
   let n = 0;
   for (const e of c.state.enemies) if (e.life === 'alive') n++;
