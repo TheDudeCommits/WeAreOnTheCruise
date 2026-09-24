@@ -46,5 +46,7 @@
 .cr-unlocks { display: flex; gap: calc(10 * var(--u)); flex-wrap: wrap; }
 .cr-unlock-chip { display: inline-flex; align-items: center; gap: calc(8 * var(--u)); padding: calc(8 * var(--u)) calc(16 * var(--u)); border-radius: calc(10 * var(--u)); background: linear-gradient(180deg, #ffe066, #ffb020); border: calc(3 * var(--u)) solid var(--ink); color: var(--ink); font: 400 var(--fs-20)/1 var(--f-comic); letter-spacing: .06em; text-transform: uppercase; animation: cr-pop-in .5s 1.8s var(--ease-pop) both; }
 .cr-unlock-chip .cr-glyph { width: calc(22 * var(--u)); height: calc(22 * var(--u)); }
-.cr-results__buttons { display: flex; gap: calc(30 * var(--u)); margin-top: auto; padding-top: calc(8 * var(--u)); }
+.cr-results__buttons { display: flex; gap: calc(20 * var(--u)); margin-top: auto; padding-top: calc(8 * var(--u)); }
+.cr-results__buttons .cr-btn__label { white-space: nowrap; }
+.cr-results__buttons .cr-btn[hidden] { display: none; }
 .cr-results.is-enter .cr-results__buttons { animation: cr-fade-up .5s .6s var(--ease-out) both; }

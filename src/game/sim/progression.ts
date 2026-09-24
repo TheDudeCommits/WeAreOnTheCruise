@@ -411,7 +411,9 @@ export function onEnemyKilled(c: SimContext, e: EnemyState): void {
   if (e.ai.limbo === 1) { e.ai.limbo = 0; e.x = e.ai.hx ?? e.x; e.z = e.ai.hz ?? e.z; }
 
   const convoy = e.ai.convoy === 1;
-  spillCoins(c, e.x, e.z, def.xp * (e.elite ? DIRECTOR.eliteXp : 1) * (convoy ? 0.5 : 1), e.radius);
+  // Harder seas field more ships, not more experience: XP per ship falls with the density the budget adds.
+  const density = Math.pow(c.content.seas[s.seaId].difficulty, DIRECTOR.budgetDifficultyExp);
+  spillCoins(c, e.x, e.z, (def.xp * (e.elite ? DIRECTOR.eliteXp : 1) * (convoy ? 0.5 : 1)) / density, e.radius);
   const luck = Math.max(0, p.stats.luck);
   if (c.random() < def.doubloonChance * (1 + luck * 0.05)) scatter(c, 'doubloon', e.x, e.z, tune.doubloons, e.radius);
   if (convoy) for (let k = 0; k < 3; k++) scatter(c, 'doubloon', e.x, e.z, Math.round(EVENT_TUNING.convoyDoubloons / 3), e.radius * 1.2);

@@ -21,7 +21,7 @@ import { resolveCollisions } from './collisions';
 import { applyShipForces, snapshotEnemies } from './core-forces';
 import { CoreRuntime, DEFAULT_TURN, isBoss, KIND_TRAITS, K_HOMING, statusOf, untouchable, type CoreSim } from './core-runtime';
 import { parry, specialCooldown, ULT_CHARGE_DAMAGE } from './core-skills';
-import { updateDirector } from './director';
+import { updateDirector, continueEndless } from './director';
 import { updateEnemies } from './ai';
 import { updateHazards } from './hazards';
 import { updatePickups } from './pickups';
@@ -53,6 +53,7 @@ export interface SimDebug {
   /** Gives (or raises) a weapon. Levels ≥ 3 need a branch: keeps the current one, else `branch` (default 'A'). */
   giveWeapon(id: WeaponId, level?: number, branch?: 'A' | 'B'): void;
   killAll(): void;
+  sinkBosses(): void;
   /** Fills the ultimate charge (QA). */
   chargeUltimate(): void;
   /** Clears every skill cooldown (QA). */
@@ -122,6 +123,15 @@ export class Sim implements CoreSim {
   retire(): void {
     if (this.ended) return;
     this.endRun('retired');
+  }
+
+  /** After a victory: clears the ended state and hands the run to the director's endless loop. */
+  continueEndless(): boolean {
+    if (this.ended?.outcome !== 'victory') return false;
+    continueEndless(this);
+    this.ended = null;
+    this.state.status = 'running';
+    return true;
   }
 
   /** Advances by real seconds. Returns the number of fixed ticks executed. */
@@ -554,6 +564,7 @@ export class Sim implements CoreSim {
         this.emit({ type: 'weapon-changed', weapon: id, level: slot.level, branch: slot.branch, overdrive: slot.overdrive, isNew });
       },
       killAll: () => { for (const e of this.state.enemies) this.damageTarget(e, 1e9, { pierceArmor: true }); },
+      sinkBosses: () => { for (const b of this.state.bosses) if (b.life === 'alive') this.damageTarget(b, 1e9, { pierceArmor: true }); },
       chargeUltimate: () => { this.state.player.skills.ultimate.charge = 1; },
       resetCooldowns: () => {
         const sk = this.state.player.skills;

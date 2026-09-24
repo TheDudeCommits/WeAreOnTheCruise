@@ -15,6 +15,8 @@ export interface UiCallbacks {
   onPause(paused: boolean): void;
   onRetire(): void;
   onReturnToHarbor(): void;
+  /** After a victory: keep the run going in endless mode (bosses return, stronger). */
+  onContinueEndless(): void;
   onPurchaseUpgrade(id: MetaUpgradeId): void;
   onUnlockShip(id: ShipId): void;
   onSettingsChange(settings: Settings): void;

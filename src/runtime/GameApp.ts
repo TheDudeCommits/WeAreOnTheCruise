@@ -47,6 +47,8 @@ export class GameApp {
   readonly audio = new AudioEngine();
   readonly input: Input;
   world: IslandField;
+  /** Doubloons/kills already banked when a won run continued into endless mode. */
+  private credited: { doubloons: number; kills: number } | null = null;
   /** Opt-in CPU breakdown per frame (QA bridge). */
   readonly profiler = new FrameProfiler();
   /** Title/harbor field: includes the hand-placed harbour set as collision and shore geometry. */
@@ -134,6 +136,7 @@ export class GameApp {
     saveProfile(this.profile);
     this.world = new IslandField(`${this.config.seed}:${this.profile.runs}`, { sea: seaId });
     this.sim = new Sim({ seed: this.world.seed, shipId, seaId, meta: this.profile, world: this.world });
+    this.credited = null;
     if (this.config.god) this.sim.debug.god(true);
     this.result = null;
     this.paused = false;
@@ -145,7 +148,10 @@ export class GameApp {
     if (!sim) return;
     const result = sim.result();
     if (!result) return;
-    result.newUnlocks = applyRunResult(this.profile, result);
+    const banked = this.credited;
+    result.newUnlocks = banked
+      ? applyRunResult(this.profile, { ...result, doubloonsEarned: result.doubloonsEarned - banked.doubloons, stats: { ...result.stats, kills: result.stats.kills - banked.kills } }, true)
+      : applyRunResult(this.profile, result);
     saveProfile(this.profile);
     this.result = result;
     this.setScreen('results');
@@ -163,6 +169,12 @@ export class GameApp {
       onPause: (paused) => { this.paused = paused; this.sim?.setPaused(paused); },
       onRetire: () => { this.sim?.retire(); },
       onReturnToHarbor: () => { this.sim = null; this.world = this.menuWorld; this.setScreen('harbor'); },
+      onContinueEndless: () => {
+        const r = this.result;
+        if (!this.sim || r?.outcome !== 'victory') return;
+        this.credited = { doubloons: r.doubloonsEarned, kills: r.stats.kills };
+        if (this.sim.continueEndless()) { this.result = null; this.setScreen('run'); }
+      },
       onPurchaseUpgrade: (id: MetaUpgradeId) => { if (purchaseUpgrade(this.profile, id)) saveProfile(this.profile); },
       onUnlockShip: (id) => { if (unlockShip(this.profile, id)) { this.selectedShip = id; saveProfile(this.profile); } },
       onSettingsChange: (settings) => { this.settings = settings; saveSettings(settings); this.audio.setSettings(settings); },

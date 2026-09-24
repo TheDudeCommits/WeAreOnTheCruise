@@ -221,10 +221,11 @@ function syncUnlocks(profile: MetaProfile): string[] {
  * Banks a finished run into the profile and returns what it unlocked, in display order: achievements, then ships
  * and seas, then doubloon ships that just became affordable.
  */
-export function applyRunResult(profile: MetaProfile, result: RunResult): string[] {
+/** `continuation`: the endless stretch of a run already credited at its victory (not another run or win). */
+export function applyRunResult(profile: MetaProfile, result: RunResult, continuation = false): string[] {
   const lines: string[] = [];
   const before = profile.doubloons;
-  profile.runs++;
+  if (!continuation) profile.runs++;
   profile.doubloons += Math.max(0, Math.floor(result.doubloonsEarned));
   profile.totalKills += Math.max(0, Math.floor(result.stats.kills));
   profile.bestTime[result.shipId] = Math.max(profile.bestTime[result.shipId] ?? 0, result.time);
@@ -239,7 +240,7 @@ export function applyRunResult(profile: MetaProfile, result: RunResult): string[
   if (result.time >= 600) grant('survive-10');
   if (result.stats.bossesDefeated.includes('iron-warden')) grant('defeat-iron-warden');
   if (result.stats.bossesDefeated.includes('tidewyrm')) grant('defeat-tidewyrm');
-  if (result.outcome === 'victory') { grant('win-run'); profile.wins++; }
+  if (result.outcome === 'victory' && !continuation) { grant('win-run'); profile.wins++; }
   if (profile.totalKills >= 1000) grant('kills-1000');
   lines.push(...syncUnlocks(profile));
   for (const id of SHIP_IDS) {

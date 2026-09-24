@@ -123,6 +123,7 @@ const callbacks: UiCallbacks = {
   onPause: (p) => { state.paused = p; const r = state.run; if (p && r.status === 'running') r.status = 'paused'; else if (!p && r.status === 'paused') r.status = 'running'; },
   onRetire: () => { emit({ type: 'run-ended', outcome: 'retired' }); state.run.status = 'dead'; window.setTimeout(() => showResults('retired'), 1200); },
   onReturnToHarbor: () => setScreen('harbor'),
+  onContinueEndless: () => setScreen('run'),
   onPurchaseUpgrade: (id) => { purchaseUpgrade(state.profile, id); },
   onUnlockShip: (id) => { if (unlockShip(state.profile, id)) state.selectedShip = id; },
   onSettingsChange: (s: Settings) => { state.settings = s; },

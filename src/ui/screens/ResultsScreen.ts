@@ -33,6 +33,7 @@ export class ResultsScreen {
   private readonly record: HTMLElement;
   private readonly again: HTMLButtonElement;
   private readonly harbor: HTMLButtonElement;
+  private readonly endless: HTMLButtonElement;
   private result: Readonly<RunResult> | null = null;
   private key = '';
   private t = 0;
@@ -53,6 +54,8 @@ export class ResultsScreen {
     this.harbor = navButton('cr-btn is-ghost', prompt(['ESC'], 'B', ''), h('span', 'cr-btn__label', 'Return to Harbor'));
     this.again = navButton('cr-btn is-primary', prompt(['ENTER'], 'A', ''), h('span', 'cr-btn__label', 'Sail Again'));
     this.again.dataset.navDefault = '';
+    this.endless = navButton('cr-btn is-ghost', h('span', 'cr-btn__label', 'Keep Sailing'));
+    this.endless.addEventListener('click', () => this.cb.onContinueEndless());
     this.harbor.addEventListener('click', () => this.cb.onReturnToHarbor());
     this.again.addEventListener('click', () => { if (this.result) this.cb.onStartRun(this.result.shipId, this.result.seaId); });
     this.headlineEl = headline;
@@ -76,7 +79,7 @@ export class ResultsScreen {
           h('div', 'cr-log__block', h('div', 'cr-log__heading', glyph('cannon'), 'Top guns'), this.guns),
           this.unlockBlock,
         ),
-        h('div', 'cr-results__buttons', this.harbor, this.again),
+        h('div', 'cr-results__buttons', this.harbor, this.endless, this.again),
       ),
     );
     this.headline = new TextCell(headline);
@@ -124,6 +127,7 @@ export class ResultsScreen {
 
   private build(r: Readonly<RunResult>, f: UiFrame): void {
     this.result = r;
+    this.endless.hidden = r.outcome !== 'victory';
     this.t = 0;
     this.stamped = false;
     this.doubloonsShown = -1;
