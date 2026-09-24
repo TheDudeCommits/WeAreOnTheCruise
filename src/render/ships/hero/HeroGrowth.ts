@@ -230,11 +230,15 @@ export class HeroGrowth {
     const main = p.rails[0] ?? [];
     const others = p.rails.slice(1);
 
-    // T1 — bronze deck cannons along the main rails.
+    // T1 — big bronze deck cannons along every rail zone (main deck 2–4 per side, other decks 1–2).
     const t1 = this.feature('tier1-cannons', new THREE.Vector3(0, p.deckY, 0), p.length * 0.4);
-    for (const st of pickStations(main, clampInt(Math.round(spanOf(main) / (7.5 * ps)), 2, 4))) {
-      for (const side of [1, -1]) this.item(t1, 'deckCannon', new THREE.Vector3((st.x - 1.25 * ps) * side, st.deckY, st.z), side > 0 ? 0 : Math.PI, ps);
-    }
+    const bronze = ps * 1.3;
+    p.rails.forEach((band, bi) => {
+      const count = bi === 0 ? clampInt(Math.round(spanOf(band) / (6.5 * ps)), 2, 4) : clampInt(Math.round(spanOf(band) / (7 * ps)), 1, 2);
+      for (const st of pickStations(band, count)) {
+        for (const side of [1, -1]) this.item(t1, 'deckCannon', new THREE.Vector3((st.x - 1.2 * bronze) * side, st.deckY, st.z), side > 0 ? 0 : Math.PI, bronze);
+      }
+    });
 
     // T2 — plating chunks and lanterns.
     const t2p = this.feature('tier2-plating', new THREE.Vector3(0, p.guns[3]?.y ?? 2, 0), p.length * 0.5);
@@ -262,16 +266,11 @@ export class HeroGrowth {
     const t3p = this.feature('tier3-prow', p.prow, 4 * ps);
     this.item(t3p, 'prowPlates', p.prow, 0, ps * 1.1);
     const t3c = this.feature('tier3-cannons', new THREE.Vector3(0, p.deckY, 0), p.length * 0.4);
-    for (const band of others) {
-      for (const st of pickStations(band, clampInt(Math.round(spanOf(band) / (6 * ps)), 1, 2))) {
-        for (const side of [1, -1]) this.item(t3c, 'deckCannonIron', new THREE.Vector3((st.x - 1.2 * ps) * side, st.deckY, st.z), side > 0 ? 0 : Math.PI, ps * 0.92);
-      }
-    }
-    if (others.length === 0) {
-      // Single-deck ships get extra main-deck guns instead.
-      const extra = pickStations(main, 5).filter((_, i) => i % 2 === 1);
-      for (const st of extra) for (const side of [1, -1]) this.item(t3c, 'deckCannonIron', new THREE.Vector3((st.x - 1.2 * ps) * side, st.deckY, st.z), side > 0 ? 0 : Math.PI, ps * 0.92);
-    }
+    // Heavier iron guns interleaved between the tier-1 bronze ones on the main deck.
+    const mainCount = clampInt(Math.round(spanOf(main) / (6.5 * ps)), 2, 4);
+    const between = pickStations(main, mainCount * 2 + 1).filter((_, i) => i % 2 === 1);
+    for (const st of between) for (const side of [1, -1]) this.item(t3c, 'deckCannonIron', new THREE.Vector3((st.x - 1.2 * ps) * side, st.deckY, st.z), side > 0 ? 0 : Math.PI, ps * 1.05);
+    void others;
 
     // T4 — figurehead sun halo, glow trim, mast caps, embers.
     const t4 = this.feature('tier4-glory', p.figurehead, p.figureheadRadius * 1.6);
@@ -629,7 +628,7 @@ function platingChunk(stations: readonly PlatingStation[], side: 1 | -1, partSca
   const off = 0.16;
   const positions: number[] = [];
   const indices: number[] = [];
-  const iron = new THREE.Color(parts.PALETTE.ironBlue);
+  const iron = new THREE.Color(0x6f89a6);
   // Two rows (bottom, top) per station, pushed slightly outboard.
   for (const st of stations) {
     positions.push((st.x0 + off) * side, st.y0, st.z, (st.x1 + off) * side, st.y1, st.z);
@@ -644,7 +643,7 @@ function platingChunk(stations: readonly PlatingStation[], side: 1 | -1, partSca
   for (let i = 0; i < stations.length; i++) {
     const st = stations[i]!;
     for (const [x, y] of [[st.x0, st.y0 + 0.18 * partScale], [st.x1, st.y1 - 0.18 * partScale]] as const) {
-      b.sphere(0.13 * partScale, 6, 4, { at: [(x + off + 0.05) * side, y, st.z], color: parts.PALETTE.gold });
+      b.sphere(0.17 * partScale, 6, 4, { at: [(x + off + 0.05) * side, y, st.z], color: parts.PALETTE.gold });
     }
     if (i === 0 || i === stations.length - 1) {
       b.box(0.14, Math.abs(st.y1 - st.y0) + 0.2, 0.3 * partScale, { at: [((st.x0 + st.x1) / 2 + off + 0.05) * side, (st.y0 + st.y1) / 2, st.z], color: parts.PALETTE.iron });
@@ -656,7 +655,7 @@ function platingChunk(stations: readonly PlatingStation[], side: 1 | -1, partSca
     for (const [xa, ya, xc, yc] of [[a.x0, a.y0, c.x0, c.y0], [a.x1, a.y1, c.x1, c.y1]] as const) {
       const len = Math.hypot(xc - xa, yc - ya, c.z - a.z);
       const yaw = Math.atan2((xc - xa) * side, c.z - a.z);
-      b.box(0.2, 0.2, len + 0.05, { at: [((xa + xc) / 2 + off + 0.04) * side, (ya + yc) / 2, (a.z + c.z) / 2], rot: [0, yaw, 0], color: parts.PALETTE.iron });
+      b.box(0.26, 0.26, len + 0.05, { at: [((xa + xc) / 2 + off + 0.06) * side, (ya + yc) / 2, (a.z + c.z) / 2], rot: [0, yaw, 0], color: 0xc9d6e2 });
     }
   }
   return b.build();
