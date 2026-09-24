@@ -50,8 +50,8 @@ const SPECS: Record<'night' | 'dawn' | 'noon' | 'golden' | 'dusk' | 'storm' | 'f
     shadowTint: 0x3b2f86, highlightTint: 0xff9e74, split: 0.32, vignette: 0.34, vignetteColor: 0x180a2a, bloomStrength: 0.9, bloomThreshold: 0.86,
   },
   storm: {
-    exposure: 0.98, lift: [0.012, 0.035, 0.04], gamma: [1, 1.02, 1.02], gain: [0.9, 1.0, 1.0], saturation: 0.72, contrast: 1.1,
-    shadowTint: 0x1f4656, highlightTint: 0xdaf2ec, split: 0.26, vignette: 0.42, vignetteColor: 0x02121a, bloomStrength: 0.85, bloomThreshold: 0.88,
+    exposure: 1.0, lift: [0.03, 0.05, 0.05], gamma: [1, 1.02, 1.02], gain: [0.92, 1.0, 0.98], saturation: 0.62, contrast: 1.08,
+    shadowTint: 0x2a4a50, highlightTint: 0xe2f2ea, split: 0.24, vignette: 0.4, vignetteColor: 0x06161a, bloomStrength: 0.85, bloomThreshold: 0.88,
   },
   fog: {
     exposure: 1.03, lift: [0.07, 0.07, 0.075], gamma: [1, 1, 1], gain: [0.97, 0.98, 1.0], saturation: 0.82, contrast: 0.9,

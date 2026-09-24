@@ -22,7 +22,7 @@ import { WorldVisuals } from '../../world/WorldVisuals';
 import { PostStack } from '../PostStack';
 import { RendererHost } from '../RendererHost';
 
-type CamMode = 'showcase' | 'tactical' | 'fleet' | 'sky';
+type CamMode = 'showcase' | 'tactical' | 'fleet' | 'sky' | 'moon';
 
 /** Lengths the downloaded GLBs were normalized to at intake (metres). */
 const SOURCE_LENGTH: Record<HeroModelKey, number> = {
@@ -52,7 +52,7 @@ const scene = host.scene;
 const camera = host.camera;
 
 let quality: QualityTier = (['low', 'medium', 'high', 'ultra'] as const).find((q) => q === params.get('quality')) ?? 'high';
-let camMode: CamMode = (['showcase', 'tactical', 'fleet', 'sky'] as const).find((c) => c === params.get('cam')) ?? 'showcase';
+let camMode: CamMode = (['showcase', 'tactical', 'fleet', 'sky', 'moon'] as const).find((c) => c === params.get('cam')) ?? 'showcase';
 let selected: ShipId = (SHIP_ORDER.find((s) => s === params.get('ship')) ?? 'sunlion');
 let hour = Number(params.get('hour') ?? 16.8);
 let playing = params.get('play') === '1';
@@ -303,7 +303,14 @@ function tick(dt: number): void {
   updateShips(ctx);
   updateBursts(dt);
   cameraDirector.update(ctx);
-  if (camMode === 'sky') {
+  if (camMode === 'moon') {
+    // Ship in the foreground, moon (or sun by day) above it: a T4-style composition.
+    const d = hour > 6 && hour < 19 ? sky.sunDirection : sky.moonDirection;
+    const hx = d.x / Math.max(1e-3, Math.hypot(d.x, d.z)), hz = d.z / Math.max(1e-3, Math.hypot(d.x, d.z));
+    camera.position.set(focus.x - hx * 150, 24, focus.z - hz * 150);
+    camera.lookAt(focus.x + hx * 400, 24 + Math.tan(Math.asin(d.y)) * 400 * 0.55, focus.z + hz * 400);
+    camera.fov = 50; camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+  } else if (camMode === 'sky') {
     // Sky review: low eye point looking at the cloud ring and the horizon, slowly panning.
     const az = time * 0.05 + skyYaw;
     camera.position.set(focus.x, 26, focus.z);
@@ -376,7 +383,7 @@ panel.append(
   toggle('time flows', playing, (v) => { playing = v; }),
   select('Weather', ['clear', 'breezy', 'storm', 'fog'] as const, weather, (v) => { weather = v; }),
   select('Quality', ['low', 'medium', 'high', 'ultra'] as const, quality, (v) => { quality = v; }),
-  select('Camera', ['showcase', 'tactical', 'fleet', 'sky'] as const, camMode, (v) => { camMode = v; cameraDirector.resetView(); }),
+  select('Camera', ['showcase', 'tactical', 'fleet', 'sky', 'moon'] as const, camMode, (v) => { camMode = v; cameraDirector.resetView(); }),
   select('Ship', SHIP_ORDER, selected, (v) => { selected = v; }),
   select('Enemy fleet', ['0', '12', '24', '48'] as const, String(fleetCount) as '0', (v) => { fleetCount = Number(v); }),
   toggle('ink', true, (v) => { post.overrides.ink = v; }),

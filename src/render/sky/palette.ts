@@ -48,7 +48,7 @@ function look(spec: LookSpec): SkyLook {
 
 const NIGHT: LookSpec = {
   zenith: 0x040b2a, horizon: 0x172a5e, haze: 0x1b2d5e, key: [0.5, 0.62, 1.0], keyIntensity: 0.62,
-  shadow: [0.12, 0.15, 0.34], rim: [0.45, 0.62, 1.0], cloudLit: 0x5d74bb, cloudShade: 0x1a2553, ink: 0x0b1030,
+  shadow: [0.12, 0.15, 0.34], rim: [0.45, 0.62, 1.0], cloudLit: 0x8a9fe0, cloudShade: 0x1f2a5e, ink: 0x0b1030,
   fogNear: 240, fogFar: 2100, stars: 1,
 };
 
@@ -110,8 +110,8 @@ const KEYS: readonly [number, LookSpec][] = [
 const LOOKS: [number, SkyLook][] = KEYS.map(([h, spec]) => [h, look(spec)]);
 
 export const STORM_LOOK = look({
-  zenith: 0x1d2b33, horizon: 0x4a5f66, haze: 0x5b6e73, key: [0.66, 0.76, 0.8], keyIntensity: 0.62,
-  shadow: [0.3, 0.37, 0.42], rim: [0.7, 0.85, 0.9], cloudLit: 0x6c7f86, cloudShade: 0x243238, ink: 0x0d1a22,
+  zenith: 0x27383d, horizon: 0x62797a, haze: 0x72888a, key: [0.7, 0.8, 0.82], keyIntensity: 0.68,
+  shadow: [0.34, 0.41, 0.45], rim: [0.72, 0.88, 0.92], cloudLit: 0x7d9194, cloudShade: 0x2b3a3f, ink: 0x0d1a22,
   fogNear: 150, fogFar: 1400, stars: 0,
 });
 
@@ -168,8 +168,10 @@ export function lookForHour(out: SkyLook, hour: number): SkyLook {
 export const SUNRISE = 5.8;
 export const SUNSET = 19.1;
 const SUN_MAX_ELEVATION = THREE.MathUtils.degToRad(58);
-const MOON_MIN_ELEVATION = THREE.MathUtils.degToRad(24);
-const MOON_MAX_ELEVATION = THREE.MathUtils.degToRad(44);
+// Low enough to sit in frame for low showcase angles (the tactical camera never sees the sky anyway), high enough
+// that moonlight still reaches decks.
+const MOON_MIN_ELEVATION = THREE.MathUtils.degToRad(14);
+const MOON_MAX_ELEVATION = THREE.MathUtils.degToRad(30);
 
 /** World direction to the sun for an hour (may point below the horizon at night). Rises east (+X), sets west (−X). */
 export function sunDirection(hour: number, out: THREE.Vector3): THREE.Vector3 {

@@ -71,6 +71,11 @@ export class SkySystem implements RenderSystem {
   /** Lab override: pinned hour (null = follow sea.timeOfDay). */
   hourOverride: number | null = null;
 
+  /** World direction to the moon this frame (read-only; the camera lab frames shots with it). */
+  get moonDirection(): THREE.Vector3 { return this.moonDir; }
+  /** World direction to the sun this frame (read-only; may point below the horizon at night). */
+  get sunDirection(): THREE.Vector3 { return this.sunDir; }
+
   init(host: RenderHostHandles): void {
     this.scene = host.scene;
     this.camera = host.camera;
@@ -218,7 +223,8 @@ export class SkySystem implements RenderSystem {
     c.uRimColor.value.copy(look.rim);
     c.uFade.value = fogAmount * 0.75;
     c.uFlash.value = this.flash;
-    c.uOpacity.value = 1 - fogAmount * 0.5;
+    // In a storm the cards sink into the rolling deck instead of reading as cut-outs over it.
+    c.uOpacity.value = (1 - fogAmount * 0.5) * (1 - storm * 0.55);
     this.clouds.setDensity(this.profile.clouds * THREE.MathUtils.clamp(0.62 + breezy * 0.25 + storm * 0.38 - fogAmount * 0.4, 0.15, 1));
     this.clouds.update(ctx.time, focusX, focusZ, sea.windDir, this.camera.position);
 

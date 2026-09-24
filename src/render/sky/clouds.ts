@@ -95,9 +95,10 @@ void main() {
 	vec3 sun = normalize( vSunCard );
 	float ndl = dot( n, sun );
 	float litAA = fwidth( ndl ) + 1e-3;
-	float lit = smoothstep( -0.05 - litAA, -0.05 + litAA, ndl );
+	// Anime cumulus are mostly lit: the terminator sits well past 90° (scattering wraps light around the mass).
+	float lit = smoothstep( -0.24 - litAA, -0.24 + litAA, ndl );
 	// Second, deeper shade band in the cores facing away from the sun.
-	float deep = 1.0 - smoothstep( -0.45 - litAA, -0.45 + litAA, ndl );
+	float deep = 1.0 - smoothstep( -0.62 - litAA, -0.62 + litAA, ndl );
 	vec3 col = mix( uShade, uLit, lit );
 	col = mix( col, uShade * 0.84, deep * 0.6 );
 	// Heavier, cooler underside.
@@ -110,7 +111,7 @@ void main() {
 	col += uRimColor * edge * mix( facing, 1.0, backlit * 0.6 ) * ( 0.55 + 1.2 * backlit );
 	col += vec3( 0.8, 0.88, 1.0 ) * uFlash * ( 0.4 + lit * 0.6 );
 	// Aerial perspective: far and low cards melt into the haze.
-	float fade = clamp( ( vDist - 900.0 ) / 3200.0, 0.0, 1.0 ) * 0.42 + ( 1.0 - smoothstep( 0.0, 0.1, vElevation ) ) * 0.18;
+	float fade = clamp( ( vDist - 900.0 ) / 3200.0, 0.0, 1.0 ) * 0.3 + ( 1.0 - smoothstep( 0.0, 0.1, vElevation ) ) * 0.18;
 	col = mix( col, uHaze, clamp( fade + uFade, 0.0, 0.96 ) );
 	gl_FragColor = vec4( col, alpha * uOpacity );
 }
