@@ -174,7 +174,7 @@ export const FOES = {
     /** Flare flight (s), mark duration (s) and flare reload (s, min/max). */
     flight: 1.1, markTime: 6, cooldown: [9, 12] as const,
     /** Admiralty ships this close to the marked ship fire faster (×reload), tighter (×spread), lead more, cost fewer tokens. */
-    buffRadius: 300, reload: 0.6, spread: 0.5, lead: 0.3, fireCost: 0.6,
+    buffRadius: 300, reload: 0.72, spread: 0.6, lead: 0.25, fireCost: 0.8,
   },
   ironclad: {
     /** Charges when the target is inside `lineUp` and roughly on the bow. */
@@ -246,7 +246,7 @@ export const AFFIX_TUNING = {
  */
 export const NAMED_CAPTAINS = {
   /** First arrival (s) and the gap between arrivals (s); at most `max` per run, one alive at a time. */
-  first: [200, 260] as const,
+  first: [300, 360] as const,
   gap: [170, 230] as const,
   max: 4,
   /** Target hull: base × (1 + perMinute × minute) × sea difficulty factor, clamped to 1.5–3× a regular elite. */
