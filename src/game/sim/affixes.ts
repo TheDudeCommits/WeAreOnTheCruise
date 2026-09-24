@@ -64,7 +64,13 @@ export function hasAffix(e: EnemyState, id: EliteAffixId): boolean {
  * (`named: true` makes the next elite a named captain); the hook also receives `sim` (this run's SimContext) every tick
  * so capture scripts can stage scenes. Absent in normal play.
  */
-export interface FoesQa { affixes?: EliteAffixId[]; named?: boolean; sim?: SimContext }
+export interface FoesQa {
+  affixes?: EliteAffixId[];
+  named?: boolean;
+  sim?: SimContext;
+  /** Re-rolls an elite's affixes now (with `affixes` forced when set). */
+  roll?: (e: EnemyState) => void;
+}
 export function foesQa(): FoesQa | null {
   const g = globalThis as { __FOES_QA__?: FoesQa };
   return g.__FOES_QA__ ?? null;
@@ -133,7 +139,7 @@ function applyAffixes(e: EnemyState): void {
 
 export function updateAffixes(c: SimContext): void {
   const q = foesQa();
-  if (q) q.sim = c;
+  if (q) { q.sim = c; q.roll = (e) => { e.affixes.length = 0; e.ai.affixRolled = 0; rollAffixes(c, e); }; }
   const fr = foeRuntime(c);
   fr.cmdN = 0;
   const enemies = c.state.enemies;

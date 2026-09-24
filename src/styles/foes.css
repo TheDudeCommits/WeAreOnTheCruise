@@ -1,0 +1,35 @@
+/* Round-1 foes (FOES): elite nameplates, affix tags on offscreen markers, bounty-captain and signal markers, "Marked!" chip.
+   Imported by src/ui/hud/Markers.ts. */
+
+/* ── Nameplates over on-screen elites and named captains ── */
+.cr-plate { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; align-items: center; gap: calc(3 * var(--u)); translate: -50% calc(-100% - 10 * var(--u)); will-change: transform; white-space: nowrap; }
+.cr-plate__head { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.cr-plate__name { font: 400 var(--fs-18)/1 var(--f-comic); letter-spacing: .05em; color: var(--gold); -webkit-text-stroke: var(--stroke-s) var(--ink); paint-order: stroke fill; text-shadow: 0 calc(2 * var(--u)) 0 var(--ink); }
+.cr-plate__sub { font: 900 italic var(--fs-12)/1.1 var(--f-ui); letter-spacing: .06em; color: #ffe7b0; text-shadow: 0 1px 0 var(--ink), 0 0 3px var(--ink); }
+.cr-plate__sub:empty { display: none; }
+.cr-plate__tags { display: flex; gap: calc(4 * var(--u)); }
+.cr-plate__tag { display: inline-flex; align-items: center; gap: calc(3 * var(--u)); padding: calc(1 * var(--u)) calc(7 * var(--u)) calc(1 * var(--u)) calc(2 * var(--u)); border-radius: 999px; background: rgba(8, 12, 30, .82); border: calc(2 * var(--u)) solid var(--ax, var(--gold)); box-shadow: 0 0 calc(6 * var(--u)) var(--ax, var(--gold)); }
+.cr-plate__ico.cr-ico { width: calc(18 * var(--u)); height: calc(18 * var(--u)); background: var(--ax, var(--gold)); border-width: calc(1.5 * var(--u)); color: var(--ink); }
+.cr-plate__tagtext { font: 900 var(--fs-12)/1 var(--f-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--ax, var(--gold)); }
+.cr-plate__bar { position: relative; width: calc(96 * var(--u)); height: calc(8 * var(--u)); border-radius: 999px; background: rgba(20, 4, 8, .85); border: calc(2 * var(--u)) solid var(--ink); overflow: hidden; }
+.cr-plate__hp, .cr-plate__shield { position: absolute; inset: 0; transform-origin: left; transform: scaleX(1); }
+.cr-plate__hp { background: linear-gradient(180deg, #ffd35e, #ff9a1c); }
+.cr-plate__shield { background: linear-gradient(180deg, rgba(174, 230, 255, .95), rgba(63, 157, 255, .95)); transform: scaleX(0); mix-blend-mode: normal; }
+.cr-plate.is-named .cr-plate__name { font-size: var(--fs-24, calc(24 * var(--u))); color: #ffe066; text-shadow: 0 calc(2 * var(--u)) 0 var(--ink), 0 0 calc(10 * var(--u)) rgba(255, 90, 40, .8); }
+.cr-plate.is-named .cr-plate__bar { width: calc(150 * var(--u)); height: calc(10 * var(--u)); box-shadow: 0 0 0 calc(2 * var(--u)) rgba(255, 176, 60, .6); }
+.cr-plate.is-named .cr-plate__hp { background: linear-gradient(180deg, #ff8a6a, #d92a1c); }
+
+/* ── Offscreen markers: bounty captains, signal cutters, affix tags ── */
+.cr-marker[data-kind='bounty'] { --mk: #ff8a1c; }
+.cr-marker[data-kind='bounty'] .cr-marker__icon { color: var(--white); width: calc(46 * var(--u)); height: calc(46 * var(--u)); left: calc(-23 * var(--u)); top: calc(-23 * var(--u)); box-shadow: 0 0 0 calc(3 * var(--u)) var(--gold), 0 calc(3 * var(--u)) 0 rgba(4, 8, 22, .5); animation: cr-mk-pulse 1.2s ease-in-out infinite; }
+.cr-marker[data-kind='signal'] { --mk: #ff5a4a; }
+.cr-marker[data-kind='signal'] .cr-marker__icon { color: var(--white); animation: cr-mk-pulse .8s ease-in-out infinite; }
+.cr-marker__label { position: absolute; left: 50%; top: calc(-44 * var(--u)); transform: translateX(-50%); display: flex; align-items: center; gap: calc(3 * var(--u)); white-space: nowrap; }
+.cr-marker__labeltext { font: 400 var(--fs-14)/1 var(--f-comic); letter-spacing: .05em; color: #ffe066; -webkit-text-stroke: var(--stroke-s) var(--ink); paint-order: stroke fill; }
+.cr-marker__labeltext:empty { display: none; }
+.cr-marker__tag { display: inline-grid; place-items: center; }
+.cr-marker__tagico.cr-ico { width: calc(20 * var(--u)); height: calc(20 * var(--u)); background: var(--ax, var(--gold)); color: var(--ink); border-width: calc(2 * var(--u)); box-shadow: 0 0 calc(6 * var(--u)) var(--ax, var(--gold)); }
+
+/* ── "Marked!" chip under the player's ship while a signal flare marks it ── */
+.cr-markchip { position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: calc(5 * var(--u)); translate: -50% 0; padding: calc(3 * var(--u)) calc(10 * var(--u)) calc(3 * var(--u)) calc(6 * var(--u)); border-radius: 999px; background: #6b1010; border: calc(2 * var(--u)) solid var(--ink); color: #ffd3cd; font: 900 var(--fs-12)/1 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; box-shadow: 0 0 calc(12 * var(--u)) rgba(255, 60, 40, .8); animation: cr-mk-pulse .8s ease-in-out infinite; will-change: transform; }
+.cr-markchip__icon .cr-glyph { width: calc(16 * var(--u)); height: calc(16 * var(--u)); color: #ff8a7a; }
