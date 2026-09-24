@@ -125,7 +125,7 @@ export class StateFx {
     this.hazards(ctx, run, dt);
     this.pickups(run);
     this.telegraphs(run);
-    for (const e of run.enemies) if (e.hidden < 1) this.ship(e, dt, false);
+    for (const e of run.enemies) if (e.hidden < 1 && e.defId !== 'kraken-arm') this.ship(e, dt, false);
     for (const b of run.bosses) this.ship(b, dt, true);
     this.player(run, dt);
     this.tethers(run);

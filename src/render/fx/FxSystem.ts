@@ -254,6 +254,7 @@ export class FxSystem implements RenderSystem {
   dispose(): void {
     this.scene?.remove(this.group);
     for (const p of this.passes) p.dispose();
+    this.worldEvents.dispose();
     const k = this.kit;
     k.trails.dispose(); k.beams.dispose(); k.ropes.dispose(); k.decals.dispose(); k.debris.dispose(); k.props.dispose();
     k.numbers.dispose(); k.walls.dispose();

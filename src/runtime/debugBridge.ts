@@ -3,7 +3,10 @@
  * Capture helpers never change gameplay rules; they only drive the same app loop with fixed steps.
  */
 import type * as THREE from 'three';
+import { DIRECTOR_EVENTS, type DirectorEventId } from '../game/content/director';
 import type { BossId, EnemyId, SeaId, ShipId, WeaponId } from '../game/ids';
+import { startEvent } from '../game/sim/director';
+import { forcePoi } from '../game/sim/events/poi';
 import type { SimAction } from '../game/types';
 import type { GameApp } from './GameApp';
 import { hurtCaptain } from '../game/sim/captains-damage';
@@ -45,6 +48,11 @@ export interface CruiseBridge {
     chargeUltimate(): void;
     /** Sinks an AI captain (id −1…−4; default the first afloat) — QA for sinking and respawn. */
     sinkCaptain(id?: number): void;
+    /**
+     * Forces a director set piece now (EVENTS QA): any DirectorEventId, or a point of interest in front of the ship
+     * with 'poi:trade-wind' | 'poi:salvage' | 'poi:beacon'. False for an unknown id or no run.
+     */
+    event(id: string): boolean;
   };
 }
 
@@ -150,6 +158,13 @@ export function installDebugBridge(app: GameApp): void {
         if (!s) return;
         const k = s.state.captains.find((x) => (id === undefined ? x.alive : x.id === id));
         if (k && k.alive) { k.ai.grace = 0; hurtCaptain(s, k, k.hp * 4 + 100); }
+      },
+      event: (id) => {
+        const s = sim();
+        if (s && id.startsWith('poi:')) return forcePoi(s, id.slice(4));
+        if (!s || !(id in DIRECTOR_EVENTS)) return false;
+        startEvent(s, id as DirectorEventId);
+        return true;
       },
     },
   };

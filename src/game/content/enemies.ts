@@ -105,9 +105,11 @@ export const ENEMIES: Readonly<Record<EnemyId, EnemyDef>> = {
     speed: 8.5, turnRate: 0.45, mass: 1300, behavior: 'broadside', contactDamage: 12, xp: 16, doubloonChance: 0.25, firstMinute: 9,
     attack: { projectile: 'enemy-cannonball', damage: 7, cooldown: 5.2, range: 170, count: 6, spread: 0.17, speed: 82, lead: 0.4, telegraph: 0.6 },
   },
+  // EVENTS: spawned only by the Kraken Rising set piece (src/game/sim/events/kraken.ts drives its slams and grabs;
+  // src/render/fx/world-events/Tentacles.ts draws it — SHIPS has no model for it). Never in a spawn band.
   'kraken-arm': {
-    id: 'kraken-arm', name: "Kraken's Arm", faction: 'deep', modelKey: 'kraken-arm', length: 26, radius: 6, hp: 220, armor: 1,
-    speed: 0, turnRate: 0, mass: 1e6, behavior: 'stationary', contactDamage: 14, xp: 6, doubloonChance: 0.05, firstMinute: 99,
+    id: 'kraken-arm', name: "Kraken's Arm", faction: 'deep', modelKey: 'kraken-arm', length: 26, radius: 6, hp: 150, armor: 1,
+    speed: 0, turnRate: 0, mass: 1e6, behavior: 'stationary', contactDamage: 10, xp: 8, doubloonChance: 0.08, firstMinute: 99,
   },
 };
 
@@ -163,7 +165,8 @@ export const ENEMY_AI: Readonly<Record<EnemyId, EnemyAiDef>> = {
   'smoke-runner': AI({ skill: 0.3, fireCost: 0.4 }),
   'lantern-wisp': AI({ skill: 0.3, area: 12 }),
   'drowned-galleon': AI({ skill: 0.6, rangeFrac: 0.72, gunSpan: 0.7, doubloons: 4, fireCost: 1.5 }),
-  'kraken-arm': AI({ skill: 0.5, area: 12 }),
+  // EVENTS: slam/grab tuning lives in EVENT_TUNING (content/director.ts); `area` = circle-slam radius.
+  'kraken-arm': AI({ skill: 0.6, area: 13, doubloons: 2 }),
 };
 
 /** Round 1 class mechanics (FOES, read by src/game/sim/ai-foes.ts). Distances in m, times in s. */

@@ -656,6 +656,12 @@ function drownedGalleon(c: SimContext, e: EnemyState, def: EnemyDef): void {
   const T = FOES.drowned;
   const ai = e.ai, dt = c.dt;
   const p = focusOf(c, e);
+  // Ghost Fleet (EVENTS) raises its galleons in place (ai.gRise): wait for that, then go straight to the fight.
+  if (ai.gRise === 1) return;
+  if (ai.dg === undefined && ai.gT !== undefined) {
+    ai.dg = DG_FIGHT; ai.t = rand(c, T.surface[0], T.surface[1]);
+    ai.reloadP = rand(c, 0.4, 1.2); ai.reloadS = rand(c, 0.4, 1.2); ai.mode = 0;
+  }
   if (ai.dg === undefined) {
     ai.dg = DG_DEEP; ai.t = rand(c, 1, 2.5); ai.sub = 1;
     enterLimbo(e);

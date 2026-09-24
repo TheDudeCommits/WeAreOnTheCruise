@@ -67,6 +67,8 @@ export class EventRouter {
   private lastCoin = -10;
   /** Last volley time per AI captain (ms), for the per-captain gunfire cap. */
   private readonly captainShot = new Map<number, number>();
+  /** Router time of the last world-event outcome sting. */
+  private outcomeAt = -10;
   private readonly killTimes: number[] = [];
   private lastCheer = -30;
   private prevScreen: AppScreen | null = null;
@@ -219,7 +221,8 @@ export class EventRouter {
       }
       case 'director-event': return this.directorEvent(e.name);
       case 'world-event':
-        // 'start' is voiced by its director-event banner; outcomes get their own sting.
+        // 'start' is voiced by its director-event banner; outcomes get their own sting (and mute their banner).
+        if (e.phase === 'success' || e.phase === 'fail') this.outcomeAt = this.now;
         if (e.phase === 'success') { this.p('world-event', 'crew-cheer', { gain: 0.9 }); this.p('world-event', 'treasure-sparkle', { delay: 0.25 }); }
         else if (e.phase === 'fail') this.p('world-event', 'boss-horn', { pitch: -4, gain: 0.45 });
         return;
@@ -550,6 +553,8 @@ export class EventRouter {
   }
 
   private directorEvent(name: string): void {
+    // An outcome banner ("Kraken Repelled!") follows its 'world-event' outcome in the same tick: that sting covers it.
+    if (this.now - this.outcomeAt < 0.25) return;
     const n = name.toLowerCase();
     // Round-1 set pieces and bounty captains (matched by name so new events stay data-driven).
     if (n.includes('kraken')) { this.p('director-event', 'serpent-roar', { pitch: -5, gain: 1.1 }); this.p('director-event', 'wave-roar', { delay: 0.5 }); return; }

@@ -73,7 +73,21 @@ export type HazardKind =
   /** Player summons (Escort Skiffs weapon): positions are updated by the sim; SHIPS renders them as small boats. */
   | 'escort-skiff'
   /** Round 1 (FOES): smoke-runner screens. Static, harmless; enemy ships inside are hidden from auto-targeting. */
-  | 'smoke-screen';
+  | 'smoke-screen'
+  // Round 1 (EVENTS, append-only). CORE only ages and expires these; src/game/sim/events/* drives them and
+  // src/render/fx/WorldEventFx.ts draws them.
+  /** The Maelstrom: a vortex of outer radius `radius` pulling ships to its eye; lives `ttl`. */
+  | 'maelstrom'
+  /** A rogue wave: a front `radius` half-wide moving with (vx, vz) (moved by the event, not CORE). */
+  | 'rogue-wave'
+  /** A lava bomb in flight from the eruption's vent (run.worldEvent x/z) to this circle; lands at `ttl`. */
+  | 'lava-bomb'
+  /** A trade-wind lane: a current patch of `radius` carrying ships along (vx, vz); the patch itself stays put. */
+  | 'trade-wind'
+  /** A lighthouse beacon ring (`radius`): sailing through it grants a timed buff. */
+  | 'beacon'
+  /** Floating wreck salvage (`radius`): sail over it to haul up treasure. */
+  | 'salvage';
 
 export type StatusKind = 'burning' | 'slowed' | 'stunned' | 'hooked' | 'submerged' | 'shielded' | 'invulnerable' | 'airborne' | 'frenzy'
   /** Round 1 (PACE): the Momentum passive's speed surge; `magnitude` = current bonus (0.12 = +12% speed). */

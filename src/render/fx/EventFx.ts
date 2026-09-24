@@ -155,6 +155,8 @@ export class EventFx {
         if (e.elite) { fx.shock(e.x, e.z, 18, 0.8, 0xffd84a, 0.9, 1); fx.sparkles(e.x, fx.wy(e.x, e.z) + 6, e.z, 10, 8, GlowPal.Gold, 1.2); }
         break;
       case 'enemy-killed': {
+        // The Kraken's arms are not ships: WorldEventFx dissolves them into ink (no planks, fire or sinking whirl).
+        if (e.defId === 'kraken-arm') break;
         const ship = findShip(run, e.id);
         const length = ship ? ship.length : CONTENT.enemies[e.defId].length * (e.elite ? 1.2 : 1);
         const heading = ship ? ship.heading : rand() * TAU;
