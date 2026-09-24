@@ -121,7 +121,9 @@ class Planner {
       if (smp.zone === 'water') return null;
       lo = Math.min(lo, smp.y); hi = Math.max(hi, smp.y);
     }
-    const k: KitPlacement = { kind, x, y: hi, z, yaw, w, h, d, variant, base: lo - 0.6 };
+    // Houses sink into the uphill side so foundations read as terrace walls, not stilts.
+    const y = kind === 'house' || kind === 'hut' ? lo + (hi - lo) * 0.55 : hi;
+    const k: KitPlacement = { kind, x, y, z, yaw, w, h, d, variant, base: lo - 0.6 };
     this.plan.kit.push(k);
     if (footprint > 0) this.block(x, z, footprint);
     return k;
@@ -135,7 +137,8 @@ function buildPlan(def: IslandDef, palette: PaletteId): IslandPlan {
   // Landmarks and kit claim ground first, vegetation fills around them.
   switch (def.landmark) {
     case 'fort': planFort(p); break;
-    case 'harbor': planHarbor(p); break;
+    case 'harbor': planHarbor(p, false); break;
+    case 'harbor-town': planHarbor(p, true); break;
     case 'lighthouse': planLighthouse(p); break;
     case 'ruins': planRuins(p); break;
     case 'shipwreck': planWreck(p); break;
@@ -395,14 +398,35 @@ function planFort(p: Planner): void {
   }
 }
 
-function planHarbor(p: Planner): void {
+function planHarbor(p: Planner, grand: boolean): void {
   const { def, s, rng } = p;
   const bay = s.shape.spec.bay ?? 0;
+  if (grand) {
+    // Hilltop keep with a ring of towers and walls (the castle above the town, T8).
+    const back = bay + Math.PI;
+    const kx = def.x + Math.sin(back) * rimAt(s, back) * 0.12, kz = def.z + Math.cos(back) * rimAt(s, back) * 0.12;
+    const keep = p.kit('keep', kx, kz, bay, 18, 15, 13, 0, 13);
+    if (keep) p.kit('flag', kx, kz, 0, 1.4, keep.h + 11, 1, 1, 0);
+    const ring = 21, towers = 5;
+    const pts: { x: number; z: number }[] = [];
+    for (let c = 0; c < towers; c++) {
+      const t = bay + Math.PI / towers + (c / towers) * Math.PI * 2;
+      pts.push({ x: kx + Math.sin(t) * ring, z: kz + Math.cos(t) * ring });
+    }
+    for (let c = 0; c < towers; c++) {
+      const a = pts[c]!, b = pts[(c + 1) % towers]!;
+      const dx = b.x - a.x, dz = b.z - a.z;
+      p.kit(c === towers - 1 ? 'gate' : 'wall', (a.x + b.x) / 2, (a.z + b.z) / 2, Math.atan2(dx, dz), 2.6, 7, Math.hypot(dx, dz), 0, 0);
+      const tower = p.kit('tower', a.x, a.z, 0, 7.5, 12 + rng.range(0, 3), 7.5, c % 2 === 0 ? 1 : 0, 6);
+      if (tower && c % 2 === 0) p.kit('flag', a.x, a.z, 0, 1, tower.h + 6, 1, 0, 0);
+    }
+    p.block(kx, kz, ring + 5);
+  }
   // Terraced town rows climbing the slope behind the bay beach.
-  const rows = [0.9, 0.78, 0.66, 0.54, 0.43];
+  const rows = grand ? [0.93, 0.84, 0.75, 0.66, 0.57, 0.48, 0.4] : [0.9, 0.78, 0.66, 0.54, 0.43];
   for (let ri = 0; ri < rows.length; ri++) {
     const frac = rows[ri]!;
-    const spread = 0.75 - ri * 0.08;
+    const spread = (grand ? 0.95 : 0.75) - ri * (grand ? 0.07 : 0.08);
     for (let a = -spread; a <= spread; a += 0.1 + rng.next() * 0.06) {
       const t = bay + a;
       const r = rimAt(s, t) * frac;
@@ -416,7 +440,7 @@ function planHarbor(p: Planner): void {
   // Watch tower at the top of town.
   const topT = bay + rng.range(-0.3, 0.3), topR = rimAt(s, topT) * 0.3;
   const tx = def.x + Math.sin(topT) * topR, tz = def.z + Math.cos(topT) * topR;
-  if (p.top(tx, tz, 0.8, 0) && p.free(tx, tz, 5)) {
+  if (!grand && p.top(tx, tz, 0.8, 0) && p.free(tx, tz, 5)) {
     const tower = p.kit('tower', tx, tz, 0, 8, 18, 8, 1, 6);
     if (tower) p.kit('flag', tx, tz, 0, 1, tower.h + 7, 1, 0, 0);
   }

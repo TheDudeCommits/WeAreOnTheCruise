@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import type { IslandDef, WorldQuery } from '../../game/types';
 import type { WorldFeature } from '../../world/features';
+import { harborSetFeatures, HARBOR_SET_RADIUS } from '../../world/harborSet';
 import { paletteForSea, type PaletteId } from '../../world/seas';
 import type { FrameContext, RenderHostHandles, RenderSystem } from '../frame';
 import { buildFeatureLod, type FeatureLod } from './featureMesh';
@@ -70,6 +71,8 @@ export class WorldVisuals implements RenderSystem {
   private world: WorldQuery | null = null;
   private source: FeatureSource | null = null;
   private refreshTimer = 0;
+  private menu = false;
+  private readonly menuList: WorldFeature[] = [];
   private lastX = Infinity;
   private lastZ = Infinity;
   private buildMs = 0;
@@ -94,6 +97,8 @@ export class WorldVisuals implements RenderSystem {
 
   update(ctx: FrameContext): void {
     if (ctx.world !== this.world) this.setWorld(ctx.world);
+    const menu = ctx.screen === 'title' || ctx.screen === 'harbor';
+    if (menu !== this.menu) { this.menu = menu; this.refreshTimer = 0; }
     const fx = ctx.focus.x, fz = ctx.focus.z;
     this.refreshTimer -= ctx.dt;
     if (this.refreshTimer <= 0 || Math.hypot(fx - this.lastX, fz - this.lastZ) > 30) {
@@ -147,7 +152,15 @@ export class WorldVisuals implements RenderSystem {
 
   private refresh(fx: number, fz: number, seaId: string | null): void {
     const source = this.source!;
-    const features = source.featuresNear(fx, fz, STREAM_RADIUS, this.near);
+    let features = source.featuresNear(fx, fz, STREAM_RADIUS, this.near);
+    if (this.menu) {
+      // Title/harbour: the hand-placed harbour set owns the origin; streamed islands only far behind it.
+      const list = this.menuList;
+      list.length = 0;
+      for (const f of harborSetFeatures()) list.push(f);
+      for (const f of features) if (!f.id.startsWith('menu:') && Math.hypot(f.x, f.z) - f.radius > HARBOR_SET_RADIUS) list.push(f);
+      features = list;
+    }
     const keep = new Set<string>();
     for (const f of features) {
       keep.add(f.id);

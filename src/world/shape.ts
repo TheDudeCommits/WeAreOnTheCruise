@@ -50,7 +50,7 @@ export interface StrataBand {
 const LOBE: Record<Archetype, number> = { dome: 0.17, mesa: 0.15, stack: 0.12, rock: 0.2, cone: 0.1, reef: 0.24, pillar: 0.07 };
 const ROUGH: Record<Archetype, number> = { dome: 0.022, mesa: 0.034, stack: 0.045, rock: 0.07, cone: 0.026, reef: 0.07, pillar: 0.03 };
 const LEAN: Record<Archetype, number> = { dome: 0.16, mesa: 0.045, stack: 0.035, rock: 0.55, cone: 0.32, reef: 0.7, pillar: 0.02 };
-const STRATA: Record<Archetype, number> = { dome: 0.65, mesa: 1, stack: 1, rock: 0.25, cone: 0.35, reef: 0, pillar: 1 };
+const STRATA: Record<Archetype, number> = { dome: 0.65, mesa: 1, stack: 0.4, rock: 0.25, cone: 0.35, reef: 0, pillar: 0.75 };
 
 /** Default share of the coastline that is beach. */
 function beachCoverage(biome: IslandBiome, archetype: Archetype): number {
@@ -114,7 +114,7 @@ export class IslandShape {
     this.bumpAmp = spec.flatTop ? 0
       : a === 'dome' ? spec.height * 0.07 : a === 'cone' ? spec.height * 0.035 : a === 'rock' ? spec.height * 0.08
       : a === 'reef' ? 1.1 : a === 'mesa' ? 1.6 : 0.55;
-    this.strataContrast = a === 'stack' ? 0.5 : a === 'cone' ? 0.4 : a === 'dome' ? 0.8 : 1;
+    this.strataContrast = a === 'stack' ? 0.35 : a === 'cone' ? 0.4 : a === 'pillar' ? 0.85 : a === 'dome' ? 0.8 : 1;
     this.grooveAmp = a === 'mesa' || a === 'pillar' ? 1.5 : a === 'stack' ? 1.1 : a === 'dome' ? 0.9 : a === 'cone' ? 0.8 : a === 'rock' ? 0.35 : 0;
     this.tierRise = spec.tier && a === 'mesa' ? spec.height * (0.28 + rng.next() * 0.16) : 0;
 
@@ -124,12 +124,15 @@ export class IslandShape {
     const strength = STRATA[a];
     this.strata = [];
     let y = 2.2, k = 0;
-    const toneStart = rng.integer(0, 5);
+    let tone = rng.integer(0, 5);
     while (y < top && k < 40) {
-      const thick = base * (0.45 + rng.next() * 1.1);
-      const hard = k % 2 === 0;
-      const inset = (hard ? -0.38 : 0.95) * (0.55 + rng.next() * 0.9) * strength;
-      this.strata.push({ bottom: y, top: y + thick, inset, tone: (toneStart + k) % 5 });
+      // Irregular layers: occasional thin seams between thick beds, tones wander instead of cycling.
+      const seam = rng.chance(0.22);
+      const thick = seam ? base * (0.18 + rng.next() * 0.2) : base * (0.55 + rng.next() * 1.15);
+      const hard = seam ? false : rng.chance(0.55);
+      const inset = (hard ? -0.38 : 0.95) * (0.55 + rng.next() * 0.9) * strength * (seam ? 0.6 : 1);
+      this.strata.push({ bottom: y, top: y + thick, inset, tone });
+      tone = (tone + 1 + rng.integer(0, 3)) % 5;
       y += thick;
       k++;
     }

@@ -77,7 +77,8 @@ function windowQuad(t: KitTargets, lx: number, ly: number, lz: number, w: number
 
 function house(t: KitTargets, k: KitPlacement, lod: number): void {
   const { w, h, d, variant } = k;
-  foundation(t, k, w + 0.6, d + 0.6);
+  // Terrace platform: a little wider than the house, reads as a stone retaining wall on slopes.
+  foundation(t, k, w + 1.6, d + 1.4);
   const wallColor = KIT.walls[variant % KIT.walls.length]!;
   const roofColor = KIT.roofs[Math.floor(variant / 6) % KIT.roofs.length]!;
   t.solid.box(f.m(0, 0.35 + h / 2, 0, w, h, d), wallColor);
