@@ -253,26 +253,51 @@ export function prepareGerstnerWaves(waves: readonly GerstnerWave[] = DEFAULT_GE
   return prepared;
 }
 
-const filterScratch = new Float64Array(16);
+// Per-call scratch (no allocations). Phases are reduced to [0, 2π) before trig: V8's sin/cos are ~4x faster
+// on small arguments, and world coordinates / render time grow large during a run.
+const MAX_WAVES = 16;
+const ampScratch = new Float64Array(MAX_WAVES);
+const horizScratch = new Float64Array(MAX_WAVES);
+const kxScratch = new Float64Array(MAX_WAVES);
+const kzScratch = new Float64Array(MAX_WAVES);
+const wtScratch = new Float64Array(MAX_WAVES);
+let cachedWaves: PreparedWaves | null = null;
+let cachedTime = NaN;
+/** Horizontal amplitudes below this (metres) are ignored by the inversion (height error < 1 cm). */
+const INVERSION_EPS = 0.05;
 
-function fillFilters(p: PreparedWaves, strength: number, footprint: number): void {
-  for (let i = 0; i < p.count; i++) filterScratch[i] = strength * (footprint > 0 ? gerstnerFilter(p.wavelength[i]!, footprint) : 1);
+function reduce(phase: number): number {
+  return phase - TAU * Math.floor(phase / TAU);
 }
 
-/** Fixed-point inversion of the horizontal displacement: returns the base point via the out array [bx, bz]. */
-function invertBase(p: PreparedWaves, x: number, z: number, time: number, out: Float64Array): void {
+function setup(p: PreparedWaves, time: number, strength: number, footprint: number): void {
+  if (p !== cachedWaves || time !== cachedTime) {
+    cachedWaves = p;
+    cachedTime = time;
+    for (let i = 0; i < p.count; i++) {
+      kxScratch[i] = p.k[i]! * p.dirX[i]!;
+      kzScratch[i] = p.k[i]! * p.dirZ[i]!;
+      wtScratch[i] = reduce(p.omega[i]! * time);
+    }
+  }
+  for (let i = 0; i < p.count; i++) {
+    const weight = strength * (footprint > 0 ? gerstnerFilter(p.wavelength[i]!, footprint) : 1);
+    ampScratch[i] = p.amplitude[i]! * weight;
+    horizScratch[i] = ampScratch[i]! * p.steepness[i]!;
+  }
+}
+
+/** Fixed-point inversion of the horizontal displacement: writes the base point into out[0..1]. */
+function invertBase(p: PreparedWaves, x: number, z: number, out: Float64Array): void {
   let bx = x;
   let bz = z;
   for (let iteration = 0; iteration < 2; iteration++) {
     let ox = 0;
     let oz = 0;
     for (let i = 0; i < p.count; i++) {
-      const weight = filterScratch[i]!;
-      if (weight <= 0) continue;
-      const horizontal = p.amplitude[i]! * p.steepness[i]! * weight;
-      if (horizontal <= 0) continue;
-      const phase = p.k[i]! * (p.dirX[i]! * bx + p.dirZ[i]! * bz) - p.omega[i]! * time;
-      const c = Math.cos(phase) * horizontal;
+      const horizontal = horizScratch[i]!;
+      if (horizontal < INVERSION_EPS) continue;
+      const c = Math.cos(reduce(kxScratch[i]! * bx + kzScratch[i]! * bz - wtScratch[i]!)) * horizontal;
       ox += p.dirX[i]! * c;
       oz += p.dirZ[i]! * c;
     }
@@ -284,6 +309,20 @@ function invertBase(p: PreparedWaves, x: number, z: number, time: number, out: F
 }
 
 const baseScratch = new Float64Array(2);
+// One-entry cache: heightAt + normalAt for the same point share the inversion.
+let lastX = NaN;
+let lastZ = NaN;
+let lastT = NaN;
+let lastS = NaN;
+let lastF = NaN;
+let lastP: PreparedWaves | null = null;
+
+function base(p: PreparedWaves, x: number, z: number, time: number, strength: number, footprint: number): void {
+  setup(p, time, strength, footprint);
+  if (x === lastX && z === lastZ && time === lastT && strength === lastS && footprint === lastF && p === lastP) return;
+  invertBase(p, x, z, baseScratch);
+  lastX = x; lastZ = z; lastT = time; lastS = strength; lastF = footprint; lastP = p;
+}
 
 /**
  * Height of the rendered surface at world (x, z). No allocations. `footprint` (metres) fades waves the render
@@ -298,16 +337,14 @@ export function sampleGerstnerHeight(
   footprint = 0,
 ): number {
   const p = prepareGerstnerWaves(waves);
-  fillFilters(p, Math.max(0, strength), footprint);
-  invertBase(p, x, z, time, baseScratch);
+  base(p, x, z, time, Math.max(0, strength), footprint);
   const bx = baseScratch[0]!;
   const bz = baseScratch[1]!;
   let height = 0;
   for (let i = 0; i < p.count; i++) {
-    const weight = filterScratch[i]!;
-    if (weight <= 0) continue;
-    const phase = p.k[i]! * (p.dirX[i]! * bx + p.dirZ[i]! * bz) - p.omega[i]! * time;
-    height += p.amplitude[i]! * weight * Math.sin(phase);
+    const amplitude = ampScratch[i]!;
+    if (amplitude <= 0) continue;
+    height += amplitude * Math.sin(reduce(kxScratch[i]! * bx + kzScratch[i]! * bz - wtScratch[i]!));
   }
   return height;
 }
@@ -323,23 +360,21 @@ export function sampleGerstnerNormal<T extends WaveVector>(
   footprint = 0,
 ): T {
   const p = prepareGerstnerWaves(waves);
-  fillFilters(p, Math.max(0, strength), footprint);
-  invertBase(p, x, z, time, baseScratch);
+  base(p, x, z, time, Math.max(0, strength), footprint);
   const bx = baseScratch[0]!;
   const bz = baseScratch[1]!;
   let tx = 1, ty = 0, tz = 0;
   let sx = 0, sy = 0, sz = 1;
   for (let i = 0; i < p.count; i++) {
-    const weight = filterScratch[i]!;
-    if (weight <= 0) continue;
+    const amplitude = ampScratch[i]!;
+    if (amplitude <= 0) continue;
     const dx = p.dirX[i]!;
     const dz = p.dirZ[i]!;
     const k = p.k[i]!;
-    const amplitude = p.amplitude[i]! * weight;
-    const phase = k * (dx * bx + dz * bz) - p.omega[i]! * time;
+    const phase = reduce(kxScratch[i]! * bx + kzScratch[i]! * bz - wtScratch[i]!);
     const s = Math.sin(phase);
     const c = Math.cos(phase);
-    const slope = amplitude * p.steepness[i]! * k * s;
+    const slope = horizScratch[i]! * k * s;
     const vertical = amplitude * k * c;
     tx -= dx * dx * slope;
     ty += dx * vertical;
