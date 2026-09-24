@@ -46,7 +46,7 @@ varying vec3 vCelInstanceTint;
 #endif
 // Faction light (instanced variants look it up; USE_INSTANCING is a vertex-only define, so the varying is always on).
 varying vec4 vCelFaction;
-#ifdef USE_INSTANCING
+#if defined( USE_INSTANCING ) || defined( USE_BATCHING )
 ${FACTION_VERTEX_GLSL}
 #endif
 `;
@@ -85,9 +85,11 @@ const VERTEX_WORLD = /* glsl */ `
 		vCelWorldPos = ( modelMatrix * celWorld ).xyz;
 	}
 	vCelFaction = vec4( 0.0 );
-	#ifdef USE_INSTANCING
+	#if defined( USE_INSTANCING )
 		// Faction light: look this instance's origin up in the faction map (skipped in daylight).
 		if ( uCruiseFactionRim.x > 0.001 ) vCelFaction = cruiseFactionAt( ( modelMatrix * instanceMatrix * vec4( 0.0, 0.0, 0.0, 1.0 ) ).xz );
+	#elif defined( USE_BATCHING )
+		if ( uCruiseFactionRim.x > 0.001 ) vCelFaction = cruiseFactionAt( ( modelMatrix * batchingMatrix * vec4( 0.0, 0.0, 0.0, 1.0 ) ).xz );
 	#endif
 `;
 
