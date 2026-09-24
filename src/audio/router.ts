@@ -214,6 +214,17 @@ export class EventRouter {
         return;
       }
       case 'director-event': return this.directorEvent(e.name);
+      case 'world-event':
+        // 'start' is voiced by its director-event banner; outcomes get their own sting.
+        if (e.phase === 'success') { this.p('world-event', 'crew-cheer', { gain: 0.9 }); this.p('world-event', 'treasure-sparkle', { delay: 0.25 }); }
+        else if (e.phase === 'fail') this.p('world-event', 'boss-horn', { pitch: -4, gain: 0.45 });
+        return;
+      case 'captain-joined': this.p('captain-joined', 'ship-bell', { gain: 0.55 }); return;
+      case 'captain-respawned': this.p('captain-respawned', 'ship-bell', { pitch: 2, gain: 0.45 }); return;
+      case 'captain-sunk':
+        if (this.dist(e.x, e.z) < 320) { this.p('captain-sunk', 'ship-break', { x: e.x, z: e.z, gain: 0.8 }); this.p('captain-sunk', 'hull-creak', { x: e.x, z: e.z, delay: 0.4, gain: 0.7 }); }
+        return;
+      case 'captain-kill': return; // Their sinkings already sound through enemy-killed.
       case 'weather-changed':
         if (e.weather === 'storm') this.p('weather-changed', 'thunder-far', { gain: 1.1 });
         else if (e.weather === 'fog') this.p('weather-changed', 'boss-horn', { pitch: 3, gain: 0.35 });
@@ -528,6 +539,15 @@ export class EventRouter {
 
   private directorEvent(name: string): void {
     const n = name.toLowerCase();
+    // Round-1 set pieces and bounty captains (matched by name so new events stay data-driven).
+    if (n.includes('kraken')) { this.p('director-event', 'serpent-roar', { pitch: -5, gain: 1.1 }); this.p('director-event', 'wave-roar', { delay: 0.5 }); return; }
+    if (n.includes('rogue') || n.includes('wave')) { this.p('director-event', 'wave-roar', { gain: 1.2 }); this.p('director-event', 'alarm-bell', { delay: 0.2, gain: 0.6 }); return; }
+    if (n.includes('maelstrom') || n.includes('whirl')) { this.p('director-event', 'whirlpool-cast', { gain: 1.1 }); this.p('director-event', 'wave-roar', { delay: 0.4, gain: 0.7 }); return; }
+    if (n.includes('blockade') || n.includes('armada')) { this.p('director-event', 'war-horn'); this.p('director-event', 'alarm-bell', { delay: 0.5, gain: 0.7 }); return; }
+    if (n.includes('ghost') || n.includes('drowned')) { this.p('director-event', 'boss-horn', { pitch: 4, gain: 0.55 }); this.p('director-event', 'hull-creak', { delay: 0.6 }); return; }
+    if (n.includes('erupt') || n.includes('volcan')) { this.p('director-event', 'explosion-large', { gain: 0.9 }); this.p('director-event', 'thunder-far', { delay: 0.3 }); return; }
+    if (n.includes('bounty') || n.includes('contract') || n.includes('wanted')) { this.p('director-event', 'war-horn', { pitch: 2, gain: 0.7 }); this.p('director-event', 'elite-spawn', { delay: 0.3 }); return; }
+    if (n.includes('sunken') || n.includes('dig')) { this.p('director-event', 'compass'); this.p('director-event', 'treasure-sparkle', { delay: 0.3 }); return; }
     if (n.includes('treasure') || n.includes('convoy')) { this.p('director-event', 'ship-bell'); this.p('director-event', 'treasure-sparkle', { delay: 0.3 }); return; }
     if (n.includes('storm')) { this.p('director-event', 'thunder-far', { gain: 1.1 }); return; }
     if (n.includes('fog')) { this.p('director-event', 'boss-horn', { pitch: 3, gain: 0.4 }); return; }
