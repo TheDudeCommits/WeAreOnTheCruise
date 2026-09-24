@@ -25,8 +25,8 @@ const NDC_X: [number, number] = [-1.25, 1.25];
 const NDC_Y: [number, number] = [-1.42, 1.25];
 
 /** Detail texture tiles (metres) and scroll speeds (m/s along the wind). */
-const TILE_A = 46;
-const TILE_B = 15;
+const TILE_A = 88;
+const TILE_B = 23;
 const SPEED_A = 1.9;
 const SPEED_B = 1.15;
 const FOAM_E_TILE = 26;
@@ -97,6 +97,7 @@ export class OceanSurface {
       uWaveA: { value: this.waveA },
       uWaveB: { value: this.waveB },
       uAmpSum: { value: 1 },
+      uCapNorm: { value: 0.2 },
       uTransient: { value: field.transientTexture },
       uPersist: { value: field.persistentTexture },
       uRtRect: { value: field.rect },
@@ -211,13 +212,16 @@ export class OceanSurface {
 
     const p = prepareGerstnerWaves(DEFAULT_GERSTNER_WAVES);
     let ampSum = 0;
+    let capNorm = 0;
     for (let i = 0; i < GERSTNER_WAVE_COUNT; i++) {
       const amplitude = p.amplitude[i]! * waveStrength;
+      capNorm += p.steepness[i]! * p.k[i]! * amplitude;
       const phase = p.k[i]! * (p.dirX[i]! * ox + p.dirZ[i]! * oz) - p.omega[i]! * time;
       this.waveB[i]!.set(amplitude, amplitude * p.steepness[i]!, phase - Math.floor(phase / TAU) * TAU, 0);
       ampSum += amplitude;
     }
     u.uAmpSum!.value = ampSum;
+    u.uCapNorm!.value = capNorm;
 
     // Textures and interaction/shore state.
     u.uTransient!.value = field.transientTexture;

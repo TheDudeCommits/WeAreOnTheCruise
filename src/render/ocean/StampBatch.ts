@@ -122,9 +122,10 @@ void main() {
     float bowness = smoothstep(-0.15, 0.85, t);
     float moving = clamp(s * 2.5, 0.0, 1.0);
     // Contact foam hugging the waterline: from under the hull out to bw, heavier and wider at the bow.
-    float bw = (mix(0.9, 2.8, bowness) * (0.65 + 0.55 * s) + halfB * 0.05) * (1.0 + rag(0.35));
+    float bw = (mix(0.7, 2.6, bowness * bowness) * (0.6 + 0.5 * s) + halfB * 0.035) * (1.0 + rag(0.4));
     float band = (1.0 - smoothstep(0.0, bw, sd)) * smoothstep(-3.0, -0.6, sd);
-    float contactFoam = band * mix(0.5, 1.0, moving);
+    // Sides stay lacy (partial coverage), the bow is solid white.
+    float contactFoam = band * mix(0.42, 1.0, bowness) * mix(0.55, 1.0, moving);
     // Bow wave: a ridge pushed ahead of the stem and along the shoulders.
     float ridgeOff = 0.4 + 1.5 * s + halfB * 0.06;
     float ridgeW = 1.1 + 1.9 * s + halfB * 0.07;

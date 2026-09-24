@@ -5,8 +5,8 @@
  *   sum of sines with integer wave numbers (so they tile) whose directions cluster around +U (the wind axis;
  *   the ocean shader rotates U onto ctx.sea.windDir). Mipmapped + anisotropic, so distance filtering is done by
  *   the hardware and the averaged normal length feeds a Toksvig factor (no sparkle crawl at distance).
- * - foam: tileable shape texture. R = rounded blob field (two Worley octaves), G = lace lines (Worley cell
- *   borders), B = soft value-noise patches, A = wind streaks (stretched along U).
+ * - foam: tileable shape texture. R = foam network (Worley cell borders; thresholding gives solid → lace with
+ *   round holes → threads), G = bubble dots, B = soft value-noise patches, A = wind streaks (stretched along U).
  */
 import * as THREE from 'three';
 
@@ -35,7 +35,7 @@ void main() {
   float h = 0.0;
   vec2 g = vec2(0.0);
   float ampSum = 0.0;
-  for (int i = 0; i < 44; i++) {
+  for (int i = 0; i < 64; i++) {
     float fi = float(i);
     float r1 = hash1(fi * 3.17 + 1.3);
     float r2 = hash1(fi * 5.71 + 2.9);
@@ -46,7 +46,7 @@ void main() {
     vec2 kk = floor(vec2(cos(ang), sin(ang)) * freq + 0.5);
     if (abs(kk.x) + abs(kk.y) < 0.5) kk = vec2(1.0, 0.0);
     float kl = length(kk);
-    float amp = 1.0 / pow(kl, 1.9);
+    float amp = 1.0 / pow(kl, 1.6);
     float ph = 6.2831853 * (dot(kk, uv) + r3);
     h += amp * sin(ph);
     g += amp * 6.2831853 * kk * cos(ph);
@@ -105,20 +105,21 @@ float vnoise(vec2 uv, vec2 cells) {
 
 void main() {
   vec2 uv = vUv;
-  // R: rounded blobs with irregular outlines (coarse cells + finer cells).
+  // R: foam network — high along Worley cell borders, low at feature points. Thresholding it against coverage
+  // gives solid foam → lace with round holes → thin threads as foam dissolves.
   vec2 w1 = worley(uv, 6.0);
   vec2 w2 = worley(uv + 0.37, 13.0);
-  float blob = 1.0 - (0.72 * w1.x + 0.28 * w2.x) * 1.22;
-  blob = clamp(blob * 1.08 + (vnoise(uv, vec2(24.0)) - 0.5) * 0.12, 0.0, 1.0);
-  // G: lace network on cell borders, broken up so it never reads as a grid.
-  vec2 w3 = worley(uv + 0.71, 9.0);
-  float lace = 1.0 - smoothstep(0.015, 0.085, w3.y - w3.x);
-  lace *= smoothstep(0.28, 0.62, vnoise(uv, vec2(5.0)));
-  // B: soft patches (cloud-shadow / painterly variation / breakup).
+  float net = 0.7 * smoothstep(0.0, 0.62, w1.x) + 0.3 * smoothstep(0.0, 0.6, w2.x);
+  net = clamp(net + (vnoise(uv, vec2(24.0)) - 0.5) * 0.1, 0.0, 1.0);
+  // G: bubbles — small round dots for the fringe of dissolving foam.
+  vec2 w3 = worley(uv + 0.71, 21.0);
+  float bubbles = 1.0 - smoothstep(0.08, 0.3, w3.x);
+  bubbles *= smoothstep(0.35, 0.6, vnoise(uv, vec2(7.0)));
+  // B: soft patches (cloud-shadow / painterly variation / crest segment breakup).
   float patches = vnoise(uv, vec2(3.0)) * 0.55 + vnoise(uv, vec2(7.0)) * 0.3 + vnoise(uv, vec2(15.0)) * 0.15;
   // A: wind streaks, long along U.
   float streak = vnoise(uv, vec2(3.0, 26.0)) * 0.65 + vnoise(uv, vec2(6.0, 52.0)) * 0.35;
-  gl_FragColor = vec4(blob, lace, patches, streak);
+  gl_FragColor = vec4(net, bubbles, patches, streak);
 }
 `;
 
@@ -170,8 +171,8 @@ export function createOceanTextures(renderer: THREE.WebGLRenderer, seed = 1): Oc
   const detailB = makeTarget(512, anisotropy);
   const foam = makeTarget(512, anisotropy);
   const materials = [
-    detailMaterial(3, 13, 0.95, 0.16, 0.35, seed * 1.37 + 0.11),
-    detailMaterial(4, 18, 1.25, 0.14, 0.25, seed * 2.91 + 0.53),
+    detailMaterial(5, 22, 1.0, 0.07, 0.35, seed * 1.37 + 0.11),
+    detailMaterial(5, 24, 1.3, 0.06, 0.25, seed * 2.91 + 0.53),
     new THREE.ShaderMaterial({ vertexShader: FULLSCREEN_VERT, fragmentShader: FOAM_FRAG, depthTest: false, depthWrite: false, uniforms: { uSeed: { value: seed * 0.77 + 0.2 } } }),
   ];
   const targets = [detailA, detailB, foam];

@@ -26,7 +26,7 @@ function palette(deep: number, mid: number, sss: number, shallow: number, foam: 
   };
 }
 
-const DAY = palette(0x0a3a8c, 0x1a6cc0, 0x2ee6d6, 0x39d2c2, 0xffffff, 0x8fb6dc);
+const DAY = palette(0x0a3f8e, 0x1673c2, 0x2ee6d6, 0x39d2c2, 0xffffff, 0x8fb6dc);
 const DUSK = palette(0x14306c, 0x2d5c9c, 0x4fe0c8, 0x3cb9b0, 0xfff4e6, 0x8f98c8);
 const STORM = palette(0x0d2a31, 0x2a5559, 0x5ab5a6, 0x3e8a82, 0xe4efec, 0x7d9c9f);
 const FOG = palette(0x2c6680, 0x5a8ea2, 0x93d1cc, 0x7cc4bc, 0xf4fbfa, 0xa2bec4);
@@ -104,10 +104,10 @@ export class OceanLook {
     this.glint = lerp(lerp(6.5, 5.0, dusk), 3.2, night) * lerp(1, 0.12, storm) * lerp(1, 0.2, fog);
     this.sheen = lerp(lerp(0.32, 0.45, dusk), 0.85, night) * lerp(1, 0.25, storm) * lerp(1, 0.3, fog);
     this.specPower = lerp(lerp(1100, 700, dusk), 260, night);
-    this.capLo = lerp(lerp(0.62, 0.5, breezy), 0.28, storm) + fog * 0.08;
-    this.capHi = this.capLo + lerp(0.24, 0.3, storm);
+    this.capLo = lerp(lerp(0.56, 0.44, breezy), 0.2, storm) + fog * 0.1;
+    this.capHi = this.capLo + lerp(0.22, 0.3, storm);
     this.streak = Math.max(0.12, breezy * 0.35, storm);
-    this.detail = lerp(1, 1.25, breezy) * lerp(1, 1.45, storm) * lerp(1, 0.55, fog);
+    this.detail = 0.55 * lerp(1, 1.25, breezy) * lerp(1, 1.5, storm) * lerp(1, 0.5, fog);
     this.reflectivity = lerp(1, 0.85, storm) * lerp(1, 0.65, fog);
     this.sssStrength = lerp(lerp(1, 1.25, dusk), 0.45, night) * lerp(1, 0.55, storm) * lerp(1, 0.35, fog) * (0.6 + 0.4 * clear);
     this.cloudPatch = lerp(0.16, 0.3, storm) * (1 - fog * 0.7);

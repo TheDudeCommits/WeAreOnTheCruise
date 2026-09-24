@@ -229,11 +229,11 @@ export class WakeSystem {
         this.capsule(
           true,
           track.prevX + pfX * sternU, track.prevZ + pfZ * sternU, src.x + fwdX * sternU, src.z + fwdZ * sternU,
-          halfB * (0.5 + 0.28 * Math.min(s, 1)), 0.45, 0.95 * deposit * wakeK, deposit, 0.3,
+          halfB * (0.42 + 0.25 * Math.min(s, 1)), 0.5, 0.62 * deposit * wakeK, deposit, 0.25,
         );
         const shoulderU = halfL * 0.05;
         const sideR = 0.7 + 0.7 * Math.min(s, 1.2) + halfB * 0.06;
-        const sideFoam = 0.72 * smooth(0.12, 0.65, s) * deposit * wakeK;
+        const sideFoam = 0.6 * smooth(0.12, 0.65, s) * deposit * wakeK;
         for (let side = -1; side <= 1; side += 2) {
           const off = halfB * 1.02 * side;
           this.capsule(

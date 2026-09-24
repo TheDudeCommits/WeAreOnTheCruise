@@ -33,15 +33,16 @@ export interface WaveSampler {
 }
 
 /**
- * One long swell, two crossing body waves and two short chops. These exact
- * parameters are uploaded to GLSL, keeping buoyancy and rendered water in sync.
+ * A coherent wind sea: one long swell, a secondary swell and three shorter waves spread within about ±40°
+ * of the swell direction (wide crossings read as an artificial diamond lattice with only five waves).
+ * These exact parameters are uploaded to GLSL, keeping buoyancy and rendered water in sync.
  */
 export const DEFAULT_GERSTNER_WAVES: readonly GerstnerWave[] = Object.freeze([
-  Object.freeze({ directionX: 0.94, directionZ: 0.342, amplitude: 2.65, wavelength: 142, speed: 10.8, steepness: 0.56 }),
-  Object.freeze({ directionX: 0.588, directionZ: 0.809, amplitude: 1.2, wavelength: 61, speed: 7.1, steepness: 0.48 }),
-  Object.freeze({ directionX: -0.454, directionZ: 0.891, amplitude: 0.72, wavelength: 31, speed: 5.2, steepness: 0.44 }),
-  Object.freeze({ directionX: 0.982, directionZ: -0.191, amplitude: 0.31, wavelength: 14.5, speed: 3.4, steepness: 0.36 }),
-  Object.freeze({ directionX: -0.766, directionZ: -0.643, amplitude: 0.16, wavelength: 7.4, speed: 2.2, steepness: 0.3 }),
+  Object.freeze({ directionX: 0.94, directionZ: 0.342, amplitude: 2.3, wavelength: 150, speed: 10.8, steepness: 0.52 }),
+  Object.freeze({ directionX: 0.755, directionZ: 0.656, amplitude: 1.05, wavelength: 79, speed: 7.6, steepness: 0.46 }),
+  Object.freeze({ directionX: 0.995, directionZ: -0.105, amplitude: 0.55, wavelength: 42, speed: 5.6, steepness: 0.42 }),
+  Object.freeze({ directionX: 0.469, directionZ: 0.883, amplitude: 0.27, wavelength: 19.5, speed: 3.7, steepness: 0.36 }),
+  Object.freeze({ directionX: 0.857, directionZ: -0.515, amplitude: 0.14, wavelength: 9.6, speed: 2.5, steepness: 0.3 }),
 ]);
 
 const TAU = Math.PI * 2;

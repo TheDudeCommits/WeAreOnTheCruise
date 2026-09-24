@@ -115,6 +115,7 @@ uniform vec4 uLookA;             // glint, sheen, spec power, detail strength
 uniform vec4 uLookB;             // cap lo, cap hi, reflectivity, sss strength
 uniform vec4 uLookC;             // cloud patch, night, flash, sun level
 uniform float uAmpSum;
+uniform float uCapNorm;          // sum of q*k*A: max horizontal compression (normalises the Jacobian)
 uniform float uTime;             // wrapped render clock (surf animation)
 uniform float uDebug;
 
@@ -136,6 +137,11 @@ void main() {
   vec3 T = vec3(1.0, 0.0, 0.0);
   vec3 Bt = vec3(0.0, 0.0, 1.0);
   float height = 0.0;
+  // Along-swell slope and curvature of the height field: their ratio is the distance (m) to the nearest crest
+  // ridge, used to paint thin crest lines that follow the combined (wavy) crests.
+  vec2 d1 = uWaveA[0].xy;
+  float ridgeS = 0.0;
+  float ridgeC = 0.0;
   for (int i = 0; i < WAVE_COUNT; i++) {
     vec4 A = uWaveA[i];
     vec4 B = uWaveB[i];
@@ -148,6 +154,9 @@ void main() {
     T += vec3(-A.x * A.x * slope, A.x * vert, -A.x * A.y * slope);
     Bt += vec3(-A.x * A.y * slope, A.y * vert, -A.y * A.y * slope);
     height += B.x * f * s;
+    float along = dot(d1, A.xy);
+    ridgeS += along * vert;
+    ridgeC -= along * along * B.x * f * A.z * A.z * s;
   }
   vec3 Ng = normalize(cross(Bt, T));
   float jac = T.x * Bt.z - Bt.x * T.z;
@@ -176,8 +185,8 @@ void main() {
   vec3 nA = texture(uDetailA, pw * uDetailScale.x + uDetailOff.xy).xyz * 2.0 - 1.0;
   vec2 pwB = vec2(dot(pw, vec2(0.94, 0.34)), dot(pw, vec2(-0.34, 0.94)));
   vec3 nB = texture(uDetailB, pwB * uDetailScale.y + uDetailOff.zw).xyz * 2.0 - 1.0;
-  float fadeA = uLookA.w * (1.0 - smoothstep(160.0, 1300.0, dist));
-  float fadeB = uLookA.w * (1.0 - smoothstep(45.0, 380.0, dist));
+  float fadeA = uLookA.w * (1.0 - smoothstep(120.0, 900.0, dist));
+  float fadeB = uLookA.w * (1.0 - smoothstep(30.0, 220.0, dist)) * 0.5;
   vec2 sA = nA.xz / max(nA.y, 0.35) * fadeA;
   vec2 sB = nB.xz / max(nB.y, 0.35) * fadeB;
   sB = vec2(sB.x * 0.94 - sB.y * 0.34, sB.x * 0.34 + sB.y * 0.94);
@@ -229,7 +238,9 @@ void main() {
 
   // ── Sky reflection (Fresnel), painterly cloud tint, lightning flash ──
   vec3 R = reflect(-V, Nd);
-  float F = 0.02 + 0.98 * pow(1.0 - clamp(dot(Nd, V), 0.0, 1.0), 5.0);
+  float Fm = 0.02 + 0.98 * pow(1.0 - clamp(dot(Nm, V), 0.0, 1.0), 5.0);
+  float Fd = 0.02 + 0.98 * pow(1.0 - clamp(dot(Nd, V), 0.0, 1.0), 5.0);
+  float F = mix(Fm, Fd, 0.35);
   vec3 refl = mix(uHorizon, uSky, smoothstep(0.0, 0.45, R.y));
   refl = mix(refl, mix(uHorizon, vec3(1.0), 0.35), (cloud.b - 0.45) * uLookC.x * 2.0);
   refl += vec3(0.85, 0.9, 1.0) * uLookC.z * 0.9;
@@ -237,26 +248,40 @@ void main() {
 
   // ── Foam: interaction + shore (Eulerian) and whitecaps (Lagrangian, wind-stretched strokes) ──
   vec4 fE = texture(uFoamTex, vWRel * (1.0 / 26.0) + uFoamOff.xy);
-  vec4 fL = texture(uFoamTex, pw * vec2(1.0 / 34.0, 1.0 / 12.0) + uFoamOff.zw);
+  // Lagrangian samples: crest segments stretched along the crests (across the wind), storm streaks along it.
+  vec4 fL = texture(uFoamTex, pw * vec2(1.0 / 16.0, 1.0 / 58.0) + uFoamOff.zw);
+  float windStreak = texture(uFoamTex, pw * vec2(1.0 / 72.0, 1.0 / 15.0) + uFoamOff.wz).a;
   float farBlur = smoothstep(0.35, 2.6, pix);
   float covI = clamp(max(pr.r, tr.b), 0.0, 1.5);
-  float capSig = (1.0 - jac) * 3.2 + hN * 0.95;
-  float covC = smoothstep(uLookB.x, uLookB.y, capSig);
-  covC *= mix(1.0, fL.a * 1.7, uWind.w);
+  // Whitecaps: a band on the sharpest crests (Jacobian compression normalised by the sea state's maximum),
+  // broken into wind-aligned strokes; never thresholded noise (no speckle at low coverage).
+  float compress = clamp((1.0 - jac) / max(uCapNorm, 1e-3), 0.0, 1.5);
+  float ridgeDist = abs(ridgeS) / max(-ridgeC, 1e-5);
+  float ridgeW = 0.32 + 0.45 * uWind.z + 1.4 * uWind.w;
+  float ridge = (1.0 - smoothstep(ridgeW * 0.45, ridgeW + pix * 1.2, ridgeDist)) * step(ridgeC, 0.0);
+  float crestGate = smoothstep(uLookB.x, uLookB.y, clamp(hN, 0.0, 1.2) * 0.85 + compress * 0.45);
+  float seg = smoothstep(0.42, 0.66, fL.b + uWind.w * 0.14);
+  // Storms add broad breaking patches on compressed crests, streaked along the wind.
+  float stormCap = smoothstep(0.55, 0.9, compress + hN * 0.25) * smoothstep(0.25, 0.7, windStreak) * uWind.w;
+  float covC = max(ridge * crestGate * seg, stormCap);
   covC *= 1.0 - smoothstep(3.0, 12.0, pix);
   float coast = (1.0 - smoothstep(0.5, 6.0, shoreD)) * step(-6.0, shoreD);
   float surfPhase = fract(shoreD / 9.0 + uTime * 0.21 + fE.b * 0.4);
   float surf = smoothstep(0.7, 0.9, surfPhase) * (1.0 - smoothstep(3.0, 34.0, shoreD)) * smoothstep(0.32, 0.6, fE.b + 0.08);
   float covS = max(coast, surf * 0.9) * shoreValid;
-  float xI = max(covI, covS) * 1.05 - (1.0 - fE.r);
-  float xC = covC * 1.05 - (1.0 - fL.r);
+  float covE = max(covI, covS);
+  // Offset keeps zero coverage strictly foam-free (blob maxima never pop up as dots).
+  float xI = covE * 1.12 - (1.0 - fE.r) - 0.07;
+  float xC = covC - 0.45 + (fL.r - 0.5) * 0.3;
   float aaI = fwidth(xI) * 0.85 + 0.015 + farBlur * 0.35;
   float aaC = fwidth(xC) * 0.85 + 0.015 + farBlur * 0.35;
   float solidI = smoothstep(-aaI, aaI, xI);
   float solidC = smoothstep(-aaC, aaC, xC);
-  float edgeI = smoothstep(-0.16 - aaI, -0.16 + aaI, xI) - solidI;
-  float edgeC = smoothstep(-0.13 - aaC, -0.13 + aaC, xC) - solidC;
-  float lace = fE.g * smoothstep(0.03, 0.32, max(covI, covS * 0.6)) * (1.0 - solidI) * (1.0 - farBlur) * 0.9;
+  float edgeI = (smoothstep(-0.15 - aaI, -0.15 + aaI, xI) - solidI) * smoothstep(0.08, 0.3, covE);
+  float edgeC = (smoothstep(-0.12 - aaC, -0.12 + aaC, xC) - solidC) * smoothstep(0.2, 0.5, covC);
+  // Fringe bubbles where foam is thin (the network has mostly dissolved).
+  float bub = smoothstep(0.45 - aaI, 0.55 + aaI, fE.g) * smoothstep(0.04, 0.16, covE) * (1.0 - smoothstep(0.3, 0.55, covE));
+  float lace = bub * (1.0 - solidI) * (1.0 - farBlur);
   float foamSolid = max(solidI, solidC);
   float foamEdge = clamp(max(edgeI, edgeC), 0.0, 1.0) * (1.0 - foamSolid);
   float foamLight = 0.74 + 0.26 * smoothstep(-0.35, 0.45, dot(Nm, L) - L.y + 0.2);
@@ -268,7 +293,7 @@ void main() {
   float rl = max(dot(R, L), 0.0);
   float spec = pow(rl, Peff);
   float aaS = fwidth(spec) + 0.05;
-  float glint = smoothstep(0.42 - aaS, 0.42 + aaS, spec) * (1.0 - smoothstep(0.8, 3.5, pix));
+  float glint = smoothstep(0.55 - aaS, 0.55 + aaS, spec) * (1.0 - smoothstep(0.8, 3.5, pix));
   float sheen = pow(rl, 16.0) * uLookA.y;
   col += uSunColor * (glint * uLookA.x + sheen) * sunUp * (1.0 - foamSolid * 0.85);
 
