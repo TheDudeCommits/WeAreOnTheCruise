@@ -60,7 +60,10 @@ try {
     await page.keyboard.press('KeyW');
     await page.evaluate(() => { window.__CRUISE__.profiler.enable(true); window.__CRUISE__.profiler.reset(); });
     await page.waitForTimeout(2500);
+    const SLOW = new Set(['rogue-wave', 'volcanic-eruption', 'maelstrom']);
     for (const id of events) {
+      // Hold the ship near the set pieces that are best seen from a standstill (half sail), full sail otherwise.
+      if (SLOW.has(id)) { await page.keyboard.press('KeyS'); } else { await page.keyboard.press('KeyW'); await page.keyboard.press('KeyW'); }
       const started = await page.evaluate((id) => window.__CRUISE__.debug.event(id), id);
       const entry = { id, sea: leg.sea, started, samples: [] };
       let t = 0;

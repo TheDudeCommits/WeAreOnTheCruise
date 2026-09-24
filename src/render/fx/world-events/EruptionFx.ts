@@ -106,10 +106,10 @@ export class EruptionFx {
     const y = oy + (ty - oy) * s + arc * 4 * s * (1 - s);
     // Molten head + glow.
     const c = k.cel.spec.reset();
-    c.at(x, y, z).look(Cel.Fireball, gold ? CelPal.GoldFire : CelPal.EnemyFire).sized(3.4, 3.4).rotate(k.clock * 6 + h.id).lived(10, 0.2);
+    c.at(x, y, z).look(Cel.Fireball, gold ? CelPal.GoldFire : CelPal.EnemyFire).sized(5, 5).rotate(k.clock * 6 + h.id).lived(10, 0.2);
     k.cel.imm(0.3);
     const g = k.glow.spec.reset();
-    g.at(x, y, z).look(Glow.Soft, gold ? GlowPal.Gold : GlowPal.Explosion).sized(9, 9).lived(10).bright(gold ? 0.9 : 0.75);
+    g.at(x, y, z).look(Glow.Soft, gold ? GlowPal.Gold : GlowPal.Explosion).sized(13, 13).lived(10).bright(gold ? 0.9 : 0.75);
     k.glow.imm(0.02);
     // Trail.
     if (rand() < dt * 18 * k.q) {

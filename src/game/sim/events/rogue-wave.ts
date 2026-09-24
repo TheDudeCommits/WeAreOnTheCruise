@@ -1,5 +1,5 @@
 /**
- * Rogue Wave (EVENTS). A towering wave front rolls across the area with the wind: a 'rogue-wave' hazard `radius`
+ * Rogue Wave (EVENTS). A towering wave front rolls in from ahead of the ship: a 'rogue-wave' hazard `radius`
  * half-wide, moved here at a steady speed, with a moving 'line' telegraph just ahead of its face. Ships caught in
  * the face are hit once, thrown along with it and briefly stunned — enemies included — and enemy shots in it are
  * washed out. Boosting through it rides the wave instead: no damage and a speed surge. Later in the run a smaller
@@ -61,8 +61,9 @@ export const ROGUE_WAVE: WorldEventHandler = {
   start(c, rt, minute) {
     const w = state(rt);
     const s = c.state, p = s.player;
-    // Waves run with the wind (windDir points where it blows TO), give or take.
-    const a = s.sea.windDir + (c.random() - 0.5) * 0.9;
+    // The wave rolls in from ahead of the ship (where the helm and the camera look), give or take, so it is seen
+    // coming; it travels toward the ship: −forward of bearing `a`.
+    const a = p.heading + (c.random() - 0.5) * 1.6;
     w.dirX = Math.sin(a); w.dirZ = Math.cos(a);
     w.heading = headingTo(w.dirX, w.dirZ);
     w.count = Math.min(MAX_WAVES, EVENT_TUNING.rogueWaves(minute));
