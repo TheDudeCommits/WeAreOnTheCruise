@@ -26,7 +26,7 @@ import { TAU } from './meta-steer';
 import { STAT_KEYS, addStats, doubloonMul, emptyStats, xpMul } from './stats';
 import { onAffixDeath } from './affixes';
 import { gainMomentum } from './player';
-import { runMods } from './run-mods';
+import { MILESTONES, runMods } from './run-mods';
 
 const CHIP_KEY = Object.fromEntries(STAT_KEYS.map((k) => [k, `${CHIP_PREFIX}${k}`])) as Record<StatKey, string>;
 
@@ -496,9 +496,6 @@ function endlessMilestone(c: SimContext, b: BossState): void {
     text: `${c.content.bosses[b.defId].name} sunk at ${minutes}:${String(Math.floor(s.time % 60)).padStart(2, '0')}. +${purse} ◈ and +${bounty.toLocaleString('en-US')} bounty.`,
   });
 }
-
-/** Director scratch key: endless milestones reached this run (read by the logbook). */
-export const MILESTONES = 'rp:milestones';
 
 // ───────────────────────── Pickups ─────────────────────────
 

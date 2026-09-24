@@ -29,6 +29,8 @@ import { installDebugBridge } from './debugBridge';
 import { captainSetting, configureCaptains } from '../game/sim/captains-runtime';
 import { storedCaptainSetting } from './presence';
 import { warmup } from '../render/app/warmup';
+import { startVoyage, takeVoyage, type Voyage } from '../game/meta/voyage';
+import { dailyVoyage } from '../game/meta/daily';
 
 const SYSTEM_NAMES = ['sky', 'ocean', 'world', 'ships', 'fx', 'camera'] as const;
 
@@ -57,6 +59,8 @@ export class GameApp {
   /** Title/harbor field: includes the hand-placed harbour set as collision and shore geometry. */
   private readonly menuWorld: IslandField;
   sim: Sim | null = null;
+  /** REPLAY: this run's heat/daily options, modifiers and quest tracker. */
+  voyage: Voyage | null = null;
   profile: MetaProfile;
   settings: Settings;
   screen: AppScreen = 'boot';
@@ -138,14 +142,17 @@ export class GameApp {
   private warmed = false;
 
   startRun(shipId: ShipId, seaId: SeaId): void {
-    if (!this.profile.unlockedShips.includes(shipId)) return;
-    this.selectedShip = shipId;
-    this.profile.lastShip = shipId;
-    this.profile.lastSea = seaId;
+    // REPLAY: heat and the daily voyage come from the harbor's voyage store; a daily voyage may lend ship and sea.
+    const voyage = takeVoyage(this.profile, shipId, seaId);
+    const owned = this.profile.unlockedShips.includes(shipId);
+    if (!owned && !voyage.daily) return;
+    if (owned) { this.selectedShip = shipId; this.profile.lastShip = shipId; }
+    if (this.profile.unlockedSeas.includes(seaId)) this.profile.lastSea = seaId;
     saveProfile(this.profile);
-    this.world = new IslandField(`${this.config.seed}:${this.profile.runs}`, { sea: seaId });
-    this.sim = new Sim({ seed: this.world.seed, shipId, seaId, meta: this.profile, world: this.world });
+    this.world = new IslandField(voyage.daily ? dailyVoyage(voyage.daily).seed : `${this.config.seed}:${this.profile.runs}`, { sea: seaId });
+    this.sim = new Sim({ seed: this.world.seed, shipId, seaId, meta: this.profile, world: this.world, heat: voyage.heat, daily: voyage.daily });
     configureCaptains(this.sim.state, captainSetting(this.settings)); // CAPTAINS: Settings.captains (default 3)
+    this.voyage = startVoyage(this.sim, this.profile, voyage);
     this.credited = null;
     if (this.config.god) this.sim.debug.god(true);
     this.result = null;
@@ -159,9 +166,10 @@ export class GameApp {
     const result = sim.result();
     if (!result) return;
     const banked = this.credited;
+    const voyage = this.voyage?.bank(result) ?? { heat: 0 };
     result.newUnlocks = banked
-      ? applyRunResult(this.profile, { ...result, doubloonsEarned: result.doubloonsEarned - banked.doubloons, stats: { ...result.stats, kills: result.stats.kills - banked.kills } }, true)
-      : applyRunResult(this.profile, result);
+      ? applyRunResult(this.profile, { ...result, doubloonsEarned: result.doubloonsEarned - banked.doubloons, stats: { ...result.stats, kills: result.stats.kills - banked.kills } }, true, voyage)
+      : applyRunResult(this.profile, result, false, voyage);
     saveProfile(this.profile);
     this.result = result;
     this.setScreen('results');
@@ -178,7 +186,7 @@ export class GameApp {
       onBanish: (index) => { this.sim?.banish(index); },
       onPause: (paused) => { this.paused = paused; this.sim?.setPaused(paused); },
       onRetire: () => { this.sim?.retire(); },
-      onReturnToHarbor: () => { this.sim = null; this.world = this.menuWorld; this.setScreen('harbor'); },
+      onReturnToHarbor: () => { this.sim = null; this.voyage = null; this.world = this.menuWorld; this.setScreen('harbor'); },
       onContinueEndless: () => {
         const r = this.result;
         if (!this.sim || r?.outcome !== 'victory') return;
@@ -220,6 +228,7 @@ export class GameApp {
     prof.lap('sim');
     this.frameEvents.length = 0;
     if (this.sim) for (const e of this.sim.drainEvents()) this.frameEvents.push(e);
+    if (this.voyage && run) for (const e of this.voyage.observe(this.frameEvents, run)) this.frameEvents.push(e); // REPLAY quest banners
     if (run && (run.status === 'dead' || run.status === 'victory') && this.screen === 'run' && this.frameEvents.some((e) => e.type === 'run-ended')) {
       window.setTimeout(() => this.finishRun(), 1800);
     }

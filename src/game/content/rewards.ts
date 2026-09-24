@@ -70,8 +70,8 @@ export const CHESTS = {
   eliteLuckShift: 6,
   bossCount: 3,
   /** Doubloons added on top of the rewards (a purse: exact, see ECONOMY). */
-  eliteDoubloons: 3,
-  bossDoubloons: 12,
+  eliteDoubloons: 2,
+  bossDoubloons: 10,
   /** Chip rarity floor for chest chips. */
   chipRarity: 1,
 };
@@ -121,10 +121,10 @@ export const BOUNTY = {
  * - **Purses**, banked exactly: wages per full minute, chest purses (CHESTS), the victory bonus, endless milestones.
  * Everything is then × doubloonMul (Fortune, and the heat/daily reward: × (1 + 0.25 × heat)).
  *
- * Measured at heat 0 without harbor upgrades, 3 AI captains (balance-sim ledger, 12 seeds × 2 ships):
- * a Sunward victory banks ≈ 500 ◈ (plunder ≈ 45%, chests ≈ 25%, victory ≈ 25%, wages ≈ 5%), a run lost at ~10:00
- * ≈ 150–250 ◈. Career model (scripts/economy-model.ts): with quests, the whole harbor takes ≈ 40 runs for a captain
- * who stays at heat 0, ≈ 30 for one who climbs a heat level every few wins, ≈ 25 for a fast climber.
+ * Measured at heat 0 without harbor upgrades, 3 AI captains (balance-sim ledger, 12 seeds × 2 ships): a victory
+ * banks ≈ 425–460 ◈ (plunder ≈ 45%, chest purses ≈ 20%, victory purse ≈ 20%, wages ≈ 7%), a lost run ≈ 130–190 ◈.
+ * Quests pay ≈ 5,000 ◈ more over a career. Career model (scripts/economy-model.ts): the whole harbor (19,220 ◈) takes
+ * ≈ 32 voyages at heat 0, ≈ 26 for a captain who climbs a heat level every two wins, ≈ 22 for a very fast climber.
  */
 export const ECONOMY = {
   /** Wages paid at every full minute survived (purse). */
@@ -132,9 +132,9 @@ export const ECONOMY = {
   /** Doubloons an elite spills when it sinks (plunder, before `plunder`), besides its chest. */
   eliteKill: 2,
   /** Purse banked with a victory, on top of the flagship's hold. */
-  victoryBonus: 40,
+  victoryBonus: 30,
   /** Value of doubloons on the water relative to their table values (kills, elites, bosses, captains, set pieces). */
-  plunder: 0.45,
+  plunder: 0.36,
   /** Endless mode: every boss sunk after the victory is a milestone purse of milestone × (loop + 1) ◈. */
   endlessMilestone: 40,
   /** Endless milestone bounty (× the bounty multiplier) per loop. */

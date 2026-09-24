@@ -40,7 +40,7 @@ import { CAPTAIN } from '../src/game/content/captains';
 import type { BossId, SeaId, ShipId, WeaponId } from '../src/game/ids';
 import { SEA_IDS } from '../src/game/ids';
 import { defaultProfile } from '../src/game/meta/save';
-import { applyVoyage } from '../src/game/meta/voyage';
+import { startVoyage } from '../src/game/meta/voyage';
 import { Sim } from '../src/game/sim/Sim';
 import { captainRuntime, configureCaptains } from '../src/game/sim/captains-runtime';
 import { cooldownMul, damageMul, doubloonMul, extraAmount, rangeMul } from '../src/game/sim/stats';
@@ -514,7 +514,7 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
   const world = new IslandField(seed, { sea });
   const sim = new Sim({ seed, shipId: ship, seaId: sea, meta: metaProfile(), world, content: contentFor(ship) });
   configureCaptains(sim.state, CAPTAINS);
-  applyVoyage(sim, { heat: HEAT_LEVEL });
+  startVoyage(sim, sim.meta, { heat: HEAT_LEVEL });
   const perMinute: number[] = [];
   const shots: Record<string, { fired: number; hits: number; volleys: number }> = {};
   const sourcesPerMinute: Record<string, number>[] = [];

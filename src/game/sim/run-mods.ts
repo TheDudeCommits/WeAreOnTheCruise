@@ -41,6 +41,9 @@ export interface RunMods {
 
 const STORES = new WeakMap<RunState, RunMods>();
 
+/** Director scratch key: endless milestones reached this run (progression writes it; the run tracker reads it). */
+export const MILESTONES = 'rp:milestones';
+
 /** Heat-0 modifiers for a sea: its SEA_BALANCE row and nothing else. */
 export function baseRunMods(seaId: RunState['seaId']): RunMods {
   const sea = SEA_BALANCE[seaId];

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { META_SAVE_KEY, SETTINGS_KEY } from '../src/game/constants';
 import { CONTENT } from '../src/game/content';
+import { questDef } from '../src/game/meta/quests';
 import {
   applyRunResult, defaultProfile, loadProfile, loadSettings, purchaseUpgrade, sanitizeProfile, saveProfile, saveSettings,
   shipUnlockState, unlockShip, upgradeCost,
@@ -125,7 +126,9 @@ describe('harbor and unlocks', () => {
     let lines = applyRunResult(p, result({ time: 605, doubloonsEarned: 120, stats: stats({ kills: 400, bounty: 5000 }) }));
     expect(p.unlockedSeas).toContain('stormwrack-reach');
     expect(lines.some((l) => l.includes('Stormwrack Reach'))).toBe(true);
-    expect(p.doubloons).toBe(120);
+    // 120 banked + the 'Weathered Hull' quest purse (REPLAY quests pay on completion).
+    expect(lines.some((l) => l.includes('Quest complete: Weathered Hull'))).toBe(true);
+    expect(p.doubloons).toBe(120 + (questDef('weathered')?.reward.doubloons ?? 0));
     expect(p.bestBounty.sunlion).toBe(5000);
 
     // Defeating the Iron Warden → Seawarden.
