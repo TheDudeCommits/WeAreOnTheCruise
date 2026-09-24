@@ -241,9 +241,9 @@
       "draft": 3.2,
       "beam": 20.59,
       "height": 32.71,
-      "tris": 23152,
+      "tris": 23132,
       "sourceTris": 73141,
-      "materials": 5,
+      "materials": 2,
       "role": "enemy",
       "source": {
         "kind": "sketchfab",
@@ -254,8 +254,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/c5e06cf1ba164b749cb47044fe7b86eb"
       },
-      "bytes": 196852,
-      "sha256": "c043dcd4dfe1ff71d25343b3c78a6de6df40f5ea8c310a5f9da1ad6d3360c4bd",
+      "bytes": 191584,
+      "sha256": "b965a2f59f663d79512a6a177995e264fa76112a39f5eb880409bb59a66a2f71",
       "sourceSha256": "2e0ffe3f451ed6399e560ec4859ed3af8efca8666eedcd7fbf49e27607695eed",
       "notes": "Admiralty Frigate: flat colours remapped (white upper hull, navy lower hull, gold trim) and baked into one palette texture; black sails re-mapped to white canvas with the original gold wave-crest; loose deck clutter (cannonballs, cups, bottles) removed; decimated from 73k tris."
     },

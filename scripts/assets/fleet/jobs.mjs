@@ -73,7 +73,7 @@ export const JOBS = [
     notes: 'Admiralty Brig: hull sides repainted white with a navy boot-top (texture copies through luminance ramps), sails re-mapped to white canvas with the original gold wave-crest.',
   },
   {
-    key: 'frigate', role: 'enemy', src: 'src/c5e06cf1ba164b749cb47044fe7b86eb/source.glb', yaw: 245.67, length: 38, draft: 3.2, tris: 24000, tex: 1024, palette: process.env.NOPAL ? false : true,
+    key: 'frigate', role: 'enemy', atlas: true, src: 'src/c5e06cf1ba164b749cb47044fe7b86eb/source.glb', yaw: 245.67, length: 38, draft: 3.2, tris: 24000, tex: 1024, palette: process.env.NOPAL ? false : true,
     exclude: /Cannon_Balls|M_Cups|Bottle|M_Rum|Black_Powder|lambert/,
     recolor: (ctx) => RECOLOR.admiraltyFrigate(ctx),
     source: SKETCHFAB('c5e06cf1ba164b749cb47044fe7b86eb', 'Low-Poly Pirate Ship', 'Greggory_Fisher'),

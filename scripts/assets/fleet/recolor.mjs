@@ -193,6 +193,8 @@ export const RECOLOR = {
       MI_Base_Wood_Dark: '#4a3526', M_Barrel_Wood_1: '#7a5433', M_Barrel_Wood_2: '#5e3f26', M_Cannon_01: '#1e1f23', M_Cannon_02: '#2c2d33',
       M_Cannon_Wood_01: '#6b4a2e', M_Cannon_Wood_02: '#57391f',
     });
+    // one opaque, double-sided palette material instead of three (glass/shadow alpha dropped, barrels made 2-sided)
+    for (const m of doc.getRoot().listMaterials()) if (!m.getBaseColorTexture()) { const f = m.getBaseColorFactor(); m.setAlphaMode('OPAQUE').setDoubleSided(true).setBaseColorFactor([f[0], f[1], f[2], 1]); }
   },
 
   /** anagvf "Pirate Ship (Low Poly)" → Admiralty brig: white topsides, navy bottom band, wave-crest sails. */
