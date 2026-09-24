@@ -54,8 +54,8 @@ export const CAPTAIN = {
   respawn: 25,
   respawnGrace: 2.5,
   /** Hull: ship hp × hpMul × (1 + hpPerLevel × (level − 1)); armour: ship armour + level × armorPerLevel. */
-  hpMul: 0.8,
-  hpPerLevel: 0.045,
+  hpMul: 1.05,
+  hpPerLevel: 0.055,
   armorPerLevel: 0.06,
   /** Regeneration (fraction of max hull per second): always, when out of the fight, and while falling back. */
   regen: 0.002,
@@ -98,7 +98,7 @@ export const CAPTAIN = {
    * Fleet fire control: extra volley tokens per captain afloat (the enemy fleet shares one volley budget; without this
    * the captains would soak up fire the player no longer takes, and runs would get easier).
    */
-  firePerCaptain: 0.3,
+  firePerCaptain: 0.42,
   /**
    * Aggro: enemies pick the nearest friendly by `distance × weight` and hold it for `hold` seconds. The player's
    * weight < 1 keeps roughly half of the fleet on the player; `load` penalises captains already drawing a crowd.

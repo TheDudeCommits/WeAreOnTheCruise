@@ -46,7 +46,7 @@ export const SPAWN_BANDS: readonly SpawnBand[] = [
 ];
 
 /** Per-boss HP multipliers on top of content/bosses.ts (PACE round 1; see DIRECTOR.bossHpScale). */
-const BOSS_HP_MUL: Readonly<Record<BossId, number>> = { 'iron-warden': 1.6, tidewyrm: 1.7, sovereign: 1.2 };
+const BOSS_HP_MUL: Readonly<Record<BossId, number>> = { 'iron-warden': 2.1, tidewyrm: 2.4, sovereign: 1.8 };
 
 export const DIRECTOR = {
   /**

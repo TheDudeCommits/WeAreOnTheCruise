@@ -456,7 +456,7 @@ export function onBossKilled(c: SimContext, b: BossState): void {
     // The run ends shortly: bank everything directly instead of dropping it on the water.
     s.stats.doubloons += Math.round((def.doubloons + ECONOMY.victoryBonus) * doubloonMul(p.stats));
     s.stats.bounty += BOUNTY.victory;
-    grantXp(c, def.xp);
+    // No XP here: it would queue level-up cards over the victory lap and hold the results behind them.
     beginVictoryLap(c);
     return;
   }
