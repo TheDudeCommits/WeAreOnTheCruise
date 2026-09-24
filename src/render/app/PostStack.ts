@@ -73,6 +73,8 @@ export class PostStack implements PostServices {
   private width = 0;
   private height = 0;
   private warmed = false;
+  private rewarm = false;
+  private lastScreen = '';
   private dummies: THREE.Group | null = null;
   private time = 0;
   private screenFx = 1;
@@ -143,7 +145,12 @@ export class PostStack implements PostServices {
     this.time += dt;
     this.screenFx = THREE.MathUtils.clamp(ctx.settings.cameraShake ?? 1, 0, 1);
     this.impactCooldown = Math.max(0, this.impactCooldown - dt);
-    for (const t of [this.speed, this.flashState, this.chroma]) t.time = Math.max(0, t.time - dt);
+    this.speed.time = Math.max(0, this.speed.time - dt);
+    this.flashState.time = Math.max(0, this.flashState.time - dt);
+    this.chroma.time = Math.max(0, this.chroma.time - dt);
+    // A new screen (entering a run, the harbor) brings new pools and ships: compile them on its first frame, not
+    // piecemeal on first sight mid-fight.
+    if (ctx.screen !== this.lastScreen) { this.lastScreen = ctx.screen; this.rewarm = this.warmed; }
 
     // Grade: hour, then weather on top, then lightning.
     const a = ctx.atmosphere;
@@ -169,6 +176,7 @@ export class PostStack implements PostServices {
     const perspective = camera as THREE.PerspectiveCamera;
     if (this.ink.overlay.parent !== scene) scene.add(this.ink.overlay);
     if (!this.warmed) { this.warmed = true; this.warmupScene(scene, perspective); }
+    else if (this.rewarm) { this.rewarm = false; this.compileInto(scene, perspective, scene); }
 
     // 1. Ink prepass.
     this.ink.enabled = (this.overrides.ink ?? this.profile.ink) === true;

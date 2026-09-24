@@ -122,7 +122,7 @@ const FRAGMENT_LIGHTING = /* glsl */ `
 	if ( receiveShadow ) {
 		DirectionalLightShadow celDls = directionalLightShadows[ 0 ];
 		float celRaw = getShadow( directionalShadowMap[ 0 ], celDls.shadowMapSize, 1.0, celDls.shadowBias, celDls.shadowRadius, vDirectionalShadowCoord[ 0 ] );
-		celShadowMap = smoothstep( 0.3, 0.7, celRaw );
+		celShadowMap = smoothstep( 0.35, 0.65, celRaw );
 	}
 	#endif
 	float celCloud = cruiseCloudShadow( vCelWorldPos );

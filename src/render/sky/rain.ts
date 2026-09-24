@@ -76,6 +76,7 @@ export class RainField {
     this.mesh.renderOrder = 10;
     this.mesh.userData.inkSkip = true;
     this.mesh.userData.lookInternal = true;
+    this.mesh.raycast = () => undefined;
   }
 
   update(time: number, intensity: number, origin: THREE.Vector3, windX: number, windZ: number, windStrength: number, density: number, color: THREE.Color): void {

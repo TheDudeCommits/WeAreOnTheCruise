@@ -458,6 +458,9 @@ async function start(): Promise<void> {
   const handles = { renderer: host.renderer, scene, camera };
   for (const system of [sky, ocean, worldVisuals, cameraDirector]) await system.init(handles);
   await Promise.all(slots.map((slot) => loadHero(slot).catch((error: unknown) => console.error(`hero ${slot.id} failed`, error))));
+  // One frame first so quality (shadows on/off) and the sky state are applied; the first render warms the variant
+  // set, then precompile waits for every program of the loaded fleet to finish linking.
+  tick(0);
   await post.precompile(scene, camera);
   api.ready = true;
   document.body.dataset.ready = '1';

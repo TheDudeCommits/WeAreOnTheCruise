@@ -63,6 +63,7 @@ export class LightningBolt {
     this.mesh.renderOrder = 5;
     this.mesh.userData.inkSkip = true;
     this.mesh.userData.lookInternal = true;
+    this.mesh.raycast = () => undefined;
   }
 
   private rnd(): number { this.seed = (this.seed * 1664525 + 1013904223) >>> 0; return this.seed / 4294967296; }

@@ -185,6 +185,7 @@ export class CloudLayer {
     this.mesh.renderOrder = -2e6;
     this.mesh.userData.inkSkip = true;
     this.mesh.userData.lookInternal = true;
+    this.mesh.raycast = () => undefined;
     this.visibleCount = maxCards;
   }
 

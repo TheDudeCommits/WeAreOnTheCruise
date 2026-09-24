@@ -81,7 +81,8 @@ export class SkySystem implements RenderSystem {
     this.sun.shadow.mapSize.set(2048, 2048);
     this.sun.shadow.bias = -0.0004;
     this.sun.shadow.normalBias = 0.12;
-    this.sun.shadow.radius = 1.6;
+    // Small PCF radius: the cel shader hardens the result, and a wide rotated-disk kernel leaves ragged edges.
+    this.sun.shadow.radius = 1.0;
     this.sun.target.name = 'key-light-target';
     this.hemi.name = 'sky-fill';
     this.lantern.name = 'night-lantern';

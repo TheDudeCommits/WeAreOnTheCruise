@@ -259,6 +259,7 @@ export class InkPass {
     this.overlay.renderOrder = -1e6;
     this.overlay.userData.inkSkip = true;
     this.overlay.userData.lookInternal = true;
+    this.overlay.raycast = () => undefined;
   }
 
   setSize(width: number, height: number): void {

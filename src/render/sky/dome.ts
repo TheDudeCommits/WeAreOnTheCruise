@@ -150,6 +150,7 @@ export class SkyDome {
     this.mesh.renderOrder = -1000;
     this.mesh.userData.inkSkip = true;
     this.mesh.userData.lookInternal = true;
+    this.mesh.raycast = () => undefined;
   }
 
   dispose(): void {
