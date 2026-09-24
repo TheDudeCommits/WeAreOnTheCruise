@@ -298,6 +298,12 @@ export class CameraDirector implements RenderSystem, CameraServices {
   /** Lab/QA: resets user orbit/zoom. */
   resetView(): void { this.userYaw = 0; this.userPitch = 0; this.zoom = 1; }
 
+  /** Lab/QA: pins the showcase orbit angle (radians, world yaw of the camera offset) and snaps to it. */
+  setShowcaseAngle(yaw: number, snap = true): void {
+    this.showcaseYaw = yaw;
+    if (snap) { this.yaw = yaw + this.userYaw; this.initialized = false; }
+  }
+
   private readonly onContext = (event: Event) => event.preventDefault();
   private readonly onDown = (event: PointerEvent) => {
     if (event.button !== 2) return;

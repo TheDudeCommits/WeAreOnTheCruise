@@ -179,7 +179,39 @@ function buildSkinned(): THREE.SkinnedMesh {
 }
 const skinned = buildSkinned();
 skinned.name = 'lab-skinned';
+skinned.visible = params.get('skinned') !== '0';
 scene.add(skinned);
+
+// ───────────── HDR burst (bloom test: a stand-in for FX muzzle flashes) ─────────────
+const burstGeometry = new THREE.IcosahedronGeometry(1, 1);
+const burstMaterial = createToonMaterial({ color: 0x000000, emissive: 0xffc46b, emissiveIntensity: 7, rim: 0, name: 'lab-burst' });
+const bursts: { mesh: THREE.Mesh; age: number }[] = [];
+for (let i = 0; i < 6; i++) {
+  const mesh = new THREE.Mesh(burstGeometry, burstMaterial);
+  mesh.visible = false;
+  mesh.userData.noInk = true;
+  scene.add(mesh);
+  bursts.push({ mesh, age: 1 });
+}
+function fireBursts(): void {
+  const slot = focusSlot();
+  const side = new THREE.Vector3(Math.cos(slot.heading), 0, -Math.sin(slot.heading));
+  bursts.forEach((b, i) => {
+    const along = (i - 2.5) * 5;
+    const fwd = new THREE.Vector3(-Math.sin(slot.heading), 0, -Math.cos(slot.heading));
+    b.mesh.position.set(slot.x, ocean.heightAt(slot.x, slot.z) + 5, slot.z).addScaledVector(fwd, along).addScaledVector(side, 11);
+    b.age = -i * 0.05;
+  });
+}
+function updateBursts(dt: number): void {
+  for (const b of bursts) {
+    b.age += dt;
+    const t = b.age / 0.35;
+    b.mesh.visible = t >= 0 && t < 1;
+    if (b.mesh.visible) b.mesh.scale.setScalar(1.5 + 5 * Math.sqrt(t) * (1 - t * 0.6));
+  }
+}
+let paused = false;
 
 // ───────────── Frame ─────────────
 function focusSlot(): HeroSlot { return slots[SHIP_ORDER.indexOf(selected)]!; }
@@ -269,6 +301,7 @@ function tick(dt: number): void {
   ocean.update(ctx);
   worldVisuals.update(ctx);
   updateShips(ctx);
+  updateBursts(dt);
   cameraDirector.update(ctx);
   if (camMode === 'sky') {
     // Sky review: low eye point looking at the cloud ring and the horizon, slowly panning.
@@ -287,7 +320,7 @@ function frame(now: number): void {
   requestAnimationFrame(frame);
   const dt = Math.min(0.1, Math.max(0, (now - last) / 1000));
   last = now;
-  tick(dt);
+  if (!paused) tick(dt);
   updateStats(now);
 }
 
@@ -363,6 +396,7 @@ panel.append(
       button('kick', () => cameraDirector.kick(6, 0.4)),
       button('lightning', () => { sea.lightningSerial++; }),
       button('focus', () => cameraDirector.focusOn(focusSlot().x + 220, focusSlot().z - 120, 3)),
+      button('broadside', () => { fireBursts(); cameraDirector.kick(4, 0.3); cameraDirector.shake(0.5, 0.35); }),
     );
     return row;
   })(),
@@ -372,7 +406,8 @@ panel.append(
 export interface LookLabApi {
   ready: boolean;
   loaded(): number;
-  set(opts: Partial<{ yaw: number; pitch: number; hour: number; weather: WeatherId; quality: QualityTier; cam: CamMode; ship: ShipId; fleet: number; ink: boolean; bloom: boolean; grade: boolean; flash: boolean; glow: boolean; spectral: boolean; dpr: number }>): void;
+  set(opts: Partial<{ paused: boolean; skinned: boolean; showcaseYaw: number; yaw: number; pitch: number; hour: number; weather: WeatherId; quality: QualityTier; cam: CamMode; ship: ShipId; fleet: number; ink: boolean; bloom: boolean; grade: boolean; flash: boolean; glow: boolean; spectral: boolean; dpr: number }>): void;
+  burst(): void;
   advance(seconds: number): void;
   impact(strength?: number): void;
   speed(strength?: number, duration?: number): void;
@@ -385,8 +420,11 @@ const api: LookLabApi = {
   ready: false,
   loaded: () => slots.filter((s) => s.loaded).length,
   set(opts) {
+    if (opts.paused !== undefined) paused = opts.paused;
+    if (opts.skinned !== undefined) skinned.visible = opts.skinned;
     if (opts.yaw !== undefined) skyYaw = opts.yaw;
     if (opts.pitch !== undefined) skyPitch = opts.pitch;
+    if (opts.showcaseYaw !== undefined) cameraDirector.setShowcaseAngle(opts.showcaseYaw);
     if (opts.hour !== undefined) { hour = opts.hour; hourInput.value = String(hour); }
     if (opts.weather) {
       weather = opts.weather;
@@ -411,6 +449,7 @@ const api: LookLabApi = {
   flash: () => post.flash(0xfff1d0, 0.8, 0.25),
   chromatic: () => post.chromatic(1, 0.35),
   strike: () => { sea.lightningSerial++; },
+  burst: () => fireBursts(),
   metrics: () => ({ ...host.getMetrics(), inked: post.ink.lastInked, occluders: post.ink.lastOccluders }),
 };
 (window as unknown as { __LOOK__: LookLabApi }).__LOOK__ = api;

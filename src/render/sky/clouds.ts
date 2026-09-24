@@ -103,10 +103,11 @@ void main() {
 	// Heavier, cooler underside.
 	float base = 1.0 - smoothstep( 0.14, 0.3, p.y );
 	col = mix( col, uShade * 0.9, base * 0.5 );
-	// Silver lining on sun-facing edges.
-	float edge = 1.0 - smoothstep( 0.0, 0.014, shape );
+	// Silver lining on sun-facing edges; strongest when the cloud is backlit (sun behind it).
+	float backlit = clamp( -sun.z, 0.0, 1.0 );
+	float edge = 1.0 - smoothstep( 0.0, 0.014 + 0.012 * backlit, shape );
 	float facing = smoothstep( 0.1, 0.5, dot( normalize( nPuff.xy + 1e-4 ), normalize( sun.xy + 1e-4 ) ) );
-	col += uRimColor * edge * facing * 0.55;
+	col += uRimColor * edge * mix( facing, 1.0, backlit * 0.6 ) * ( 0.55 + 1.2 * backlit );
 	col += vec3( 0.8, 0.88, 1.0 ) * uFlash * ( 0.4 + lit * 0.6 );
 	// Aerial perspective: far and low cards melt into the haze.
 	float fade = clamp( ( vDist - 900.0 ) / 3200.0, 0.0, 1.0 ) * 0.42 + ( 1.0 - smoothstep( 0.0, 0.1, vElevation ) ) * 0.18;
