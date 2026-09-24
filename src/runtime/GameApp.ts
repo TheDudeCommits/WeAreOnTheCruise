@@ -70,6 +70,8 @@ export class GameApp {
   private paused = false;
   private fps = 60;
   private menuHeading = 0;
+  /** QA/bridge input override (steer/aim) that wins over live input until `until` (render time). */
+  inputOverride: { steer?: number; aimX?: number; aimZ?: number; until: number } | null = null;
 
   constructor(private readonly root: HTMLElement, readonly config: AppConfig) {
     this.host = new RendererHost(root, config.captureMode, config.quality === 'low');
@@ -105,6 +107,8 @@ export class GameApp {
     this.lastFrame = performance.now();
     this.raf = requestAnimationFrame(this.frame);
   }
+
+  renderClock(): number { return this.renderTime; }
 
   setScreen(screen: AppScreen): void {
     this.screen = screen;
@@ -172,7 +176,9 @@ export class GameApp {
     if (this.sim && run && this.screen === 'run') {
       const snap = this.input.read();
       this.updateAim(snap.pointerX, snap.pointerY, snap.usingGamepad, snap.stickAimX, snap.stickAimY);
-      this.sim.setInput({ steer: snap.steer, throttleAxis: snap.throttleAxis, aimX: this.aimPoint.x, aimZ: this.aimPoint.z, broadsideHeld: snap.broadsideHeld });
+      const o = this.inputOverride && this.inputOverride.until > this.renderTime ? this.inputOverride : null;
+      if (o?.aimX !== undefined && o.aimZ !== undefined) this.aimPoint.set(o.aimX, 0, o.aimZ);
+      this.sim.setInput({ steer: o?.steer ?? snap.steer, throttleAxis: snap.throttleAxis, aimX: this.aimPoint.x, aimZ: this.aimPoint.z, broadsideHeld: snap.broadsideHeld });
       for (const action of this.input.drainActions()) this.sim.press(action);
       if (!this.paused) this.sim.step(dt);
     }

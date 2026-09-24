@@ -1,32 +1,35 @@
 /**
  * Run simulation orchestrator (CORE-owned). Fixed 60 Hz step, seeded, no rendering.
  * The public API below is the contract used by src/runtime; system internals live in sibling files.
+ *
+ * Tick order: pools → sea → player → director → (enemy snapshot) → AI → bosses → CORE forces (stun, knockback,
+ * tethers, burning) → spatial rebuild → weapons → projectiles → hazards → collisions → pickups → progression → cleanup.
  */
 import { hashString, createSeededRandom } from '../../core/rng';
 import { CONTENT } from '../content';
-import {
-  HAZARD_POOL, MAX_STEPS_PER_FRAME, PICKUP_POOL, PROJECTILE_POOL, SIM_DT, TELEGRAPH_POOL,
-} from '../constants';
-import type { BossId, EnemyId, PickupKind, SeaId, ShipId, StatusKind, WeaponId } from '../ids';
+import { MAX_STEPS_PER_FRAME, SIM_DT } from '../constants';
+import type { BossId, EnemyId, HazardKind, PickupKind, ProjectileKind, SeaId, ShipId, StatusKind, Team, WeaponId } from '../ids';
 import type {
   BossState, ContentDb, EnemyState, HazardState, MetaProfile, PickupState, PlayerInput, PlayerState,
   ProjectileState, RunResult, RunState, SimAction, SimEvent, TelegraphState, WorldQuery,
 } from '../types';
 import type {
-  DamageOpts, HazardSpawn, PlayerDamageOpts, ProjectileSpawn, SimContext, Target, TelegraphSpawn,
+  DamageOpts, HazardSpawn, PlayerDamageOpts, ProjectileSpawn, Target, TelegraphSpawn,
 } from './context';
 import { updateBosses } from './bosses';
 import { resolveCollisions } from './collisions';
+import { applyShipForces, snapshotEnemies } from './core-forces';
+import { CoreRuntime, DEFAULT_TURN, isBoss, KIND_TRAITS, K_HOMING, statusOf, untouchable, type CoreSim } from './core-runtime';
+import { parry, specialCooldown, ULT_CHARGE_DAMAGE } from './core-skills';
 import { updateDirector } from './director';
 import { updateEnemies } from './ai';
 import { updateHazards } from './hazards';
 import { updatePickups } from './pickups';
-import { BRACE_DURATION, PARRY_WINDOW, updatePlayer } from './player';
+import { BRACE_DAMAGE_TAKEN, BRACE_DURATION, PARRY_WINDOW, updatePlayer } from './player';
 import {
   applyChosenCard, banishCard, initProgression, onBossKilled, onEnemyKilled, rerollOffers, updateProgression,
 } from './progression';
 import { updateProjectiles } from './projectiles';
-import { SpatialHash } from './spatial';
 import { createRunState } from './state';
 import { updateWeapons } from './weapons';
 import { updateSeaState } from './weather';
@@ -47,13 +50,22 @@ export interface SimDebug {
   spawnBoss(defId: BossId): void;
   setTime(seconds: number): void;
   god(on: boolean): void;
-  giveWeapon(id: WeaponId, level?: number): void;
+  /** Gives (or raises) a weapon. Levels ≥ 3 need a branch: keeps the current one, else `branch` (default 'A'). */
+  giveWeapon(id: WeaponId, level?: number, branch?: 'A' | 'B'): void;
   killAll(): void;
+  /** Fills the ultimate charge (QA). */
+  chargeUltimate(): void;
+  /** Clears every skill cooldown (QA). */
+  resetCooldowns(): void;
+  /** Moves the player (QA). */
+  teleport(x: number, z: number, heading?: number): void;
 }
 
 const EMPTY_INPUT: PlayerInput = { steer: 0, throttleAxis: 0, aimX: 0, aimZ: -100, broadsideHeld: false };
+const NO_OPTS: DamageOpts = {};
+const NO_PLAYER_OPTS: PlayerDamageOpts = {};
 
-export class Sim implements SimContext {
+export class Sim implements CoreSim {
   readonly state: RunState;
   readonly content: ContentDb;
   readonly world: WorldQuery;
@@ -61,13 +73,13 @@ export class Sim implements SimContext {
   readonly random: () => number;
   readonly dt = SIM_DT;
   readonly debug: SimDebug;
+  readonly core = new CoreRuntime();
 
   input: PlayerInput = { ...EMPTY_INPUT };
   actions = new Set<SimAction>();
 
-  private readonly pendingActions = new Set<SimAction>();
-  private readonly events: SimEvent[] = [];
-  private readonly spatial = new SpatialHash<Target>(40);
+  private pendingActions = new Set<SimAction>();
+  private events: SimEvent[] = [];
   private idCounter = 1;
   private accumulator = 0;
   private timeScaleTimer = 0;
@@ -81,9 +93,13 @@ export class Sim implements SimContext {
     const rng = createSeededRandom(hashString(`${opts.seed}:${opts.shipId}:${opts.seaId}`));
     this.random = rng.next;
     this.state = createRunState({ seed: opts.seed, shipId: opts.shipId, seaId: opts.seaId, content: this.content, meta: opts.meta });
+    const ship = this.content.ships[opts.shipId];
+    this.state.player.skills.special.cooldownMax = specialCooldown(ship.special);
     initProgression(this);
     this.debug = this.createDebug();
   }
+
+  get god(): boolean { return this.godMode; }
 
   // ───────────── Public API (runtime) ─────────────
 
@@ -128,9 +144,20 @@ export class Sim implements SimContext {
     return ticks;
   }
 
+  /** Runs exactly `count` fixed ticks while the run is 'running' (tests, benchmarks). Ignores time scale. */
+  stepTicks(count: number): number {
+    let ticks = 0;
+    for (let i = 0; i < count && this.state.status === 'running'; i++) { this.tick(); ticks++; }
+    this.state.timeScale = 1;
+    this.timeScaleTimer = 0;
+    return ticks;
+  }
+
   drainEvents(): SimEvent[] {
     if (this.events.length === 0) return [];
-    return this.events.splice(0, this.events.length);
+    const out = this.events;
+    this.events = [];
+    return out;
   }
 
   result(): RunResult | null { return this.ended; }
@@ -139,16 +166,28 @@ export class Sim implements SimContext {
 
   private tick(): void {
     const s = this.state;
-    this.actions = new Set(this.pendingActions);
-    this.pendingActions.clear();
+    const core = this.core;
+    // Discrete actions pressed since the previous tick (swap the two sets; no allocation).
+    const used = this.actions;
+    this.actions = this.pendingActions;
+    this.pendingActions = used;
+    used.clear();
     s.tick++;
     s.time += SIM_DT;
+
+    core.projFree.rebuild(s.projectiles);
+    core.hazFree.rebuild(s.hazards);
+    core.pickFree.rebuild(s.pickups);
+    core.teleFree.rebuild(s.telegraphs);
+    core.refreshIslands(this);
 
     updateSeaState(this);
     updatePlayer(this);
     updateDirector(this);
+    snapshotEnemies(this);
     updateEnemies(this);
     updateBosses(this);
+    applyShipForces(this);
     this.rebuildSpatial();
     updateWeapons(this);
     updateProjectiles(this);
@@ -157,32 +196,46 @@ export class Sim implements SimContext {
     updatePickups(this);
     updateProgression(this);
     this.cleanup();
-    if (this.godMode) { s.player.hp = s.player.maxHp; }
+    if (this.godMode && s.player.alive) s.player.hp = s.player.maxHp;
     if (!s.player.alive && s.status === 'running') this.endRun('defeat');
   }
 
   private rebuildSpatial(): void {
-    this.spatial.clear();
-    for (const e of this.state.enemies) if (e.life === 'alive') this.spatial.insert(e);
-    for (const b of this.state.bosses) if (b.life === 'alive') this.spatial.insert(b);
+    const grid = this.core.grid;
+    grid.clear();
+    const list = this.state.enemies;
+    for (let i = 0; i < list.length; i++) { const e = list[i]!; if (e.life === 'alive') grid.insert(e); }
   }
 
   private cleanup(): void {
     const s = this.state;
-    for (let i = s.enemies.length - 1; i >= 0; i--) {
-      const e = s.enemies[i]!;
+    const byId = this.core.byId;
+    const enemies = s.enemies;
+    let w = 0;
+    for (let i = 0; i < enemies.length; i++) {
+      const e = enemies[i]!;
       if (e.life === 'sinking') {
         e.sink = Math.min(1, e.sink + SIM_DT / 3);
         if (e.sink >= 1) { e.life = 'dead'; this.emit({ type: 'enemy-sunk', id: e.id }); }
       }
-      if (e.life === 'dead') s.enemies.splice(i, 1);
+      if (e.life === 'dead') { byId.delete(e.id); continue; }
+      enemies[w++] = e;
     }
-    for (let i = s.bosses.length - 1; i >= 0; i--) {
-      const b = s.bosses[i]!;
+    if (w !== enemies.length) enemies.length = w;
+    const bosses = s.bosses;
+    w = 0;
+    for (let i = 0; i < bosses.length; i++) {
+      const b = bosses[i]!;
       if (b.life === 'sinking') { b.sink = Math.min(1, b.sink + SIM_DT / 6); if (b.sink >= 1) b.life = 'dead'; }
-      if (b.life === 'dead') s.bosses.splice(i, 1);
+      if (b.life === 'dead') { byId.delete(b.id); continue; }
+      bosses[w++] = b;
     }
-    for (const t of s.telegraphs) if (t.alive) { t.time += SIM_DT; if (t.time >= t.duration) t.alive = false; }
+    if (w !== bosses.length) bosses.length = w;
+    const tele = s.telegraphs;
+    for (let i = 0; i < tele.length; i++) {
+      const t = tele[i]!;
+      if (t.alive) { t.time += SIM_DT; if (t.time >= t.duration) t.alive = false; }
+    }
   }
 
   endRun(outcome: 'victory' | 'defeat' | 'retired'): void {
@@ -208,18 +261,21 @@ export class Sim implements SimContext {
 
   spawnEnemy(defId: EnemyId, x: number, z: number, opts: { elite?: boolean; heading?: number } = {}): EnemyState | null {
     const def = this.content.enemies[defId];
+    if (!def) return null;
     const heat = this.state.director.heat;
     const elite = !!opts.elite;
     const hp = def.hp * (1 + (heat - 1) * 0.6) * (elite ? 3.5 : 1);
+    const scale = elite ? 1.2 : 1;
     const enemy: EnemyState = {
       id: this.nextId(), defId, faction: def.faction, life: 'alive', sink: 0,
       x, z, y: 0, heading: opts.heading ?? Math.atan2(-(this.state.player.x - x), -(this.state.player.z - z)),
       speed: 0, vx: 0, vz: 0, yawRate: 0, roll: 0, pitch: 0,
-      radius: def.radius * (elite ? 1.2 : 1), length: def.length * (elite ? 1.2 : 1), beam: def.radius * 2 * (elite ? 1.2 : 1),
+      radius: def.radius * scale, length: def.length * scale, beam: def.radius * 2 * scale,
       hp, maxHp: hp, armor: def.armor, elite, hitFlash: 0, statuses: [],
-      attackCooldown: 1 + this.random() * 2, ai: {}, spawnTime: this.state.time,
+      attackCooldown: 1 + this.random() * 2, ai: newAiScratch(), spawnTime: this.state.time,
     };
     this.state.enemies.push(enemy);
+    this.core.byId.set(enemy.id, enemy);
     this.emit({ type: 'enemy-spawned', id: enemy.id, defId, x, z, elite });
     return enemy;
   }
@@ -232,66 +288,111 @@ export class Sim implements SimContext {
       x, z, y: 0, heading, speed: 0, vx: 0, vz: 0, yawRate: 0, roll: 0, pitch: 0,
       radius: def.radius, length: def.length, beam: def.radius * 2,
       hp, maxHp: hp, armor: def.armor, phase: 0, hitFlash: 0, statuses: [], attack: 'arrive', attackTime: 0,
-      submerged: 0, ai: {}, spawnTime: this.state.time,
+      submerged: 0, ai: newAiScratch(), spawnTime: this.state.time,
     };
     this.state.bosses.push(boss);
+    this.core.byId.set(boss.id, boss);
     this.state.director.activeBoss = defId;
     this.emit({ type: 'boss-spawned', boss: defId, id: boss.id, x, z });
     return boss;
   }
 
   spawnProjectile(p: ProjectileSpawn): ProjectileState | null {
-    const list = this.state.projectiles;
-    let slot = list.find((q) => !q.alive);
-    if (!slot) {
-      if (list.length >= PROJECTILE_POOL) return null;
-      slot = { id: 0, alive: false, kind: p.kind, team: p.team, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, damage: 0, radius: 0, pierce: 0, ttl: 0, age: 0, crit: false, area: 0, hits: [] };
-      list.push(slot);
+    const idx = this.shoot(
+      p.kind, p.team, p.x, p.y ?? 3, p.z, p.vx, p.vy ?? 0, p.vz, p.damage, p.radius ?? 1.2, p.pierce ?? 0,
+      p.ttl ?? 3, p.weapon, p.crit ?? false, p.area ?? 0,
+    );
+    if (idx < 0) return null;
+    const slot = this.state.projectiles[idx]!;
+    if (p.target !== undefined) {
+      slot.target = p.target;
+      if (KIND_TRAITS[p.kind] & K_HOMING) {
+        this.core.pTurn[idx] = DEFAULT_TURN[p.kind] ?? 2;
+        this.core.pTarget[idx] = p.target === 0 ? null : this.core.byId.get(p.target) ?? null;
+      }
     }
-    slot.id = this.nextId(); slot.alive = true; slot.kind = p.kind; slot.team = p.team;
-    slot.x = p.x; slot.y = p.y ?? 3; slot.z = p.z; slot.vx = p.vx; slot.vy = p.vy ?? 0; slot.vz = p.vz;
-    slot.damage = p.damage; slot.radius = p.radius ?? 1.2; slot.pierce = p.pierce ?? 0; slot.ttl = p.ttl ?? 3;
-    slot.age = 0; slot.weapon = p.weapon; slot.target = p.target; slot.crit = p.crit ?? false; slot.area = p.area ?? 0;
-    slot.hits.length = 0;
     return slot;
   }
 
-  spawnHazard(h: HazardSpawn): HazardState | null {
-    const list = this.state.hazards;
-    let slot = list.find((q) => !q.alive);
-    if (!slot) {
-      if (list.length >= HAZARD_POOL) return null;
-      slot = { id: 0, alive: false, kind: h.kind, team: h.team, x: 0, z: 0, radius: 0, ttl: 0, age: 0, damage: 0, tick: 0, tickTimer: 0, vx: 0, vz: 0, armed: true };
-      list.push(slot);
+  shoot(
+    kind: ProjectileKind, team: Team, x: number, y: number, z: number, vx: number, vy: number, vz: number,
+    damage: number, radius: number, pierce: number, ttl: number, weapon: WeaponId | undefined, crit: boolean, area: number,
+  ): number {
+    const list = this.state.projectiles;
+    const core = this.core;
+    const idx = core.projFree.acquire(list, this.state.tick);
+    if (idx < 0) return -1;
+    if (idx === list.length) {
+      list.push({
+        id: 0, alive: false, kind, team, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, damage: 0, radius: 0, pierce: 0,
+        ttl: 0, age: 0, weapon: undefined, target: undefined, crit: false, area: 0, hits: [],
+      });
     }
-    slot.id = this.nextId(); slot.alive = true; slot.kind = h.kind; slot.team = h.team; slot.x = h.x; slot.z = h.z;
-    slot.radius = h.radius; slot.ttl = h.ttl; slot.age = 0; slot.damage = h.damage; slot.tick = h.tick ?? 0; slot.tickTimer = 0;
-    slot.vx = h.vx ?? 0; slot.vz = h.vz ?? 0; slot.weapon = h.weapon; slot.armed = h.armed ?? true;
-    this.emit({ type: 'hazard-spawned', id: slot.id, kind: h.kind, x: h.x, z: h.z, radius: h.radius });
-    return slot;
+    const s = list[idx]!;
+    s.id = this.nextId(); s.alive = true; s.kind = kind; s.team = team;
+    s.x = x; s.y = y; s.z = z; s.vx = vx; s.vy = vy; s.vz = vz;
+    s.damage = damage; s.radius = radius; s.pierce = pierce; s.ttl = ttl; s.age = 0;
+    s.weapon = weapon; s.target = undefined; s.crit = crit; s.area = area;
+    if (s.hits.length > 0) s.hits.length = 0;
+    core.pFlags[idx] = 0; core.pKnock[idx] = 0; core.pTurn[idx] = 0; core.pSpeed[idx] = Math.sqrt(vx * vx + vz * vz);
+    core.pSlowMag[idx] = 0; core.pSlowTime[idx] = 0; core.pBurn[idx] = 0; core.pStun[idx] = 0;
+    core.pA[idx] = 0; core.pB[idx] = 0; core.pC[idx] = 0; core.pD[idx] = 0; core.pFrom[idx] = 0; core.pTarget[idx] = null;
+    return idx;
+  }
+
+  spawnHazard(h: HazardSpawn): HazardState | null {
+    const idx = this.placeHazard(h.kind, h.team, h.x, h.z, h.radius, h.ttl, h.damage, h.tick ?? 0, h.vx ?? 0, h.vz ?? 0, h.weapon, h.armed ?? true);
+    return idx < 0 ? null : this.state.hazards[idx]!;
+  }
+
+  placeHazard(
+    kind: HazardKind, team: Team, x: number, z: number, radius: number, ttl: number, damage: number, tick: number,
+    vx: number, vz: number, weapon: WeaponId | undefined, armed: boolean,
+  ): number {
+    const list = this.state.hazards;
+    const core = this.core;
+    const idx = core.hazFree.acquire(list, this.state.tick);
+    if (idx < 0) return -1;
+    if (idx === list.length) {
+      list.push({
+        id: 0, alive: false, kind, team, x: 0, z: 0, radius: 0, ttl: 0, age: 0, damage: 0, tick: 0, tickTimer: 0,
+        vx: 0, vz: 0, weapon: undefined, armed: true,
+      });
+    }
+    const h = list[idx]!;
+    h.id = this.nextId(); h.alive = true; h.kind = kind; h.team = team; h.x = x; h.z = z;
+    h.radius = radius; h.ttl = ttl; h.age = 0; h.damage = damage; h.tick = tick; h.tickTimer = 0;
+    h.vx = vx; h.vz = vz; h.weapon = weapon; h.armed = armed;
+    core.hFlags[idx] = 0; core.hKnock[idx] = 0; core.hA[idx] = 0; core.hB[idx] = 0; core.hC[idx] = 0; core.hD[idx] = 0;
+    core.hTimer[idx] = 0; core.hMode[idx] = 0; core.hTarget[idx] = null;
+    const hits = core.hHits[idx]!;
+    if (hits.length > 0) hits.length = 0;
+    this.emit({ type: 'hazard-spawned', id: h.id, kind, x, z, radius });
+    return idx;
   }
 
   spawnPickup(kind: PickupKind, x: number, z: number, value = 1): PickupState | null {
     const list = this.state.pickups;
-    let slot = list.find((q) => !q.alive);
-    if (!slot) {
-      if (list.length >= PICKUP_POOL) return null;
-      slot = { id: 0, alive: false, kind, x: 0, z: 0, value: 0, age: 0, magnet: false };
-      list.push(slot);
-    }
-    slot.id = this.nextId(); slot.alive = true; slot.kind = kind; slot.x = x; slot.z = z; slot.value = value; slot.age = 0; slot.magnet = false;
-    this.emit({ type: 'pickup-spawned', id: slot.id, kind, x, z, value });
-    return slot;
+    const core = this.core;
+    const idx = core.pickFree.acquire(list, this.state.tick);
+    if (idx < 0) return null;
+    if (idx === list.length) list.push({ id: 0, alive: false, kind, x: 0, z: 0, value: 0, age: 0, magnet: false });
+    const k = list[idx]!;
+    k.id = this.nextId(); k.alive = true; k.kind = kind; k.x = x; k.z = z; k.value = value; k.age = 0; k.magnet = false;
+    core.kSpeed[idx] = 0;
+    this.emit({ type: 'pickup-spawned', id: k.id, kind, x, z, value });
+    return k;
   }
 
   addTelegraph(t: TelegraphSpawn): TelegraphState | null {
     const list = this.state.telegraphs;
-    let slot = list.find((q) => !q.alive);
-    if (!slot) {
-      if (list.length >= TELEGRAPH_POOL) return null;
-      slot = { id: 0, alive: false, shape: t.shape, team: t.team, x: 0, z: 0, radius: 0, length: 0, angle: 0, time: 0, duration: 0 };
-      list.push(slot);
+    const core = this.core;
+    const idx = core.teleFree.acquire(list, this.state.tick);
+    if (idx < 0) return null;
+    if (idx === list.length) {
+      list.push({ id: 0, alive: false, shape: t.shape, team: t.team, x: 0, z: 0, radius: 0, length: 0, angle: 0, time: 0, duration: 0 });
     }
+    const slot = list[idx]!;
     slot.id = this.nextId(); slot.alive = true; slot.shape = t.shape; slot.team = t.team; slot.x = t.x; slot.z = t.z;
     slot.radius = t.radius; slot.length = t.length ?? 0; slot.angle = t.angle ?? 0; slot.time = 0; slot.duration = t.duration;
     this.emit({ type: 'telegraph', id: slot.id, shape: t.shape, x: t.x, z: t.z, radius: t.radius, duration: t.duration });
@@ -299,56 +400,87 @@ export class Sim implements SimContext {
   }
 
   targetsNear(x: number, z: number, radius: number, out: Target[]): Target[] {
-    return this.spatial.query(x, z, radius, out);
+    const buf = this.core.bufX;
+    const n = this.core.near(this.state, x, z, radius, buf);
+    // Overwrite in place, then trim: `out.length = 0` would drop the backing store and reallocate every query.
+    for (let i = 0; i < n; i++) out[i] = buf[i]!;
+    if (out.length !== n) out.length = n;
+    return out;
   }
 
   findTarget(id: number): Target | undefined {
-    return this.state.enemies.find((e) => e.id === id) ?? this.state.bosses.find((b) => b.id === id);
+    return this.core.byId.get(id);
   }
 
-  damageTarget(target: Target, amount: number, opts: DamageOpts = {}): number {
-    if (target.life !== 'alive' || amount <= 0) return 0;
-    if ('submerged' in target && target.submerged > 0.6) return 0;
-    const dealt = opts.pierceArmor ? amount : Math.max(amount * 0.3, amount - target.armor);
-    target.hp -= dealt;
-    target.hitFlash = 1;
+  damageTarget(target: Target, amount: number, opts: DamageOpts = NO_OPTS): number {
+    const st = opts.status;
+    return this.hitTarget(
+      target, amount, opts.weapon, !!opts.crit, opts.knockback ?? 0, opts.fromX ?? target.x, opts.fromZ ?? target.z,
+      st ? st.kind : null, st ? st.time : 0, st ? st.magnitude ?? 1 : 0, !!opts.pierceArmor,
+    );
+  }
+
+  hitTarget(
+    t: Target, amount: number, weapon: WeaponId | undefined, crit: boolean, knockback: number, fromX: number, fromZ: number,
+    status: StatusKind | null, statusTime: number, statusMag: number, pierceArmor: boolean,
+  ): number {
+    if (t.life !== 'alive' || !(amount > 0)) return 0;
+    const boss = isBoss(t);
+    if ((boss && t.submerged > 0.6) || untouchable(t)) return 0;
+    const dealt = pierceArmor ? amount : Math.max(amount * 0.3, amount - t.armor);
+    const effective = Math.min(dealt, t.hp);
+    t.hp -= dealt;
+    t.hitFlash = 1;
     const s = this.state;
-    s.stats.damageDealt += dealt;
-    if (opts.weapon) {
-      s.stats.damageByWeapon[opts.weapon] = (s.stats.damageByWeapon[opts.weapon] ?? 0) + dealt;
-      if ('defId' in target && !('phase' in target)) (target as EnemyState).lastHitBy = opts.weapon;
+    s.stats.damageDealt += effective;
+    if (weapon) {
+      s.stats.damageByWeapon[weapon] = (s.stats.damageByWeapon[weapon] ?? 0) + effective;
+      if (!boss) t.lastHitBy = weapon;
     }
     const ult = s.player.skills.ultimate;
-    ult.charge = Math.min(1, ult.charge + dealt / 2500);
-    if (opts.knockback && opts.fromX !== undefined && opts.fromZ !== undefined && !('phase' in target)) {
-      const dx = target.x - opts.fromX, dz = target.z - opts.fromZ, d = Math.hypot(dx, dz) || 1;
-      target.vx += (dx / d) * opts.knockback; target.vz += (dz / d) * opts.knockback;
+    if (ult.active <= 0 && ult.charge < 1) {
+      ult.charge = Math.min(1, ult.charge + effective / ULT_CHARGE_DAMAGE);
+      if (ult.charge >= 1) this.emit({ type: 'skill-ready', slot: 'ultimate' });
     }
-    if (opts.status) this.applyStatus(target, opts.status.kind, opts.status.time, opts.status.magnitude);
-    this.emit({ type: 'damage', target: target.id, amount: dealt, crit: !!opts.crit, x: target.x, y: 4, z: target.z, weapon: opts.weapon });
-    if (target.hp <= 0) {
-      target.hp = 0;
-      target.life = 'sinking';
-      if ('phase' in target) onBossKilled(this, target);
-      else onEnemyKilled(this, target);
+    if (knockback > 0 && !boss) this.core.push(this, t, t.x - fromX, t.z - fromZ, knockback);
+    if (status && statusTime > 0 && !(boss && (status === 'stunned' || status === 'hooked'))) {
+      this.applyStatus(t, status, statusTime, statusMag);
+    }
+    this.emit({ type: 'damage', target: t.id, amount: dealt, crit, x: t.x, y: 4, z: t.z, weapon });
+    if (t.hp <= 0) {
+      t.hp = 0;
+      t.life = 'sinking';
+      if (boss) onBossKilled(this, t);
+      else onEnemyKilled(this, t);
     }
     return dealt;
   }
 
-  damagePlayer(amount: number, opts: PlayerDamageOpts = {}): number {
+  damagePlayer(amount: number, opts: PlayerDamageOpts = NO_PLAYER_OPTS): number {
     const p = this.state.player;
-    if (!p.alive || amount <= 0 || this.godMode) return 0;
+    return this.hurtPlayer(amount, opts.x ?? p.x, opts.z ?? p.z, opts.source, opts.kind ?? 'projectile');
+  }
+
+  hurtPlayer(amount: number, x: number, z: number, source: number | undefined, _kind: 'projectile' | 'contact' | 'hazard' | 'boss'): number {
+    const p = this.state.player;
+    if (!p.alive || !(amount > 0)) return 0;
     if (p.invulnerable > 0 || p.airborne > 0.2 || p.submerged > 0.5) return 0;
     const brace = p.skills.brace;
     const braced = brace.active > 0;
     const parried = braced && brace.active > BRACE_DURATION - PARRY_WINDOW;
-    let value = braced ? amount * 0.3 : amount;
+    if (parried) {
+      if (!this.core.parryUsed) { this.core.parryUsed = true; parry(this, x, z); }
+      this.emit({ type: 'player-hit', amount: 0, x, z, braced: true, parried: true, source });
+      return 0;
+    }
+    let value = braced ? amount * BRACE_DAMAGE_TAKEN : amount;
     value = Math.max(value * 0.25, value - p.stats.armor - this.content.ships[p.shipId].armor);
     if (p.shield > 0) { const absorbed = Math.min(p.shield, value); p.shield -= absorbed; value -= absorbed; }
-    p.hp -= value;
     p.sinceHit = 0;
+    this.emit({ type: 'player-hit', amount: value, x, z, braced, parried: false, source });
+    if (this.godMode || value <= 0) return value;
+    p.hp -= value;
     this.state.stats.damageTaken += value;
-    this.emit({ type: 'player-hit', amount: value, x: opts.x ?? p.x, z: opts.z ?? p.z, braced, parried, source: opts.source });
     if (p.hp <= 0) {
       if (p.revivesLeft > 0) {
         p.revivesLeft--; p.hp = p.maxHp * 0.5; p.invulnerable = 3;
@@ -363,14 +495,22 @@ export class Sim implements SimContext {
   }
 
   applyStatus(target: PlayerState | Target, kind: StatusKind, time: number, magnitude = 1): void {
-    const existing = target.statuses.find((st) => st.kind === kind);
-    if (existing) { existing.time = Math.max(existing.time, time); existing.magnitude = Math.max(existing.magnitude, magnitude); return; }
-    target.statuses.push({ kind, time, magnitude });
+    const list = target.statuses;
+    for (let i = 0; i < list.length; i++) {
+      const st = list[i]!;
+      if (st.kind === kind) {
+        const wasOff = st.time <= 0;
+        st.time = Math.max(st.time, time);
+        st.magnitude = wasOff ? magnitude : Math.max(st.magnitude, magnitude);
+        return;
+      }
+    }
+    list.push({ kind, time, magnitude });
     this.emit({ type: 'status-changed', target: 'shipId' in target ? 0 : target.id, status: kind, on: true });
   }
 
   hasStatus(target: PlayerState | Target, kind: StatusKind): boolean {
-    return target.statuses.some((st) => st.kind === kind && st.time > 0);
+    return statusOf(target.statuses, kind) !== null;
   }
 
   requestTimeScale(scale: number, duration: number): void {
@@ -383,22 +523,52 @@ export class Sim implements SimContext {
   private createDebug(): SimDebug {
     return {
       grantXp: (amount) => { const p = this.state.player; p.xp += amount; },
-      setLevel: (level) => { const p = this.state.player; while (p.level < level) { p.xp = p.xpToNext; updateProgression(this); if (this.state.offers) applyChosenCard(this, 0); } },
+      setLevel: (level) => {
+        const p = this.state.player;
+        let guard = 0;
+        while (p.level < level && guard++ < 200) {
+          p.xp = p.xpToNext; updateProgression(this);
+          let cards = 0;
+          while (this.state.offers && cards++ < 50) if (!applyChosenCard(this, 0)) break;
+        }
+      },
       spawnEnemy: (defId, count = 1, elite = false) => {
         const p = this.state.player;
-        for (let i = 0; i < count; i++) { const a = this.random() * Math.PI * 2, r = 180 + this.random() * 60; this.spawnEnemy(defId, p.x + Math.sin(a) * r, p.z + Math.cos(a) * r, { elite }); }
+        for (let i = 0; i < count; i++) {
+          const a = this.random() * Math.PI * 2, r = 180 + this.random() * 60;
+          this.spawnEnemy(defId, p.x + Math.sin(a) * r, p.z + Math.cos(a) * r, { elite });
+        }
       },
       spawnBoss: (defId) => { const p = this.state.player; this.spawnBoss(defId, p.x + 260, p.z - 260); },
       setTime: (seconds) => { this.state.time = seconds; },
       god: (on) => { this.godMode = on; },
-      giveWeapon: (id, level = 1) => {
+      giveWeapon: (id, level = 1, branch) => {
         const p = this.state.player;
-        const slot = p.weapons.find((w) => w.id === id);
-        if (slot) slot.level = Math.max(slot.level, level);
-        else p.weapons.push({ id, level, overdrive: level >= 6, cooldown: 0.5, scratch: {} });
-        this.emit({ type: 'weapon-changed', weapon: id, level, overdrive: level >= 6, isNew: !slot });
+        const lv = Math.max(1, Math.min(6, level));
+        let slot = p.weapons.find((w) => w.id === id);
+        const isNew = !slot;
+        if (!slot) { slot = { id, level: lv, overdrive: false, cooldown: 0.5, scratch: {} }; p.weapons.push(slot); }
+        slot.level = Math.max(slot.level, lv);
+        if (slot.level >= 3) slot.branch = branch ?? slot.branch ?? 'A';
+        slot.overdrive = slot.level >= 6;
+        this.emit({ type: 'weapon-changed', weapon: id, level: slot.level, branch: slot.branch, overdrive: slot.overdrive, isNew });
       },
       killAll: () => { for (const e of this.state.enemies) this.damageTarget(e, 1e9, { pierceArmor: true }); },
+      chargeUltimate: () => { this.state.player.skills.ultimate.charge = 1; },
+      resetCooldowns: () => {
+        const sk = this.state.player.skills;
+        sk.broadside.cooldown = 0; sk.special.cooldown = 0; sk.brace.cooldown = 0; sk.boost.cooldown = 0;
+      },
+      teleport: (x, z, heading) => {
+        const p = this.state.player;
+        p.x = x; p.z = z; p.vx = 0; p.vz = 0; p.speed = 0;
+        if (heading !== undefined) p.heading = heading;
+      },
     };
   }
+}
+
+/** AI scratch with the CORE keys pre-declared (stable object shape; META adds its own keys). */
+function newAiScratch(): Record<string, number> {
+  return { contactCd: 0, coreKx: 0, coreKz: 0, coreBurnT: 0, coreBurnW: -1, coreSmash: 0 };
 }

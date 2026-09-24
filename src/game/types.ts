@@ -367,6 +367,10 @@ export interface ProjectileState {
   hits: number[];
 }
 
+/**
+ * Hazard semantics: 'shockwave' radius = FINAL radius reached over ttl (expanding ring); 'wave-front' radius = half-width,
+ * moving with vx/vz; 'escort-skiff' heading = its velocity direction; others are static circles unless vx/vz move them.
+ */
 export interface HazardState {
   id: number;
   alive: boolean;
@@ -398,6 +402,10 @@ export interface PickupState {
   magnet: boolean;
 }
 
+/**
+ * Telegraph geometry: 'circle'/'ring' centred at x,z with `radius`. 'line'/'cone' START at x,z and point along the ship
+ * heading convention (−sin(angle), −cos(angle)); `length` is the extent and `radius` the HALF-width (cone: end half-width).
+ */
 export type TelegraphShape = 'circle' | 'line' | 'cone' | 'ring';
 
 export interface TelegraphState {
@@ -423,6 +431,7 @@ export interface SeaState {
   blend: number;
   /** Multiplier for the shared Gerstner waves (see src/core/waves.ts). */
   waveScale: number;
+  /** Direction the wind blows TOWARD: (sin(windDir), cos(windDir)) in world XZ. */
   windDir: number;
   windStrength: number;
   /** Hours 0–24. */
