@@ -3,7 +3,7 @@
  * (`orbitGap` 18 m off the hull, `orbitSpeed` 0.75 rad/s) and each fires 'skiff-shot' projectiles at the nearest
  * ship in range on its own reload. `x/z` and `vx/vz` are kept current for SHIPS/FX (heading = velocity).
  *  - A +2 Skiffs: +`extraSkiffs` (2) boats.
- *  - B Fire Skiffs: every `kamikazeCooldown` (4 s) a skiff dashes (`dashSpeed` 48 m/s) into a ship and explodes
+ *  - B Fire Skiffs: every `kamikazeCooldown` (3.4 s) a skiff dashes (`dashSpeed` 48 m/s) into a ship and explodes
  *    (×`kamikazeDamage` 4, `blastArea` 14 m), then a new skiff launches after `respawn` (2.5 s).
  *  - ★ Armada: at least `armada` (8) escorts in a wider ring.
  */
@@ -50,7 +50,7 @@ export function updateEscortSkiffs(c: CoreSim, slot: WeaponSlot, rate: number): 
       h = list[ni]!;
       sc[ik] = ni; sc[dk] = h.id;
       core.hTimer[ni] = E.cooldown * (0.3 + 0.7 * (k / count));
-      core.hA[ni] = ex(l, 'kamikazeCooldown', 4) * (0.5 + 0.1 * k);
+      core.hA[ni] = ex(l, 'kamikazeCooldown', 3.4) * (0.5 + 0.1 * k);
       core.hMode[ni] = 0;
       core.hTarget[ni] = null;
       updateSkiff(c, slot, l, h, ni, k, count, ring, rate);
@@ -123,7 +123,7 @@ function updateSkiff(
       if (!t) core.hA[i] = 0.5;
       else {
         core.hMode[i] = 1; core.hTarget[i] = t; core.hB[i] = 3;
-        core.hA[i] = ex(l, 'kamikazeCooldown', 4);
+        core.hA[i] = ex(l, 'kamikazeCooldown', 3.4);
       }
     }
   }

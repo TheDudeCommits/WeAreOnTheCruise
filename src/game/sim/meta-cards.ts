@@ -42,15 +42,26 @@ export function newWeaponCard(def: WeaponDef): CardOffer {
   };
 }
 
-/** What a passive rank adds, with Deep Stores' half projectiles spelled out. */
+/** Stats that only count in whole units but may be granted in fractions per rank (Deep Stores, Trade Winds). */
+const WHOLE: Partial<Record<StatKey, readonly [string, string]>> = {
+  amount: ['projectile', 'projectiles'],
+  boostCharges: ['boost charge', 'boost charges'],
+};
+
+const whole = (key: StatKey, n: number): string => `+${n} ${n === 1 ? WHOLE[key]![0] : WHOLE[key]![1]}`;
+
+/** What a passive rank adds, with fractional whole-unit stats spelled out ("+1 boost charge at rank 4"). */
 export function passiveGainText(def: PassiveDef, rank: number): string {
   const parts: string[] = [];
   for (const key of Object.keys(def.perRank) as StatKey[]) {
     const v = def.perRank[key];
     if (!v) continue;
-    if (key === 'amount' && v < 1) {
+    if (WHOLE[key] && v < 1) {
       const before = Math.floor((rank - 1) * v + 1e-6), after = Math.floor(rank * v + 1e-6);
-      parts.push(after > before ? `+${after - before} projectile${after - before === 1 ? '' : 's'}` : `+1 projectile at rank ${rank + 1}`);
+      if (after > before) { parts.push(whole(key, after - before)); continue; }
+      let at = rank + 1;
+      while (at <= def.maxRank && Math.floor(at * v + 1e-6) <= before) at++;
+      if (at <= def.maxRank) parts.push(`${whole(key, 1)} at rank ${at}`);
     } else parts.push(statText(key, v));
   }
   return parts.join(', ');
@@ -61,9 +72,9 @@ function passiveTotalText(def: PassiveDef, rank: number): string {
   for (const key of Object.keys(def.perRank) as StatKey[]) {
     const v = def.perRank[key];
     if (!v) continue;
-    if (key === 'amount' && v < 1) {
+    if (WHOLE[key] && v < 1) {
       const total = Math.floor(rank * v + 1e-6);
-      if (total > 0) parts.push(`+${total} projectile${total === 1 ? '' : 's'}`);
+      if (total > 0) parts.push(whole(key, total));
     } else parts.push(statText(key, v * rank));
   }
   return parts.join(', ');

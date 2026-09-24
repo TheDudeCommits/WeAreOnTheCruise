@@ -3,7 +3,7 @@
  * within `trigger` (8 m): level damage in the level area, knockback.
  *  - A Magnet Mines: armed mines drift toward ships within `magnetRange` (70 m) at up to `magnetSpeed` (10 m/s).
  *  - B Depth Charges: slow, huge blasts — ×`depthArea` 1.8 radius, ×`depthDamage` 1.6, a 0.55 s fuse, stun.
- *  - ★ Minefield: mines also seed themselves around the ship every `seedInterval` (0.7 s), up to `maxMines` (36).
+ *  - ★ Minefield: mines also seed themselves around the ship every `seedInterval` (0.6 s), up to `maxMines` (36).
  */
 import type { WeaponLevelDef, WeaponSlot } from '../../types';
 import { HF_DEPTH, HF_MAGNET, type CoreSim } from '../core-runtime';
@@ -53,7 +53,7 @@ function minefield(c: CoreSim, slot: WeaponSlot, l: WeaponLevelDef, rate: number
   const p = c.state.player;
   slot.scratch.seed = (slot.scratch.seed ?? 0) - c.dt * rate;
   if (slot.scratch.seed > 0) return;
-  slot.scratch.seed = ex(l, 'seedInterval', 0.7) * cooldownMul(p.stats);
+  slot.scratch.seed = ex(l, 'seedInterval', 0.6) * cooldownMul(p.stats);
   const hazards = c.state.hazards;
   let mines = 0;
   for (let i = 0; i < hazards.length; i++) { const h = hazards[i]!; if (h.alive && h.kind === 'mine' && h.team === 'player') mines++; }

@@ -78,7 +78,7 @@ export function mockRun(shipId: ShipId = 'sunlion', seaId: SeaId = 'sunward-shal
       passives: [
         { id: 'master-gunner', rank: 3 }, { id: 'ironwood-hull', rank: 2 }, { id: 'powder-monkeys', rank: 5 }, { id: 'weather-eye', rank: 1 },
       ],
-      stats: { maxHp: 0, armor: 0, regen: 0, speed: 0, turn: 0, damage: 0, cooldown: 0, area: 0, range: 0, projectileSpeed: 0, duration: 0, amount: 0, crit: 0, critDamage: 0, pickupRadius: 0, xpGain: 0, luck: 0, skillCooldown: 0, ramDamage: 0, doubloonGain: 0, revives: 0 },
+      stats: { maxHp: 0, armor: 0, regen: 0, speed: 0, turn: 0, damage: 0, cooldown: 0, area: 0, range: 0, projectileSpeed: 0, duration: 0, amount: 0, crit: 0, critDamage: 0, pickupRadius: 0, xpGain: 0, luck: 0, skillCooldown: 0, ramDamage: 0, doubloonGain: 0, revives: 0, accel: 0, fullSail: 0, carve: 0, helm: 0, surge: 0, boostDuration: 0, boostCooldown: 0, boostCharges: 0 },
       skills: {
         broadside: { cooldown: 3.2, cooldownMax: 8, active: 0, charge: 1 },
         special: { cooldown: 0, cooldownMax: 18, active: 0, charge: 1 },

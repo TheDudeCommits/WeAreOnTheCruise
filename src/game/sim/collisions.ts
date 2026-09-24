@@ -103,7 +103,8 @@ function islandsVsPlayer(c: CoreSim, p: PlayerState): void {
     c.emit({ type: 'collision', a: 0, b: 'island', x: hitX, z: hitZ, impulse: impact });
     core.kickPitch(-Math.min(0.3, impact * 0.015));
     core.kickRoll((c.random() - 0.5) * Math.min(0.3, impact * 0.02));
-    if (impact > HARD_IMPACT) c.hurtPlayer((impact - 6) * 1.6, hitX, hitZ, undefined, 'contact');
+    // Scrapes hurt; a boosted head-on crash stings (capped at 8% of the hull) but never ends a run by itself.
+    if (impact > HARD_IMPACT) c.hurtPlayer(Math.min(p.maxHp * 0.08, (impact - 6) * 1.2), hitX, hitZ, undefined, 'contact');
   }
 }
 
@@ -133,6 +134,7 @@ function shipsVsPlayer(c: CoreSim, p: PlayerState): void {
   const massP = c.content.ships[p.shipId].mass;
   const slot = ironRamSlot(p);
   const ramming = core.rammingSpeed > 0;
+  const vx0 = p.vx, vz0 = p.vz;
   for (let j = 0; j < n; j++) {
     const t = buf[j]!;
     if (t.life !== 'alive' || (!isBoss(t) && t.hidden >= 1)) continue;
@@ -178,6 +180,14 @@ function shipsVsPlayer(c: CoreSim, p: PlayerState): void {
     }
     t.ai.contactCd = ramming ? 0.3 : slot ? levelOf(c, slot).cooldown : 0.6;
   }
+  // A crowd of hulls resolves one contact at a time; cap the tick's combined shove so a dense horde can't fling the
+  // ship backwards (it used to reach −40 m/s), and never let contacts push it astern faster than a gentle drift.
+  let dvx = p.vx - vx0, dvz = p.vz - vz0;
+  const shove = Math.hypot(dvx, dvz), limit = Math.max(4, Math.hypot(vx0, vz0) * 1.15);
+  if (shove > limit) { dvx *= limit / shove; dvz *= limit / shove; p.vx = vx0 + dvx; p.vz = vz0 + dvz; }
+  const hfx = -Math.sin(p.heading), hfz = -Math.cos(p.heading);
+  const fwd = p.vx * hfx + p.vz * hfz;
+  if (fwd < -6) { p.vx += (-6 - fwd) * hfx; p.vz += (-6 - fwd) * hfz; }
 }
 
 function ram(c: CoreSim, p: PlayerState, t: Target, vpn: number, nx: number, nz: number, x: number, z: number, massP: number, massT: number): void {

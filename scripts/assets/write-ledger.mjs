@@ -113,7 +113,9 @@ L.push(`Generated for this project with the owner\'s accounts and budget (Meshy 
 L.push('');
 L.push('- **3D models (Meshy image-to-3D):** ' + Object.entries(fleet).filter(([, m]) => m.source.kind === 'meshy').map(([k]) => `\`${k}\``).join(', ') + '. Concept images (Higgsfield Nano Banana Pro) are kept as small JPGs in `assets/concepts/`.');
 const allIcons = Object.values(icons.sheets).flat().filter(Boolean);
-L.push(`- **UI icons:** ${allIcons.length} painted icons in \`public/assets/icons/<id>.png\` (256×256, transparent), sliced from four Higgsfield Nano Banana Pro 4×4 sheets (\`assets/concepts/icon-sheet-*.jpg\`) by \`scripts/assets/icons/slice-icons.mjs\`. Covers every WeaponId, PassiveId, SpecialId, UltimateId, MetaUpgradeId, PickupKind and broadside/brace/boost/heal/doubloon/bounty, plus spares (coins, chest-open, helm, anchor, lantern, admiralty-flag, cutlasses).`);
+const sheetWords = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
+const sheetCount = Object.keys(icons.sheets).length;
+L.push(`- **UI icons:** ${allIcons.length} painted icons in \`public/assets/icons/<id>.png\` (256×256, transparent), sliced from ${sheetWords[sheetCount] ?? sheetCount} Higgsfield Nano Banana Pro 4×4 sheets (\`assets/concepts/icon-sheet-*.jpg\`) by \`scripts/assets/icons/slice-icons.mjs\`. Covers every WeaponId, PassiveId, SpecialId, UltimateId, MetaUpgradeId, PickupKind, elite affix (\`affix-<id>\`), the AI captain badge and broadside/brace/boost/heal/doubloon/bounty, plus spares (coins, chest-open, helm, anchor, lantern, admiralty-flag, cutlasses).`);
 L.push('- **Emblems and procedural flags:** `scripts/assets/fleet/emblems/*.svg` (Admiralty wave-crest, Redtide cutlass-and-sun, Gloam sigil) drawn for this project; `flag`, `flag-redtide` and the skiff\'s added mast/sail are procedural geometry.');
 L.push('- **Materials from the earlier pass (kept):** `public/assets/materials/limestone.png`, `painted-timber.png`, `cinematic-sky.png` (generated images, see git history; SHA-256 `dfe06806…`, `caa10fa3…`, `9ab3d6ac…`).');
 L.push('');

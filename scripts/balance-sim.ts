@@ -73,6 +73,7 @@ const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.m
 const PASSIVE_PRIORITY: Record<string, number> = {
   'master-gunner': 66, 'powder-monkeys': 63, 'ironwood-hull': 60, 'deep-stores': 57, shipwright: 52, 'weather-eye': 46,
   'long-barrels': 45, 'lucky-doubloon': 42, 'figurehead-fury': 41, 'salvage-nets': 40, 'cloudsilk-sails': 36, 'drill-master': 30,
+  momentum: 38, 'clipper-rigging': 35, 'trade-winds': 33, 'racing-keel': 32,
 };
 const RARITY_BONUS: Record<string, number> = { common: 0, rare: 8, epic: 16, legendary: 26 };
 const BALLISTIC = new Set(['enemy-mortar', 'boss-shell']);
@@ -364,7 +365,7 @@ export class Bot {
 
 // ───────────────────────── Runs ─────────────────────────
 
-interface Checkpoint { minute: number; level: number; kills: number; alive: number; hp: number; weapons: number; capKills: number }
+interface Checkpoint { minute: number; level: number; kills: number; alive: number; hp: number; weapons: number; capKills: number; xp: number }
 
 interface RunReport {
   ship: ShipId;
@@ -391,6 +392,14 @@ interface RunReport {
   /** Enemy shots fired / hits on the player, by projectile kind (flat shots only have a hit count). */
   shots: Record<string, { fired: number; hits: number; volleys: number }>;
   bot: BotStats;
+  /** Pace: first player weapon hit, first enemy within 150 m, level-up times (s), seconds with nothing within 200 m. */
+  firstHit: number | null;
+  firstNear: number | null;
+  levelTimes: number[];
+  idle: number;
+  /** XP value dropped as coins vs collected. */
+  xpDropped: number;
+  xpCollected: number;
   ms: number;
   /** AI captains: kills (all captains), sinkings, share of enemy attention on the player, captain levels at the end. */
   captains: { kills: number; sinkings: number; playerShare: number; levels: number[]; dealt: number; taken: number };
@@ -398,7 +407,12 @@ interface RunReport {
 
 function metaProfile(): MetaProfile {
   const m = defaultProfile();
-  if (META === 'mid') m.upgrades = { hull: 3, powder: 3, gunnery: 2, sails: 1, salvage: 2, wisdom: 2, fortune: 1, charts: 1, 'second-wind': 1 };
+  if (META === 'mid') {
+    m.upgrades = {
+      hull: 3, powder: 3, gunnery: 2, sails: 1, salvage: 2, wisdom: 2, fortune: 1, charts: 1, 'second-wind': 1,
+      'copper-sheathing': 1, 'storm-sails': 1, 'rudder-chains': 1,
+    };
+  }
   return m;
 }
 
@@ -421,9 +435,12 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
   const checkpoints: Checkpoint[] = [];
   const bosses: RunReport['bosses'] = [];
   let died: number | null = null, revives = 0, maxAlive12 = 0, next = 0;
+  let firstHit: number | null = null, firstNear: number | null = null, idle = 0, xpDropped = 0;
+  const levelTimes: number[] = [];
   const sourceKind = new Map<number, string>();
   const damageTaken: Record<string, number> = {};
   const limit = MINUTES * 60;
+  let prevTime = 0;
   while (sim.state.time < limit) {
     const s = sim.state;
     if (s.status === 'levelup' && s.offers) {
@@ -445,6 +462,9 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
         const m = Math.floor(sim.state.time / 60);
         perMinute[m] = (perMinute[m] ?? 0) + e.amount / (sim.state.player.maxHp / (TANK ? TANK_MUL : 1));
       }
+      if (e.type === 'damage' && e.weapon !== undefined && e.target > 0 && firstHit === null) firstHit = sim.state.time;
+      else if (e.type === 'level-up') levelTimes.push(sim.state.time);
+      else if (e.type === 'pickup-spawned' && e.kind.startsWith('xp-')) xpDropped += e.value;
       if (e.type === 'enemy-spawned') sourceKind.set(e.id, e.defId);
       else if (e.type === 'player-hit') {
         if (e.source === undefined) { if (unsourced) addSource('mortar/hazard', unsourced); unsourced = e.amount; }
@@ -462,6 +482,15 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
       }
     }
     if (unsourced) addSource('mortar/hazard', unsourced);
+    {
+      const p = sim.state.player;
+      let nearest = Infinity;
+      for (const e of sim.state.enemies) if (e.life === 'alive' && e.hidden < 1) nearest = Math.min(nearest, Math.hypot(e.x - p.x, e.z - p.z));
+      for (const b of sim.state.bosses) if (b.life === 'alive') nearest = Math.min(nearest, Math.hypot(b.x - p.x, b.z - p.z) - b.radius);
+      if (firstNear === null && nearest <= 150) firstNear = sim.state.time;
+      if (sim.state.time > 10 && nearest > 200 && p.alive) idle += sim.state.time - prevTime;
+      prevTime = sim.state.time;
+    }
     const minute = sim.state.time / 60;
     if (minute >= 11 && minute <= 13) maxAlive12 = Math.max(maxAlive12, sim.state.enemies.filter((e) => e.life === 'alive').length);
     while (next < CHECKPOINTS.length && minute >= CHECKPOINTS[next]!) {
@@ -470,6 +499,7 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
         minute: CHECKPOINTS[next]!, level: p.level, kills: sim.state.stats.kills,
         alive: sim.state.enemies.filter((e) => e.life === 'alive').length, hp: p.hp / p.maxHp, weapons: p.weapons.length,
         capKills: sim.state.captains.reduce((a, k) => a + k.kills, 0),
+        xp: Math.round(sim.state.stats.xpCollected),
       });
       next++;
     }
@@ -487,7 +517,8 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
     hullPerMinute: Array.from({ length: Math.ceil(s.time / 60) }, (_, i) => perMinute[i] ?? 0),
     sourcesPerMinute: Array.from({ length: Math.ceil(s.time / 60) }, (_, i) => sourcesPerMinute[i] ?? {}),
     shots,
-    bot: bot.stats, ms: Date.now() - t0,
+    bot: bot.stats, firstHit, firstNear, levelTimes, idle, xpDropped: Math.round(xpDropped), xpCollected: Math.round(s.stats.xpCollected),
+    ms: Date.now() - t0,
     captains: (() => {
       const rt = captainRuntime(s);
       return {
@@ -507,6 +538,15 @@ const fmtTime = (t: number | null): string => (t === null ? '—' : `${Math.floo
 const cp = (r: RunReport, m: number) => r.checkpoints.find((c) => c.minute === m);
 const mean = (xs: number[]): number => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : NaN);
 const f1 = (v: number): string => (Number.isFinite(v) ? v.toFixed(1) : '—');
+const f0 = (v: number | null): string => (v !== null && Number.isFinite(v) ? v.toFixed(0) : '—');
+/** Mean seconds between level-ups whose time falls in [from, to] (NaN with fewer than 2). */
+function levelGap(times: readonly number[], from: number, to: number): number {
+  const w = times.filter((t) => t >= from && t <= to);
+  return w.length >= 2 ? (w[w.length - 1]! - w[0]!) / (w.length - 1) : NaN;
+}
+/** Pace targets (PACE round 1): first hit 5–8 s, first level-up ≤ 20 s, gaps 15–25 s early / 40–60 s late. */
+const EARLY: readonly [number, number] = [0, 180];
+const LATE: readonly [number, number] = [600, 900];
 
 /** CLI entry: runs only when this file is executed directly (so the bot can be imported by other scripts). */
 function main(): void {
@@ -528,6 +568,9 @@ function main(): void {
           `${sea.padEnd(17)} ${ship.padEnd(16)} ${seed.padEnd(5)} ${L(1)} ${L(3)} ${L(5)} ${L(10)} ${L(15)} | ${String(`${K(5)}/${K(10)}/${K(15)}`).padEnd(15)} | ${String(`${A(5)}/${A(10)}/${r.maxAlive12}/${A(15)}`).padEnd(19)} | ${String(`${H(5)}/${H(10)}/${H(15)}`).padEnd(13)} | ${fmtTime(r.died).padEnd(6)} | ${pad(boss('iron-warden'), 6)} ${pad(boss('tidewyrm'), 8)} ${pad(boss('sovereign'), 9)}      | ${pad(r.doubloons, 4)} | ${r.outcome}${r.revives ? ` (+${r.revives} revive)` : ''}`
           + (CAPTAINS ? ` | capK ${cp(r, 5)?.capKills ?? '—'}/${cp(r, 10)?.capKills ?? '—'}/${cp(r, 15)?.capKills ?? '—'} sunk ${r.captains.sinkings} focus ${Math.round(r.captains.playerShare * 100)}% capL ${r.captains.levels.join(',')} taken ${r.captains.taken}` : ''),
         );
+        console.log(
+          `   pace: hit ${f1(r.firstHit ?? NaN)} s · near ${f1(r.firstNear ?? NaN)} s · L2 ${f0(r.levelTimes[0] ?? null)} s · gap early ${f0(levelGap(r.levelTimes, ...EARLY))} s / late ${f0(levelGap(r.levelTimes, ...LATE))} s · idle ${f0(r.idle)} s · xp ${r.xpCollected}/${r.xpDropped} (${Math.round((100 * r.xpCollected) / Math.max(1, r.xpDropped))}%)`,
+        );
         if (VERBOSE) {
           console.log(`   loadout ${r.loadout.join(' ')} proxied=[${r.proxied.join(',')}] bot=${JSON.stringify(r.bot)} ${r.ms}ms`);
           console.log(`   dealt ${JSON.stringify(r.damageByWeapon)} taken ${JSON.stringify(r.damageTaken)}`);
@@ -537,7 +580,7 @@ function main(): void {
     }
   }
 
-  console.log('\nSummary per sea (targets: L 6–9 @5, 16–22 @10, 25–35 @15; alive 60–90 @12; bosses 45–120 s; deaths: some on Sunward, more on Stormwrack/Gloam)');
+  console.log('\nSummary per sea (targets: first hit 5–8 s, first level ≤ 20 s, level gaps 15–25 s early (0–3 min) / 40–60 s late (10–15 min), L 25–35 @15; alive 60–90 @12; bosses 45–120 s; deaths: some on Sunward, more on Stormwrack/Gloam)');
   for (const sea of SEAS) {
     const rs = reports.filter((r) => r.sea === sea);
     const lv = (m: number) => mean(rs.map((r) => cp(r, m)?.level).filter((v): v is number => v !== undefined));
@@ -552,6 +595,8 @@ function main(): void {
     const ck = (m: number) => mean(rs.map((r) => cp(r, m)?.capKills).filter((v): v is number => v !== undefined));
     console.log(`   player kills @5/10/15 ${f1(kl(5))}/${f1(kl(10))}/${f1(kl(15))}` + (CAPTAINS ? ` · captain kills @5/10/15 ${f1(ck(5))}/${f1(ck(10))}/${f1(ck(15))} · player kill share @15 ${Math.round((100 * kl(15)) / Math.max(1, kl(15) + ck(15)))}% · captain sinkings avg ${f1(mean(rs.map((r) => r.captains.sinkings)))} · fleet attention on player ${Math.round(100 * mean(rs.map((r) => r.captains.playerShare)))}%` : ''));
     console.log(`   Iron Warden ${bossStat('iron-warden')} · Tidewyrm ${bossStat('tidewyrm')} · Sovereign ${bossStat('sovereign')}`);
+    const m = (f: (r: RunReport) => number) => f1(mean(rs.map(f).filter((v) => Number.isFinite(v))));
+    console.log(`   pace: first hit ${m((r) => r.firstHit ?? NaN)} s · first near ${m((r) => r.firstNear ?? NaN)} s · first level ${m((r) => r.levelTimes[0] ?? NaN)} s · gap early ${m((r) => levelGap(r.levelTimes, ...EARLY))} s · late ${m((r) => levelGap(r.levelTimes, ...LATE))} s · idle ${m((r) => r.idle)} s · xp collected ${m((r) => (100 * r.xpCollected) / Math.max(1, r.xpDropped))}% · kills@15 ${m((r) => cp(r, 15)?.kills ?? NaN)}`);
   }
   if (TANK) {
     console.log('\nIncoming damage per minute (% of max hull), mean over runs:');

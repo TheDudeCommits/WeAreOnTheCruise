@@ -11,8 +11,10 @@ import { keelDistance, type CoreSim } from './core-runtime';
 import { onPickupCollected } from './progression';
 import { pickupMul } from './stats';
 
-const POP_SPEED = -9;
-const PULL_ACCEL = 170;
+// PACE round 1: a shorter pop and a harder pull (was −9 / 170 / 60) so treasure never holds up the fight.
+const POP_SPEED = -6;
+const PULL_ACCEL = 240;
+const PULL_BASE = 75;
 const MERGE_THRESHOLD = 300;
 const MERGE_CELL = 18;
 const MERGE_BITS = 10;
@@ -44,7 +46,7 @@ export function updatePickups(c: CoreSim): void {
     let d = Math.sqrt(dx * dx + dz * dz);
     if (!k.magnet && d < radius) { k.magnet = true; core.kSpeed[i] = POP_SPEED; }
     if (k.magnet) {
-      const maxV = 60 + shipSpeed * 1.4 + d * 0.6;
+      const maxV = PULL_BASE + shipSpeed * 1.4 + d * 0.6;
       const v = Math.min(maxV, core.kSpeed[i]! + (PULL_ACCEL + k.age * 20) * dt);
       core.kSpeed[i] = v;
       if (d > 1e-3) {

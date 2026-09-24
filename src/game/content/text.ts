@@ -23,7 +23,7 @@ export function statText(key: StatKey, value: number): string {
     case 'maxHp': return `+${pct(value)} max hull`;
     case 'armor': return `+${num(value)} armour`;
     case 'regen': return `repair ${num(value * 100, 2)}% hull per second`;
-    case 'speed': return `+${pct(value)} speed`;
+    case 'speed': return `+${pct(value)} top speed`;
     case 'turn': return `+${pct(value)} turning`;
     case 'damage': return `+${pct(value)} damage`;
     case 'cooldown': return `${pct(value)} faster reloads`;
@@ -41,6 +41,14 @@ export function statText(key: StatKey, value: number): string {
     case 'ramDamage': return `+${pct(value)} ram damage`;
     case 'doubloonGain': return `+${pct(value)} doubloons`;
     case 'revives': return `+${num(value)} revive${value === 1 ? '' : 's'} per run`;
+    case 'accel': return `+${pct(value)} acceleration`;
+    case 'fullSail': return `+${pct(value)} top speed at full sail`;
+    case 'carve': return `${pct(value)} less speed lost in turns`;
+    case 'helm': return `+${pct(value)} helm response`;
+    case 'surge': return `sinkings surge your speed, up to +${pct(value)}`;
+    case 'boostDuration': return `+${pct(value)} boost duration`;
+    case 'boostCooldown': return `${pct(value)} faster boost recharge`;
+    case 'boostCharges': return `+${num(value)} boost charge${value === 1 ? '' : 's'}`;
   }
 }
 

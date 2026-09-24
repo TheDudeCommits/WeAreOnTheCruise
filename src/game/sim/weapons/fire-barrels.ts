@@ -4,7 +4,7 @@
  * damage every 0.5 s (burning ships keep smouldering).
  *  - A Barrel Chains: each drop is a chain of `chain` (3) barrels, `chainGap` (9 m) apart.
  *  - B Powder Kegs: kegs explode on contact (×`kegDamage` 4, ×`kegArea` 1.3 radius, knockback).
- *  - ★ Sea of Fire: the whole wake burns (a patch every `wakeInterval` 0.35 s while under way).
+ *  - ★ Sea of Fire: the whole wake burns (a patch every `wakeInterval` 0.3 s while under way).
  */
 import type { WeaponSlot } from '../../types';
 import { HF_BURN, type CoreSim } from '../core-runtime';
@@ -22,7 +22,7 @@ export function updateFireBarrels(c: CoreSim, slot: WeaponSlot, rate: number): v
   if (slot.overdrive) {
     slot.scratch.wake = (slot.scratch.wake ?? 0) - c.dt * rate;
     if (slot.scratch.wake <= 0) {
-      slot.scratch.wake = ex(l, 'wakeInterval', 0.35);
+      slot.scratch.wake = ex(l, 'wakeInterval', 0.3);
       if (Math.abs(p.speed) > 3 && anyNear(c, 320, core.bufW2)) {
         const idx = c.placeHazard('fire-patch', 'player', sternX - fx * 4, sternZ - fz * 4, E.area * ex(l, 'wakeArea', 0.75),
           E.duration * ex(l, 'wakeDuration', 1), E.damage * ex(l, 'wakeDamage', 0.6), 0.5, 0, 0, 'fire-barrels', true);

@@ -28,7 +28,11 @@ export function captainHit(c: CoreSim, id: number, t: Target, amount: number, cr
   ult.active = 1;
   // Id watermark: treasure spilled by this kill gets ids above it (only needed when the hit can sink the ship).
   const mark = !boss && amount >= t.hp ? c.nextId() : 0;
+  // Flag the hit as a captain's for the kill handler: the player's Momentum surge feeds on the player's sinkings only.
+  const sc = s.director.scratch;
+  sc.captainCredit = 1;
   const dealt = c.hitTarget(t, boss ? amount * CAPTAIN.bossDamageMul : amount, undefined, crit, knock, fromX, fromZ, null, 0, 0, false);
+  sc.captainCredit = 0;
   ult.active = ultActive;
   st.damageDealt = dealt0;
   const k = captainById(s.captains, id);

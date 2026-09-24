@@ -75,7 +75,9 @@ export type HazardKind =
   /** Round 1 (FOES): smoke-runner screens. Static, harmless; enemy ships inside are hidden from auto-targeting. */
   | 'smoke-screen';
 
-export type StatusKind = 'burning' | 'slowed' | 'stunned' | 'hooked' | 'submerged' | 'shielded' | 'invulnerable' | 'airborne' | 'frenzy';
+export type StatusKind = 'burning' | 'slowed' | 'stunned' | 'hooked' | 'submerged' | 'shielded' | 'invulnerable' | 'airborne' | 'frenzy'
+  /** Round 1 (PACE): the Momentum passive's speed surge; `magnitude` = current bonus (0.12 = +12% speed). */
+  | 'momentum';
 
 export type SkillSlot = 'broadside' | 'special' | 'ultimate' | 'brace' | 'boost';
 
@@ -84,6 +86,8 @@ export type WeaponMount = 'broadside' | 'bow' | 'stern' | 'deck' | 'mast' | 'rai
 export type StatKey =
   | 'maxHp' | 'armor' | 'regen' | 'speed' | 'turn' | 'damage' | 'cooldown' | 'area' | 'range'
   | 'projectileSpeed' | 'duration' | 'amount' | 'crit' | 'critDamage' | 'pickupRadius' | 'xpGain'
-  | 'luck' | 'skillCooldown' | 'ramDamage' | 'doubloonGain' | 'revives';
+  | 'luck' | 'skillCooldown' | 'ramDamage' | 'doubloonGain' | 'revives'
+  // Round 1 (PACE): handling and boost (semantics in src/game/content/passives.ts).
+  | 'accel' | 'fullSail' | 'carve' | 'helm' | 'surge' | 'boostDuration' | 'boostCooldown' | 'boostCharges';
 
 export type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
