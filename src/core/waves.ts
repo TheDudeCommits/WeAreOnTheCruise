@@ -33,15 +33,16 @@ export interface WaveSampler {
 }
 
 /**
- * One long swell, two crossing body waves and two short chops. These exact
- * parameters are uploaded to GLSL, keeping buoyancy and rendered water in sync.
+ * A coherent wind sea: one long swell, a secondary swell and three shorter waves spread within about ±40°
+ * of the swell direction (wide crossings read as an artificial diamond lattice with only five waves).
+ * These exact parameters are uploaded to GLSL, keeping buoyancy and rendered water in sync.
  */
 export const DEFAULT_GERSTNER_WAVES: readonly GerstnerWave[] = Object.freeze([
-  Object.freeze({ directionX: 0.94, directionZ: 0.342, amplitude: 2.65, wavelength: 142, speed: 10.8, steepness: 0.56 }),
-  Object.freeze({ directionX: 0.588, directionZ: 0.809, amplitude: 1.2, wavelength: 61, speed: 7.1, steepness: 0.48 }),
-  Object.freeze({ directionX: -0.454, directionZ: 0.891, amplitude: 0.72, wavelength: 31, speed: 5.2, steepness: 0.44 }),
-  Object.freeze({ directionX: 0.982, directionZ: -0.191, amplitude: 0.31, wavelength: 14.5, speed: 3.4, steepness: 0.36 }),
-  Object.freeze({ directionX: -0.766, directionZ: -0.643, amplitude: 0.16, wavelength: 7.4, speed: 2.2, steepness: 0.3 }),
+  Object.freeze({ directionX: 0.94, directionZ: 0.342, amplitude: 2.3, wavelength: 150, speed: 10.8, steepness: 0.52 }),
+  Object.freeze({ directionX: 0.755, directionZ: 0.656, amplitude: 1.05, wavelength: 79, speed: 7.6, steepness: 0.46 }),
+  Object.freeze({ directionX: 0.995, directionZ: -0.105, amplitude: 0.55, wavelength: 42, speed: 5.6, steepness: 0.42 }),
+  Object.freeze({ directionX: 0.469, directionZ: 0.883, amplitude: 0.27, wavelength: 19.5, speed: 3.7, steepness: 0.36 }),
+  Object.freeze({ directionX: 0.857, directionZ: -0.515, amplitude: 0.14, wavelength: 9.6, speed: 2.5, steepness: 0.3 }),
 ]);
 
 const TAU = Math.PI * 2;
@@ -185,3 +186,217 @@ void sampleGerstnerWaves(
   crestSignal = crest / max(0.0001, crestWeight);
 }
 `;
+
+// ───────────────────────── Non-allocating, footprint-filtered sampling (OCEAN) ─────────────────────────
+//
+// The ocean renders the waves on a camera-projected grid. Waves shorter than the grid can resolve are faded
+// out (instead of aliasing into crawling noise), so the rendered surface is the Gerstner sum with each wave
+// weighted by `gerstnerFilter(wavelength, footprint)`. `footprint` is the local sample spacing in metres (0 =
+// unfiltered). The ocean's OceanServices.heightAt/normalAt pass the same footprint the vertex shader used, so
+// ships float on exactly the surface that is drawn.
+//
+// Positions are world XZ of the *displaced* surface: the samplers invert the horizontal Gerstner displacement
+// with two fixed-point steps before evaluating height/normal, matching what the rendered mesh shows at (x, z).
+
+/** 1 when the spacing resolves the wave comfortably (≤ λ/8), 0 when it cannot (≥ λ/3). Mirrors GERSTNER_FILTER_GLSL. */
+export function gerstnerFilter(wavelength: number, footprint: number): number {
+  const lo = wavelength * 0.125;
+  const hi = wavelength * 0.33;
+  if (footprint <= lo) return 1;
+  if (footprint >= hi) return 0;
+  const t = (footprint - lo) / (hi - lo);
+  return 1 - t * t * (3 - 2 * t);
+}
+
+/** GLSL twin of gerstnerFilter (smoothstep is identical to the JS polynomial). */
+export const GERSTNER_FILTER_GLSL = /* glsl */ `
+float gerstnerFilter(float wavelength, float footprint) {
+  return 1.0 - smoothstep(wavelength * 0.125, wavelength * 0.33, footprint);
+}
+`;
+
+/** Per-wave constants derived once per wave set (normalized direction, wave number, angular frequency). */
+export interface PreparedWaves {
+  readonly count: number;
+  readonly dirX: Float64Array;
+  readonly dirZ: Float64Array;
+  readonly k: Float64Array;
+  readonly omega: Float64Array;
+  readonly amplitude: Float64Array;
+  readonly steepness: Float64Array;
+  readonly wavelength: Float64Array;
+}
+
+const preparedCache = new WeakMap<readonly GerstnerWave[], PreparedWaves>();
+
+export function prepareGerstnerWaves(waves: readonly GerstnerWave[] = DEFAULT_GERSTNER_WAVES): PreparedWaves {
+  const cached = preparedCache.get(waves);
+  if (cached) return cached;
+  const n = waves.length;
+  const prepared: PreparedWaves = {
+    count: n,
+    dirX: new Float64Array(n), dirZ: new Float64Array(n), k: new Float64Array(n), omega: new Float64Array(n),
+    amplitude: new Float64Array(n), steepness: new Float64Array(n), wavelength: new Float64Array(n),
+  };
+  waves.forEach((wave, i) => {
+    const len = Math.hypot(wave.directionX, wave.directionZ) || 1;
+    const wavelength = Math.max(0.001, wave.wavelength);
+    prepared.dirX[i] = wave.directionX / len;
+    prepared.dirZ[i] = wave.directionZ / len;
+    prepared.k[i] = TAU / wavelength;
+    prepared.omega[i] = prepared.k[i]! * wave.speed;
+    prepared.amplitude[i] = wave.amplitude;
+    prepared.steepness[i] = Math.min(0.95, Math.max(0, wave.steepness));
+    prepared.wavelength[i] = wavelength;
+  });
+  preparedCache.set(waves, prepared);
+  return prepared;
+}
+
+// Per-call scratch (no allocations). Phases are reduced to [0, 2π) before trig: V8's sin/cos are ~4x faster
+// on small arguments, and world coordinates / render time grow large during a run.
+const MAX_WAVES = 16;
+const ampScratch = new Float64Array(MAX_WAVES);
+const horizScratch = new Float64Array(MAX_WAVES);
+const kxScratch = new Float64Array(MAX_WAVES);
+const kzScratch = new Float64Array(MAX_WAVES);
+const wtScratch = new Float64Array(MAX_WAVES);
+let cachedWaves: PreparedWaves | null = null;
+let cachedTime = NaN;
+/** Horizontal amplitudes below this (metres) are ignored by the inversion (height error < 1 cm). */
+const INVERSION_EPS = 0.05;
+
+function reduce(phase: number): number {
+  return phase - TAU * Math.floor(phase / TAU);
+}
+
+function setup(p: PreparedWaves, time: number, strength: number, footprint: number): void {
+  if (p !== cachedWaves || time !== cachedTime) {
+    cachedWaves = p;
+    cachedTime = time;
+    for (let i = 0; i < p.count; i++) {
+      kxScratch[i] = p.k[i]! * p.dirX[i]!;
+      kzScratch[i] = p.k[i]! * p.dirZ[i]!;
+      wtScratch[i] = reduce(p.omega[i]! * time);
+    }
+  }
+  for (let i = 0; i < p.count; i++) {
+    const weight = strength * (footprint > 0 ? gerstnerFilter(p.wavelength[i]!, footprint) : 1);
+    ampScratch[i] = p.amplitude[i]! * weight;
+    horizScratch[i] = ampScratch[i]! * p.steepness[i]!;
+  }
+}
+
+/** Fixed-point inversion of the horizontal displacement: writes the base point into out[0..1]. */
+function invertBase(p: PreparedWaves, x: number, z: number, out: Float64Array): void {
+  let bx = x;
+  let bz = z;
+  for (let iteration = 0; iteration < 2; iteration++) {
+    let ox = 0;
+    let oz = 0;
+    for (let i = 0; i < p.count; i++) {
+      const horizontal = horizScratch[i]!;
+      if (horizontal < INVERSION_EPS) continue;
+      const c = Math.cos(reduce(kxScratch[i]! * bx + kzScratch[i]! * bz - wtScratch[i]!)) * horizontal;
+      ox += p.dirX[i]! * c;
+      oz += p.dirZ[i]! * c;
+    }
+    bx = x - ox;
+    bz = z - oz;
+  }
+  out[0] = bx;
+  out[1] = bz;
+}
+
+const baseScratch = new Float64Array(2);
+// One-entry cache: heightAt + normalAt for the same point share the inversion.
+let lastX = NaN;
+let lastZ = NaN;
+let lastT = NaN;
+let lastS = NaN;
+let lastF = NaN;
+let lastP: PreparedWaves | null = null;
+
+function base(p: PreparedWaves, x: number, z: number, time: number, strength: number, footprint: number): void {
+  setup(p, time, strength, footprint);
+  if (x === lastX && z === lastZ && time === lastT && strength === lastS && footprint === lastF && p === lastP) return;
+  invertBase(p, x, z, baseScratch);
+  lastX = x; lastZ = z; lastT = time; lastS = strength; lastF = footprint; lastP = p;
+}
+
+/**
+ * Height of the rendered surface at world (x, z). No allocations. `footprint` (metres) fades waves the render
+ * grid cannot resolve; pass 0 for the full-detail surface.
+ */
+export function sampleGerstnerHeight(
+  x: number,
+  z: number,
+  time: number,
+  waves: readonly GerstnerWave[] = DEFAULT_GERSTNER_WAVES,
+  strength = 1,
+  footprint = 0,
+): number {
+  const p = prepareGerstnerWaves(waves);
+  base(p, x, z, time, Math.max(0, strength), footprint);
+  const bx = baseScratch[0]!;
+  const bz = baseScratch[1]!;
+  let height = 0;
+  for (let i = 0; i < p.count; i++) {
+    const amplitude = ampScratch[i]!;
+    if (amplitude <= 0) continue;
+    height += amplitude * Math.sin(reduce(kxScratch[i]! * bx + kzScratch[i]! * bz - wtScratch[i]!));
+  }
+  return height;
+}
+
+/** Unit normal of the rendered surface at world (x, z), written into `out`. No allocations. */
+export function sampleGerstnerNormal<T extends WaveVector>(
+  x: number,
+  z: number,
+  time: number,
+  out: T,
+  waves: readonly GerstnerWave[] = DEFAULT_GERSTNER_WAVES,
+  strength = 1,
+  footprint = 0,
+): T {
+  const p = prepareGerstnerWaves(waves);
+  base(p, x, z, time, Math.max(0, strength), footprint);
+  const bx = baseScratch[0]!;
+  const bz = baseScratch[1]!;
+  let tx = 1, ty = 0, tz = 0;
+  let sx = 0, sy = 0, sz = 1;
+  for (let i = 0; i < p.count; i++) {
+    const amplitude = ampScratch[i]!;
+    if (amplitude <= 0) continue;
+    const dx = p.dirX[i]!;
+    const dz = p.dirZ[i]!;
+    const k = p.k[i]!;
+    const phase = reduce(kxScratch[i]! * bx + kzScratch[i]! * bz - wtScratch[i]!);
+    const s = Math.sin(phase);
+    const c = Math.cos(phase);
+    const slope = horizScratch[i]! * k * s;
+    const vertical = amplitude * k * c;
+    tx -= dx * dx * slope;
+    ty += dx * vertical;
+    tz -= dx * dz * slope;
+    sx -= dx * dz * slope;
+    sy += dz * vertical;
+    sz -= dz * dz * slope;
+  }
+  // normal = bitangent × tangent (same orientation as sampleGerstnerWaves).
+  const nx = sy * tz - sz * ty;
+  const ny = sz * tx - sx * tz;
+  const nz = sx * ty - sy * tx;
+  const len = Math.hypot(nx, ny, nz) || 1;
+  out.x = nx / len;
+  out.y = ny / len;
+  out.z = nz / len;
+  return out;
+}
+
+/** Sum of amplitudes (metres at strength 1) — used to normalise crest signals. */
+export function gerstnerAmplitudeSum(waves: readonly GerstnerWave[] = DEFAULT_GERSTNER_WAVES): number {
+  let sum = 0;
+  for (const wave of waves) sum += wave.amplitude;
+  return sum;
+}

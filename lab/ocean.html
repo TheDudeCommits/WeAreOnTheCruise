@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ocean lab — We Are On The Cruise</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #06283f; overflow: hidden; font: 12px/1.35 system-ui, sans-serif; color: #eaf6ff; }
+      #app { position: fixed; inset: 0; }
+      #panel { position: fixed; top: 10px; left: 10px; width: 250px; padding: 10px 12px; background: rgba(6, 24, 44, 0.78); border-radius: 8px; backdrop-filter: blur(4px); }
+      #panel h1 { margin: 0 0 6px; font-size: 13px; letter-spacing: 0.04em; }
+      #panel label { display: grid; grid-template-columns: 86px 1fr 34px; gap: 6px; align-items: center; margin: 4px 0; }
+      #panel select, #panel input[type=range] { width: 100%; }
+      #panel .row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+      #panel button { background: #ffd272; color: #06283f; border: 0; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-weight: 600; }
+      #panel .hint { color: #9fc2d8; margin-top: 6px; }
+      #stats { position: fixed; right: 10px; top: 10px; padding: 6px 10px; background: rgba(6, 24, 44, 0.7); border-radius: 6px; white-space: pre; font: 11px/1.4 ui-monospace, monospace; }
+      body.clean #panel, body.clean #stats { display: none; }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="panel"></div>
+    <div id="stats"></div>
+    <script type="module" src="/src/render/ocean/lab/main.ts"></script>
+  </body>
+</html>
