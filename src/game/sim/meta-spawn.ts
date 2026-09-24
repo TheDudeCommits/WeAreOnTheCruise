@@ -19,20 +19,32 @@ export function spawnScaled(c: SimContext, id: EnemyId, x: number, z: number, op
   const e = c.spawnEnemy(id, x, z, { elite: !!opts.elite, heading: opts.heading });
   if (!e) return null;
   const def = c.content.enemies[id];
-  const hp = def.hp * DIRECTOR.hpScale(c.state.director.heat) * (opts.elite ? DIRECTOR.eliteHp : 1) * (opts.hpMul ?? 1);
+  const hp = def.hp * enemyHpScale(c) * (opts.elite ? DIRECTOR.eliteHp : 1) * (opts.hpMul ?? 1);
   e.hp = hp;
   e.maxHp = hp;
   return e;
 }
 
-/** Enemy attack damage after heat and elite scaling. */
-export function enemyDamage(c: SimContext, e: EnemyState, base: number): number {
-  return base * DIRECTOR.damageScale(c.state.director.heat) * (e.elite ? DIRECTOR.eliteDamage : 1);
+const difficulty = (c: SimContext): number => c.content.seas[c.state.seaId].difficulty;
+
+/** Enemy HP multiplier for this moment of the run (time × sea difficulty). */
+export function enemyHpScale(c: SimContext): number {
+  return DIRECTOR.hpScale(c.state.time / 60, difficulty(c));
 }
 
-/** Boss attack damage after heat scaling (bosses scale half as fast as the fleet). */
+/** Enemy damage multiplier for this moment of the run. */
+export function enemyDamageScale(c: SimContext): number {
+  return DIRECTOR.damageScale(c.state.time / 60, difficulty(c));
+}
+
+/** Enemy attack damage after time/difficulty and elite scaling. */
+export function enemyDamage(c: SimContext, e: EnemyState, base: number): number {
+  return base * enemyDamageScale(c) * (e.elite ? DIRECTOR.eliteDamage : 1);
+}
+
+/** Boss attack damage (bosses scale half as fast as the fleet). */
 export function bossDamage(c: SimContext, base: number): number {
-  return base * (1 + (DIRECTOR.damageScale(c.state.director.heat) - 1) * 0.5);
+  return base * (1 + (enemyDamageScale(c) - 1) * 0.5);
 }
 
 export function countAliveEnemies(c: SimContext): number {

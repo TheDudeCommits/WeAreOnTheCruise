@@ -7,9 +7,8 @@ import { EVENT_TUNING } from '../content/director';
 import type { WeatherId } from '../ids';
 import type { SimContext, Target } from './context';
 import { SCRATCH, metaRuntime } from './meta-runtime';
-import { bossDamage } from './meta-spawn';
+import { bossDamage, enemyHpScale } from './meta-spawn';
 import { TAU, fwdX, fwdZ, predictPlayer, rand, sideX, sideZ, wrap } from './meta-steer';
-import { DIRECTOR } from '../content/director';
 
 const WAVE_SCALE: Record<WeatherId, number> = { clear: 0.8, breezy: 1.1, storm: 1.7, fog: 0.7 };
 const WIND: Record<WeatherId, number> = { clear: 0.45, breezy: 0.7, storm: 1, fog: 0.25 };
@@ -91,7 +90,7 @@ export function scheduleStrike(c: SimContext, x: number, z: number, delay = STRI
     if (st.active) continue;
     st.active = true; st.x = x; st.z = z; st.t = delay; st.radius = radius;
     st.damage = bossDamage(c, STRIKE_DAMAGE);
-    st.enemyDamage = STRIKE_ENEMY_DAMAGE * DIRECTOR.hpScale(c.state.director.heat);
+    st.enemyDamage = STRIKE_ENEMY_DAMAGE * enemyHpScale(c);
     c.addTelegraph({ shape: 'circle', team: 'enemy', x, z, radius, duration: delay });
     return true;
   }

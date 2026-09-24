@@ -161,12 +161,14 @@ export class Bot {
       h += toward * clamp((d - R) / 60, -1, 1) * 0.7;
       return h;
     };
-    const target = this.pickupTarget(nearestD);
-    if (boss && bossD < 480) heading = orbit(boss.x - p.x, boss.z - p.z, bossD, 105 + boss.radius);
+    // Survival mode (like a human at low hull): wider orbits, stay off the boss, grab repairs.
+    const hurt = p.hp / p.maxHp < 0.35;
+    const target = this.pickupTarget(hurt ? Math.max(nearestD, 120) : nearestD);
+    if (boss && bossD < 480) heading = orbit(boss.x - p.x, boss.z - p.z, bossD, (hurt ? 190 : 105) + boss.radius);
     else if (cw > 0 && nearestD < 260) {
       const mx = cx / cw, mz = cz / cw, md = Math.hypot(mx, mz) || 1;
-      heading = orbit(mx, mz, Math.min(nearestD + 20, md * 2), 95);
-      if (target && target.d < 60) heading = headingOf(target.x - p.x, target.z - p.z) * 0.3 + heading * 0.7;
+      heading = orbit(mx, mz, Math.min(nearestD + 20, md * 2), hurt ? 150 : 95);
+      if (target && (target.d < 60 || hurt)) heading = headingOf(target.x - p.x, target.z - p.z);
     } else if (target) heading = headingOf(target.x - p.x, target.z - p.z);
     else heading = p.heading + Math.sin(s.time * 0.1) * 0.3;
 
@@ -208,7 +210,8 @@ export class Bot {
       const d = Math.hypot(k.x - p.x, k.z - p.z);
       if (d > 260) continue;
       const score = d / (k.kind === 'chest' ? 4 : k.kind === 'repair' && p.hp < p.maxHp * 0.6 ? 3 : 1);
-      if (score < bestScore && (nearestEnemy > 90 || d < 70)) { bestScore = score; best = { x: k.x, z: k.z, d }; }
+      const hurtRepair = k.kind === 'repair' && p.hp < p.maxHp * 0.5;
+      if (score < bestScore && (nearestEnemy > 90 || d < 70 || hurtRepair)) { bestScore = score; best = { x: k.x, z: k.z, d }; }
     }
     return best;
   }

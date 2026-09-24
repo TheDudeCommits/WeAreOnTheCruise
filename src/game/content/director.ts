@@ -57,8 +57,14 @@ export const DIRECTOR = {
   maxElites: 3,
   /** Heat: difficulty × time curve. Drives enemy HP, damage and speed. */
   heat: (minute: number, difficulty: number): number => difficulty * (1 + 0.08 * minute + 0.003 * minute * minute),
-  hpScale: (heat: number): number => 1 + (heat - 1) * 0.8,
-  damageScale: (heat: number): number => Math.min(2.2, 1 + (heat - 1) * 0.32),
+  /**
+   * Enemy HP multiplier: grows with time; sea difficulty counts at half strength (harder seas also bring more
+   * ships, more fire and nastier weather, so HP does not need to carry all of it).
+   */
+  hpScale: (minute: number, difficulty: number): number => (1 + 0.088 * minute + 0.0033 * minute * minute) * (1 + (difficulty - 1) * 0.5),
+  /** Enemy damage multiplier (time and difficulty), capped. */
+  damageScale: (minute: number, difficulty: number): number =>
+    Math.min(2.2, (1 + 0.0256 * minute + 0.00096 * minute * minute) * (1 + (difficulty - 1) * 0.35)),
   /**
    * Green crews: early enemy gunnery is forgiving and hardens over the first minutes (multipliers on lead, spread
    * and reload time), so the opening is about learning to sail, not about dodging perfect volleys.
@@ -71,8 +77,10 @@ export const DIRECTOR = {
    * for spectacle while incoming fire stays a designed curve. Bosses are exempt (their attacks are telegraphed).
    */
   fireRate: (minute: number): number => 0.06 + 0.017 * minute,
+  /** Fire-control rate multiplier from sea difficulty. */
+  fireDifficultyExp: 0.5,
   fireBank: 3,
-  speedScale: (heat: number): number => 1 + Math.min(0.25, (heat - 1) * 0.08),
+  speedScale: (minute: number): number => 1 + Math.min(0.25, 0.0064 * minute + 0.00024 * minute * minute),
   /** Boss HP multiplier for the sea difficulty and the endless loop (0 = first pass). */
   bossHpScale: (difficulty: number, loop: number): number => (1 + (difficulty - 1) * 0.8) * (1 + loop * 0.75),
   eliteHp: 3.5,

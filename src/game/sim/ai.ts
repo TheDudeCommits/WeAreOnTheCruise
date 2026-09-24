@@ -48,7 +48,8 @@ const LG_SWIM = 0, LG_DIVE = 1, LG_UNDER = 2, LG_RIPPLE = 3, LG_LUNGE = 4, LG_RE
 export function updateEnemies(c: SimContext): void {
   const enemies = c.state.enemies;
   const rt = metaRuntime(c.state, c.content);
-  rt.fire = Math.min(DIRECTOR.fireBank, rt.fire + DIRECTOR.fireRate(c.state.time / 60) * c.dt);
+  const difficulty = c.content.seas[c.state.seaId].difficulty;
+  rt.fire = Math.min(DIRECTOR.fireBank, rt.fire + DIRECTOR.fireRate(c.state.time / 60) * Math.pow(difficulty, DIRECTOR.fireDifficultyExp) * c.dt);
   fleet = rt;
   // Rotate the update order every tick so no ship is always first in line for fire-control tokens.
   const n = enemies.length;
@@ -109,7 +110,7 @@ function clearStatus(e: EnemyState, kind: StatusState['kind']): void {
 
 /** Speed after heat, slows and hooks. */
 function baseSpeed(c: SimContext, e: EnemyState, def: EnemyDef): number {
-  let m = DIRECTOR.speedScale(c.state.director.heat);
+  let m = DIRECTOR.speedScale(c.state.time / 60);
   for (const st of e.statuses) {
     if (st.time <= 0) continue;
     if (st.kind === 'slowed') m *= 1 - Math.min(0.8, st.magnitude > 1 ? 0.4 : st.magnitude);
