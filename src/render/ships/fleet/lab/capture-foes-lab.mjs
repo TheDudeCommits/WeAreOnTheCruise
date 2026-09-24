@@ -17,11 +17,12 @@ try {
   await page.waitForFunction(() => window.__SHIPS_LAB__?.ready, null, { timeout: 60000 });
   await page.waitForTimeout(4000);
   const sources = await page.evaluate(() => window.__SHIPS_LAB__.sources());
+  const LEN = { 'signal-cutter': 20, ironclad: 30, harpooner: 26, 'bomb-ketch': 24, 'smoke-runner': 14, 'lantern-wisp': 6, 'drowned-galleon': 44 };
   for (const id of ids) {
     const x = await page.evaluate((d) => window.__SHIPS_LAB__.xOf(d), id);
-    const big = id === 'drowned-galleon' ? 1.6 : id === 'lantern-wisp' ? 0.35 : id === 'smoke-runner' ? 0.65 : 1;
-    // Normal row at z = 0, elite row at z = 90: frame both from the side.
-    await page.evaluate(({ x, big }) => window.__SHIPS_LAB__.view(x + 46 * big, 30 * big, 45 + 74 * big, x, 3, 45), { x, big });
+    const L = Math.max(10, LEN[id]);
+    // 3/4 view of the normal row (z = 0) with the elite row (z = 90) behind it.
+    await page.evaluate(({ x, L }) => window.__SHIPS_LAB__.view(x + L * 1.1, L * 0.95, -L * 1.5, x, L * 0.12, 10), { x, L });
     await page.evaluate(() => window.__SHIPS_LAB__.advance(0.5));
     await page.waitForTimeout(300);
     await page.screenshot({ path: `${out}/${id}.png` });

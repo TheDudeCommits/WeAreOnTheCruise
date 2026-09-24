@@ -65,6 +65,13 @@ function flag(b: GeoBuilder, x: number, y: number, z: number, w: number, h: numb
   b.raw([x, top, z, x, bot, z, x, bot, z + w, x, top, z + w], [0, 1, 2, 0, 2, 3, 0, 2, 1, 0, 3, 2], 0xffffff, [u0, v1, u0, v0, u1, v0, u1, v1]);
 }
 
+/** A small powder keg (procedural: cheaper than the prop GLB when a class carries many). */
+function keg(b: GeoBuilder, x: number, y: number, z: number, s: number): void {
+  b.cylinder(0.42 * s, 0.42 * s, 0.9 * s, 8, { at: [x, y + 0.45 * s, z], color: 0x3d2a26 });
+  b.cylinder(0.46 * s, 0.46 * s, 0.1 * s, 8, { at: [x, y + 0.2 * s, z], color: 0xb0302a });
+  b.cylinder(0.46 * s, 0.46 * s, 0.1 * s, 8, { at: [x, y + 0.7 * s, z], color: 0xb0302a });
+}
+
 /** Iron plates along both sides of a hull (atlas iron-plate texture). */
 function plating(b: GeoBuilder, halfBeam: number, z0: number, z1: number, y0: number, y1: number, rows: number): void {
   const uv = atlasUV('ironPlates');
@@ -88,8 +95,11 @@ function plating(b: GeoBuilder, halfBeam: number, z0: number, z1: number, y0: nu
 export const FOE_LOOKS: Partial<Record<EnemyId, FoeLook>> = {
   'signal-cutter': {
     base: 'sloop', tint: [1.04, 1.0, 0.96], deck: 1.6,
-    props: [{ key: 'mortar', at: [0, 1.5, 5.8], yaw: Math.PI, size: 1.9 }],
+    props: [],
     extras: (b, g) => {
+      // Flare mortar on the quarterdeck.
+      b.cylinder(0.75, 0.9, 0.5, 10, { at: [0, 1.85, 5.8], color: P.woodDark });
+      b.cylinder(0.42, 0.5, 1.3, 10, { at: [0, 2.6, 5.9], rot: [0.5, 0, 0], color: P.iron });
       // Signal hoist: bowsprit → masthead → stern, and a red-white signal flag at the peak.
       pennants(b, [0, 2.6, -13.5], [0, 12.4, -2.2], 9, 0.9);
       pennants(b, [0, 12.4, -2.2], [0, 3.2, 9.4], 8, 0.9);
@@ -136,33 +146,23 @@ export const FOE_LOOKS: Partial<Record<EnemyId, FoeLook>> = {
   },
   'bomb-ketch': {
     base: 'mortar-barge', tint: [0.44, 0.17, 0.14], deck: 1.9,
-    props: [
-      { key: 'powder-keg', at: [-1.7, 1.9, 5.6], size: 1.15 },
-      { key: 'powder-keg', at: [0, 1.9, 6.4], size: 1.15 },
-      { key: 'powder-keg', at: [1.7, 1.9, 5.6], size: 1.15 },
-      { key: 'powder-keg', at: [-0.85, 2.72, 6.0], size: 1.15 },
-      { key: 'powder-keg', at: [0.85, 2.72, 6.0], size: 1.15 },
-      { key: 'powder-keg', at: [3.6, 1.9, -5.5], size: 1.0 },
-      { key: 'powder-keg', at: [-3.6, 1.9, -5.5], size: 1.0 },
-    ],
-    extras: (b, g, deck) => {
+    props: [],
+    extras: (b, _g, deck) => {
       flag(b, 0, deck + 8.2, 9.2, 2.4, 1.5, 'corsairFlag');
-      // Lit fuses on the stacked kegs.
-      g.octa(0.2, { at: [-0.85, 3.85, 6.0], color: P.glowWarm });
-      g.octa(0.2, { at: [0.85, 3.85, 6.0], color: P.glowWarm });
+      // Keg stacks astern and along the rails (the bombs it lobs).
+      for (const [x, z] of [[-1.7, 5.6], [0, 6.4], [1.7, 5.6], [3.6, -5.5], [-3.6, -5.5], [3.6, -3.4], [-3.6, -3.4]] as const) keg(b, x, deck, z, 1.25);
+      keg(b, -0.85, deck + 1.12, 6.0, 1.25);
+      keg(b, 0.85, deck + 1.12, 6.0, 1.25);
     },
   },
   'smoke-runner': {
     base: 'skiff', tint: [0.4, 0.4, 0.47], deck: 0.8,
-    props: [
-      { key: 'powder-keg', at: [-0.9, 0.55, 3.9], size: 0.85 },
-      { key: 'powder-keg', at: [0.9, 0.55, 3.9], size: 0.85 },
-    ],
-    extras: (b, g) => {
-      // Smoke pots: two short black stacks at the stern with embers.
+    props: [],
+    extras: (b) => {
+      // Smoke pots: kegs with short black stacks at the stern.
       for (const x of [-0.9, 0.9]) {
-        b.cylinder(0.26, 0.32, 1.0, 8, { at: [x, 1.55, 3.9], color: P.black });
-        g.octa(0.18, { at: [x, 2.1, 3.9], color: P.glowWarm });
+        keg(b, x, 0.5, 3.9, 0.95);
+        b.cylinder(0.26, 0.32, 1.0, 8, { at: [x, 1.9, 3.9], color: P.black });
       }
       b.box(2.4, 0.08, 1.5, { at: [0, 5.8, 0.4], rot: [0, 0, 0], color: 0x3a3a44 });
     },
