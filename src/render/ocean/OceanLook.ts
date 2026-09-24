@@ -102,8 +102,8 @@ export class OceanLook {
 
     const clear = 1 - Math.max(storm, fog);
     this.glint = lerp(lerp(6.5, 5.0, dusk), 3.2, night) * lerp(1, 0.12, storm) * lerp(1, 0.2, fog);
-    this.sheen = lerp(lerp(0.32, 0.45, dusk), 0.85, night) * lerp(1, 0.25, storm) * lerp(1, 0.3, fog);
-    this.specPower = lerp(lerp(1100, 700, dusk), 260, night);
+    this.sheen = lerp(lerp(0.32, 0.45, dusk), 1.1, night) * lerp(1, 0.25, storm) * lerp(1, 0.3, fog);
+    this.specPower = lerp(lerp(1100, 700, dusk), 650, night);
     this.capLo = lerp(lerp(0.56, 0.44, breezy), 0.2, storm) + fog * 0.1;
     this.capHi = this.capLo + lerp(0.22, 0.3, storm);
     this.streak = Math.max(0.12, breezy * 0.35, storm);

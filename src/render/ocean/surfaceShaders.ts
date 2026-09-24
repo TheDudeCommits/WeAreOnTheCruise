@@ -185,8 +185,8 @@ void main() {
   vec3 nA = texture(uDetailA, pw * uDetailScale.x + uDetailOff.xy).xyz * 2.0 - 1.0;
   vec2 pwB = vec2(dot(pw, vec2(0.94, 0.34)), dot(pw, vec2(-0.34, 0.94)));
   vec3 nB = texture(uDetailB, pwB * uDetailScale.y + uDetailOff.zw).xyz * 2.0 - 1.0;
-  float fadeA = uLookA.w * (1.0 - smoothstep(120.0, 900.0, dist));
-  float fadeB = uLookA.w * (1.0 - smoothstep(30.0, 220.0, dist)) * 0.5;
+  float fadeA = uLookA.w * (1.0 - smoothstep(100.0, 650.0, dist));
+  float fadeB = uLookA.w * (1.0 - smoothstep(25.0, 170.0, dist)) * 0.5;
   vec2 sA = nA.xz / max(nA.y, 0.35) * fadeA;
   vec2 sB = nB.xz / max(nB.y, 0.35) * fadeB;
   sB = vec2(sB.x * 0.94 - sB.y * 0.34, sB.x * 0.34 + sB.y * 0.94);
@@ -213,7 +213,8 @@ void main() {
   // ── Body colour: deep cobalt looking down, turquoise-leaning at grazing faces, soft cel bands ──
   float deepness = smoothstep(0.18, 0.9, NdV);
   vec3 body = mix(uMid, uDeep, deepness);
-  float tone = clamp(0.52 + (dot(Nm, L) - L.y) * 1.6 + hN * 0.42 + lift * 0.12, 0.0, 1.0);
+  // Sun-facing faces lighter; the sensitivity drops with a low sun so dusk light does not stripe the swells.
+  float tone = clamp(0.52 + (dot(Nm, L) - L.y) * 1.6 * mix(0.4, 1.0, clamp(L.y * 1.4, 0.0, 1.0)) + hN * 0.42 + lift * 0.12, 0.0, 1.0);
   vec3 cShadow = uDeep * 0.78;
   vec3 cLight = mix(uMid, uSSS, 0.22);
   vec3 col = mix(cShadow, body, smoothstep(0.16, 0.4, tone));
@@ -237,12 +238,13 @@ void main() {
   col = mix(col, uShallow * 1.22 + vec3(0.02, 0.035, 0.0), (1.0 - smoothstep(0.0, 16.0, shoreD)) * 0.45);
 
   // ── Sky reflection (Fresnel), painterly cloud tint, lightning flash ──
+  // Reflection uses a softened normal (macro + 40% detail) so ripples tint rather than stripe the sky.
+  vec3 Nr = normalize(mix(Nm, Nd, 0.4));
+  vec3 Rr = reflect(-V, Nr);
   vec3 R = reflect(-V, Nd);
-  float Fm = 0.02 + 0.98 * pow(1.0 - clamp(dot(Nm, V), 0.0, 1.0), 5.0);
-  float Fd = 0.02 + 0.98 * pow(1.0 - clamp(dot(Nd, V), 0.0, 1.0), 5.0);
-  float F = mix(Fm, Fd, 0.35);
-  vec3 refl = mix(uHorizon, uSky, smoothstep(0.0, 0.45, R.y));
-  refl = mix(refl, mix(uHorizon, vec3(1.0), 0.35), (cloud.b - 0.45) * uLookC.x * 2.0);
+  float F = 0.02 + 0.98 * pow(1.0 - clamp(dot(Nr, V), 0.0, 1.0), 5.0);
+  vec3 refl = mix(uHorizon, uSky, smoothstep(0.0, 0.45, Rr.y));
+  refl *= 1.0 + (cloud.b - 0.5) * uLookC.x * 1.4;
   refl += vec3(0.85, 0.9, 1.0) * uLookC.z * 0.9;
   col = mix(col, refl, clamp(F * uLookB.z * (1.0 - shallowAmt * 0.35), 0.0, 1.0));
 
@@ -263,8 +265,7 @@ void main() {
   float seg = smoothstep(0.42, 0.66, fL.b + uWind.w * 0.14);
   // Storms add broad breaking patches on compressed crests, streaked along the wind.
   float stormCap = smoothstep(0.55, 0.9, compress + hN * 0.25) * smoothstep(0.25, 0.7, windStreak) * uWind.w;
-  float covC = max(ridge * crestGate * seg, stormCap);
-  covC *= 1.0 - smoothstep(3.0, 12.0, pix);
+  float covC = max(ridge * crestGate * seg * (1.0 - smoothstep(0.7, 2.2, pix)), stormCap * (1.0 - smoothstep(2.0, 8.0, pix)));
   float coast = (1.0 - smoothstep(0.5, 6.0, shoreD)) * step(-6.0, shoreD);
   float surfPhase = fract(shoreD / 9.0 + uTime * 0.21 + fE.b * 0.4);
   float surf = smoothstep(0.7, 0.9, surfPhase) * (1.0 - smoothstep(3.0, 34.0, shoreD)) * smoothstep(0.32, 0.6, fE.b + 0.08);
@@ -273,12 +274,14 @@ void main() {
   // Offset keeps zero coverage strictly foam-free (blob maxima never pop up as dots).
   float xI = covE * 1.12 - (1.0 - fE.r) - 0.07;
   float xC = covC - 0.45 + (fL.r - 0.5) * 0.3;
-  float aaI = fwidth(xI) * 0.85 + 0.015 + farBlur * 0.35;
-  float aaC = fwidth(xC) * 0.85 + 0.015 + farBlur * 0.35;
-  float solidI = smoothstep(-aaI, aaI, xI);
-  float solidC = smoothstep(-aaC, aaC, xC);
-  float edgeI = (smoothstep(-0.15 - aaI, -0.15 + aaI, xI) - solidI) * smoothstep(0.08, 0.3, covE);
-  float edgeC = (smoothstep(-0.12 - aaC, -0.12 + aaC, xC) - solidC) * smoothstep(0.2, 0.5, covC);
+  // Sharp, fwidth-antialiased shapes up close; at distance (sub-pixel shapes) converge to the expected foam
+  // fraction for the coverage instead of widening the threshold (which would invent foam from nothing).
+  float aaI = fwidth(xI) * 0.85 + 0.015;
+  float aaC = fwidth(xC) * 0.85 + 0.015;
+  float solidI = mix(smoothstep(-aaI, aaI, xI), clamp(covE * 1.15 - 0.12, 0.0, 1.0), farBlur) * smoothstep(0.0, 0.07, covE);
+  float solidC = mix(smoothstep(-aaC, aaC, xC), clamp(covC * 0.9 - 0.2, 0.0, 1.0), farBlur) * smoothstep(0.02, 0.12, covC);
+  float edgeI = max(smoothstep(-0.15 - aaI, -0.15 + aaI, xI) - solidI, 0.0) * smoothstep(0.08, 0.3, covE) * (1.0 - farBlur);
+  float edgeC = max(smoothstep(-0.12 - aaC, -0.12 + aaC, xC) - solidC, 0.0) * smoothstep(0.2, 0.5, covC) * (1.0 - farBlur);
   // Fringe bubbles where foam is thin (the network has mostly dissolved).
   float bub = smoothstep(0.45 - aaI, 0.55 + aaI, fE.g) * smoothstep(0.04, 0.16, covE) * (1.0 - smoothstep(0.3, 0.55, covE));
   float lace = bub * (1.0 - solidI) * (1.0 - farBlur);
@@ -293,8 +296,13 @@ void main() {
   float rl = max(dot(R, L), 0.0);
   float spec = pow(rl, Peff);
   float aaS = fwidth(spec) + 0.05;
-  float glint = smoothstep(0.55 - aaS, 0.55 + aaS, spec) * (1.0 - smoothstep(0.8, 3.5, pix));
-  float sheen = pow(rl, 16.0) * uLookA.y;
+  // Toksvig energy term: where filtered ripples widen the lobe, glints dim instead of flooding the far field.
+  float toksvig = (1.0 + Peff) / (1.0 + P);
+  float glint = smoothstep(0.55 - aaS, 0.55 + aaS, spec) * toksvig * (1.0 - smoothstep(0.6, 2.2, pix));
+  // Broad sun path by day; at night a narrower moon path broken up by the ripples.
+  float sheenDay = pow(max(dot(Rr, L), 0.0), 18.0);
+  float sheenNight = pow(max(dot(R, L), 0.0), 140.0) * 1.6 + pow(max(dot(Rr, L), 0.0), 60.0) * 0.25;
+  float sheen = mix(sheenDay, sheenNight, uLookC.y) * uLookA.y;
   col += uSunColor * (glint * uLookA.x + sheen) * sunUp * (1.0 - foamSolid * 0.85);
 
   // ── Night: bioluminescent wake and crests ──
@@ -305,7 +313,12 @@ void main() {
   col = mix(col, uFogColor, fogF);
 
   if (uDebug > 0.5) {
-    col = uDebug < 1.5 ? vec3(tr.r, tr.g, tr.b) : uDebug < 2.5 ? vec3(pr.r, pr.g, 0.0) : vec3(shoreD / uShoreMax);
+    if (uDebug < 1.5) col = vec3(tr.r, tr.g, tr.b);
+    else if (uDebug < 2.5) col = vec3(pr.r, pr.g, 0.0);
+    else if (uDebug < 3.5) col = vec3(shoreD / uShoreMax);
+    else if (uDebug < 4.5) col = vec3(solidI, solidC, lace);
+    else if (uDebug < 5.5) col = vec3(glint * toksvig, sheen, max(edgeI, 0.0));
+    else col = vec3(covI, covS, covC);
   }
   gl_FragColor = vec4(col, 1.0);
   #include <tonemapping_fragment>
