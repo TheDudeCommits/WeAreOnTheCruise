@@ -66,6 +66,26 @@ export async function paintHull(doc, { material, deckY, navyTop, minSide = 0.35,
   }
   return moved;
 }
+/** Mast, yard and a gently bulging square sail for the rowboat skiffs; half = 'emblem' | 'plain' part of the sail canvas. */
+async function addSkiffRig(doc, sailName, half) {
+  const mats = doc.getRoot().listMaterials();
+  const wood = mats.find((x) => x.getName() === 'Metal');
+  const acc = { positions: [], indices: [], uvs: [] };
+  L.pushBox(acc, [-0.13, 0.2, -1.73], [0.13, 7.6, -1.47]);
+  L.pushBox(acc, [-2.7, 6.9, -1.72], [2.7, 7.1, -1.52]);
+  L.addGeometry(doc, { ...acc, material: wood, name: 'skiff-rig' });
+  const sailMat = await makeSailMaterial(doc, sailName);
+  const S = { positions: [], indices: [], uvs: [] };
+  const cols = 4, rows = 3, x0 = -2.5, x1 = 2.5, y0 = 2.3, y1 = 6.85, zc = -1.8, bulge = 0.45, u0 = half === 'plain' ? 0.51 : 0.01;
+  for (let r = 0; r <= rows; r++) for (let c = 0; c <= cols; c++) {
+    const u = c / cols, v = r / rows; const x = x0 + (x1 - x0) * u, y = y1 - (y1 - y0) * v;
+    const z = zc - bulge * Math.sin(Math.PI * u) * Math.sin(Math.PI * Math.min(1, v * 0.9 + 0.1));
+    S.positions.push(x, y, z); S.uvs.push(u0 + u * 0.48, 0.01 + v * 0.98);
+  }
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const a = r * (cols + 1) + c, b = a + 1, d = a + cols + 1, e = d + 1; S.indices.push(a, d, b, b, d, e, a, b, d, b, e, d); }
+  L.addGeometry(doc, { ...S, material: sailMat, name: 'skiff-sail' });
+}
+
 async function makeSailMaterial(doc, name) {
   const { sharp } = await import('./tools.mjs');
   const png = await sharp(Buffer.from(SVG(name))).resize(1024, 512, { fit: 'fill' }).png().toBuffer();
@@ -133,27 +153,19 @@ export const RECOLOR = {
     });
   },
 
+  /** local.yany "Boat" → player escort skiff: original blue/amber paint kept, mast and plain cream sail added. */
+  async escortSkiff(ctx) { await addSkiffRig(ctx.doc, 'admiralty-sail', 'plain'); },
+  /** anagvf brig → neutral trader for the Treasure convoy: natural wood hull, russet-striped sails with a coin mark. */
+  async merchant({ doc }) {
+    await L.sailify(doc, { name: 'merchant-sail', svg: SVG('merchant-sail'), select: (t, i) => i.texel && Math.min(...i.texel) > 150 && t.centroid[1] > 4 });
+  },
+
   /** local.yany "Boat" → Redtide raider skiff: black-stained hull, red gunwale, plus a small mast and red square sail. */
   async raiderSkiff({ doc }) {
     const mats = doc.getRoot().listMaterials();
     await hslMaterial(mats.find((x) => x.getName() === 'Planks'), (h, s, l) => [230, 0.08, l * 0.32]);
     await hslMaterial(mats.find((x) => x.getName() === 'Wood'), (h, s, l) => [2, 0.72, l * 0.62]);
-    // mast + yard (dark wood, reuse the Metal material) and a red square sail with the emblem half of the Redtide canvas
-    const wood = mats.find((x) => x.getName() === 'Metal');
-    const acc = { positions: [], indices: [], uvs: [] };
-    L.pushBox(acc, [-0.13, 0.2, -1.73], [0.13, 7.6, -1.47]);
-    L.pushBox(acc, [-2.7, 6.9, -1.72], [2.7, 7.1, -1.52]);
-    L.addGeometry(doc, { ...acc, material: wood, name: 'skiff-rig' });
-    const sailMat = await makeSailMaterial(doc, 'redtide-sail');
-    const S = { positions: [], indices: [], uvs: [] };
-    const cols = 4, rows = 3, x0 = -2.5, x1 = 2.5, y0 = 2.3, y1 = 6.85, zc = -1.8, bulge = 0.45;
-    for (let r = 0; r <= rows; r++) for (let c = 0; c <= cols; c++) {
-      const u = c / cols, v = r / rows; const x = x0 + (x1 - x0) * u, y = y1 - (y1 - y0) * v;
-      const z = zc - bulge * Math.sin(Math.PI * u) * Math.sin(Math.PI * Math.min(1, v * 0.9 + 0.1));
-      S.positions.push(x, y, z); S.uvs.push(0.01 + u * 0.48, 0.01 + v * 0.98);
-    }
-    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const a = r * (cols + 1) + c, b = a + 1, d = a + cols + 1, e = d + 1; S.indices.push(a, d, b, b, d, e, a, b, d, b, e, d); }
-    L.addGeometry(doc, { ...S, material: sailMat, name: 'skiff-sail' });
+    await addSkiffRig(doc, 'redtide-sail', 'emblem');
   },
 
   /** Sololopenko "Ghost ship" → Gloam Wraith: spectral teal hull, torn pale-teal sails, teal lantern glow. */

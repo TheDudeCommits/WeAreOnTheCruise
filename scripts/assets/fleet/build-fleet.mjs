@@ -74,7 +74,7 @@ async function build(job) {
   if (!skinned) await doc.transform(fn.flatten());
   const b = L.boundsWith(doc, R);
   const s = (job.length ? job.length / b.size[2] : job.height ? job.height / b.size[1] : job.longest ? job.longest / Math.max(...b.size) : job.scale || 1) * (job.poseScale || 1);
-  const isShip = SHIP_ROLES.has(job.role) && job.origin !== 'ground';
+  const isShip = (SHIP_ROLES.has(job.role) && job.origin !== 'ground') || job.origin === 'waterline';
   const ty = isShip ? -(job.draft ?? 0) - b.min[1] * s : -(b.min[1] * s) + (job.lift || 0);
   const M = L.mul(L.translate(-b.center[0] * s, ty, -b.center[2] * s), L.mul(L.scale(s), R));
   if (!skinned) L.bakeTransforms(doc, M);
@@ -193,7 +193,7 @@ function writeManifest() {
   for (const job of JOBS) {
     const st = stats[job.key];
     if (!st || !fs.existsSync(path.join(OUT_DIR, `${job.key}.glb`))) { if (prev[job.key]) models[job.key] = prev[job.key]; continue; }
-    const ship = (job.role === 'enemy' || job.role === 'boss') && job.origin !== 'ground';
+    const ship = ((job.role === 'enemy' || job.role === 'boss') && job.origin !== 'ground') || job.origin === 'waterline';
     models[job.key] = {
       file: st.file,
       length: job.role === 'crew' ? job.height : ship ? job.length : +Math.max(st.size[0], st.size[2]).toFixed(2),

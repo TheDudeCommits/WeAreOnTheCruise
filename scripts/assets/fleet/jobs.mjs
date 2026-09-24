@@ -23,7 +23,7 @@ export const JOBS = [
   {
     key: 'mortar-barge', role: 'enemy', src: 'meshy/mortar-barge.glb', yaw: -90, length: 24, draft: 1.6, tris: 20000, tex: 1024,
     source: MESHY('01a0cfd3-a6a4-75a2-b2a7-e67d8c0b8d4b', 'Admiralty Mortar Barge'),
-    notes: 'Boxy armoured barge; the siege mortar sits on a turntable amidships (about z = 0, y ≈ 3 m) — a good muzzle anchor for the lob FX.',
+    notes: 'Boxy armoured barge; the siege mortar sits on a turntable just forward of amidships, muzzle angled up toward the bow — use it as the lob FX origin. Single mesh, single 1024² atlas.',
   },
   {
     key: 'dreadnought', role: 'boss', src: 'meshy/dreadnought.glb', yaw: -90, length: 90, draft: 6.5, tris: 50000, tex: 2048,
@@ -172,6 +172,19 @@ export const JOBS = [
   { key: 'hut', role: 'nature', src: 'quaternius/pirate/Environment_House3.gltf', yaw: 0, height: 11, tris: 6000, tex: 256, source: QUATERNIUS('Environment_House3.gltf'), notes: 'Stilt house built from an upturned hull with a mast and striped sail (harbor/shore dressing), 11 m tall.' },
   { key: 'dock', role: 'nature', src: 'quaternius/pirate/Environment_Dock.gltf', yaw: 0, longest: 4, tris: 3000, tex: 256, source: QUATERNIUS('Environment_Dock.gltf'), notes: 'Modular dock segment on stilts (deck ≈ 2.9 × 3.5 m, 4 m tall incl. mooring post); origin at the stilt feet, deck top ≈ 2.6 m — sink the stilts into the water.' },
   { key: 'tower', role: 'nature', src: 'kenney/pirate-kit/Models/GLB format/tower-complete-large.glb', yaw: 0, height: 14, tris: 3000, tex: 256, source: KENNEY('tower-complete-large.glb'), notes: 'Stone watchtower with a blue conical roof, 14 m (Admiralty outposts / lighthouse stand-in).' },
+  // ───────────── Extras: player escort skiff, Treasure-convoy trader ─────────────
+  {
+    key: 'escort-skiff', role: 'prop', origin: 'waterline', src: 'src/c9b94c52d0704614930ad5e076e02198/source.glb', yaw: 90, length: 9, draft: 0.45, tris: 8000, tex: 512,
+    recolor: (ctx) => RECOLOR.escortSkiff(ctx),
+    source: SKETCHFAB('c9b94c52d0704614930ad5e076e02198', 'Boat', 'local.yany'),
+    notes: 'Extra: friendly escort boat for the Escort Skiffs weapon (hazard kind escort-skiff): the rowboat in its original blue/amber paint with an added mast and plain cream sail. Waterline origin, bow −Z, 9 m.',
+  },
+  {
+    key: 'merchant', role: 'enemy', src: 'src/d9953f66583340c4879a3770f6d09a37/source.glb', yaw: 180, length: 26, draft: 2, tris: 14000, tex: 1024,
+    recolor: (ctx) => RECOLOR.merchant(ctx),
+    source: SKETCHFAB('d9953f66583340c4879a3770f6d09a37', 'Pirate Ship (Low Poly)', 'anagvf', 'Ana Vassallo'),
+    notes: 'Extra: neutral trader for the Treasure convoy event: natural wood hull, cream sails with russet stripes and a gold coin mark.',
+  },
 ];
 
 export { RECOLOR };

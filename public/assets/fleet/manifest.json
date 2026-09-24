@@ -47,7 +47,7 @@
       "bytes": 686776,
       "sha256": "45b392ce9fa7043a5d7a324b8ed5959cad481b0200fd0118318fb152b83b1614",
       "sourceSha256": "bc61a3fc1b11e162a365db72837677e0347219174a971c06797e4d325327b2e8",
-      "notes": "Boxy armoured barge; the siege mortar sits on a turntable amidships (about z = 0, y ≈ 3 m) — a good muzzle anchor for the lob FX."
+      "notes": "Boxy armoured barge; the siege mortar sits on a turntable just forward of amidships, muzzle angled up toward the bow — use it as the lob FX origin. Single mesh, single 1024² atlas."
     },
     "dreadnought": {
       "file": "/assets/fleet/dreadnought.glb",
@@ -1095,6 +1095,54 @@
       "sha256": "3aecfa02fccdc68f8ca81383232d230b71d08caa160521e9cd8d19640e5bf830",
       "sourceSha256": "3e65bcb990840a59c0b7c0c1237ba41da5a2b5434cab65d6f904a732d4899eb0",
       "notes": "Stone watchtower with a blue conical roof, 14 m (Admiralty outposts / lighthouse stand-in)."
+    },
+    "escort-skiff": {
+      "file": "/assets/fleet/escort-skiff.glb",
+      "length": 9,
+      "draft": 0.45,
+      "beam": 5.4,
+      "height": 7.6,
+      "tris": 7364,
+      "sourceTris": 7292,
+      "materials": 4,
+      "role": "prop",
+      "source": {
+        "kind": "sketchfab",
+        "uid": "c9b94c52d0704614930ad5e076e02198",
+        "author": "local.yany",
+        "authorUrl": "https://sketchfab.com/local.yany",
+        "title": "Boat",
+        "license": "CC-BY-4.0",
+        "url": "https://sketchfab.com/3d-models/c9b94c52d0704614930ad5e076e02198"
+      },
+      "bytes": 170208,
+      "sha256": "2293799452738f57b9d8d2da8537ffcebabf85e5b95427a0bb2ee68aa30c78a1",
+      "sourceSha256": "977e03cf75b9a5c96061a92ffc76bed01b4c8fa50fe498290e57f3ed32dfc060",
+      "notes": "Extra: friendly escort boat for the Escort Skiffs weapon (hazard kind escort-skiff): the rowboat in its original blue/amber paint with an added mast and plain cream sail. Waterline origin, bow −Z, 9 m."
+    },
+    "merchant": {
+      "file": "/assets/fleet/merchant.glb",
+      "length": 26,
+      "draft": 2,
+      "beam": 9.08,
+      "height": 17.13,
+      "tris": 9731,
+      "sourceTris": 9731,
+      "materials": 2,
+      "role": "enemy",
+      "source": {
+        "kind": "sketchfab",
+        "uid": "d9953f66583340c4879a3770f6d09a37",
+        "author": "Ana Vassallo (anagvf)",
+        "authorUrl": "https://sketchfab.com/anagvf",
+        "title": "Pirate Ship (Low Poly)",
+        "license": "CC-BY-4.0",
+        "url": "https://sketchfab.com/3d-models/d9953f66583340c4879a3770f6d09a37"
+      },
+      "bytes": 232388,
+      "sha256": "924699f7369c469603979084329797eb4df85d58e868e7c48d671055778f209a",
+      "sourceSha256": "6b12d15106dab8f727d9d99395a96c6b80a28d9f030db35d5202114a09063082",
+      "notes": "Extra: neutral trader for the Treasure convoy event: natural wood hull, cream sails with russet stripes and a gold coin mark."
     }
   }
 }

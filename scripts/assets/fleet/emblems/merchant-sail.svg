@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="512" viewBox="0 0 1024 512">
+  <!-- neutral trader canvas: cream with broad russet stripes; left half carries a small gold coin mark -->
+  <rect width="1024" height="512" fill="#efe4cc"/>
+  <g fill="#b5562f">
+    <rect x="64" y="0" width="64" height="512"/><rect x="192" y="0" width="64" height="512"/><rect x="320" y="0" width="64" height="512"/><rect x="448" y="0" width="48" height="512"/>
+    <rect x="576" y="0" width="64" height="512"/><rect x="704" y="0" width="64" height="512"/><rect x="832" y="0" width="64" height="512"/><rect x="960" y="0" width="64" height="512"/>
+  </g>
+  <rect x="0" y="0" width="512" height="512" fill="none" stroke="#6b4a2e" stroke-width="10"/>
+  <rect x="512" y="0" width="512" height="512" fill="none" stroke="#6b4a2e" stroke-width="10"/>
+  <g transform="translate(256 256)"><circle r="92" fill="#e2b23a" stroke="#6b4a2e" stroke-width="16"/><path d="M -34 -52 L 34 -52 L 0 0 L 34 52 L -34 52 L 0 0 Z" fill="none" stroke="#6b4a2e" stroke-width="14" stroke-linejoin="round"/></g>
+</svg>
