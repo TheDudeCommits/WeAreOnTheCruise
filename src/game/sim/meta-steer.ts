@@ -16,8 +16,7 @@ import type { SimContext, Target } from './context';
 import { GRAVITY } from './core-runtime';
 
 export const TAU = Math.PI * 2;
-/** Must match the gravity used for ballistic kinds in src/game/sim/projectiles.ts (CORE). */
-/** Shell gravity: the same constant the projectile integrator uses. */
+/** Gravity of ballistic projectiles (CORE's constant, so lobbed shells land exactly on their telegraphs). */
 export const SHELL_GRAVITY = GRAVITY;
 /** Launch height used for lobbed shells. */
 export const SHELL_Y0 = 4;
@@ -105,12 +104,12 @@ export function fireAlong(
  */
 export function lobShell(
   c: SimContext, kind: 'enemy-mortar' | 'boss-shell', sx: number, sz: number, tx: number, tz: number,
-  flight: number, damage: number, area: number, telegraph = true,
+  flight: number, damage: number, area: number, telegraph = true, launchY = SHELL_Y0,
 ): void {
   const T = Math.max(0.4, flight);
-  const vy = 0.5 * SHELL_GRAVITY * T - SHELL_Y0 / T;
+  const vy = 0.5 * SHELL_GRAVITY * T - launchY / T;
   c.spawnProjectile({
-    kind, team: 'enemy', x: sx, y: SHELL_Y0, z: sz, vx: (tx - sx) / T, vy, vz: (tz - sz) / T,
+    kind, team: 'enemy', x: sx, y: launchY, z: sz, vx: (tx - sx) / T, vy, vz: (tz - sz) / T,
     damage, area, radius: 1.4, ttl: T + 1,
   });
   if (telegraph) c.addTelegraph({ shape: 'circle', team: 'enemy', x: tx, z: tz, radius: area, duration: T });

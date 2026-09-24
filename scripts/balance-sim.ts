@@ -391,7 +391,7 @@ function metaProfile(): MetaProfile {
 
 export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Sim) => void): RunReport {
   const t0 = Date.now();
-  const world = new IslandField(seed);
+  const world = new IslandField(seed, { sea });
   const sim = new Sim({ seed, shipId: ship, seaId: sea, meta: metaProfile(), world, content: contentFor(ship) });
   const perMinute: number[] = [];
   const shots: Record<string, { fired: number; hits: number; volleys: number }> = {};

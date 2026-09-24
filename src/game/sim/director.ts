@@ -415,6 +415,11 @@ function fogBank(c: SimContext, minute: number, duration: number): void {
 
 // ───────────────────────── Forts ─────────────────────────
 
+/** Cliff Battery site on a fort island (WORLD's IslandField.batterySitesNear; not part of the WorldQuery contract). */
+interface BatterySiteLike { islandId: string; x: number; y: number; z: number; facing: number }
+type BatteryWorld = { batterySitesNear?: (x: number, z: number, radius: number, out?: BatterySiteLike[]) => BatterySiteLike[] };
+const SITES: BatterySiteLike[] = [];
+
 function placeForts(c: SimContext, sea: SeaDef, minute: number): void {
   const s = c.state, sc = s.director.scratch, p = s.player;
   const fortDef = c.content.enemies.fort;
@@ -425,12 +430,35 @@ function placeForts(c: SimContext, sea: SeaDef, minute: number): void {
   for (const e of s.enemies) if (e.defId === 'fort' && e.life === 'alive') forts++;
   if (forts >= DIRECTOR.fortMax) return;
   const rt = metaRuntime(s, c.content);
+  const world = c.world as typeof c.world & BatteryWorld;
+  if (typeof world.batterySitesNear === 'function') {
+    // Real Admiralty forts: man the tower tops of fort islands (two batteries per island at most).
+    const sites = world.batterySitesNear(p.x, p.z, DIRECTOR.fortSearchMax, SITES);
+    for (const site of sites) {
+      if (forts >= DIRECTOR.fortMax) break;
+      const key = `${site.islandId}:${Math.round(site.x)}:${Math.round(site.z)}`;
+      const islandKey = `isl:${site.islandId}`;
+      if (rt.fortIslands.has(key) || (rt.fortCount.get(islandKey) ?? 0) >= 2) continue;
+      if (Math.hypot(site.x - p.x, site.z - p.z) < DIRECTOR.fortSearchMin) continue;
+      const e = spawnScaled(c, 'fort', site.x, site.z, { heading: site.facing });
+      if (!e) break;
+      e.y = site.y;
+      // Flat shots stop at the coastline: reach the hit circle a little past the shore so broadsides can hit.
+      const inland = Math.max(0, -c.world.shoreDistance(site.x, site.z, 120));
+      e.radius = Math.max(e.radius, inland + 9);
+      e.attackCooldown = 2.5;
+      rt.fortIslands.add(key);
+      rt.fortCount.set(islandKey, (rt.fortCount.get(islandKey) ?? 0) + 1);
+      forts++;
+    }
+    return;
+  }
+  // Fallback worlds without battery sites: a battery hugging the shore of the island nearest the player.
   const islands = c.world.islandsNear(p.x, p.z, DIRECTOR.fortSearchMax, rt.islands);
   for (const island of islands) {
     if (rt.fortIslands.has(island.id)) continue;
     const d = Math.hypot(island.x - p.x, island.z - p.z);
     if (d - island.radius < DIRECTOR.fortSearchMin * 0.6 || d > DIRECTOR.fortSearchMax + island.radius) continue;
-    // Shore point facing the player: the outline vertex nearest to the player, pushed out to open water.
     let best = island.outline[0]!, bestD = Infinity;
     for (const v of island.outline) {
       const vd = (v.x - p.x) * (v.x - p.x) + (v.z - p.z) * (v.z - p.z);

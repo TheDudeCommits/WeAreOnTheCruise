@@ -96,7 +96,7 @@ export const DIRECTOR = {
   /** Seconds of boss warning before the spawn. */
   warningLead: 10,
   /** Forts: seconds between placement attempts, max alive, search ring (m). */
-  fortInterval: 38,
+  fortInterval: 6,
   fortMax: 2,
   fortSearchMin: 170,
   fortSearchMax: 420,

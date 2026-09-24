@@ -9,7 +9,7 @@ import type { BossState, SimEvent } from '../src/game/types';
 import { IslandField } from '../src/world/IslandField';
 
 function makeSim(seed = 'meta-dir', sea: SeaId = 'sunward-shallows'): Sim {
-  const sim = new Sim({ seed, shipId: 'sunlion', seaId: sea, meta: defaultProfile(), world: new IslandField(seed) });
+  const sim = new Sim({ seed, shipId: 'sunlion', seaId: sea, meta: defaultProfile(), world: new IslandField(seed, { sea }) });
   sim.debug.god(true);
   return sim;
 }
@@ -123,6 +123,34 @@ describe('director', () => {
     const budget = (DIRECTOR.fireRate(8) + DIRECTOR.fireRate(9)) / 2 * 60 + DIRECTOR.fireBank + 2;
     expect(volleys).toBeGreaterThan(5);
     expect(volleys).toBeLessThanOrEqual(budget * 2 /* cutters cost half a token */);
+  });
+
+  it('mans real fort towers (WORLD battery sites) and keeps the battery on land', () => {
+    const world = new IslandField('bal-1', { sea: 'sunward-shallows' });
+    const sim = new Sim({ seed: 'bal-1', shipId: 'sunlion', seaId: 'sunward-shallows', meta: defaultProfile(), world });
+    sim.debug.god(true);
+    const site = world.batterySitesNear(0, 0, 4000)[0]!;
+    expect(site).toBeDefined();
+    // Park the player in open water ~250 m from the tower.
+    const p = sim.state.player;
+    for (let a = 0; a < 64; a++) {
+      const x = site.x + Math.sin(a) * 250, z = site.z + Math.cos(a) * 250;
+      if (world.isWater(x, z, 30)) { p.x = x; p.z = z; break; }
+    }
+    sim.debug.setTime(250);
+    run(sim, 0.5, 0);
+    const forts = sim.state.enemies.filter((e) => e.defId === 'fort' && e.life === 'alive');
+    expect(forts.length).toBeGreaterThan(0);
+    const sites = world.batterySitesNear(p.x, p.z, 500);
+    const fort = forts[0]!;
+    expect(sites.some((st) => Math.hypot(st.x - fort.x, st.z - fort.z) < 0.01 && Math.abs(st.y - fort.y) < 0.01)).toBe(true);
+    expect(world.isWater(fort.x, fort.z, 0)).toBe(false);
+    const x = fort.x, z = fort.z;
+    run(sim, 2, 0);
+    expect(fort.x).toBe(x);
+    expect(fort.z).toBe(z);
+    // The hit circle reaches past the coastline so flat shots can land.
+    expect(fort.radius).toBeGreaterThan(-world.shoreDistance(fort.x, fort.z, 120));
   });
 
   it('is deterministic for a seed', () => {

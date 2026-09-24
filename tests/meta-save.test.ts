@@ -38,7 +38,7 @@ describe('meta save', () => {
     saveProfile(p);
     expect(loadProfile()).toEqual(p);
     const s = loadSettings();
-    s.musicVolume = 0.25; s.quality = 'high';
+    s.musicVolume = 0.25; s.quality = 'high'; s.reduceFlashing = true;
     saveSettings(s);
     expect(loadSettings()).toEqual(s);
   });
