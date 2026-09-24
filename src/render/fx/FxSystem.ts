@@ -14,6 +14,7 @@ import * as THREE from 'three';
 import type { RunState } from '../../game/types';
 import type { FrameContext, QualityTier, RenderHostHandles, RenderSystem } from '../frame';
 import { createSharedUniforms, type FxSharedUniforms } from './core/glsl';
+import { WaterSampler } from './core/water';
 import type { SpritePass } from './core/SpritePass';
 import { EventFx } from './EventFx';
 import { Juice } from './Juice';
@@ -55,6 +56,7 @@ export class FxSystem implements RenderSystem {
   private clock = 0;
   private readonly sunView = new THREE.Vector3();
   private readonly tmpColor = new THREE.Color();
+  private readonly waterHeight = (x: number, z: number): number => this.kit.water.height(x, z);
   readonly stats: FxStats = { cel: 0, glow: 0, heads: 0, trails: 0, beams: 0, decals: 0, debris: 0, numbers: 0, clock: 0, spawned: 0 };
 
   constructor() {
@@ -73,7 +75,7 @@ export class FxSystem implements RenderSystem {
     this.passes = [cel, glow, heads];
     this.kit = {
       cel, glow, heads, trails, beams, ropes, decals, debris, props, numbers, walls, juice: this.juice,
-      ocean: null, ships: null, focusX: 0, focusZ: 0, windX: 0, windZ: 0, clock: 0, q: 1, spawned: 0,
+      water: new WaterSampler(), ocean: null, ships: null, focusX: 0, focusZ: 0, windX: 0, windZ: 0, clock: 0, q: 1, spawned: 0,
     };
     this.sakuga = new Sakuga(this.kit);
     this.events = new EventFx(this.kit, this.sakuga);
@@ -111,6 +113,7 @@ export class FxSystem implements RenderSystem {
     k.ships = ctx.services.ships;
     k.focusX = ctx.focus.x;
     k.focusZ = ctx.focus.z;
+    k.water.sync(ctx.time, ctx.sea.waveScale, ctx.services.ocean, ctx.focus.x, ctx.focus.z);
     const wind = 2 + ctx.sea.windStrength * 5;
     k.windX = Math.sin(ctx.sea.windDir) * wind;
     k.windZ = Math.cos(ctx.sea.windDir) * wind;
@@ -134,7 +137,7 @@ export class FxSystem implements RenderSystem {
       this.events.process(ctx, run);
       this.state.render(ctx, run, dt);
     }
-    k.debris.update(dt, (x, z) => (k.ocean ? k.ocean.heightAt(x, z) : 0), ctx.time);
+    k.debris.update(dt, this.waterHeight, ctx.time);
     const glyphPx = Math.max(22, Math.min(40, ctx.viewport.height * 0.03));
     k.numbers.update(dt, this.clock, glyphPx);
 

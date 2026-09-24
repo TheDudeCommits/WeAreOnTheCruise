@@ -52,6 +52,8 @@ export class EventFx {
   launchAge = 99;
   diveAge = 99;
 
+  private readonly waterY = (x: number, z: number): number => this.fx.wy(x, z);
+
   constructor(private readonly k: FxKit, private readonly fx: Sakuga) {}
 
   reset(): void {
@@ -123,7 +125,7 @@ export class EventFx {
   private handle(e: SimEvent, ctx: FrameContext, run: Readonly<RunState>): void {
     const fx = this.fx;
     const k = this.k;
-    const water = (x: number, z: number) => fx.wy(x, z);
+    const water = this.waterY;
     switch (e.type) {
       case 'weapon-fired': this.weaponFired(e, run, water); break;
       case 'enemy-fired': this.enemyFired(e, run, water); break;

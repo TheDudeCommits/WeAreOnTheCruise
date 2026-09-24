@@ -1,7 +1,7 @@
 /**
  * FX lab (lab/fx.html): the real Sim + sky/ocean/ship/camera systems + FxSystem on an open sea, with buttons
  * that emit every event type and spawn every projectile, hazard, pickup and telegraph kind, plus a barrage
- * stress test (500 projectiles + 30 explosions/s) with FPS and draw-call readouts.
+ * stress test (650 projectiles + 30 explosions/s) with FPS and draw-call readouts.
  *
  * Automation: window.__FXLAB__ (scene presets, deterministic `advance`, stats). `?manual=1` disables the RAF
  * loop so captures step in fixed 1/60 frames; `?clean=1` hides the panels.
@@ -67,6 +67,8 @@ const shot = { side: 0, along: 0, y: 4, dist: 90, yaw: 0, pitch: 0.35 };
 const camTarget = new THREE.Vector3();
 const holds = new Map<number, { x: number; z: number; heading: number }>();
 const fpsSamples: number[] = [];
+const fxMs: number[] = [];
+const perfFrames: number[] = [];
 let lastNow = performance.now();
 
 const services: RenderServices = {
@@ -96,10 +98,6 @@ function tick(dt: number): void {
   const s = sim.state;
   s.director.budget = -1e6;
   s.director.nextBossIndex = 99;
-  s.sea.timeOfDay = hour;
-  s.sea.weather = s.sea.nextWeather = weather;
-  s.sea.rain = weather === 'storm' ? 1 : 0;
-  s.sea.fog = weather === 'fog' ? 1 : 0;
   if (s.status === 'levelup' || s.status === 'chest') sim.chooseCard(0);
   sim.setInput({ steer: 0, aimX: aim.x, aimZ: aim.z, broadsideHeld: false, throttleAxis: 0 });
   // fake special states the skeleton sim does not implement yet
@@ -108,6 +106,13 @@ function tick(dt: number): void {
   if (subT > 0) { subT = Math.max(0, subT - dt * slow); p.submerged = subT > 0.2 ? Math.min(1, (3 - subT) * 3) : subT * 5; if (subT === 0) p.submerged = 0; }
   if (barrage) runBarrage(dt);
   if (!paused) sim.step(dt * slow);
+  // the sim's sea-state schedule runs inside step(); the lab's time-of-day/weather overrides win afterwards
+  s.sea.timeOfDay = hour;
+  s.sea.weather = s.sea.nextWeather = weather;
+  s.sea.blend = 1;
+  s.sea.rain = weather === 'storm' ? 1 : 0;
+  s.sea.fog = weather === 'fog' ? 1 : 0;
+  s.sea.waveScale = weather === 'storm' ? 1.7 : weather === 'fog' ? 0.7 : 0.8;
   if (hold) for (const e of s.enemies) {
     const h = holds.get(e.id);
     if (h && e.life === 'alive') { e.x = h.x; e.z = h.z; e.heading = h.heading; e.vx = e.vz = 0; e.speed = 0; }
@@ -123,7 +128,14 @@ function tick(dt: number): void {
     focus: { x: p.x, z: p.z, heading: p.heading, speed: p.speed }, menuShip: null, aim: { x: aim.x, z: aim.z }, world,
     quality, settings, viewport: { width: vp.width, height: vp.height, dpr: host.renderer.getPixelRatio() }, atmosphere, services,
   };
-  for (const system of systems) system.update(ctx);
+  for (const system of systems) {
+    if (system === fx) {
+      const t0 = performance.now();
+      system.update(ctx);
+      fxMs.push(performance.now() - t0);
+      if (fxMs.length > 1200) fxMs.shift();
+    } else system.update(ctx);
+  }
   applyCameraPreset(p.x, p.z, p.heading);
   post.update(dt);
   host.render(() => post.render(host.scene, host.camera));
@@ -169,6 +181,8 @@ function frame(now: number): void {
   lastNow = now;
   fpsSamples.push(dt);
   if (fpsSamples.length > 90) fpsSamples.shift();
+  perfFrames.push(dt);
+  if (perfFrames.length > 1200) perfFrames.shift();
   tick(dt);
   if (Math.round(now / 250) !== Math.round((now - dt * 1000) / 250)) drawStats();
 }
@@ -280,7 +294,7 @@ function runBarrage(dt: number): void {
   for (const q of s.projectiles) if (q.alive) alive++;
   const kinds: ProjectileKind[] = ['cannonball', 'enemy-cannonball', 'chain-shot', 'heavy-shot', 'grapeshot', 'rocket', 'mortar-shell', 'water-bolt', 'skiff-shot', 'enemy-chaser'];
   let guard = 0;
-  while (alive < 500 && guard++ < 80) {
+  while (alive < 650 && guard++ < 90) {
     const a = Math.random() * Math.PI * 2;
     const r = 60 + Math.random() * 90;
     const kind = kinds[(Math.random() * kinds.length) | 0]!;
@@ -491,6 +505,7 @@ declare global {
       scene(name: string): void;
       advance(seconds: number): void;
       stats(): unknown;
+      perf(reset: boolean): unknown;
       set(opts: { hour?: number; weather?: SeaState['weather']; cam?: typeof camPreset; barrage?: boolean; quality?: QualityTier; juice?: boolean }): void;
       emit(label: string): void;
       fx: FxSystem;
@@ -507,6 +522,22 @@ async function boot(): Promise<void> {
     scene: (name) => { barrage = false; weather = 'clear'; seedFx(1234567); scenes[name]?.(); },
     advance: (seconds) => { const n = Math.round(seconds * 60); for (let i = 0; i < n; i++) tick(1 / 60); drawStats(); },
     stats: () => ({ metrics: host.getMetrics(), fx: { ...fx.stats }, fxDraws: fxDrawCalls(), juice: { ...fx.juice.last }, post: { ...post.counts } }),
+    perf: (reset: boolean) => {
+      if (reset) { perfFrames.length = 0; fxMs.length = 0; return null; }
+      const sorted = [...perfFrames].sort((a, b) => a - b);
+      const avg = perfFrames.reduce((a, b) => a + b, 0) / Math.max(1, perfFrames.length);
+      const fxAvg = fxMs.reduce((a, b) => a + b, 0) / Math.max(1, fxMs.length);
+      const fxSorted = [...fxMs].sort((a, b) => a - b);
+      const s = sim.state;
+      return {
+        frames: perfFrames.length, fps: 1 / Math.max(1e-6, avg), p95ms: (sorted[Math.floor(sorted.length * 0.95)] ?? 0) * 1000,
+        worstMs: (sorted[sorted.length - 1] ?? 0) * 1000, fxUpdateMs: fxAvg, fxUpdateMaxMs: Math.max(0, ...fxMs),
+        fxP50: fxSorted[Math.floor(fxSorted.length * 0.5)] ?? 0, fxP99: fxSorted[Math.floor(fxSorted.length * 0.99)] ?? 0,
+        fxOver4ms: fxMs.filter((v) => v > 4).length, framesOver20ms: perfFrames.filter((v) => v > 0.02).length,
+        projectiles: s.projectiles.filter((q) => q.alive).length, drawCalls: host.getMetrics().drawCalls, fxDraws: fxDrawCalls(),
+        triangles: host.getMetrics().triangles, debris: fx.stats.debris,
+      };
+    },
     set: (o) => {
       if (o.hour !== undefined) hour = o.hour;
       if (o.weather) weather = o.weather;

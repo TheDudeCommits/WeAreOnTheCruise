@@ -101,6 +101,8 @@ export class StateFx {
   private prevSub = 0;
   private emitPlayer = 0;
 
+  private readonly waterY = (x: number, z: number): number => this.fx.wy(x, z);
+
   constructor(private readonly k: FxKit, private readonly fx: Sakuga, private readonly events: EventFx) {}
 
   reset(): void {
@@ -209,7 +211,7 @@ export class StateFx {
 
   private harpoonRope(run: Readonly<RunState>, x: number, y: number, z: number): void {
     const f = this.frame;
-    if (!shipFrame(run, this.k.ships, 0, f, (a, b) => this.fx.wy(a, b))) return;
+    if (!shipFrame(run, this.k.ships, 0, f, this.waterY)) return;
     const bx = f.x + f.fx * f.length * 0.48, bz = f.z + f.fz * f.length * 0.48;
     this.k.ropes.add(bx, f.gunY + 0.5, bz, x, y, z, 0.6, 0.18, 0.36, 0.22, 0.1, 0);
   }
@@ -284,7 +286,7 @@ export class StateFx {
       case 'fire-patch': {
         const r = h.radius;
         const count = Math.max(3, Math.min(12, Math.round(r / 2)));
-        for (let j = 0; j < count; j++) this.loopFlame(h.x, wy, h.z, r * 0.8, r * 0.42 * fade, id, j, CelPal.Fire);
+        for (let j = 0; j < count; j++) this.loopFlame(h.x, wy, h.z, r * 0.75, r * 0.62 * fade, id, j, CelPal.Fire);
         k.decals.imm(Decal.Glow, h.x, h.z, r * 1.4, r * 1.4, 0, 14, 0, 0xff8a2a, 0, 0xff8a2a, 1.1 * fade, 0.5, 0.5);
         if (rand() < dt * 3 * k.q) fx.smoke(h.x + spread(r * 0.5), wy + r * 0.5, h.z + spread(r * 0.5), 1, r * 0.3, r * 0.8, CelPal.DarkSmoke, 2.2, 0, 3, 0, 1, 2.6, 0.5, 0, 0.4);
         if (rand() < dt * 4 * k.q) fx.embers(h.x, wy + 1, h.z, 1, r * 0.6);
@@ -602,7 +604,7 @@ export class StateFx {
         }
         case 'hooked': {
           const f = this.frame;
-          if (this.lastRun && shipFrame(this.lastRun, k.ships, 0, f, (x, z) => fx.wy(x, z))) {
+          if (this.lastRun && shipFrame(this.lastRun, k.ships, 0, f, this.waterY)) {
             const bx = f.x + f.fx * f.length * 0.48, bz = f.z + f.fz * f.length * 0.48;
             const tension = Math.max(0.2, 3 - Math.hypot(s.x - bx, s.z - bz) * 0.02);
             k.ropes.add(bx, f.gunY + 0.5, bz, s.x, wy + Math.max(3, L * 0.12), s.z, tension, 0.22, 0.36, 0.22, 0.1, 0);
@@ -625,7 +627,7 @@ export class StateFx {
     const p = run.player;
     if (!p.alive) { this.prevAir = this.prevSub = 0; return; }
     const f = this.frame;
-    shipFrame(run, k.ships, 0, f, (x, z) => fx.wy(x, z));
+    shipFrame(run, k.ships, 0, f, this.waterY);
     const wy = fx.wy(p.x, p.z);
     const L = p.length;
     this.emitPlayer += dt;
@@ -767,8 +769,8 @@ export class StateFx {
     const sx = Math.cos(p.heading), sz = -Math.sin(p.heading);
     const side = (ctx.aim.x - p.x) * sx + (ctx.aim.z - p.z) * sz >= 0 ? 1 : -1;
     const angle = p.heading + (side > 0 ? Math.PI / 2 : -Math.PI / 2);
-    const slot = p.weapons.find((w) => w.id === 'broadside');
-    const level = slot ? slot.level : 1;
+    let level = 1;
+    for (let i = 0; i < p.weapons.length; i++) if (p.weapons[i]!.id === 'broadside') level = p.weapons[i]!.level;
     const range = CONTENT.weapons.broadside.levels[Math.max(0, Math.min(5, level - 1))]!.range * rangeMul(p.stats);
     d.imm(Decal.Wedge, p.x, p.z, range, range, angle, ready, (40 * Math.PI) / 180, PLAYER_MARK_HEX, 1, INK_HEX, 0, 0.5);
     // aimed special/ultimate target preview when ready

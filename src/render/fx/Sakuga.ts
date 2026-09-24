@@ -31,7 +31,7 @@ export class Sakuga {
 
   // ───────────────────────── helpers ─────────────────────────
 
-  wy(x: number, z: number): number { return this.k.ocean ? this.k.ocean.heightAt(x, z) : 0; }
+  wy(x: number, z: number): number { return this.k.water.height(x, z); }
 
   private n(count: number, min = 1): number { return Math.max(min, Math.round(count * this.k.q)); }
 

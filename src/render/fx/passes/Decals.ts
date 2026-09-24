@@ -227,11 +227,11 @@ void main() {
     // compact fan at the hull (which side fires) + a faint dotted arc at the gun range
     float near = 1.0 - smoothstep(0.2, 0.36, rr);
     float edgeA = band(ang - halfA + 0.01, 0.01, aa2) * smoothstep(0.08, 0.14, rr) * near;
-    float arc = band(rr - 0.99, 0.005, aa) * step(0.55, fract(ang * 14.0));
+    float arc = band(rr - 0.99, 0.0035, aa) * step(0.6, fract(ang * 16.0));
     float ready = clamp(vP.x, 0.0, 1.0);
     float fill = (0.05 + 0.09 * ready) * near * smoothstep(0.08, 0.3, rr);
     float chev = band(fract(rr * 10.0 - uRealTime * 1.2) - 0.5, 0.05, 0.02) * near * smoothstep(0.1, 0.16, rr) * ready;
-    float a = inside * (fill + chev * 0.35 + edgeA * (0.3 + 0.45 * ready) + arc * (0.12 + 0.18 * ready));
+    float a = inside * (fill + chev * 0.35 + edgeA * (0.3 + 0.45 * ready) + arc * (0.08 + 0.12 * ready));
     alpha = a;
     paint = c1 * a;
     add = c1 * (edgeA + arc) * inside * 0.25 * ready;

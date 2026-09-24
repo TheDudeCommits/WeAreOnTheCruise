@@ -2,6 +2,7 @@
  * Shared handles every FX module uses: the passes, the juice aggregator and per-frame world context.
  */
 import type { OceanServices, ShipServices } from '../frame';
+import type { WaterSampler } from './core/water';
 import type { SpritePass } from './core/SpritePass';
 import type { BeamPass } from './passes/Beams';
 import type { DamageNumbers } from './passes/DamageNumbers';
@@ -26,6 +27,8 @@ export interface FxKit {
   numbers: DamageNumbers;
   walls: WaveWallPass;
   juice: Juice;
+  /** Allocation-free water height (shared Gerstner waves + per-frame offset vs OceanServices). */
+  water: WaterSampler;
   /** Per-frame services (null outside a frame). */
   ocean: OceanServices | null;
   ships: ShipServices | null;
