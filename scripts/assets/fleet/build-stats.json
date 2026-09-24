@@ -197,10 +197,10 @@
   },
   "corsair-galleon": {
     "file": "/assets/fleet/corsair-galleon.glb",
-    "bytes": 304272,
-    "sha256": "bbd86f6e729172d961ab7c92fd5333327821d1ed7399c90f55414600d45173fc",
+    "bytes": 304424,
+    "sha256": "0588fc703448907871d4d95e0e457709dbf87c54cf503193d4124e5b875714b7",
     "sourceSha256": "c9048bce2695ed9c4d6fd65f3f824d6a1f9c034c8572e2111dc890cc34980f03",
-    "tris": 21599,
+    "tris": 21618,
     "materials": 2,
     "draws": 2,
     "textures": 2,
@@ -208,12 +208,12 @@
     "size": [
       14.14,
       26.1,
-      44
+      43.97
     ],
     "min": [
       -7.07,
       -3.6,
-      -22
+      -21.97
     ],
     "max": [
       7.07,
@@ -247,6 +247,62 @@
       2.42,
       13.97,
       10
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "brig": {
+    "file": "/assets/fleet/brig.glb",
+    "bytes": 289368,
+    "sha256": "7e636bd4bb2bd62ec218f1886fdd7ceac95affffd57570f80b02c4755b19cb4f",
+    "sourceSha256": "6b12d15106dab8f727d9d99395a96c6b80a28d9f030db35d5202114a09063082",
+    "tris": 9731,
+    "materials": 4,
+    "draws": 4,
+    "textures": 4,
+    "maxTexture": 1024,
+    "size": [
+      9.78,
+      20.6,
+      28
+    ],
+    "min": [
+      -4.89,
+      -2.2,
+      -14
+    ],
+    "max": [
+      4.89,
+      18.4,
+      14
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "frigate": {
+    "file": "/assets/fleet/frigate.glb",
+    "bytes": 196852,
+    "sha256": "c043dcd4dfe1ff71d25343b3c78a6de6df40f5ea8c310a5f9da1ad6d3360c4bd",
+    "sourceSha256": "2e0ffe3f451ed6399e560ec4859ed3af8efca8666eedcd7fbf49e27607695eed",
+    "tris": 23152,
+    "materials": 5,
+    "draws": 5,
+    "textures": 3,
+    "maxTexture": 1024,
+    "size": [
+      20.59,
+      35.91,
+      38
+    ],
+    "min": [
+      -10.3,
+      -3.2,
+      -19
+    ],
+    "max": [
+      10.29,
+      32.71,
+      19
     ],
     "clips": [],
     "built": "2026-09-24"

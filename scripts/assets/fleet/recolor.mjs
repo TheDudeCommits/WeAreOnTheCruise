@@ -46,7 +46,49 @@ export async function remapPalette(tex, pairs, tol = 10) {
   });
 }
 
+/**
+ * Paint a textured wooden hull in Admiralty colours: side-facing triangles below `deckY` get a white-painted copy of the
+ * texture, the band below `navyTop` a navy copy. Deck (up-facing) and rigging keep the source wood.
+ */
+export async function paintHull(doc, { material, deckY, navyTop, minSide = 0.35, white = WHITE_RAMP, navy = NAVY_RAMP, filter = null }) {
+  const src = doc.getRoot().listMaterials().find((m) => m.getName() === material);
+  if (!src) throw new Error(`paintHull: no material ${material}`);
+  const W = L.cloneMaterial(doc, src, `${material}-admiralty-white`), N = L.cloneMaterial(doc, src, `${material}-admiralty-navy`);
+  await rampOne(W, white); await rampOne(N, navy);
+  let moved = 0;
+  for (const mesh of doc.getRoot().listMeshes()) for (const prim of [...mesh.listPrimitives()]) {
+    if (prim.getMaterial() !== src) continue;
+    moved += L.splitPrimitive(doc, mesh, prim, (t) => t.centroid[1] < navyTop && Math.abs(t.normal[1]) < 0.9 && (!filter || filter(t)), N);
+  }
+  for (const mesh of doc.getRoot().listMeshes()) for (const prim of [...mesh.listPrimitives()]) {
+    if (prim.getMaterial() !== src) continue;
+    moved += L.splitPrimitive(doc, mesh, prim, (t) => t.centroid[1] < deckY && Math.hypot(t.normal[0], t.normal[2]) > minSide && (!filter || filter(t)), W);
+  }
+  return moved;
+}
+const WHITE_RAMP = [[0, '#8a857d'], [0.12, '#cfcabe'], [0.3, '#ece7dc'], [1, '#fdfaf2']];
+const NAVY_RAMP = [[0, '#0b1127'], [0.35, '#1a2750'], [0.7, '#27396e'], [1, '#4a5f98']];
+async function rampOne(mat, stops) { const t = mat.getBaseColorTexture(); const f = L.ramp(stops); if (t) await L.editTexture(t, (r, g, b, a) => [...f(L.lum(r, g, b)), a]); }
+
 export const RECOLOR = {
+  /** Greggory_Fisher "Low-Poly Pirate Ship" (flat colours) → Admiralty frigate: white upper hull, navy lower hull, gold trim. */
+  async admiraltyFrigate({ doc }) {
+    await L.sailify(doc, { name: 'admiralty-sail', svg: SVG('admiralty-sail'), select: (t, i) => /M_Sail_0[12]/.test(i.material) });
+    await L.sailify(doc, { name: 'admiralty-flag', svg: SVG('admiralty-flag'), layout: 'full', texSize: [256, 256], select: (t, i) => i.material === 'M_Flag_02' });
+    flatColors(doc, {
+      M_Wood_Maroon: '#f2efe6', M_Wood_Dark: '#1d2b53', M_Wood_Light: '#8a6a48', M_Gold_Dark: '#e2b23a', M_Gold_Light: '#f0c85a',
+      M_Metal_Dark: '#2e3036', M_Metal_Light: '#6d7079', M_Rope: '#8c7a5b', M_Window: '#2b3d63', M_Shadows: '#141414',
+      MI_Base_Wood_Dark: '#4a3526', M_Barrel_Wood_1: '#7a5433', M_Barrel_Wood_2: '#5e3f26', M_Cannon_01: '#1e1f23', M_Cannon_02: '#2c2d33',
+      M_Cannon_Wood_01: '#6b4a2e', M_Cannon_Wood_02: '#57391f',
+    });
+  },
+
+  /** anagvf "Pirate Ship (Low Poly)" → Admiralty brig: white topsides, navy bottom band, wave-crest sails. */
+  async admiraltyBrig({ doc }) {
+    await L.sailify(doc, { name: 'admiralty-sail', svg: SVG('admiralty-sail'), select: (t, i) => i.texel && Math.min(...i.texel) > 150 && t.centroid[1] > 4 });
+    await paintHull(doc, { material: 'Scene_-_Root', deckY: 7.5, navyTop: 0.6, filter: (t) => !(Math.abs(t.centroid[0]) < 1.3 && Math.abs(t.centroid[2]) < 11) });
+  },
+
   /** Razer820 "Low Poly Sloop" → Admiralty cutter: white topsides, navy bottom, gold stripe, wave-crest sails. */
   async admiraltyCutter({ doc }) {
     const hull = doc.getRoot().listMaterials().find((m) => m.getName() === 'Boat_sketch_mat');

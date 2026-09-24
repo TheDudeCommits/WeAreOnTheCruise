@@ -162,7 +162,7 @@
       "draft": 3.6,
       "beam": 14.14,
       "height": 22.5,
-      "tris": 21599,
+      "tris": 21618,
       "materials": 2,
       "role": "enemy",
       "source": {
@@ -173,8 +173,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/fe0ea2cee119476fb1a7524d5ff380dc"
       },
-      "bytes": 304272,
-      "sha256": "bbd86f6e729172d961ab7c92fd5333327821d1ed7399c90f55414600d45173fc",
+      "bytes": 304424,
+      "sha256": "0588fc703448907871d4d95e0e457709dbf87c54cf503193d4124e5b875714b7",
       "sourceSha256": "c9048bce2695ed9c4d6fd65f3f824d6a1f9c034c8572e2111dc890cc34980f03",
       "notes": "Redtide galleon: flat colours remapped to the Redtide palette (black hull, red trim) and baked into one palette texture; new red sails with the original cutlass-and-sun emblem. Decimated from 74k tris."
     },
@@ -199,6 +199,50 @@
       "sha256": "1a9180242be4125afe5e79cd210941eea94263c26ce25491b9215a232a3a2b64",
       "sourceSha256": "47e1b1ed42ea2bc66695667dbcf12ca87eb682b694f2b0ae361c9382388612c5",
       "notes": "Admiralty Cutter (enemy id cutter uses modelKey sloop): palette swapped to white topsides / navy bottom / gold stripe; skull sail replaced by white canvas with the original gold wave-crest."
+    },
+    "brig": {
+      "file": "/assets/fleet/brig.glb",
+      "length": 28,
+      "draft": 2.2,
+      "beam": 9.78,
+      "height": 18.4,
+      "tris": 9731,
+      "materials": 4,
+      "role": "enemy",
+      "source": {
+        "kind": "sketchfab",
+        "uid": "d9953f66583340c4879a3770f6d09a37",
+        "author": "anagvf",
+        "title": "Pirate Ship (Low Poly)",
+        "license": "CC-BY-4.0",
+        "url": "https://sketchfab.com/3d-models/d9953f66583340c4879a3770f6d09a37"
+      },
+      "bytes": 289368,
+      "sha256": "7e636bd4bb2bd62ec218f1886fdd7ceac95affffd57570f80b02c4755b19cb4f",
+      "sourceSha256": "6b12d15106dab8f727d9d99395a96c6b80a28d9f030db35d5202114a09063082",
+      "notes": "Admiralty Brig: hull sides repainted white with a navy boot-top (texture copies through luminance ramps), sails re-mapped to white canvas with the original gold wave-crest."
+    },
+    "frigate": {
+      "file": "/assets/fleet/frigate.glb",
+      "length": 38,
+      "draft": 3.2,
+      "beam": 20.59,
+      "height": 32.71,
+      "tris": 23152,
+      "materials": 5,
+      "role": "enemy",
+      "source": {
+        "kind": "sketchfab",
+        "uid": "c5e06cf1ba164b749cb47044fe7b86eb",
+        "author": "Greggory_Fisher",
+        "title": "Low-Poly Pirate Ship",
+        "license": "CC-BY-4.0",
+        "url": "https://sketchfab.com/3d-models/c5e06cf1ba164b749cb47044fe7b86eb"
+      },
+      "bytes": 196852,
+      "sha256": "c043dcd4dfe1ff71d25343b3c78a6de6df40f5ea8c310a5f9da1ad6d3360c4bd",
+      "sourceSha256": "2e0ffe3f451ed6399e560ec4859ed3af8efca8666eedcd7fbf49e27607695eed",
+      "notes": "Admiralty Frigate: flat colours remapped (white upper hull, navy lower hull, gold trim) and baked into one palette texture; black sails re-mapped to white canvas with the original gold wave-crest; loose deck clutter (cannonballs, cups, bottles) removed; decimated from 73k tris."
     }
   }
 }

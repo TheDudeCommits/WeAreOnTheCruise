@@ -66,6 +66,19 @@ export const JOBS = [
     source: SKETCHFAB('1b27f1f60e0e49f886984ea099977757', 'Low Poly Sloop Sailing Ship', 'Razer820'),
     notes: 'Admiralty Cutter (enemy id cutter uses modelKey sloop): palette swapped to white topsides / navy bottom / gold stripe; skull sail replaced by white canvas with the original gold wave-crest.',
   },
+  {
+    key: 'brig', role: 'enemy', src: 'src/d9953f66583340c4879a3770f6d09a37/source.glb', yaw: 180, length: 28, draft: 2.2, tris: 14000, tex: 1024,
+    recolor: (ctx) => RECOLOR.admiraltyBrig(ctx),
+    source: SKETCHFAB('d9953f66583340c4879a3770f6d09a37', 'Pirate Ship (Low Poly)', 'anagvf'),
+    notes: 'Admiralty Brig: hull sides repainted white with a navy boot-top (texture copies through luminance ramps), sails re-mapped to white canvas with the original gold wave-crest.',
+  },
+  {
+    key: 'frigate', role: 'enemy', src: 'src/c5e06cf1ba164b749cb47044fe7b86eb/source.glb', yaw: 245.67, length: 38, draft: 3.2, tris: 24000, tex: 1024, palette: process.env.NOPAL ? false : true,
+    exclude: /Cannon_Balls|M_Cups|Bottle|M_Rum|Black_Powder|lambert/,
+    recolor: (ctx) => RECOLOR.admiraltyFrigate(ctx),
+    source: SKETCHFAB('c5e06cf1ba164b749cb47044fe7b86eb', 'Low-Poly Pirate Ship', 'Greggory_Fisher'),
+    notes: 'Admiralty Frigate: flat colours remapped (white upper hull, navy lower hull, gold trim) and baked into one palette texture; black sails re-mapped to white canvas with the original gold wave-crest; loose deck clutter (cannonballs, cups, bottles) removed; decimated from 73k tris.',
+  },
 ];
 
 export { RECOLOR };

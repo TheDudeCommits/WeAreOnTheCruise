@@ -18,7 +18,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { core, fn, mo, sharp, makeIO, countTris } from './tools.mjs';
+import { core, fn, ext, mo, sharp, makeIO, countTris } from './tools.mjs';
 import * as L from './lib.mjs';
 import { JOBS, SRC } from './jobs.mjs';
 
@@ -97,7 +97,6 @@ async function build(job) {
 
   // 5. geometry
   await doc.transform(fn.dedup(), fn.prune());
-  if (job.palette) await doc.transform(fn.palette({ min: 2, keepAttributes: false }));
   if (!skinned) await doc.transform(fn.join({ keepNamed: false }));
   await doc.transform(fn.weld());
   let tris = countTris(doc);
@@ -110,9 +109,15 @@ async function build(job) {
     tris = countTris(doc);
   }
   await doc.transform(fn.dedup(), fn.prune(), fn.resample());
+  if (job.palette) {
+    // after simplification (per-material primitives), bake flat colours into one palette strip and merge
+    await doc.transform(fn.palette({ min: 2, keepAttributes: false, blockSize: 8 }));
+    for (const m of root.listMaterials()) if (m.getBaseColorTexture()?.getName() === 'PaletteBaseColor') m.getBaseColorTextureInfo().setMinFilter(core.TextureInfo.MinFilter.NEAREST).setMagFilter(core.TextureInfo.MagFilter.NEAREST);
+    await doc.transform(fn.join({ keepNamed: false }), fn.prune());
+  }
 
   // 6. textures
-  await doc.transform(fn.textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [job.tex || 1024, job.tex || 1024], quality: job.webpQuality || 86 }));
+  await compressTextures(doc, job.tex || 1024, job.webpQuality || 86);
 
   // 7. compression
   await doc.transform(fn.meshopt({ encoder: mo.MeshoptEncoder, level: 'medium' }));
@@ -143,6 +148,23 @@ async function build(job) {
   };
 }
 
+/** WebP everything: palettes/small textures lossless, the rest lossy and fitted within maxSize². */
+async function compressTextures(doc, maxSize, quality) {
+  const root = doc.getRoot(); if (!root.listTextures().length) return;
+  for (const tex of root.listTextures()) {
+    const img = sharp(Buffer.from(tex.getImage()));
+    const meta = await img.metadata();
+    const small = /^Palette/.test(tex.getName()) || Math.max(meta.width, meta.height) <= 256;
+    const scaleDown = Math.min(1, maxSize / Math.max(meta.width, meta.height));
+    let pipe = sharp(Buffer.from(tex.getImage()));
+    if (scaleDown < 1) pipe = pipe.resize(Math.round(meta.width * scaleDown), Math.round(meta.height * scaleDown), { kernel: 'lanczos3' });
+    const out = await pipe.webp(small ? { lossless: true } : { quality, effort: 5, smartSubsample: true }).toBuffer();
+    tex.setImage(new Uint8Array(out)).setMimeType('image/webp');
+    if (tex.getURI()) tex.setURI(tex.getURI().replace(/\.(png|jpe?g|webp)$/i, '') + '.webp');
+  }
+  doc.createExtension(ext.EXTTextureWebP).setRequired(true);
+}
+
 /** Last-resort topology-agnostic decimation (meshopt simplifySloppy) for meshes whose UV seams stall simplify. */
 async function sloppy(doc, ratio) {
   for (const mesh of doc.getRoot().listMeshes()) for (const prim of mesh.listPrimitives()) {
@@ -150,7 +172,7 @@ async function sloppy(doc, ratio) {
     const indices = new Uint32Array(idx.getArray());
     const positions = pos.getArray() instanceof Float32Array ? pos.getArray() : new Float32Array(pos.getArray());
     const targetCount = Math.max(3, Math.floor((indices.length * ratio) / 3) * 3);
-    const [out] = mo.MeshoptSimplifier.simplifySloppy(indices, positions, 3, targetCount, 0.05);
+    const [out] = mo.MeshoptSimplifier.simplifySloppy(indices, positions, 3, null, targetCount, 0.05);
     idx.setArray(pos.getCount() > 65535 ? out : new Uint16Array(out));
   }
 }
