@@ -45,6 +45,7 @@ export class Mixer {
   readonly pauseFilter: BiquadFilterNode;
   readonly pauseGain: GainNode;
   private readonly worldBus: GainNode;
+  private analyser: AnalyserNode | null = null;
   private readonly ducks: ActiveDuck[] = [];
   private pauseMode: PauseMode = 'none';
   /** Last applied duck values (debug readout). */
@@ -95,6 +96,16 @@ export class Mixer {
     this.musicDuck.connect(this.music);
     this.musicMix = g();
     this.musicMix.connect(this.musicDuck);
+  }
+
+  /** Post-limiter analyser (lab meters / QA evidence that sound is flowing). */
+  tap(): AnalyserNode {
+    if (!this.analyser) {
+      this.analyser = this.ctx.createAnalyser();
+      this.analyser.fftSize = 2048;
+      this.limiter.connect(this.analyser);
+    }
+    return this.analyser;
   }
 
   bus(id: BusId): AudioNode {
@@ -157,8 +168,8 @@ export class Mixer {
   }
 
   dispose(): void {
-    for (const n of [this.master, this.limiter, this.sfx, this.glue, this.music, this.musicMix, this.musicDuck, this.ui, this.world, this.worldDucked, this.ambience, this.pauseFilter, this.pauseGain, this.worldBus]) {
-      try { n.disconnect(); } catch { /* already disconnected */ }
+    for (const n of [this.analyser, this.master, this.limiter, this.sfx, this.glue, this.music, this.musicMix, this.musicDuck, this.ui, this.world, this.worldDucked, this.ambience, this.pauseFilter, this.pauseGain, this.worldBus]) {
+      try { n?.disconnect(); } catch { /* already disconnected */ }
     }
   }
 }

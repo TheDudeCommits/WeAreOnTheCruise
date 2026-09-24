@@ -86,6 +86,7 @@ export class AudioEngine implements AudioSystem {
   private readonly peakVoices = {} as Record<CategoryId, number>;
   private readonly recent: AudioLogEntry[] = [];
   private noteSource = 'direct';
+  private meterBuf: Float32Array<ArrayBuffer> | null = null;
   private hidden = false;
   private disposed = false;
 
@@ -218,6 +219,20 @@ export class AudioEngine implements AudioSystem {
   }
 
   listenerFrame(): Readonly<ListenerFrame> { return this.listener; }
+
+  /** Post-limiter analyser (null before unlock). */
+  tap(): AnalyserNode | null { return this.mixer?.tap() ?? null; }
+
+  /** Instantaneous output level (dBFS) from the post-limiter tap. */
+  meter(): { rmsDb: number; peakDb: number } | null {
+    const a = this.tap();
+    if (!a) return null;
+    const buf = this.meterBuf && this.meterBuf.length === a.fftSize ? this.meterBuf : (this.meterBuf = new Float32Array(a.fftSize));
+    a.getFloatTimeDomainData(buf);
+    let sum = 0, peak = 0;
+    for (let i = 0; i < buf.length; i++) { const v = buf[i]!; sum += v * v; const m = Math.abs(v); if (m > peak) peak = m; }
+    return { rmsDb: +(10 * Math.log10(sum / buf.length + 1e-12)).toFixed(1), peakDb: +(20 * Math.log10(peak + 1e-9)).toFixed(1) };
+  }
 
   stats(): AudioStatsSnapshot {
     const now = this.ctx?.currentTime ?? 0;
@@ -398,6 +413,7 @@ export class AudioEngine implements AudioSystem {
       log: (n?: number) => this.recentLog(n),
       reset: () => this.resetStats(),
       play: (cue: CueId, opts?: PlayOptions) => this.playCue(cue, opts),
+      meter: () => this.meter(),
     };
   }
 }
