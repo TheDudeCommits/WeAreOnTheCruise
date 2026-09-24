@@ -104,6 +104,8 @@ export class AudioEngine implements AudioSystem {
     if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       this.ui.attach();
       document.addEventListener('visibilitychange', this.onVisibility);
+      // Keyboard-only players: the first key press is a user gesture too (GameApp wires pointer gestures).
+      window.addEventListener('keydown', this.onKeyGesture, true);
       if (options.debugGlobal !== false) (window as unknown as { __CRUISE_AUDIO__?: unknown }).__CRUISE_AUDIO__ = this.debugApi();
       void this.loadManifest();
     }
@@ -190,6 +192,7 @@ export class AudioEngine implements AudioSystem {
     this.disposed = true;
     this.ui.detach();
     if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', this.onVisibility);
+    if (typeof window !== 'undefined') window.removeEventListener('keydown', this.onKeyGesture, true);
     this.director?.dispose();
     this.ambience?.dispose();
     this.pool?.dispose();
@@ -398,6 +401,12 @@ export class AudioEngine implements AudioSystem {
     if (def.duck) this.duck(def.duck, delay);
     return true;
   }
+
+  private readonly onKeyGesture = (ev: KeyboardEvent): void => {
+    if (ev.repeat || ev.isTrusted === false) return;
+    void this.unlock().then(() => { if (this.settings) this.applySettings(this.settings); }).catch(() => undefined);
+    if (this.isUnlocked) window.removeEventListener('keydown', this.onKeyGesture, true);
+  };
 
   private readonly onVisibility = (): void => {
     this.hidden = document.hidden;

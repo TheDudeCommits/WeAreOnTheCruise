@@ -524,6 +524,8 @@ Every file in \`public/audio/\` is built by \`scripts/audio/build.mjs\` from the
 \`scripts/audio/recipe.mjs\`). Licences are CC0 1.0 or CC BY 3.0/4.0 only — no NC/ND/Sampling+ or
 "royalty-free" licences, no audio extracted from commercial games. Each source's licence was verified on its
 own page on ${manifest.generated}. SHA-256 of each original download and of each shipped file is recorded.
+Freesound originals were fetched as the site's public HQ preview encodes (no API key); Kenney files come from
+the official kenney.nl pack zips (member path shown); OpenGameArt files are the uploads linked on each page.
 
 Totals: ${Object.keys(manifest.files).length} shipped files, ${(total / 1048576).toFixed(2)} MB; ${usedSources.size} sources (${Object.entries(byLicense).map(([k, v]) => `${v} ${k}`).join(', ')}).
 
