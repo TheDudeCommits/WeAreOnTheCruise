@@ -45,6 +45,7 @@ const ENEMY_FIRE_CUE: Record<ProjectileKind, CueId> = {
   'mortar-shell': 'mortar-launch', bomblet: 'mortar-launch', 'swivel-shot': 'swivel-shot', grapeshot: 'swivel-shot', harpoon: 'harpoon-throw',
   rocket: 'rocket-launch', torpedo: 'rocket-launch', 'skiff-shot': 'swivel-shot',
   'enemy-cannonball': 'cannon-near', 'enemy-chaser': 'bow-chaser', 'enemy-mortar': 'mortar-launch', 'water-bolt': 'water-bolt', 'boss-shell': 'heavy-shot',
+  'enemy-harpoon': 'harpoon-throw', 'enemy-bomb': 'mortar-launch', 'enemy-flare': 'rocket-launch',
 };
 
 /** Ship hit by a projectile kind (non-boss targets). */
@@ -53,6 +54,7 @@ const HIT_CUE: Record<ProjectileKind, CueId> = {
   'mortar-shell': 'hit-wood-heavy', bomblet: 'hit-wood', 'swivel-shot': 'hit-wood-light', grapeshot: 'hit-wood-light', harpoon: 'harpoon-hit',
   rocket: 'explosion-small', torpedo: 'explosion-water', 'skiff-shot': 'hit-wood-light',
   'enemy-cannonball': 'hit-wood', 'enemy-chaser': 'hit-wood', 'enemy-mortar': 'hit-wood-heavy', 'water-bolt': 'splash-small', 'boss-shell': 'hit-wood-heavy',
+  'enemy-harpoon': 'harpoon-hit', 'enemy-bomb': 'hit-wood-heavy', 'enemy-flare': 'hit-wood-light',
 };
 
 const BIG_SPLASH = new Set<ProjectileKind>(['heavy-shot', 'mortar-shell', 'enemy-mortar', 'boss-shell', 'torpedo', 'lance']);

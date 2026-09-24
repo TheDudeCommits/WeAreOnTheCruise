@@ -39,9 +39,12 @@ export function enemyDamageScale(c: SimContext): number {
   return DIRECTOR.damageScale(c.state.time / 60, difficulty(c));
 }
 
-/** Enemy attack damage after time/difficulty and elite scaling. */
+/** Damage multiplier inside a Commander elite's aura (e.ai.fbuf bit 2 = BUFF_AURA, set by ai-foes.ts). */
+const AURA_DAMAGE = 1.2;
+
+/** Enemy attack damage after time/difficulty, elite scaling and a Commander's aura. */
 export function enemyDamage(c: SimContext, e: EnemyState, base: number): number {
-  return base * enemyDamageScale(c) * (e.elite ? DIRECTOR.eliteDamage : 1);
+  return base * enemyDamageScale(c) * (e.elite ? DIRECTOR.eliteDamage : 1) * (((e.ai.fbuf ?? 0) & 2) ? AURA_DAMAGE : 1);
 }
 
 /** Boss attack damage (bosses scale half as fast as the fleet). */

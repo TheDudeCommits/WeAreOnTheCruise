@@ -23,6 +23,7 @@ const HIT_SCALE: Record<ProjectileKind, number> = {
   cannonball: 1, 'chain-shot': 1.1, 'heavy-shot': 1.35, 'chaser-shot': 1.15, lance: 1.2, 'mortar-shell': 1.3, bomblet: 0.8,
   'swivel-shot': 0.45, grapeshot: 0.4, harpoon: 0.7, rocket: 1.1, torpedo: 1.4, 'skiff-shot': 0.6, 'enemy-cannonball': 0.95,
   'enemy-chaser': 1.0, 'enemy-mortar': 1.3, 'water-bolt': 1.2, 'boss-shell': 1.4,
+  'enemy-harpoon': 0.7, 'enemy-bomb': 1.3, 'enemy-flare': 0.5,
 };
 
 const enum Job { FinaleBurst = 1, FinaleEnd = 2, Shake = 3 }

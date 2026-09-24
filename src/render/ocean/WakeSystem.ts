@@ -87,6 +87,7 @@ const SPLASH_SIZE: Record<ProjectileKind, number> = {
   cannonball: 6, 'chain-shot': 6, 'heavy-shot': 8, 'chaser-shot': 6, lance: 7, 'mortar-shell': 11, bomblet: 5,
   'swivel-shot': 3, grapeshot: 3, harpoon: 3.5, rocket: 7, torpedo: 9, 'skiff-shot': 3, 'enemy-cannonball': 6,
   'enemy-chaser': 6, 'enemy-mortar': 11, 'water-bolt': 8, 'boss-shell': 10,
+  'enemy-harpoon': 3.5, 'enemy-bomb': 10, 'enemy-flare': 2,
 };
 
 export class WakeSystem {

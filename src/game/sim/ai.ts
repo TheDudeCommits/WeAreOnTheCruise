@@ -10,12 +10,15 @@
  *   behaviour: init mode t orbit flank skill reloadP reloadS windup windSide aimX aimZ tslot slotT retreated avoid
  *             hx hz tg lh lx lz leader fslot isLeader convoy detonate
  *   CORE:     contactCd (collisions.ts)
+ *   FOES:     round-1 classes are dispatched to ai-foes.ts by id (their keys are documented there); fbuf (signal-mark /
+ *             commander-aura buff bits), smoke + reveal (smoke screens hide ships from auto-targeting until they fire).
  */
 import { DIRECTOR } from '../content/director';
-import { ENEMY_AI } from '../content/enemies';
+import { ENEMY_AI, FOES } from '../content/enemies';
 import type { EnemyAttackDef, EnemyDef, EnemyState, StatusState } from '../types';
 import type { SimContext, Target } from './context';
 import { focusOf } from './targeting';
+import { BUFF_AURA, BUFF_MARK, FOE_AI, foeBuffs, foePrePass, smokeHidden } from './ai-foes';
 import { metaRuntime, type MetaRuntime } from './meta-runtime';
 import { enemyDamage } from './meta-spawn';
 import {
@@ -28,8 +31,8 @@ const blastScratch: Target[] = [];
 let fleet: MetaRuntime | null = null;
 
 /** Takes fire-control tokens for an attack; false = hold fire this tick. */
-function takeFire(e: EnemyState): boolean {
-  const cost = ENEMY_AI[e.defId].fireCost;
+export function takeFire(e: EnemyState): boolean {
+  const cost = ENEMY_AI[e.defId].fireCost * (((e.ai.fbuf ?? 0) & BUFF_MARK) ? FOES.signal.fireCost : 1);
   if (!fleet || fleet.fire < cost) return false;
   fleet.fire -= cost;
   return true;
@@ -52,6 +55,7 @@ export function updateEnemies(c: SimContext): void {
   const difficulty = c.content.seas[c.state.seaId].difficulty;
   rt.fire = Math.min(DIRECTOR.fireBank, rt.fire + DIRECTOR.fireRate(c.state.time / 60) * Math.pow(difficulty, DIRECTOR.fireDifficultyExp) * c.dt);
   fleet = rt;
+  foePrePass(c);
   // Rotate the update order every tick so no ship is always first in line for fire-control tokens.
   const n = enemies.length;
   const start = n > 0 ? c.state.tick % n : 0;
@@ -62,7 +66,11 @@ export function updateEnemies(c: SimContext): void {
     tickStatuses(c, e);
     const def = c.content.enemies[e.defId];
     if (e.ai.init !== 1) initEnemy(c, e);
+    e.ai.fbuf = foeBuffs(c, e);
+    if ((e.ai.reveal ?? 0) > 0) e.ai.reveal! -= c.dt;
+    const foe = FOE_AI[e.defId];
     if (e.ai.limbo !== 1 && c.hasStatus(e, 'stunned')) drift(c, e);
+    else if (foe) foe(c, e, def);
     else switch (def.behavior) {
       case 'swarm': swarm(c, e, def); break;
       case 'ram': rammer(c, e, def); break;
@@ -74,7 +82,7 @@ export function updateEnemies(c: SimContext): void {
       case 'lunge': lunge(c, e, def); break;
       case 'stationary': stationary(c, e, def); break;
     }
-    e.hidden = e.ai.limbo === 1 ? 1 : Math.max(e.ai.fade ?? 0, e.ai.sub ?? 0);
+    e.hidden = e.ai.limbo === 1 || smokeHidden(e) ? 1 : Math.max(e.ai.fade ?? 0, e.ai.sub ?? 0);
   }
 }
 
@@ -106,13 +114,13 @@ function tickStatuses(c: SimContext, e: EnemyState): void {
   }
 }
 
-function clearStatus(e: EnemyState, kind: StatusState['kind']): void {
+export function clearStatus(e: EnemyState, kind: StatusState['kind']): void {
   for (const st of e.statuses) if (st.kind === kind) st.time = Math.min(st.time, 1e-4);
 }
 
-/** Speed after heat, slows and hooks. */
-function baseSpeed(c: SimContext, e: EnemyState, def: EnemyDef): number {
-  let m = DIRECTOR.speedScale(c.state.time / 60);
+/** Speed after heat, slows, hooks and buffs. */
+export function baseSpeed(c: SimContext, e: EnemyState, def: EnemyDef): number {
+  let m = DIRECTOR.speedScale(c.state.time / 60) * (((e.ai.fbuf ?? 0) & BUFF_AURA) ? AURA_SPEED : 1) * affixSpeed(e);
   for (const st of e.statuses) {
     if (st.time <= 0) continue;
     if (st.kind === 'slowed') m *= 1 - Math.min(0.8, st.magnitude > 1 ? 0.4 : st.magnitude);
@@ -122,35 +130,59 @@ function baseSpeed(c: SimContext, e: EnemyState, def: EnemyDef): number {
 }
 
 /** Gunnery lead: grows with run time and captain skill (0 = current position, 1 = perfect intercept). */
-function gunLead(c: SimContext, e: EnemyState, attack: EnemyAttackDef): number {
+export function gunLead(c: SimContext, e: EnemyState, attack: EnemyAttackDef): number {
   const minute = c.state.time / 60;
-  return clamp(attack.lead * DIRECTOR.graceLead(minute) + e.ai.skill! * 0.45 * Math.min(1, minute / 14), 0, 0.95);
+  const mark = ((e.ai.fbuf ?? 0) & BUFF_MARK) ? FOES.signal.lead : 0;
+  return clamp(attack.lead * DIRECTOR.graceLead(minute) + e.ai.skill! * 0.45 * Math.min(1, minute / 14) + mark, 0, 0.95);
 }
 
-/** Spread tightens as crews get better. */
-function gunSpread(c: SimContext, e: EnemyState, attack: EnemyAttackDef): number {
+/** Spread tightens as crews get better (and on a marked target / inside a commander's aura). */
+export function gunSpread(c: SimContext, e: EnemyState, attack: EnemyAttackDef): number {
   const minute = c.state.time / 60;
-  return attack.spread * DIRECTOR.graceSpread(minute) * (1 - 0.4 * e.ai.skill! * Math.min(1, minute / 14));
+  const b = e.ai.fbuf ?? 0;
+  const buff = (b & BUFF_MARK ? FOES.signal.spread : 1) * (b & BUFF_AURA ? AURA_SPREAD : 1);
+  return attack.spread * DIRECTOR.graceSpread(minute) * (1 - 0.4 * e.ai.skill! * Math.min(1, minute / 14)) * buff;
 }
 
-/** Reload time after heat grace and elite drill. */
-function reloadTime(c: SimContext, e: EnemyState, attack: EnemyAttackDef): number {
-  return attack.cooldown * rand(c, 0.9, 1.1) * (e.elite ? 0.85 : 1) * DIRECTOR.graceReload(c.state.time / 60);
+/** Reload time after heat grace, elite drill and buffs. */
+export function reloadTime(c: SimContext, e: EnemyState, attack: EnemyAttackDef): number {
+  const b = e.ai.fbuf ?? 0;
+  const buff = (b & BUFF_MARK ? FOES.signal.reload : 1) * (b & BUFF_AURA ? AURA_RELOAD : 1) * affixReload(e);
+  return attack.cooldown * rand(c, 0.9, 1.1) * (e.elite ? 0.85 : 1) * DIRECTOR.graceReload(c.state.time / 60) * buff;
 }
+
+/** A ship that fires from inside a smoke screen gives itself away for a moment. */
+export function revealShooter(e: EnemyState): void {
+  e.ai.reveal = FOES.smoke.reveal;
+}
+
+/** Commander aura multipliers (speed, spread, reload) for ships near a Commander elite. */
+const AURA_SPEED = 1.12, AURA_SPREAD = 0.85, AURA_RELOAD = 0.8;
+
+/** Elite affix speed / reload multipliers (Swift). */
+function affixSpeed(e: EnemyState): number {
+  const a = e.affixes;
+  return a.length && (a[0] === 'swift' || a[1] === 'swift') ? AFFIX_SWIFT_SPEED : 1;
+}
+function affixReload(e: EnemyState): number {
+  const a = e.affixes;
+  return a.length && (a[0] === 'swift' || a[1] === 'swift') ? AFFIX_SWIFT_RELOAD : 1;
+}
+const AFFIX_SWIFT_SPEED = 1.35, AFFIX_SWIFT_RELOAD = 0.85;
 
 /** Tactical skill (T-crossing, stern rakes): grows over the run. */
 function tactics(c: SimContext, e: EnemyState): number {
   return clamp(e.ai.skill! * (0.5 + c.state.time / 900), 0, 0.95);
 }
 
-function steer(c: SimContext, e: EnemyState, desired: number, speed: number, turnRate: number, sepWeight = 1.6, accel = 1.2): void {
+export function steer(c: SimContext, e: EnemyState, desired: number, speed: number, turnRate: number, sepWeight = 1.6, accel = 1.2): void {
   let h = separate(c, e, desired, sepWeight);
   h = avoidIslands(c, e, h);
   sail(c, e, h, speed, turnRate, accel);
 }
 
 /** Heading that puts the player on `side` beam (+1 port, −1 starboard) at range R, with range keeping. */
-function beamHeading(hb: number, side: number, dist: number, R: number): number {
+export function beamHeading(hb: number, side: number, dist: number, R: number): number {
   const rangeErr = clamp((dist - R) / 60, -1, 1);
   return hb - side * (Math.PI / 2) + side * rangeErr * 0.6;
 }
@@ -168,6 +200,7 @@ function wreck(c: SimContext, e: EnemyState): void {
   e.vx *= 0.985; e.vz *= 0.985;
   e.x += e.vx * c.dt * 0.5; e.z += e.vz * c.dt * 0.5;
   if (e.ai.tg) { killTelegraph(c, e.ai.tg); e.ai.tg = 0; }
+  if (e.ai.tg2) { killTelegraph(c, e.ai.tg2); e.ai.tg2 = 0; }
   if (e.ai.detonate === 1) { e.ai.detonate = 0; detonate(c, e, c.content.enemies[e.defId], false); }
 }
 
@@ -273,12 +306,13 @@ function chaser(c: SimContext, e: EnemyState, def: EnemyDef): void {
     fireShot(c, attack.projectile, bx, bz, tx, tz, attack.speed, damage, attack.range, 1.3, fan + (c.random() - 0.5) * 2 * spread);
   }
   c.emit({ type: 'enemy-fired', source: e.id, projectile: attack.projectile, x: bx, z: bz, dirX: fwdX(e.heading), dirZ: fwdZ(e.heading), count });
+  revealShooter(e);
   e.attackCooldown = reloadTime(c, e, attack);
 }
 
 // ───────────────────────── Broadside ships ─────────────────────────
 
-function broadside(c: SimContext, e: EnemyState, def: EnemyDef): void {
+export function broadside(c: SimContext, e: EnemyState, def: EnemyDef): void {
   const attack = def.attack!;
   const tune = ENEMY_AI[e.defId];
   const p = focusOf(c, e), ai = e.ai, dt = c.dt;
@@ -394,6 +428,7 @@ function fireVolley(c: SimContext, e: EnemyState, def: EnemyDef, side: number, l
       (c.random() - 0.5) * 2 * spread);
   }
   c.emit({ type: 'enemy-fired', source: e.id, projectile: attack.projectile, x: e.x, z: e.z, dirX: sx, dirZ: sz, count });
+  revealShooter(e);
   const reload = reloadTime(c, e, attack);
   if (side === 1) ai.reloadP = reload; else ai.reloadS = reload;
 }
@@ -482,6 +517,7 @@ function fireMortars(c: SimContext, e: EnemyState, def: EnemyDef, dist: number):
   }
   const inv = 1 / (dist || 1);
   c.emit({ type: 'enemy-fired', source: e.id, projectile: 'enemy-mortar', x: e.x, z: e.z, dirX: (p.x - e.x) * inv, dirZ: (p.z - e.z) * inv, count });
+  revealShooter(e);
   e.attackCooldown = reloadTime(c, e, attack);
 }
 

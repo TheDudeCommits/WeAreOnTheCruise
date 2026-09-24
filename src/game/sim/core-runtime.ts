@@ -50,6 +50,8 @@ export const KIND_TRAITS: Readonly<Record<ProjectileKind, number>> = {
   harpoon: K_ISLAND | K_HOMING, rocket: K_HOMING | K_EXPIRE_BLAST, torpedo: K_HOMING | K_ISLAND | K_EXPIRE_BLAST,
   'skiff-shot': K_ISLAND, 'enemy-cannonball': K_ISLAND, 'enemy-chaser': K_ISLAND, 'enemy-mortar': K_BALLISTIC,
   'water-bolt': K_ISLAND, 'boss-shell': K_BALLISTIC,
+  // Round 1 (FOES): harpoon line (flat), powder-keg bombs (lobbed), flares (never spawned: event-only).
+  'enemy-harpoon': K_ISLAND, 'enemy-bomb': K_BALLISTIC, 'enemy-flare': 0,
 };
 /** Default homing turn rates (rad/s) for homing kinds spawned through the contract with a target. */
 export const DEFAULT_TURN: Partial<Record<ProjectileKind, number>> = { rocket: 3, torpedo: 2, harpoon: 2.5 };
