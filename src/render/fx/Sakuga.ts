@@ -50,7 +50,7 @@ export class Sakuga {
   dirFlash(x: number, y: number, z: number, dx: number, dy: number, dz: number, size: number, pal: number, life = 0.08, delay = 0): void {
     const g = this.k.glow; const s = g.spec.reset();
     s.at(x, y, z).vel(dx * 0.01, dy * 0.01, dz * 0.01).look(Glow.DirFlash, pal, Mode.Velocity, true)
-      .sized(size, size * 1.15, 2).stretched(1.35).lived(life).after(delay);
+      .sized(size, size * 1.15, 2).stretched(2.1).lived(life).after(delay);
     g.emit();
   }
 
@@ -275,7 +275,7 @@ export class Sakuga {
   /** Cannon muzzle blast: directional starburst (4–5 frames), core pop, bloom halo, sparks, inked smoke bank, water blast. */
   muzzle(x: number, y: number, z: number, dx: number, dz: number, scale: number, delay: number, smokePuffs: number, water: boolean, pal: number = GlowPal.Muzzle): void {
     const s = scale;
-    this.dirFlash(x, y, z, dx, 0.06, dz, 10.5 * s, pal, 0.09, delay);
+    this.dirFlash(x, y, z, dx, 0.06, dz, 9 * s, pal, 0.1, delay);
     this.burst(x + dx * 1.2 * s, y, z + dz * 1.2 * s, 4.6 * s, pal, 0.06, delay);
     this.soft(x + dx * 2.5 * s, y, z + dz * 2.5 * s, 8 * s, pal, 0.12, 0.35, delay);
     this.sparks(x + dx * s, y, z + dz * s, 3, 45 * s, GlowPal.Spark, dx, 0.25, dz, 0.75, 0.3, delay, 0.35 * s);
@@ -447,6 +447,7 @@ export class Sakuga {
     }
     this.smoke(x, y + 4 * s, z, 6, 5 * s, 13 * s, CelPal.WreckSmoke, 3.4, 0, 14 * s, 0, 3 * s, 4.5, 3 * s, 0.12, 0.45);
     this.planks(x, y, z, 12 + 6 * s, 11 * Math.sqrt(s), 20 * Math.sqrt(s), 1.0, 3.0 * Math.sqrt(s), 0.3);
+    this.k.flotsam.spawn(x, y, z, Math.max(1, Math.round((2 + s * 1.5) * Math.min(1, this.k.q))), 5 + 2 * s);
     this.chunks(x, y, z, 8, 14, CelPal.WreckSmoke, 1.1 * s);
     this.embers(x, y + 3, z, 12, 5 * s, 0.1);
     this.sparks(x, y, z, 14, 40, GlowPal.Spark, 0, 1, 0, 0.35, 0.6);

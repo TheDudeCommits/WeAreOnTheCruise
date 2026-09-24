@@ -3,6 +3,7 @@
  */
 import type { OceanServices, ShipServices } from '../frame';
 import type { WaterSampler } from './core/water';
+import type { Flotsam } from './Flotsam';
 import type { SpritePass } from './core/SpritePass';
 import type { BeamPass } from './passes/Beams';
 import type { DamageNumbers } from './passes/DamageNumbers';
@@ -26,6 +27,7 @@ export interface FxKit {
   props: PropPass;
   numbers: DamageNumbers;
   walls: WaveWallPass;
+  flotsam: Flotsam;
   juice: Juice;
   /** Allocation-free water height (shared Gerstner waves + per-frame offset vs OceanServices). */
   water: WaterSampler;

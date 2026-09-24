@@ -17,6 +17,7 @@ import { createSharedUniforms, type FxSharedUniforms } from './core/glsl';
 import { WaterSampler } from './core/water';
 import type { SpritePass } from './core/SpritePass';
 import { EventFx } from './EventFx';
+import { Flotsam } from './Flotsam';
 import { Juice } from './Juice';
 import type { FxKit } from './Kit';
 import { BeamPass } from './passes/Beams';
@@ -87,7 +88,7 @@ export class FxSystem implements RenderSystem {
     const walls = new WaveWallPass(s, 8);
     this.passes = [cel, glow, heads];
     this.kit = {
-      cel, glow, heads, trails, beams, ropes, decals, debris, props, numbers, walls, juice: this.juice,
+      cel, glow, heads, trails, beams, ropes, decals, debris, props, numbers, walls, juice: this.juice, flotsam: new Flotsam(),
       water: new WaterSampler(), ocean: null, ships: null, focusX: 0, focusZ: 0, windX: 0, windZ: 0, clock: 0, q: 1, spawned: 0,
     };
     this.sakuga = new Sakuga(this.kit);
@@ -154,6 +155,7 @@ export class FxSystem implements RenderSystem {
       this.state.render(ctx, run, dt);
     }
     k.debris.update(dt, this.waterHeight, ctx.time);
+    k.flotsam.update(dt, this.clock, k.water, k.props);
     const glyphPx = Math.max(22, Math.min(40, ctx.viewport.height * 0.03));
     k.numbers.update(dt, this.clock, glyphPx);
 
@@ -172,7 +174,7 @@ export class FxSystem implements RenderSystem {
     st.clock = this.clock; st.spawned = k.spawned;
     st.cel = k.cel.pool.immediateCount; st.glow = k.glow.pool.immediateCount; st.heads = k.heads.pool.immediateCount;
     st.trails = k.trails.pool.immediateCount; st.beams = k.beams.pool.immediateCount; st.decals = k.decals.pool.immediateCount;
-    st.debris = k.debris.active; st.numbers = 0;
+    st.debris = k.debris.active; st.numbers = k.flotsam.active;
     const ms = performance.now() - t0;
     st.updateMs = ms;
     st.updateAvgMs += (ms - st.updateAvgMs) * 0.05;
@@ -230,6 +232,7 @@ export class FxSystem implements RenderSystem {
     this.kit.beams.clear();
     this.kit.decals.clear();
     this.kit.debris.clear();
+    this.kit.flotsam.clear();
     this.kit.numbers.clear();
     this.events.reset();
     this.state.reset();

@@ -664,7 +664,9 @@ export class EventFx {
         k.juice.speedLines(1, 1.2);
         k.juice.kick(9, 0.5);
         k.juice.shake(0.45, 0.35);
-        fx.cloudRing(x - ax * L * 0.45, wy + 6, z - az * L * 0.45, ax, az, L * 0.85, 30);
+        fx.cloudRing(x - ax * L * 0.45, wy + 6, z - az * L * 0.45, ax, az, L * 1.1, 40);
+        fx.cloudRing(x - ax * L * 0.6, wy + 6, z - az * L * 0.6, ax, az, L * 0.6, 22);
+        fx.droplets(x - ax * L * 0.4, wy + 4, z - az * L * 0.4, 40, 16, 16, 1.0);
         fx.explosion('water', x - ax * L * 0.3, z - az * L * 0.3, 14, true, false, 'player');
         fx.burst(x - ax * L * 0.5, wy + 5, z - az * L * 0.5, 22, GlowPal.Gold, 0.1);
         fx.sparks(x - ax * L * 0.5, wy + 4, z - az * L * 0.5, 16, 50, GlowPal.Gold, -ax, 0.3, -az, 0.6, 0.5);

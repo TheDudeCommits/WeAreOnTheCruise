@@ -151,7 +151,7 @@ void main() {
   float w = max(fwidth(m), 1e-4);
   if (m < -w * 0.5) discard;
   float alpha = smoothstep(-w * 0.5, w * 0.5, m);
-  float inkW = min(w * 1.7, 0.16);
+  float inkW = min(w * 2.5, 0.2);
   float inkMask = 1.0 - smoothstep(inkW - w * 0.5, inkW + w * 0.5, m);
 
   vec3 col;

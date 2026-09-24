@@ -61,6 +61,8 @@ const injected: SimEvent[] = [];
 const frameEvents: SimEvent[] = [];
 let airT = 0;
 let subT = 0;
+let breachId = -1;
+let breachAt = 0;
 let camPreset: 'director' | 'low' | 'side' | 'top' | 'high' | 'shot' = (params.get('cam') as 'low') || 'director';
 /** Scene-specific framing: target (relative to the player frame: side/along), distance, yaw offset, pitch. */
 const shot = { side: 0, along: 0, y: 4, dist: 90, yaw: 0, pitch: 0.35 };
@@ -85,6 +87,7 @@ function makeSim(): Sim {
 }
 
 function resetSim(): void {
+  breachId = -1;
   sim = makeSim();
   holds.clear();
   fx.reset();
@@ -105,6 +108,10 @@ function tick(dt: number): void {
   if (airT > 0) { airT = Math.max(0, airT - dt * slow); const k = 1 - airT / 1.1; p.airborne = Math.sin(Math.min(1, k) * Math.PI); p.x += 150 * dt * slow * Math.sin(p.heading + Math.PI) ; p.z += 150 * dt * slow * Math.cos(p.heading + Math.PI); if (airT === 0) p.airborne = 0; }
   if (subT > 0) { subT = Math.max(0, subT - dt * slow); p.submerged = subT > 0.2 ? Math.min(1, (3 - subT) * 3) : subT * 5; if (subT === 0) p.submerged = 0; }
   if (barrage) runBarrage(dt);
+  if (breachId >= 0) {
+    const b = s.bosses.find((q) => q.id === breachId);
+    if (b) { b.submerged = time < breachAt ? 1 : Math.max(0, 1 - (time - breachAt) * 2.5); b.speed = 6; }
+  }
   if (!paused) sim.step(dt * slow);
   // the sim's sea-state schedule runs inside step(); the lab's time-of-day/weather overrides win afterwards
   s.sea.timeOfDay = hour;
@@ -262,9 +269,12 @@ function hazard(kind: HazardKind, side: number, along: number, radius: number, t
   sim.spawnHazard({ kind, team: extra.team ?? 'player', x: at.x, z: at.z, radius, ttl, damage: 5, tick: extra.tick ?? 0.5, vx: extra.vx, vz: extra.vz, armed: extra.armed ?? true });
 }
 
-function telegraph(shape: TelegraphShape, side: number, along: number, radius: number, length: number, angle: number, duration: number, team: 'player' | 'enemy' = 'enemy'): void {
+function telegraph(shape: TelegraphShape, side: number, along: number, radius: number, length: number, angle: number | null, duration: number, team: 'player' | 'enemy' = 'enemy'): void {
   const at = ahead(along, side);
-  sim.addTelegraph({ shape, team, x: at.x, z: at.z, radius, length, angle, duration });
+  // null angle: aim the line/cone at the player (contract: direction = (−sin a, −cos a))
+  const p = P();
+  const a = angle ?? Math.atan2(-(p.x - at.x), -(p.z - at.z));
+  sim.addTelegraph({ shape, team, x: at.x, z: at.z, radius, length, angle: a, duration });
 }
 
 function inject(e: SimEvent): void { injected.push(e); }
@@ -322,7 +332,10 @@ function runBarrage(dt: number): void {
 const scenes: Record<string, () => void> = {
   broadside: () => {
     resetSim(); camPreset = 'low';
-    enemy('brig', 88, 20); enemy('frigate', 118, 55); enemy('corsair-brig', 102, -18);
+    const a = enemy('brig', 88, 20), b = enemy('frigate', 118, 55), c = enemy('corsair-brig', 102, -18);
+    if (a) a.hp = a.maxHp * 0.25;
+    if (b) b.hp = b.maxHp * 0.45;
+    if (c) c.hp = c.maxHp * 0.6;
     aim = ahead(0, 100);
     sim.state.player.skills.broadside.cooldown = 0;
     sim.press('broadside');
@@ -373,9 +386,8 @@ const scenes: Record<string, () => void> = {
     resetSim(); frameShot(30, 10, 0, 190, 1.5, 0.95);
     telegraph('circle', 50, -20, 14, 0, 0, 3);
     telegraph('ring', 60, 40, 22, 12, 0, 3);
-    const a = P().heading + Math.PI;
-    telegraph('line', 110, -40, 8, 120, a, 3);
-    telegraph('cone', 40, 60, 30, 60, P().heading + Math.PI / 2, 3);
+    telegraph('line', 150, -60, 8, 130, null, 3);
+    telegraph('cone', 110, 80, 26, 70, null, 3);
     telegraph('circle', -60, 0, 30, 0, 0, 3, 'player');
   },
   storm: () => {
@@ -420,6 +432,17 @@ const scenes: Record<string, () => void> = {
     resetSim(); frameShot(40, 110, 8, 150, 2.9, 0.12);
     const p = P();
     hazard('wave-front', 60, 160, 90, 14, { vx: Math.sin(p.heading) * 10, vz: Math.cos(p.heading) * 10 });
+  },
+  breach: () => {
+    resetSim(); frameShot(40, 60, 10, 190, 2.4, 0.18);
+    const at = ahead(90, 110);
+    const b = sim.spawnBoss('tidewyrm', at.x, at.z, P().heading + 2.2);
+    b.submerged = 1; breachId = b.id; breachAt = time + 0.5;
+  },
+  damaged: () => {
+    resetSim(); frameShot(80, 10, 8, 170, 2.2, 0.22);
+    const hps = [0.5, 0.35, 0.2, 0.1];
+    hps.forEach((f, i) => { const e = enemy(i % 2 ? 'frigate' : 'brig', 60 + i * 25, -40 + i * 30); if (e) e.hp = e.maxHp * f; });
   },
   enemyfire: () => {
     resetSim(); frameShot(70, 0, 6, 120, 2.6, 0.25);
@@ -523,8 +546,8 @@ button(pk, 'magnet all', () => { for (const q of sim.state.pickups) if (q.alive)
 const tg = section('Telegraphs');
 button(tg, 'circle', () => telegraph('circle', 50, 0, 14, 0, 0, 2.5));
 button(tg, 'ring', () => telegraph('ring', 60, 0, 24, 12, 0, 2.5));
-button(tg, 'line', () => telegraph('line', 120, -30, 8, 140, P().heading + Math.PI, 2.5));
-button(tg, 'cone', () => telegraph('cone', 30, 30, 30, 60, P().heading + Math.PI / 2, 2.5));
+button(tg, 'line', () => telegraph('line', 140, -30, 8, 130, null, 2.5));
+button(tg, 'cone', () => telegraph('cone', 100, 30, 26, 70, null, 2.5));
 
 // ───────────────────────── boot ─────────────────────────
 

@@ -50,6 +50,9 @@ const SHOTS = [
   ['finale-c', 'finale', 2.6, {}],
   ['wavewall', 'wavewall', 1.5, {}],
   ['enemyfire', 'enemyfire', 0.35, {}],
+  ['breach-a', 'breach', 0.62, {}],
+  ['breach-b', 'breach', 1.1, {}],
+  ['damaged', 'damaged', 4, {}],
 ];
 
 const browser = await chromium.launch({ headless: true, args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] });

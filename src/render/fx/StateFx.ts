@@ -28,17 +28,19 @@ interface KindVis {
   head: number; size: number; stretch: number; color: number; mode: number;
   trail: number; width: number; pal: number; swell: number; ballistic: boolean;
   smoke: number; glow: number; glowPal: number; spin: number;
+  /** Visual-only lob for flat shots (m/s²): the head and trail follow a parabola that lands exactly at ttl. */
+  arc: number;
 }
 
 const V = (head: number, size: number, color: number, trail: number, width: number, pal: number, extra: Partial<KindVis> = {}): KindVis => ({
-  head, size, stretch: 1, color, mode: Mode.Screen, trail, width, pal, swell: 0.6, ballistic: false, smoke: 0, glow: 0, glowPal: pal, spin: 0, ...extra,
+  head, size, stretch: 1, color, mode: Mode.Screen, trail, width, pal, swell: 0.6, ballistic: false, smoke: 0, glow: 0, glowPal: pal, spin: 0, arc: 0, ...extra,
 });
 
 const KINDS: Record<ProjectileKind, KindVis> = {
-  cannonball: V(Head.Ball, 1.3, 0x2c2c38, 0.24, 0.62, GlowPal.Muzzle),
-  'chain-shot': V(Head.Chain, 2.6, 0x30303c, 0.15, 0.7, GlowPal.Muzzle, { spin: 16 }),
-  'heavy-shot': V(Head.Ball, 1.8, 0x3a2622, 0.22, 0.95, GlowPal.Explosion, { glow: 4.5, glowPal: GlowPal.Explosion }),
-  'chaser-shot': V(Head.Slug, 1.1, 0x6a5234, 0.2, 0.5, GlowPal.Spark, { stretch: 2, mode: Mode.Velocity }),
+  cannonball: V(Head.Ball, 1.3, 0x2c2c38, 0.3, 0.62, GlowPal.Muzzle, { arc: 14 }),
+  'chain-shot': V(Head.Chain, 2.6, 0x30303c, 0.22, 0.7, GlowPal.Muzzle, { spin: 16, arc: 14 }),
+  'heavy-shot': V(Head.Ball, 1.8, 0x3a2622, 0.3, 0.95, GlowPal.Explosion, { glow: 4.5, glowPal: GlowPal.Explosion, arc: 10 }),
+  'chaser-shot': V(Head.Slug, 1.1, 0x6a5234, 0.2, 0.5, GlowPal.Spark, { stretch: 2, mode: Mode.Velocity, arc: 5 }),
   lance: V(Head.Pellet, 2.2, 0xfff0b0, 0.3, 2.2, GlowPal.Gold, { glow: 9, glowPal: GlowPal.Gold, swell: 1.2 }),
   'mortar-shell': V(Head.Shell, 2.0, 0x2c2c38, 0.4, 0.75, GlowPal.Muzzle, { ballistic: true, smoke: 14 }),
   bomblet: V(Head.Ball, 1.0, 0x2c2c38, 0.25, 0.45, GlowPal.Muzzle, { ballistic: true }),
@@ -47,11 +49,11 @@ const KINDS: Record<ProjectileKind, KindVis> = {
   harpoon: V(Head.Spear, 1.3, 0xffffff, 0, 0, GlowPal.Spark, { stretch: 3.2, mode: Mode.Velocity }),
   rocket: V(Head.Rocket, 1.1, 0xffffff, 0.12, 0.7, GlowPal.Explosion, { stretch: 2.6, mode: Mode.Velocity, smoke: 42, glow: 4, glowPal: GlowPal.Explosion }),
   torpedo: V(Head.Torpedo, 0, 0x1a2a3a, 0, 0, GlowPal.WaterBolt),
-  'skiff-shot': V(Head.Ball, 0.8, 0x2c2c38, 0.11, 0.38, GlowPal.Muzzle),
-  'enemy-cannonball': V(Head.Ball, 1.3, 0x2e2428, 0.24, 0.62, GlowPal.Enemy),
-  'enemy-chaser': V(Head.Slug, 1.1, 0x5a2a2a, 0.2, 0.55, GlowPal.Enemy, { stretch: 2, mode: Mode.Velocity }),
+  'skiff-shot': V(Head.Ball, 0.8, 0x2c2c38, 0.14, 0.38, GlowPal.Muzzle, { arc: 10 }),
+  'enemy-cannonball': V(Head.Ball, 1.3, 0x2e2428, 0.3, 0.62, GlowPal.Enemy, { arc: 12 }),
+  'enemy-chaser': V(Head.Slug, 1.1, 0x5a2a2a, 0.2, 0.55, GlowPal.Enemy, { stretch: 2, mode: Mode.Velocity, arc: 5 }),
   'enemy-mortar': V(Head.Shell, 2.0, 0x2e2428, 0.4, 0.75, GlowPal.Enemy, { ballistic: true, smoke: 14 }),
-  'water-bolt': V(Head.Orb, 2.8, 0x2ab8ff, 0.28, 1.5, GlowPal.WaterBolt, { glow: 5, glowPal: GlowPal.WaterBolt, smoke: 0 }),
+  'water-bolt': V(Head.Orb, 2.8, 0x2ab8ff, 0.28, 1.5, GlowPal.WaterBolt, { glow: 5, glowPal: GlowPal.WaterBolt, smoke: 0, arc: 6 }),
   'boss-shell': V(Head.Shell, 2.6, 0x2e2428, 0.45, 0.95, GlowPal.Enemy, { ballistic: true, smoke: 16 }),
 };
 
@@ -80,6 +82,7 @@ export class StateFx {
   private readonly slotV = new Float32Array(SLOT_CAP * 3);
   private readonly slotAge = new Float32Array(SLOT_CAP);
   private readonly slotCrit = new Uint8Array(SLOT_CAP);
+  private readonly slotG = new Float32Array(SLOT_CAP);
   private readonly emitAcc = new Float32Array(SLOT_CAP);
   // ghost trails (a dead shot's trail catching up to its end point)
   private readonly ghostX = new Float32Array(GHOST_CAP * 3);
@@ -88,6 +91,7 @@ export class StateFx {
   private readonly ghostDur = new Float32Array(GHOST_CAP);
   private readonly ghostKind = new Int8Array(GHOST_CAP);
   private readonly ghostCrit = new Uint8Array(GHOST_CAP);
+  private readonly ghostG = new Float32Array(GHOST_CAP);
   private ghostHead = 0;
   // hazard slot tracking
   private readonly hazId = new Int32Array(HAZ_CAP).fill(-1);
@@ -140,21 +144,31 @@ export class StateFx {
       let y = p.y;
       const wy = this.fx.wy(p.x, p.z);
       if (!vis.ballistic && p.kind !== 'torpedo') y = Math.max(y, wy + 1.1);
-      const g = vis.ballistic ? GRAVITY : 0;
+      let g = vis.ballistic ? GRAVITY : 0;
+      let vy = p.vy;
+      if (vis.arc > 0 && p.target === undefined) {
+        // visual lob: lands exactly at ttl (hits are XZ-only in the sim, so gameplay is unchanged)
+        const T = Math.max(0.05, p.ttl);
+        const a = Math.min(p.age, T);
+        g = vis.arc;
+        y += g * a * (T - a) * 0.5;
+        vy = g * (T * 0.5 - a);
+      }
       this.slotAlive[i] = 1; this.slotId[i] = p.id; this.slotKind[i] = KIND_INDEX.get(p.kind)!; this.slotAge[i] = p.age;
       this.slotX[i * 3] = p.x; this.slotX[i * 3 + 1] = y; this.slotX[i * 3 + 2] = p.z;
-      this.slotV[i * 3] = p.vx; this.slotV[i * 3 + 1] = p.vy; this.slotV[i * 3 + 2] = p.vz;
+      this.slotV[i * 3] = p.vx; this.slotV[i * 3 + 1] = vy; this.slotV[i * 3 + 2] = p.vz;
       this.slotCrit[i] = p.crit ? 1 : 0;
+      this.slotG[i] = g;
 
       if (p.kind === 'torpedo') { this.torpedo(p.x, p.z, p.vx, p.vz, wy, i, dt); continue; }
       // trail
       if (vis.trail > 0) {
         const crit = p.crit && p.team === 'player';
-        k.trails.add(p.x, y, p.z, p.age, p.vx, p.vy, p.vz, g, vis.trail, vis.width * (crit ? 1.3 : 1), crit ? GlowPal.Gold : vis.pal, vis.swell, 1, 1, 1, crit ? 1.5 : 1);
+        k.trails.add(p.x, y, p.z, p.age, p.vx, vy, p.vz, g, vis.trail, vis.width * (crit ? 1.3 : 1), crit ? GlowPal.Gold : vis.pal, vis.swell, 1, 1, 1, crit ? 1.5 : 1);
       }
       // head
       const hs = k.heads.spec.reset();
-      hs.at(p.x, y, p.z).vel(p.vx, p.vy, p.vz).look(vis.head, 0, vis.mode).sized(vis.size, vis.size).stretched(vis.stretch)
+      hs.at(p.x, y, p.z).vel(p.vx, vy, p.vz).look(vis.head, 0, vis.mode).sized(vis.size, vis.size).stretched(vis.stretch)
         .tint(lin.r, lin.g, lin.b).rotate(vis.spin ? p.age * vis.spin + p.id : 0);
       hs.seed = (p.id % 97) / 97;
       k.heads.imm(0);
@@ -229,6 +243,7 @@ export class StateFx {
     this.ghostDur[i] = Math.min(vis.trail, this.slotAge[slot]!);
     this.ghostKind[i] = this.slotKind[slot]!;
     this.ghostCrit[i] = this.slotCrit[slot]!;
+    this.ghostG[i] = this.slotG[slot]!;
   }
 
   private ghosts(dt: number): void {
@@ -242,7 +257,7 @@ export class StateFx {
       const vis = KINDS[kind];
       const crit = this.ghostCrit[i] === 1 && !kind.startsWith('enemy');
       const vx = this.ghostV[i * 3]!, vy = this.ghostV[i * 3 + 1]!, vz = this.ghostV[i * 3 + 2]!;
-      t.add(this.ghostX[i * 3]!, this.ghostX[i * 3 + 1]!, this.ghostX[i * 3 + 2]!, 99, vx, vy, vz, vis.ballistic ? GRAVITY : 0,
+      t.add(this.ghostX[i * 3]!, this.ghostX[i * 3 + 1]!, this.ghostX[i * 3 + 2]!, 99, vx, vy, vz, this.ghostG[i]!,
         remain, vis.width, crit ? GlowPal.Gold : vis.pal, 0, 1, 1, 1, crit ? 1.5 : 1);
     }
   }
@@ -275,7 +290,7 @@ export class StateFx {
     else if (kind === 'whirlpool') this.fx.foam(x, z, this.hazR0[slot]!, 1.6, 0, 1);
   }
 
-  private hazard(h: Readonly<HazardState>, slot: number, dt: number, ticked: boolean, _ctx: FrameContext): void {
+  private hazard(h: Readonly<HazardState>, _slot: number, dt: number, ticked: boolean, _ctx: FrameContext): void {
     const k = this.k;
     const fx = this.fx;
     const wy = fx.wy(h.x, h.z);
@@ -361,12 +376,11 @@ export class StateFx {
         break;
       }
       case 'shockwave': {
+        // contract: radius is the FINAL radius; the damage front is radius·(1 − (1 − k)²) (CORE)
         const t = Math.min(0.999, h.age / Math.max(0.05, h.ttl));
-        const live = Math.abs(h.radius - this.hazR0[slot]!) > 0.01;
-        const R = 1 - Math.pow(1 - t, 2.4);
-        const size = live ? h.radius / Math.max(0.05, R) : h.radius;
-        k.decals.imm(Decal.Shock, h.x, h.z, size, size, 0, 1.4, 0, 0xffffff, 0.7, 0xbfeaff, 1.4, 0.5, t);
-        const front = size * R;
+        const size = h.radius;
+        k.decals.imm(Decal.Shock, h.x, h.z, size, size, 0, 1.4, 2, 0xffffff, 0.7, 0xbfeaff, 1.4, 0.5, t);
+        const front = size * (1 - (1 - t) * (1 - t));
         k.ocean?.stampRing(h.x, h.z, front, 0.6 * (1 - t));
         const nd = Math.round(dt * 60 * k.q);
         for (let j = 0; j < nd; j++) {
@@ -520,16 +534,18 @@ export class StateFx {
           break;
         }
         case 'line': {
+          // contract: START at x,z, direction (−sin a, −cos a) (ship heading convention), radius = half-width
           const len = t.length > 0 ? t.length : t.radius * 8;
-          const dx = Math.sin(t.angle), dz = Math.cos(t.angle);
-          d.imm(Decal.Line, t.x + dx * len * 0.5, t.z + dz * len * 0.5, t.radius, len * 0.5, t.angle, prog, 0, c1, 1, c2, 0, 0.5);
+          const dx = -Math.sin(t.angle), dz = -Math.cos(t.angle);
+          d.imm(Decal.Line, t.x + dx * len * 0.5, t.z + dz * len * 0.5, t.radius, len * 0.5, t.angle + Math.PI, prog, 0, c1, 1, c2, 0, 0.5);
           break;
         }
         case 'cone': {
+          // apex at x,z; radius = half-width at the far end
           const len = t.length > 0 ? t.length : t.radius;
           const half = t.length > 0 ? t.radius : t.radius * 0.7;
-          const dx = Math.sin(t.angle), dz = Math.cos(t.angle);
-          d.imm(Decal.Cone, t.x + dx * len * 0.5, t.z + dz * len * 0.5, half, len * 0.5, t.angle, prog, 0, c1, 1, c2, 0, 0.5);
+          const dx = -Math.sin(t.angle), dz = -Math.cos(t.angle);
+          d.imm(Decal.Cone, t.x + dx * len * 0.5, t.z + dz * len * 0.5, half, len * 0.5, t.angle + Math.PI, prog, 0, c1, 1, c2, 0, 0.5);
           break;
         }
       }
@@ -567,6 +583,28 @@ export class StateFx {
       return;
     }
     if (s.life !== 'alive') return;
+    // battle damage: smoke plumes below 55% hull, deck fire below 30% (T3 / T11)
+    const frac = s.hp / Math.max(1, s.maxHp);
+    if (frac < 0.55) {
+      const dx = s.x - k.focusX, dz = s.z - k.focusZ;
+      if (dx * dx + dz * dz < 480 * 480) {
+        const deck = wy + Math.max(2.5, L * 0.1);
+        const rate = (boss ? 7 : 2.4) * (1.4 - frac * 1.6) * k.q;
+        if (rand() < dt * rate) {
+          const along = (hash01(s.id, 800 + ((k.clock * 3) | 0) % 5) - 0.5) * L * 0.5;
+          fx.smoke(s.x + fxv * along, deck + 1, s.z + fzv * along, 1, L * 0.07, L * (boss ? 0.28 : 0.34), frac < 0.3 ? CelPal.DarkSmoke : CelPal.Gunsmoke,
+            3.4, 0, 4, 0, 1, 5.5, 1, 0, 0.45);
+        }
+        if (frac < 0.3) {
+          const fires = boss ? 4 : 2;
+          for (let j = 0; j < fires; j++) {
+            const along = (hash01(s.id, j + 900) - 0.5) * L * 0.55;
+            this.loopFlame(s.x + fxv * along, deck, s.z + fzv * along, L * 0.03, L * (boss ? 0.09 : 0.13), s.id, j + 30, CelPal.Fire);
+          }
+        }
+      }
+    }
+    if (boss) this.bossWater(s as Readonly<BossState>, wy, dt);
     const statuses = s.statuses;
     for (let i = 0; i < statuses.length; i++) {
       const st = statuses[i]!;
@@ -617,6 +655,53 @@ export class StateFx {
   }
 
   private lastRun: Readonly<RunState> | null = null;
+  // boss submerge tracking (serpents): id → previous submerged fraction (≤ 4 bosses at once)
+  private readonly bossId = new Int32Array(4).fill(-1);
+  private readonly bossSub = new Float32Array(4);
+
+  /** Breach / dive / wake FX for bosses that submerge (T9). */
+  private bossWater(b: Readonly<BossState>, wy: number, dt: number): void {
+    let slot = -1;
+    for (let i = 0; i < 4; i++) if (this.bossId[i] === b.id) slot = i;
+    if (slot < 0) { slot = 0; for (let i = 0; i < 4; i++) if (this.bossId[i] === -1) { slot = i; break; } this.bossId[slot] = b.id; this.bossSub[slot] = b.submerged; }
+    const prev = this.bossSub[slot]!;
+    const sub = b.submerged;
+    this.bossSub[slot] = sub;
+    const fx = this.fx;
+    const k = this.k;
+    const L = b.length;
+    const fxv = -Math.sin(b.heading), fzv = -Math.cos(b.heading);
+    if (prev > 0.5 && sub <= 0.5) {
+      // breach: towering columns along the body, pouring sheets, cloud ring, droplets
+      fx.explosion('water', b.x, b.z, Math.max(18, b.radius * 1.4), true, false, 'enemy');
+      for (let j = 0; j < 6; j++) {
+        const along = (j / 5 - 0.5) * L * 0.5;
+        fx.column(b.x + fxv * along, b.z + fzv * along, 9 + rand() * 5, 3.4, 1.6, j * 0.05);
+      }
+      fx.cloudRing(b.x, wy + 8, b.z, fxv, fzv, L * 0.3, 26);
+      fx.droplets(b.x, wy + 10, b.z, 50, 14, 22, 1.4);
+      k.juice.shakeAt(0.6, Math.hypot(b.x - k.focusX, b.z - k.focusZ), 0.6, 60, 420);
+    } else if (prev <= 0.5 && sub > 0.5) {
+      fx.waterSplash(b.x, b.z, 3.2);
+      fx.foam(b.x, b.z, L * 0.4, 3, 0, 1.4);
+      fx.bubbles(b.x, b.z, 24, L * 0.25, 3);
+    }
+    if (sub > 0.05 && sub < 0.98) {
+      // moving shadow + wake while under the surface
+      k.decals.imm(Decal.Shadow, b.x, b.z, L * 0.18, L * 0.45, Math.atan2(fxv, fzv), 0, 0, 0x03162a, 0.5 * sub, 0x03162a, 0, 0.5);
+      if (rand() < dt * 20 * k.q) fx.bubbles(b.x + spread(L * 0.2), b.z + spread(L * 0.2), 1, 2, 2.2);
+      k.ocean?.stampWake(b.x, b.z, fxv, fzv, b.radius, 0.6);
+    }
+    if (sub < 0.4 && b.speed > 2 && rand() < dt * 10 * k.q) {
+      // water pouring off the body
+      const along = spread(L * 0.3);
+      const px = b.x + fxv * along, pz = b.z + fzv * along;
+      const c = k.cel.spec.reset();
+      c.at(px, wy + range(6, 16), pz).vel(spread(2), -range(4, 8), spread(2)).accel(0, -18, 0).look(Cel.Column, CelPal.Water, Mode.Upright, true)
+        .sized(2.2, 3.2, 2).stretched(2.2).lived(0.7, 0.5);
+      k.cel.emit();
+    }
+  }
 
   // ───────────── player ─────────────
 

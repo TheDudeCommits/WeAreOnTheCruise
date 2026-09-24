@@ -175,7 +175,8 @@ void main() {
     paint = foam * alpha;
   } else if (shape == 5) {
     // thin, fast shock line (anime timing: out fast, thin out, gone) with a brief inner wash
-    float R = 1.0 - pow(1.0 - t, 3.0);
+    // p2 = ease-out exponent of the front (0 → 3; shockwave hazards pass 2 to match the sim's damage front)
+    float R = 1.0 - pow(1.0 - t, vP.y > 0.5 ? vP.y : 3.0);
     float thick = max(vP.x, 0.2);
     float th = min(0.03 * thick, 1.6 * thick / max(vHalf.x, 1.0)) * mix(1.0, 0.25, t);
     float ring = band(r - R, th, aa);
