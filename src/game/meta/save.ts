@@ -107,6 +107,7 @@ export function sanitizeSettings(raw: unknown): Settings {
     ...(typeof raw.reduceFlashing === 'boolean' ? { reduceFlashing: raw.reduceFlashing } : {}),
     quality: typeof raw.quality === 'string' && (QUALITIES as readonly string[]).includes(raw.quality) ? (raw.quality as QualitySetting) : base.quality,
     showFps: typeof raw.showFps === 'boolean' ? raw.showFps : base.showFps,
+    ...(finite(raw.captains) ? { captains: Math.min(4, Math.max(0, Math.round(raw.captains))) } : {}),
   };
 }
 

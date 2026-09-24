@@ -265,6 +265,14 @@ export class EventRouter {
   // ───────────────────────── handlers ─────────────────────────
 
   private weaponFired(e: Extract<SimEvent, { type: 'weapon-fired' }>): void {
+    if (e.owner < 0) {
+      // AI captains: one lighter, distant report per volley (rate-capped per captain) so they never mask your guns.
+      const now = performance.now();
+      if (now - (this.captainShot.get(e.owner) ?? -1e9) < 350) return;
+      this.captainShot.set(e.owner, now);
+      this.p('weapon-fired', 'cannon-far', { x: e.x, z: e.z, gain: 0.55 });
+      return;
+    }
     if (e.owner !== 0) {
       // Allied/enemy use of a player weapon: treat as generic gunfire.
       this.gun('weapon-fired', e.x, e.z, e.count, 'cannon-near');

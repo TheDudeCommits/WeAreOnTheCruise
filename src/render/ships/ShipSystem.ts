@@ -154,8 +154,9 @@ export class ShipSystem implements RenderSystem, ShipServices {
   sources(): Record<string, string> { return { ...this.fleet.sources(), ...this.bosses.sources() }; }
 
   dispose(): void {
-    this.scene.remove(this.heroShip.root, this.fleet.group, this.serpents.group, this.bosses.group, this.skiffs.group);
+    this.scene.remove(this.heroShip.root, this.fleet.group, this.serpents.group, this.bosses.group, this.skiffs.group, this.captains.group);
     this.heroShip.dispose();
+    this.captains.dispose();
     this.fleet.dispose();
     this.serpents.dispose();
     this.bosses.dispose();
