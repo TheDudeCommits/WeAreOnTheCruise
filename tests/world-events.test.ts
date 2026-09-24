@@ -273,6 +273,36 @@ describe('world events', () => {
     for (const s of starts) if (EVENT_IDS.includes(s.id)) expect(s.t + DIRECTOR_EVENTS[s.id].duration).toBeLessThanOrEqual(300);
   });
 
+  it('points of interest: trade winds carry ships, salvage pays, beacons bless', () => {
+    const sim = makeSim('poi', 'sunward-shallows', 2);
+    const evs = run(sim, EVENT_TUNING.poiFirst + 45, 0.2);
+    const spawned = new Set(evs.flatMap((e) => (e.type === 'hazard-spawned' ? [e.kind] : [])));
+    expect(spawned.has('trade-wind')).toBe(true);
+    expect(spawned.has('salvage')).toBe(true);
+    // Salvage: sail over it.
+    const salvage = sim.state.hazards.find((h) => h.alive && h.kind === 'salvage');
+    if (salvage) {
+      sim.debug.teleport(salvage.x, salvage.z);
+      const got = run(sim, 0.2);
+      expect(got.some((e) => e.type === 'hazard-triggered' && e.kind === 'salvage')).toBe(true);
+      expect(got.some((e) => e.type === 'pickup-spawned' && e.kind.startsWith('xp-'))).toBe(true);
+    }
+    // Trade wind: an idle ship in a patch drifts with the current.
+    const lane = sim.spawnHazard({ kind: 'trade-wind', team: 'player', x: sim.state.player.x + 400, z: sim.state.player.z, radius: 34, ttl: 30, damage: 0, vx: 8, vz: 0 })!;
+    run(sim, 2.2);
+    sim.debug.teleport(lane.x, lane.z, 0);
+    sim.state.player.gear = 0;
+    const x0 = sim.state.player.x;
+    run(sim, 1);
+    expect(sim.state.player.x - x0).toBeGreaterThan(5);
+    // Beacon: sailing through blesses the ship.
+    const p = sim.state.player;
+    sim.spawnHazard({ kind: 'beacon', team: 'player', x: p.x, z: p.z, radius: 22, ttl: 30, damage: 0 });
+    const blessed = run(sim, 0.2);
+    expect(p.statuses.some((st) => st.kind === 'frenzy' && st.time > 0)).toBe(true);
+    expect(blessed.some((e) => e.type === 'director-event' && e.name === "Keeper's Blessing")).toBe(true);
+  });
+
   it('stays deterministic through a set piece', () => {
     const play = (): string => {
       const sim = makeSim('det-events');

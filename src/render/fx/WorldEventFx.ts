@@ -5,7 +5,8 @@
  *  - world-events/SeaFx: rogue-wave curls (WaveWalls pass) and the maelstrom spiral (decals + ocean stamps);
  *  - world-events/EruptionFx: the volcano/sea-vent plume and lava/gold bombs in flight;
  *  - world-events/MarksFx: the dig-site beacon, the blockade flagship marker, bounty marks, ghosts surfacing and
- *    the outcome bursts.
+ *    the outcome bursts;
+ *  - world-events/PoiFx: trade-wind streaks, lighthouse beacon rings and floating salvage.
  * Draw calls: one tentacle mesh (+ its ink prepass) while arms are up; everything else rides the shared passes.
  */
 import * as THREE from 'three';
@@ -16,6 +17,7 @@ import type { Sakuga } from './Sakuga';
 import { EruptionFx } from './world-events/EruptionFx';
 import { KrakenFx } from './world-events/KrakenFx';
 import { MarksFx } from './world-events/MarksFx';
+import { PoiFx } from './world-events/PoiFx';
 import { SeaFx } from './world-events/SeaFx';
 import { Tentacles } from './world-events/Tentacles';
 
@@ -26,6 +28,7 @@ export class WorldEventFx {
   private readonly sea: SeaFx;
   private readonly eruption: EruptionFx;
   private readonly marks: MarksFx;
+  private readonly poi: PoiFx;
 
   constructor(readonly kit: FxKit, readonly sakuga: Sakuga) {
     this.group.name = 'world-event-fx';
@@ -33,6 +36,7 @@ export class WorldEventFx {
     this.sea = new SeaFx(kit, sakuga);
     this.eruption = new EruptionFx(kit, sakuga);
     this.marks = new MarksFx(kit, sakuga);
+    this.poi = new PoiFx(kit, sakuga);
     this.group.add(this.tentacles.mesh);
   }
 
@@ -40,6 +44,7 @@ export class WorldEventFx {
     this.tentacles.begin();
     this.sea.beginFrame(dt);
     this.eruption.beginFrame();
+    this.poi.beginFrame(dt);
     this.kraken.update(run, dt);
     this.eruption.vent(ctx, run, dt);
     const hazards = run.hazards;
@@ -50,12 +55,16 @@ export class WorldEventFx {
         case 'rogue-wave': this.sea.wave(h, dt); break;
         case 'maelstrom': this.sea.maelstrom(h, dt); break;
         case 'lava-bomb': this.eruption.bomb(h, dt); break;
+        case 'trade-wind': this.poi.wind(h, dt); break;
+        case 'beacon': this.poi.beacon(h); break;
+        case 'salvage': this.poi.salvage(h); break;
         default: break;
       }
     }
     this.marks.update(run, dt);
-    for (let i = 0; i < ctx.events.length; i++) this.marks.onEvent(ctx.events[i]!, run);
+    for (let i = 0; i < ctx.events.length; i++) { const e = ctx.events[i]!; this.marks.onEvent(e, run); this.poi.onEvent(e); }
     this.sea.endFrame();
+    this.poi.endFrame();
     this.eruption.endFrame();
     this.tentacles.end();
   }

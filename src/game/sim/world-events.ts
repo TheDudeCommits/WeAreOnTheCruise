@@ -1,6 +1,7 @@
 /**
  * World events (EVENTS-owned): the big-world set pieces beyond META's first six (src/game/sim/events/*), the public
- * `state.worldEvent` for the HUD tracker, minimap ring and effects, and the event cadence.
+ * `state.worldEvent` for the HUD tracker, minimap ring and effects, the event cadence, and the points of interest
+ * between them (events/poi.ts: trade-wind lanes, lighthouse beacons, floating salvage).
  *
  * Director hooks (src/game/sim/director.ts):
  *  - startWorldEvent: startEvent's fallback for ids it does not handle (true when handled). startEvent has already
@@ -14,6 +15,7 @@ import { DIRECTOR_EVENTS, EVENT_TUNING, SEA_EVENTS, type DirectorEventId } from 
 import type { SimContext } from './context';
 import { SCRATCH } from './meta-runtime';
 import { HANDLERS } from './events/registry';
+import { updatePois } from './events/poi';
 import { OUTCOME_END, OUTCOME_NONE, eventRuntime, type EventRuntime } from './events/runtime';
 
 export function startWorldEvent(c: SimContext, id: DirectorEventId, minute: number): boolean {
@@ -57,6 +59,7 @@ export function updateWorldEvents(c: SimContext): void {
       if (rt.done && rt.t - rt.outcomeAt >= EVENT_TUNING.linger) clear(c, rt, false);
     }
   }
+  updatePois(c, rt);
   holdCadence(c, rt);
 }
 

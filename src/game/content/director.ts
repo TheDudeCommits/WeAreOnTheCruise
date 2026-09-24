@@ -309,4 +309,29 @@ export const EVENT_TUNING = {
   treasureDoubloons: 7,
 
   bountyDoubloons: 6,
+
+  // Points of interest (between set pieces).
+  /** Seconds into the run (after the first sim tick) before the first trade wind / salvage. */
+  poiFirst: 90,
+  tradeWindEvery: [80, 120] as readonly [number, number],
+  tradeWindTtl: 55,
+  /** Current speed (m/s), patches per lane and their radius (m). */
+  tradeWindSpeed: 8,
+  tradeWindPatches: 5,
+  tradeWindRadius: 34,
+  /** Sailing with the current: extra acceleration (m/s²) up to this multiple of top speed. */
+  tradeWindAccel: 5,
+  tradeWindCap: 1.35,
+  salvageEvery: [55, 85] as readonly [number, number],
+  salvageTtl: 50,
+  salvageRadius: 14,
+  salvageXp: (minute: number): number => 4 + 1.5 * minute,
+  salvageRepair: 0.12,
+  /** Lighthouse beacons: reach (m) from the ship, ring radius, lifetime, blessing length, fire-rate and shield. */
+  beaconReach: 650,
+  beaconRadius: 22,
+  beaconTtl: 120,
+  beaconBuff: 15,
+  beaconFireRate: 1.3,
+  beaconShield: 0.1,
 };
