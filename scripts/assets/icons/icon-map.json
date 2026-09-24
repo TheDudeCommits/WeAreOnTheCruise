@@ -72,6 +72,24 @@
       "lantern",
       "admiralty-flag",
       "cutlasses"
+    ],
+    "icons-e": [
+      "clipper-rigging",
+      "racing-keel",
+      "momentum",
+      "trade-winds",
+      "copper-sheathing",
+      "storm-sails",
+      "rudder-chains",
+      "captain",
+      "affix-swift",
+      "affix-armored",
+      "affix-volatile",
+      "affix-vampiric",
+      "affix-shielded",
+      "affix-splitting",
+      "affix-burning",
+      "affix-commander"
     ]
   },
   "keepHoles": [],

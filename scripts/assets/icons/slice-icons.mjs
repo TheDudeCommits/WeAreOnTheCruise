@@ -4,7 +4,7 @@
  *
  *   node scripts/assets/icons/slice-icons.mjs <sheet-dir> [--only id,id]
  *
- * <sheet-dir> holds icons-a.png … icons-d.png (the 2048² Higgsfield outputs; small JPG copies are kept in
+ * <sheet-dir> holds icons-a.png … icons-e.png (the 2048² Higgsfield outputs; small JPG copies are kept in
  * assets/concepts/icon-sheet-*.jpg for reference). The cell → id mapping lives in ./icon-map.json.
  * Background removal: flood fill from the cell border through near-white / light-grey unsaturated pixels
  * (so white highlights inside the thick outline stay opaque), then remove large flat pure-white enclosed
@@ -28,6 +28,7 @@ const isBg = (r, g, b) => Math.min(r, g, b) >= 168 && Math.max(r, g, b) - Math.m
 const isPureWhite = (r, g, b) => r >= 247 && g >= 247 && b >= 247;
 
 for (const [sheet, ids] of Object.entries(map.sheets)) {
+  if (only && !ids.some((id) => only.has(id))) continue; // --only: sheets without a requested id need not be present
   const file = path.join(sheetDir, `${sheet}.png`);
   const { data, info } = await sharp(file).removeAlpha().raw().toBuffer({ resolveWithObject: true });
   const W = info.width, H = info.height, cw = W / 4, ch = H / 4, inset = Math.round(cw * 0.03);

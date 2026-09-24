@@ -14,9 +14,9 @@
     "higgsfield": {
       "before": 2157.24,
       "after": 2157.24,
-      "spent": 24,
+      "spent": 26,
       "checked": "2026-09-24",
-      "note": "The balance endpoint did not move (shared account, boost grants); the transaction list shows the 12 Nano Banana Pro jobs below at 2 credits each."
+      "note": "The balance endpoint did not move (shared account, boost grants); the transaction list shows the Nano Banana Pro jobs below at 2 credits each (sheet E added in round 1 by PACE)."
     }
   },
   "entries": [
@@ -262,6 +262,15 @@
       "credits": 15,
       "purpose": "prop: iron-ram (cell of assets/concepts/prop-sheet.jpg)",
       "output": "public/assets/fleet/iron-ram.glb"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro 2k (job reports nano_banana_2)",
+      "jobId": "43cb53b8-4472-4ecb-bc8c-91b5bd728a53",
+      "credits": 2,
+      "purpose": "icon sheet E (round 1: speed passives + harbor refits, captain, 8 elite-affix badges)",
+      "output": "public/assets/icons/*.png (sliced)"
     }
   ]
 }

@@ -103,10 +103,10 @@ CC0 kit pieces for the WORLD agent.
 
 ## Owner-generated assets
 
-Generated for this project with the owner's accounts and budget (Meshy ≤ 400 credits, Higgsfield ≤ 50 credits). Spent: **Meshy 315 credits**, **Higgsfield 24 credits**; every job id is in [scripts/assets/generation-log.json](scripts/assets/generation-log.json) (ids only, no URLs).
+Generated for this project with the owner's accounts and budget (Meshy ≤ 400 credits, Higgsfield ≤ 50 credits). Spent: **Meshy 315 credits**, **Higgsfield 26 credits**; every job id is in [scripts/assets/generation-log.json](scripts/assets/generation-log.json) (ids only, no URLs).
 
 - **3D models (Meshy image-to-3D):** `man-o-war`, `mortar-barge`, `dreadnought`, `sovereign`, `fort`, `tidewyrm-head`, `mortar`, `rocket-rack`, `swivel-gun`, `harpoon-gun`, `storm-rod`, `mine`, `lantern`, `powder-keg`, `iron-ram`. Concept images (Higgsfield Nano Banana Pro) are kept as small JPGs in `assets/concepts/`.
-- **UI icons:** 64 painted icons in `public/assets/icons/<id>.png` (256×256, transparent), sliced from four Higgsfield Nano Banana Pro 4×4 sheets (`assets/concepts/icon-sheet-*.jpg`) by `scripts/assets/icons/slice-icons.mjs`. Covers every WeaponId, PassiveId, SpecialId, UltimateId, MetaUpgradeId, PickupKind and broadside/brace/boost/heal/doubloon/bounty, plus spares (coins, chest-open, helm, anchor, lantern, admiralty-flag, cutlasses).
+- **UI icons:** 80 painted icons in `public/assets/icons/<id>.png` (256×256, transparent), sliced from five Higgsfield Nano Banana Pro 4×4 sheets (`assets/concepts/icon-sheet-*.jpg`) by `scripts/assets/icons/slice-icons.mjs`. Covers every WeaponId, PassiveId, SpecialId, UltimateId, MetaUpgradeId, PickupKind, elite affix (`affix-<id>`), the AI captain badge and broadside/brace/boost/heal/doubloon/bounty, plus spares (coins, chest-open, helm, anchor, lantern, admiralty-flag, cutlasses).
 - **Emblems and procedural flags:** `scripts/assets/fleet/emblems/*.svg` (Admiralty wave-crest, Redtide cutlass-and-sun, Gloam sigil) drawn for this project; `flag`, `flag-redtide` and the skiff's added mast/sail are procedural geometry.
 - **Materials from the earlier pass (kept):** `public/assets/materials/limestone.png`, `painted-timber.png`, `cinematic-sky.png` (generated images, see git history; SHA-256 `dfe06806…`, `caa10fa3…`, `9ab3d6ac…`).
 
