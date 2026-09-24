@@ -216,7 +216,7 @@ export class Sim implements CoreSim {
       const e = enemies[i]!;
       if (e.life === 'sinking') {
         e.sink = Math.min(1, e.sink + SIM_DT / 3);
-        if (e.sink >= 1) { e.life = 'dead'; this.emit({ type: 'enemy-sunk', id: e.id }); }
+        if (e.sink >= 1) { e.life = 'dead'; this.emit({ type: 'enemy-sunk', id: e.id, x: e.x, z: e.z }); }
       }
       if (e.life === 'dead') { byId.delete(e.id); continue; }
       enemies[w++] = e;
@@ -395,7 +395,7 @@ export class Sim implements CoreSim {
     const slot = list[idx]!;
     slot.id = this.nextId(); slot.alive = true; slot.shape = t.shape; slot.team = t.team; slot.x = t.x; slot.z = t.z;
     slot.radius = t.radius; slot.length = t.length ?? 0; slot.angle = t.angle ?? 0; slot.time = 0; slot.duration = t.duration;
-    this.emit({ type: 'telegraph', id: slot.id, shape: t.shape, x: t.x, z: t.z, radius: t.radius, duration: t.duration });
+    this.emit({ type: 'telegraph', id: slot.id, shape: t.shape, team: t.team, x: t.x, z: t.z, radius: t.radius, duration: t.duration });
     return slot;
   }
 

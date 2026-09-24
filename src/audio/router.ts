@@ -65,7 +65,6 @@ export class EventRouter {
   private lastCoin = -10;
   private readonly killTimes: number[] = [];
   private lastCheer = -30;
-  private readonly lastPositions = new Map<ShipRef, Pos>();
   private prevScreen: AppScreen | null = null;
   private prevStatus: RunState['status'] | null = null;
   private prevRerolls = -1;
@@ -96,12 +95,9 @@ export class EventRouter {
         if (e.elite) this.p('enemy-spawned', 'elite-spawn', { x: e.x, z: e.z });
         return;
       case 'enemy-killed': return this.enemyKilled(e);
-      case 'enemy-sunk': {
-        const pos = this.lastPositions.get(e.id);
-        this.lastPositions.delete(e.id);
-        if (pos && this.dist(pos.x, pos.z) < 260) this.p('enemy-sunk', 'splash-small', { x: pos.x, z: pos.z, pitch: -7, gain: 0.45 });
+      case 'enemy-sunk':
+        if (this.dist(e.x, e.z) < 260) this.p('enemy-sunk', 'splash-small', { x: e.x, z: e.z, pitch: -7, gain: 0.45 });
         return;
-      }
       case 'pickup-spawned':
         if (e.kind === 'chest') this.p('pickup-spawned', 'treasure-sparkle', { x: e.x, z: e.z, gain: 0.7 });
         return;
@@ -399,8 +395,6 @@ export class EventRouter {
   }
 
   private enemyKilled(e: Extract<SimEvent, { type: 'enemy-killed' }>): void {
-    this.lastPositions.set(e.id, { x: e.x, z: e.z });
-    if (this.lastPositions.size > 256) this.lastPositions.delete(this.lastPositions.keys().next().value!);
     this.p('enemy-killed', 'ship-break', { x: e.x, z: e.z, gain: e.elite ? 1.2 : 1 });
     this.p('enemy-killed', 'ship-sink', { x: e.x, z: e.z, delay: 0.5, gain: 0.7 });
     const now = this.now;
@@ -475,8 +469,7 @@ export class EventRouter {
   }
 
   private telegraph(e: Extract<SimEvent, { type: 'telegraph' }>): void {
-    const tel = this.run?.telegraphs.find((t) => t.id === e.id);
-    const friendly = tel?.team === 'player';
+    const friendly = e.team === 'player';
     if (e.shape === 'circle') {
       const len = this.h.cueLength('mortar-whistle') || 1.6;
       this.p('telegraph', 'mortar-whistle', { x: e.x, z: e.z, delay: Math.max(0, e.duration - len), gain: friendly ? 0.5 : 0.9 });

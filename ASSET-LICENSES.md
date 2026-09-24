@@ -117,7 +117,26 @@ Generated for this project with the owner's accounts and budget (Meshy ≤ 400 c
 
 ## Music and sound
 
-Audio files and their licences are ledgered by the audio pipeline under `public/audio/` (CC0 / CC BY only). Add the audio credits to `public/credits.html` in the `#audio-credits` section.
+Built by `scripts/audio/build.mjs`; the full per-source and per-file ledger (author, page, licence, changes, SHA-256 of every original and shipped file) is `public/audio/CREDITS.md`. Totals: 221 shipped files, 13.17 MB; 213 sources (212 CC0-1.0, 1 CC-BY-4.0). Licences are CC0 1.0 or CC BY only.
+
+**Attribution required (CC BY):**
+- "Battle Horn" by Porphyr — https://freesound.org/people/Porphyr/sounds/188815/ — CC-BY-4.0. Trimmed, processed and re-encoded.
+
+**Music:**
+- `title`: "Pirate's Orchestra [2:08]" by Dizzy Crow — https://opengameart.org/content/pirates-orchestra-208 — CC0-1.0
+- `harbor`: "A sailor's chant" by Thimras — https://opengameart.org/content/a-sailors-chant — CC0-1.0
+- `run-calm`: "Trials of the Sea" by Crocdent — https://opengameart.org/content/trials-of-the-sea — CC0-1.0
+- `run-combat`: "Chest of Adventure" by Eldritch Grim — https://opengameart.org/content/chest-of-adventure — CC0-1.0
+- `run-horde`: "Battle Theme A" by cynicmusic — https://opengameart.org/content/battle-theme-a — CC0-1.0
+- `boss`: "Boss Battle Music" by SubspaceAudio — https://opengameart.org/content/boss-battle-music — CC0-1.0
+- `boss-final`: "The Final Battle" by skrjablin — https://opengameart.org/content/the-final-battle — CC0-1.0
+
+## Fonts
+
+Self-hosted WOFF2 latin subsets in `public/fonts/` (unmodified; provenance in `public/fonts/FONTS.txt`, each folder carries its `OFL.txt`). SIL Open Font License 1.1.
+- **Knewave** by Tyler Finck — https://github.com/google/fonts/tree/main/ofl/knewave
+- **Bangers** by Vernon Adams / The Bangers Project Authors — https://github.com/google/fonts/tree/main/ofl/bangers
+- **Nunito** by The Nunito Project Authors — https://github.com/google/fonts/tree/main/ofl/nunito
 
 ## Rebuild
 

@@ -19,6 +19,22 @@ const gen = read('scripts/assets/generation-log.json');
 const icons = read('scripts/assets/icons/icon-map.json');
 const today = new Date().toLocaleDateString('en-CA');
 
+// Audio ledger (written by scripts/audio/build.mjs) and self-hosted fonts (public/fonts/FONTS.txt).
+const audioMd = fs.readFileSync(path.join(repo, 'public/audio/CREDITS.md'), 'utf8');
+const audioTotals = (audioMd.match(/^Totals: .*$/m) ?? [''])[0];
+const audioSources = [...audioMd.matchAll(/^\| ([\w.-]+) \| \[(.+?)\]\((https?:[^)]+)\) \| (.+?) \| \[([\w.-]+)\]/gm)]
+  .map(([, id, title, url, author, license]) => ({ id, title, url, author, license }));
+const music = [...audioMd.matchAll(/^\| `music\/([\w-]+)\.ogg` \| [\w:-]+ \| \[(.+?)\]\((https?:[^)]+)\) — (.+?) \| ([\w.-]+) \|/gm)]
+  .map(([, slot, title, url, author, license]) => ({ slot, title, url, author, license }));
+const audioBy = audioSources.filter((a) => a.license !== 'CC0-1.0');
+const audioAuthors = [...audioSources.filter((a) => a.license === 'CC0-1.0').reduce((m, a) => m.set(a.author, (m.get(a.author) ?? 0) + 1), new Map())]
+  .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([a]) => a);
+const FONTS = [
+  { name: 'Knewave', by: 'Tyler Finck', url: 'https://github.com/google/fonts/tree/main/ofl/knewave' },
+  { name: 'Bangers', by: 'Vernon Adams / The Bangers Project Authors', url: 'https://github.com/google/fonts/tree/main/ofl/bangers' },
+  { name: 'Nunito', by: 'The Nunito Project Authors', url: 'https://github.com/google/fonts/tree/main/ofl/nunito' },
+];
+
 const LIC = {
   'CC-BY-4.0': { label: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' },
   'CC-BY-SA-4.0': { label: 'CC BY-SA 4.0', url: 'https://creativecommons.org/licenses/by-sa/4.0/' },
@@ -108,7 +124,18 @@ L.push('- **Quaternius — Pirate Kit** (https://quaternius.com/packs/piratekit.
 L.push('');
 L.push('## Music and sound');
 L.push('');
-L.push('Audio files and their licences are ledgered by the audio pipeline under `public/audio/` (CC0 / CC BY only). Add the audio credits to `public/credits.html` in the `#audio-credits` section.');
+L.push(`Built by \`scripts/audio/build.mjs\`; the full per-source and per-file ledger (author, page, licence, changes, SHA-256 of every original and shipped file) is \`public/audio/CREDITS.md\`. ${audioTotals} Licences are CC0 1.0 or CC BY only.`);
+L.push('');
+L.push('**Attribution required (CC BY):**');
+for (const a of audioBy) L.push(`- "${md(a.title)}" by ${md(a.author)} — ${a.url} — ${a.license}. Trimmed, processed and re-encoded.`);
+L.push('');
+L.push('**Music:**');
+for (const m of music) L.push(`- \`${m.slot}\`: "${md(m.title)}" by ${md(m.author)} — ${m.url} — ${m.license}`);
+L.push('');
+L.push('## Fonts');
+L.push('');
+L.push('Self-hosted WOFF2 latin subsets in `public/fonts/` (unmodified; provenance in `public/fonts/FONTS.txt`, each folder carries its `OFL.txt`). SIL Open Font License 1.1.');
+for (const f of FONTS) L.push(`- **${f.name}** by ${f.by} — ${f.url}`);
 L.push('');
 L.push('## Rebuild');
 L.push('');
@@ -149,7 +176,15 @@ H.push('</div>');
 H.push('<h2>Made for this game</h2>');
 const meshyKeys = Object.entries(fleet).filter(([, m]) => m.source.kind === 'meshy').map(([k]) => k);
 H.push(`<p>The Man-o\'-War, Mortar Barge, Cliff Battery, the Iron Warden, the Sovereign, the Tidewyrm\'s head and the weapon-mount props (${meshyKeys.filter((k) => fleet[k].role === 'prop').join(', ')}) were generated for the project with <a href="https://www.meshy.ai/">Meshy</a> from concept art made with Higgsfield. The UI icons were painted with Higgsfield (Nano Banana Pro) and cut out with the project's own tooling. The faction emblems (Admiralty wave-crest, Redtide cutlass-and-sun, Gloam sigil) and the flags are original to this game.</p>`);
-H.push('<h2>Music and sound</h2><section id="audio-credits"><p class="note">Music and sound effects are free Creative Commons works (CC0 / CC BY); their credits are listed with the audio files.</p></section>');
+H.push('<h2>Music and sound</h2><section id="audio-credits"><div class="grid">');
+for (const m of music) { const lic = LIC[m.license] ?? LIC['CC-BY-4.0']; H.push(art(esc(m.title), `Music by ${esc(m.author)}`, `<a href="${m.url}">Source</a> · <a href="${lic.url}">${lic.label}</a>`, '')); }
+for (const a of audioBy) H.push(art(esc(a.title), `Sound by ${esc(a.author)}`, `<a href="${a.url}">Source</a> · <a href="${(LIC[a.license] ?? LIC['CC-BY-4.0']).url}">${(LIC[a.license] ?? LIC['CC-BY-4.0']).label}</a>`, 'Trimmed, processed and re-encoded.'));
+H.push('</div>');
+H.push(`<p>Sound effects are CC0 works from <a href="https://freesound.org/">Freesound</a>, <a href="https://kenney.nl/assets/category:Audio">Kenney</a> and <a href="https://opengameart.org/">OpenGameArt</a>, trimmed, layered and re-encoded for the game. With thanks to ${audioAuthors.map(esc).join(', ')}.</p>`);
+H.push('<p class="note">Per-file sources, licences and changes: <a href="/audio/CREDITS.md">audio ledger</a>.</p></section>');
+H.push('<h2>Fonts</h2><div class="grid">');
+for (const f of FONTS) H.push(art(f.name, `By ${esc(f.by)}`, `<a href="${f.url}">Source</a> · <a href="https://openfontlicense.org/">SIL OFL 1.1</a>`, ''));
+H.push('</div>');
 H.push('<h2>Software</h2><p><a href="https://threejs.org/">three.js</a> (MIT), <a href="https://gltf-transform.dev/">glTF-Transform</a> (MIT), <a href="https://github.com/zeux/meshoptimizer">meshoptimizer</a> (MIT), <a href="https://sharp.pixelplumbing.com/">sharp</a> (Apache-2.0), <a href="https://vite.dev/">Vite</a> (MIT).</p>');
 H.push('<p class="note">An unofficial, non-commercial fan project. Model licences are those chosen by each creator for their upload. Full ledger: ASSET-LICENSES.md in the source repository; machine-readable manifests: <a href="/assets/fleet/manifest.json">fleet</a>, <a href="/assets/sketchfab/manifest.json">player ships</a>.</p>');
 H.push('</main></html>');

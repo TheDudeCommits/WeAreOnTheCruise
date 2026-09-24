@@ -532,7 +532,7 @@ export type SimEvent =
   | { type: 'player-hit'; amount: number; x: number; z: number; braced: boolean; parried: boolean; source?: ShipRef }
   | { type: 'enemy-spawned'; id: ShipRef; defId: EnemyId; x: number; z: number; elite: boolean }
   | { type: 'enemy-killed'; id: ShipRef; defId: EnemyId; x: number; z: number; elite: boolean; weapon?: WeaponId }
-  | { type: 'enemy-sunk'; id: ShipRef }
+  | { type: 'enemy-sunk'; id: ShipRef; x: number; z: number }
   | { type: 'pickup-spawned'; id: number; kind: PickupKind; x: number; z: number; value: number }
   | { type: 'pickup-collected'; id: number; kind: PickupKind; x: number; z: number; value: number }
   | { type: 'level-up'; level: number }
@@ -549,7 +549,7 @@ export type SimEvent =
   | { type: 'collision'; a: ShipRef; b: ShipRef | 'island'; x: number; z: number; impulse: number }
   | { type: 'hazard-spawned'; id: number; kind: HazardKind; x: number; z: number; radius: number }
   | { type: 'hazard-triggered'; id: number; kind: HazardKind; x: number; z: number; radius: number }
-  | { type: 'telegraph'; id: number; shape: TelegraphShape; x: number; z: number; radius: number; duration: number }
+  | { type: 'telegraph'; id: number; shape: TelegraphShape; team: Team; x: number; z: number; radius: number; duration: number }
   | { type: 'boss-warning'; boss: BossId; eta: number }
   | { type: 'boss-spawned'; boss: BossId; id: ShipRef; x: number; z: number }
   | { type: 'boss-phase'; boss: BossId; id: ShipRef; phase: number }
