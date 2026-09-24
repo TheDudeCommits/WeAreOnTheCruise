@@ -134,8 +134,10 @@ export class EventFx {
       case 'projectile-hit': this.projectileHit(e, run); break;
       case 'explosion': {
         const onWater = ctx.world.isWater(e.x, e.z, 0);
-        const nearShip = this.nearShip(run, e.x, e.z, e.radius);
-        fx.explosion(e.kind, e.x, e.z, e.radius, onWater, nearShip, e.team);
+        const p = run.player;
+        const onHero = e.team === 'player' && Math.hypot(e.x - p.x, e.z - p.z) < p.length * 0.6 && e.radius > 12;
+        const nearShip = !onHero && this.nearShip(run, e.x, e.z, Math.min(e.radius, 18));
+        fx.explosion(e.kind, e.x, e.z, e.radius, onWater, nearShip, e.team, onHero);
         break;
       }
       case 'damage': {
@@ -697,7 +699,7 @@ export class EventFx {
         fx.burst(x - ax * L * 0.5, wy + 5, z - az * L * 0.5, 22, GlowPal.Gold, 0.1);
         fx.sparks(x - ax * L * 0.5, wy + 4, z - az * L * 0.5, 16, 50, GlowPal.Gold, -ax, 0.3, -az, 0.6, 0.5);
         // landing marker along the dash line
-        k.decals.emit(Decal.Line, x + ax * 90, z + az * 90, 6, 1.0, 0xffd76a, 0.8, 0x5a4210, 0.4, 1, 0, 0, Math.atan2(ax, az), 90);
+        k.decals.emit(Decal.Line, x + ax * 90, z + az * 90, 3, 0.9, 0xffd76a, 0.55, 0x5a4210, 0.3, 1, 0, 0, Math.atan2(ax, az), 90);
         break;
       }
       case 'second-wind': {

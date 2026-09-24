@@ -348,10 +348,30 @@ export class Sakuga {
     this.sparks(x, y, z, 4, 25 * s, GlowPal.Spark, 0, 1, 0, 0.3, 0.35);
   }
 
-  /** Every explosion kind, scaled by radius. */
-  explosion(kind: ExplosionKind, x: number, z: number, radius: number, onWater: boolean, nearShip: boolean, team: 'player' | 'enemy'): void {
+  /**
+   * Area skills (seaquake 160 m, Lionburst 42 m, tidal front 75 m...) arrive as explosions with big radii: the core
+   * blast is clamped to ship scale and the radius is shown as a ring at the circumference instead.
+   */
+  areaRing(x: number, z: number, radius: number, kind: ExplosionKind): void {
+    const hot = kind !== 'water' && kind !== 'lightning';
+    this.shock(x, z, radius, 0.55, hot ? 0xfff0c8 : 0xeaf8ff, 1.0, 1.4);
+    this.shock(x, z, radius * 0.72, 0.45, 0xffffff, 0.5, 0.8, 0.06);
+    this.foam(x, z, radius * 0.95, 2.4, 0.05, 0.9);
+    const n = Math.min(30, Math.max(10, Math.round(radius / 5)));
+    this.crown(x, z, radius * 0.92, n, 13, 2.8, 0.08);
+    const o = this.k.ocean;
+    if (o) { o.stampRing(x, z, radius * 0.9, 1); o.stampFoam(x, z, radius * 0.6, 0.6); }
+  }
+
+  /** Every explosion kind; `onHero` = centred on the player's hull (skill blasts: no core blast over the ship). */
+  explosion(kind: ExplosionKind, x: number, z: number, radius: number, onWater: boolean, nearShip: boolean, team: 'player' | 'enemy', onHero = false): void {
     const wy = this.wy(x, z);
-    let s = Math.max(0.5, radius / 8);
+    if (radius > 24) this.areaRing(x, z, radius, kind);
+    if (onHero) {
+      this.k.juice.shake(Math.min(0.8, 0.25 + radius / 250), 0.4);
+      return;
+    }
+    let s = Math.max(0.5, Math.min(radius, 18) / 8);
     const o = this.k.ocean;
     const dist = this.distToFocus(x, z);
     if (kind === 'small') s *= 0.75;
