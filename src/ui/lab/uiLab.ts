@@ -2,7 +2,7 @@
  * UI lab (lab/ui.html): mounts the real Ui over a screenshot plate with mock state, a control panel (sliders,
  * event buttons) and URL presets for deterministic screenshots, e.g.
  *   /lab/ui.html?screen=run&bg=day&panel=0&modal=branch&boss=1&freeze=1
- * Params: screen, bg, panel, tab, ship, profile, modal, boss, hp, pad, outcome, fire, freeze, sea, hudscale.
+ * Params: screen, bg, panel, tab, ship, profile, modal, boss, hp, pad, outcome, fire, freeze, sea, hudscale, cb.
  * Round-2 fire presets: busy (captains + world event + affixed elites + bounty captain + signal cutter), irons,
  * momentum, charges, auto (toggle latches), victory-lap (armed lap + an offer the guard must resolve).
  */
@@ -310,6 +310,8 @@ if (state.screen === 'results') showResults((params.get('outcome') as RunResult[
 if (params.get('boss') === '1') fire('boss');
 const hudScale = params.get('hudscale');
 if (hudScale) state.settings = { ...state.settings, hudScale: Number(hudScale) };
+const cb = params.get('cb') as Settings['colorBlind'] | null;
+if (cb) state.settings = { ...state.settings, colorBlind: cb };
 const hp = params.get('hp');
 if (hp) state.run.player.hp = Number(hp) * state.run.player.maxHp;
 if (params.get('pad') === '1') document.querySelector('.cr-ui')?.classList.add('is-pad');

@@ -16,7 +16,7 @@ import { PadReader, type PadIntent } from './core/nav';
 import { Hud } from './hud/Hud';
 import { CardsModal } from './modals/CardsModal';
 import { PauseMenu } from './modals/PauseMenu';
-import { SettingsPanel } from './modals/SettingsPanel';
+import { SettingsPanel, type SettingsTab } from './modals/SettingsPanel';
 import { HarborScreen } from './screens/HarborScreen';
 import { ResultsScreen } from './screens/ResultsScreen';
 import { TitleScreen } from './screens/TitleScreen';
@@ -82,7 +82,7 @@ export class Ui implements UiSystem {
     });
     this.pause = new PauseMenu({
       resume: () => this.setPaused(false),
-      openSettings: () => this.openSettings(),
+      openSettings: (tab) => this.openSettings(tab),
       retire: () => { this.setPaused(false); this.cb.onRetire(); },
     });
     this.settings = new SettingsPanel((s) => { this.settingsValue = s; this.cb.onSettingsChange(s); });
@@ -152,6 +152,8 @@ export class Ui implements UiSystem {
     if (this.restored) this.applyRestored(f);
     const calm = !!(f.settings as { reduceFlashing?: boolean }).reduceFlashing;
     if (calm !== this.layer.classList.contains('is-calm')) this.layer.classList.toggle('is-calm', calm);
+    const cb = f.settings.colorBlind ?? 'off';
+    if (cb !== (this.layer.dataset.cb ?? 'off')) { if (cb === 'off') delete this.layer.dataset.cb; else this.layer.dataset.cb = cb; }
     this.pollPad(f.dt);
     switch (this.screen) {
       case 'harbor': this.harbor.update(f); break;
@@ -236,13 +238,13 @@ export class Ui implements UiSystem {
     }
   }
 
-  private openSettings(): void {
+  private openSettings(tab?: SettingsTab): void {
     const s = this.settingsValue ?? this.frame?.settings;
     if (!s) return;
     this.settings.show(s, () => {
       if (this.screen === 'run' && this.pause.open) this.pause.refocus();
       else if (this.screen === 'harbor') this.harbor.refocus();
-    });
+    }, tab);
   }
 
   // ── Input routing ──

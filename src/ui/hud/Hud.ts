@@ -131,7 +131,7 @@ export class Hud {
     this.ring.update(run, ship); mark?.('ring');
     this.skills.update(p, ship); mark?.('skills');
     this.loadout.update(p); mark?.('loadout');
-    this.minimap.update(run, this.basis, f.dt, f.world); mark?.('minimap');
+    this.minimap.update(run, this.basis, f.dt, f.world, f.settings.colorBlind); mark?.('minimap');
     this.markers.apply(); mark?.('markers');
     this.feedback.update(p); mark?.('feedback');
     this.roster.update(run, f); this.tracker.update(run, f); mark?.('roster');

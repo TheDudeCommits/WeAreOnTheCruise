@@ -4,13 +4,15 @@
  * Islands are drawn from the run's WorldQuery as sand-filled coastlines, clipped to the map disc.
  * A wind arrow rides the rim, pointing where the wind blows (bigger in a stronger wind; red while you sail in irons).
  */
-import type { IslandDef, RunState, WorldQuery } from '../../game/types';
+import type { IslandDef, RunState, Settings, WorldQuery } from '../../game/types';
 import { h, svg } from '../core/dom';
 import { FACTION_COLOR, FACTION_EDGE } from '../core/names';
 import type { ScreenBasis } from './camera';
 import { inIrons } from './wind';
 
 const RANGE = 460;
+/** Red-green colour blindness (Settings.colorBlind deutan/protan): corsair red becomes magenta on the map. */
+const FACTION_COLOR_CB: Readonly<Record<string, string>> = { ...FACTION_COLOR, corsair: '#ff4fd8' };
 const LETTERS = ['N', 'E', 'S', 'W'] as const;
 
 export class Minimap {
@@ -85,7 +87,8 @@ export class Minimap {
 
   reset(): void { this.lastNorth = Number.NaN; this.lastWind = Number.NaN; this.lastWindScale = -1; this.acc = 1; }
 
-  update(run: Readonly<RunState>, basis: ScreenBasis, dt: number, world: WorldQuery | null = null): void {
+  update(run: Readonly<RunState>, basis: ScreenBasis, dt: number, world: WorldQuery | null = null, colorBlind: Settings['colorBlind'] = 'off'): void {
+    const faction = colorBlind === 'deutan' || colorBlind === 'protan' ? FACTION_COLOR_CB : FACTION_COLOR;
     this.acc += dt;
     this.pulse += dt;
     if (this.acc < 1 / 30) return;
@@ -196,7 +199,7 @@ export class Minimap {
         ctx.globalAlpha = pt.clamped ? 0.55 : 1;
         ctx.beginPath();
         ctx.arc(pt.x, pt.y, pt.clamped ? r * 0.8 : r, 0, Math.PI * 2);
-        ctx.fillStyle = FACTION_COLOR[en.faction];
+        ctx.fillStyle = faction[en.faction]!;
         ctx.fill();
         ctx.strokeStyle = en.elite ? '#ffcf33' : FACTION_EDGE[en.faction];
         ctx.lineWidth = en.elite ? 2 : 1.2;
