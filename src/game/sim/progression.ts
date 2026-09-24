@@ -415,11 +415,12 @@ export function onEnemyKilled(c: SimContext, e: EnemyState): void {
   const convoy = e.ai.convoy === 1;
   // Harder seas (and later minutes) field more ships, not more experience: XP per ship falls with the density the
   // budget adds.
-  const density = Math.pow(c.content.seas[s.seaId].difficulty, DIRECTOR.budgetDifficultyExp);
+  const density = Math.pow(c.content.seas[s.seaId].difficulty, DIRECTOR.xpDifficultyExp);
   const xp = (def.xp * (e.elite ? DIRECTOR.eliteXp : 1) * (convoy ? 0.5 : 1) * DIRECTOR.xpScale(s.time / 60)) / density;
   spillCoins(c, e.x, e.z, xp, e.radius);
   const luck = Math.max(0, p.stats.luck);
-  if (c.random() < def.doubloonChance * (1 + luck * 0.05)) scatter(c, 'doubloon', e.x, e.z, tune.doubloons, e.radius);
+  const perShip = DIRECTOR.dropScale(s.time / 60);
+  if (c.random() < def.doubloonChance * (1 + luck * 0.05) * perShip) scatter(c, 'doubloon', e.x, e.z, tune.doubloons, e.radius);
   if (convoy) for (let k = 0; k < 3; k++) scatter(c, 'doubloon', e.x, e.z, Math.round(EVENT_TUNING.convoyDoubloons / 3), e.radius * 1.2);
   if (e.elite) {
     c.spawnPickup('chest', e.x, e.z, 1);
@@ -427,7 +428,7 @@ export function onEnemyKilled(c: SimContext, e: EnemyState): void {
     if (c.random() < RARE_DROPS.eliteRepair) scatter(c, 'repair', e.x, e.z, 1, e.radius);
     return;
   }
-  const scale = (1 + def.xp * RARE_DROPS.sizeScale) * (1 + luck * RARE_DROPS.luckScale);
+  const scale = (1 + def.xp * RARE_DROPS.sizeScale) * (1 + luck * RARE_DROPS.luckScale) * perShip;
   const r = c.random();
   if (r < RARE_DROPS.repair * scale) scatter(c, 'repair', e.x, e.z, 1, e.radius);
   else if (r < (RARE_DROPS.repair + RARE_DROPS.compass) * scale) scatter(c, 'compass', e.x, e.z, 1, e.radius);

@@ -25,11 +25,11 @@ export const PICKUP_POOL = 900;
 export const TELEGRAPH_POOL = 96;
 
 /**
- * XP required to go from `level` to `level + 1`. PACE round 1: cheap early levels (5, 8, 12, 15, 19 …) so the
- * opening level-ups come every 15–25 s, and a quadratic tail (… 116 at level 20, 163 at level 25) so late ones take
- * 40–60 s even with the bigger horde. Was 6 + 4 × (level − 1).
+ * XP required to go from `level` to `level + 1`. PACE round 1: cheap early levels (4, 7, 11, 15, 19 …) so the first
+ * level-up lands by ~0:20 and the opening ones come every 15–25 s, and a quadratic tail (… 119 at level 20, 167 at
+ * level 25) so late ones take 40–60 s even with the bigger horde. Was 6 + 4 × (level − 1).
  */
-export const xpToNext = (level: number): number => Math.round(5 + 3 * (level - 1) + 0.15 * (level - 1) ** 2);
+export const xpToNext = (level: number): number => Math.round(4 + 3.2 * (level - 1) + 0.15 * (level - 1) ** 2);
 
 /** Visual growth tier for a level. */
 export const tierForLevel = (level: number): number =>

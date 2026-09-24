@@ -39,21 +39,28 @@ export const SPAWN_BANDS: readonly SpawnBand[] = [
 ];
 
 /** Per-boss HP multipliers on top of content/bosses.ts (PACE round 1; see DIRECTOR.bossHpScale). */
-const BOSS_HP_MUL: Readonly<Record<BossId, number>> = { 'iron-warden': 1.8, tidewyrm: 1.8, sovereign: 1.3 };
+const BOSS_HP_MUL: Readonly<Record<BossId, number>> = { 'iron-warden': 1.6, tidewyrm: 1.7, sovereign: 1.3 };
 
 export const DIRECTOR = {
   /**
-   * Spawn points per second at difficulty 1 (1 point = 1 xp of enemies). PACE round 1: ~2× the v2 curve early
-   * (0.8/s at the start) and ~2× late, for a horde of 60–90 ships by minute 12 (was 0.42 + 0.14m + 0.014m²).
+   * Spawn points per second at difficulty 1 (1 point = 1 xp of enemies). PACE round 1: ~+40% (was 0.42 + 0.14m +
+   * 0.014m²). The floor (minAlive) now sets most of the horde; the budget adds ships on top while the player is not
+   * keeping up, so a struggling captain meets a bigger fleet (up to SOFT_ENEMY_CAP), not an empty sea.
    */
-  budgetRate: (minute: number): number => 0.8 + 0.3 * minute + 0.025 * minute * minute,
+  budgetRate: (minute: number): number => 0.6 + 0.16 * minute + 0.014 * minute * minute,
   /** Exponent applied to the sea difficulty for the budget (density grows slower than difficulty). */
   budgetDifficultyExp: 0.7,
   /**
-   * Live-enemy floor: below it the director spawns immediately without spending budget. PACE: a pack of skiffs is
-   * on its way from the first second (7 at 0:00) and the floor climbs faster (was min(78, 3 + 3.2m + 0.22m²)).
+   * Experience per ship falls with sea difficulty^xpDifficultyExp (harder seas field more ships, not more levels).
+   * PACE: the floor, which harder seas do not raise, now sets most of the horde, so this is gentler than the budget's.
    */
-  minAlive: (minute: number): number => Math.min(82, 7 + 4 * minute + 0.2 * minute * minute),
+  xpDifficultyExp: 0.35,
+  /**
+   * Live-enemy floor: below it the director spawns immediately without spending budget. PACE: a pack of skiffs is
+   * on its way from the first second (7 at 0:00; first contact ~6–8 s), then 30 at 5:00, 60 at 10:00 and 76 from
+   * ~12:00, held even against a fast killer (see debt), so the sea is never empty (was min(78, 3 + 3.2m + 0.22m²)).
+   */
+  minAlive: (minute: number): number => Math.min(76, 7 + 3.8 * minute + 0.15 * minute * minute),
   /** Unspent budget is capped so a quiet spell never turns into one giant burst. */
   bankMax: 40,
   /**
@@ -61,12 +68,17 @@ export const DIRECTOR = {
    * player, but a fast killer cannot farm unlimited experience (the budget sets the XP pace). PACE: was 12 + 2.5m;
    * deeper now so the floor, not the budget, sets the horde size (xpScale keeps the experience in check).
    */
-  debt: (minute: number): number => 60 + 30 * minute,
+  debt: (minute: number): number => 200 + 400 * minute,
   /**
    * Experience per ship over the run (× on every kill's coins; bosses excluded). Later minutes field more ships,
    * not more experience: the horde doubles, the level pace stays designed (see constants.xpToNext).
    */
-  xpScale: (minute: number): number => 1 / (1 + 0.14 * Math.max(0, minute - 2)),
+  xpScale: (minute: number): number => { const m = Math.max(0, minute - 2); return 1 / (1 + 0.2 * m + 0.012 * m * m); },
+  /**
+   * Loot per ship (× the doubloon, repair, compass and powder-keg drop chances of an ordinary kill): the bigger horde
+   * must not triple the healing or the doubloon income (elites, bosses, convoys and wages are unaffected).
+   */
+  dropScale: (minute: number): number => 1 / (1 + 0.3 * Math.max(0, minute - 1)),
   /** Probability that a spawned enemy is elite. */
   eliteChance: (minute: number): number => (minute < 1.5 ? 0 : Math.min(0.07, 0.006 + 0.0038 * minute)),
   maxElites: 3,
@@ -76,10 +88,10 @@ export const DIRECTOR = {
    * Enemy HP multiplier: grows with time; sea difficulty counts at half strength (harder seas also bring more
    * ships, more fire and nastier weather, so HP does not need to carry all of it).
    */
-  hpScale: (minute: number, difficulty: number): number => (1 + 0.11 * minute + 0.0041 * minute * minute) * (1 + (difficulty - 1) * 0.5),
+  hpScale: (minute: number, difficulty: number): number => (1 + 0.13 * minute + 0.006 * minute * minute) * (1 + (difficulty - 1) * 0.35),
   /** Enemy damage multiplier (time and difficulty), capped. */
   damageScale: (minute: number, difficulty: number): number =>
-    Math.min(2.2, (1 + 0.0256 * minute + 0.00096 * minute * minute) * (1 + (difficulty - 1) * 0.35)),
+    Math.min(2.4, (1 + 0.03 * minute + 0.0015 * minute * minute) * (1 + (difficulty - 1) * 0.35)),
   /**
    * Green crews: early enemy gunnery is forgiving and hardens over the first minutes (multipliers on lead, spread
    * and reload time), so the opening is about learning to sail, not about dodging perfect volleys.
@@ -91,7 +103,7 @@ export const DIRECTOR = {
    * Fire control: the whole enemy fleet shares a budget of volleys per second (tokens). The horde can be huge
    * for spectacle while incoming fire stays a designed curve. Bosses are exempt (their attacks are telegraphed).
    */
-  fireRate: (minute: number): number => 0.072 + 0.0204 * minute,
+  fireRate: (minute: number): number => 0.1 + 0.0275 * minute,
   /** Fire-control rate multiplier from sea difficulty. */
   fireDifficultyExp: 0.5,
   fireBank: 3,
@@ -102,15 +114,15 @@ export const DIRECTOR = {
    * faster level curve meets each boss with a stronger ship, so fights still last 45–120 s).
    */
   bossHpScale: (difficulty: number, loop: number, boss?: BossId): number =>
-    (1 + (difficulty - 1) * 0.8) * (1 + loop * 0.75) * (boss ? BOSS_HP_MUL[boss] : 1),
+    (1 + (difficulty - 1) * 0.4) * (1 + loop * 0.75) * (boss ? BOSS_HP_MUL[boss] : 1),
   eliteHp: 3.5,
   eliteDamage: 1.25,
   eliteXp: 4,
-  /** Budget and floor multipliers while a boss is alive (focus on the fight). PACE: was 0.35 / 0.3. */
-  bossBudgetMul: 0.5,
-  bossFloorMul: 0.45,
-  /** Seconds of calm at the start of a boss fight; spawns ramp back to normal over the same span after it (was 60). */
-  bossCalm: 40,
+  /** Budget and floor multipliers while a boss is alive (focus on the fight). */
+  bossBudgetMul: 0.35,
+  bossFloorMul: 0.3,
+  /** Seconds of calm at the start of a boss fight; spawns ramp back to normal over the same span after it. */
+  bossCalm: 60,
   /** Budget/floor multiplier during the boss warning countdown (was 0.5: the sea no longer empties before a boss). */
   warningBudgetMul: 0.8,
   /** Seconds of boss warning before the spawn (was 10). */
