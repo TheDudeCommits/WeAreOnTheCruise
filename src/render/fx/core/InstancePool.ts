@@ -21,6 +21,8 @@ export class InstancePool {
   private readonly ranges: Range[] = [{ start: 0, count: 0 }, { start: 0, count: 0 }, { start: 0, count: 0 }];
   /** Instances dropped this frame because the immediate region was full (diagnostics). */
   overflow = 0;
+  /** Total ring allocations since creation (for spawn-rate / pressure estimates). */
+  allocated = 0;
 
   constructor(readonly stride: number, readonly ringCap: number, readonly immCap: number) {
     this.data = new Float32Array(stride * Math.max(1, ringCap + immCap));
@@ -37,6 +39,7 @@ export class InstancePool {
   allocRing(): number {
     if (this.ringCap === 0) return -1;
     const i = this.ringHead;
+    this.allocated++;
     this.ringHead = i + 1 === this.ringCap ? 0 : i + 1;
     if (this.ringWritten < this.ringCap) this.ringWritten++;
     return i * this.stride;

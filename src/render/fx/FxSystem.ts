@@ -40,6 +40,8 @@ export interface FxStats {
   numbers: number; clock: number; spawned: number;
   /** CPU time of the last update (ms) and an exponential average. */
   updateMs: number; updateAvgMs: number; updateMaxMs: number;
+  /** Load-shedding multiplier (1 = full detail). */
+  pressure: number;
 }
 
 export class FxSystem implements RenderSystem {
@@ -59,9 +61,15 @@ export class FxSystem implements RenderSystem {
   private readonly sunView = new THREE.Vector3();
   private readonly tmpColor = new THREE.Color();
   private readonly waterHeight = (x: number, z: number): number => this.kit.water.height(x, z);
+  // Ring-pressure load shedding: when spawn rates would recycle live smoke before it finishes, scale counts down.
+  private lastAllocCel = 0;
+  private lastAllocGlow = 0;
+  private rateCel = 0;
+  private rateGlow = 0;
+  private pressure = 1;
   readonly stats: FxStats = {
     cel: 0, glow: 0, heads: 0, trails: 0, beams: 0, decals: 0, debris: 0, numbers: 0, clock: 0, spawned: 0,
-    updateMs: 0, updateAvgMs: 0, updateMaxMs: 0,
+    updateMs: 0, updateAvgMs: 0, updateMaxMs: 0, pressure: 1,
   };
 
   constructor() {
@@ -125,7 +133,7 @@ export class FxSystem implements RenderSystem {
     const wind = 2 + ctx.sea.windStrength * 5;
     k.windX = Math.sin(ctx.sea.windDir) * wind;
     k.windZ = Math.cos(ctx.sea.windDir) * wind;
-    k.q = QUALITY_SCALE[ctx.quality] ?? 1;
+    k.q = (QUALITY_SCALE[ctx.quality] ?? 1) * this.pressure;
     k.spawned = 0;
     this.updateUniforms(ctx);
 
@@ -158,6 +166,7 @@ export class FxSystem implements RenderSystem {
     k.walls.endFrame();
     k.debris.endFrame();
     this.juice.flush(ctx.services, ctx.dt);
+    this.updatePressure(ctx.dt);
 
     const st = this.stats;
     st.clock = this.clock; st.spawned = k.spawned;
@@ -168,6 +177,24 @@ export class FxSystem implements RenderSystem {
     st.updateMs = ms;
     st.updateAvgMs += (ms - st.updateAvgMs) * 0.05;
     st.updateMaxMs = Math.max(st.updateMaxMs * 0.995, ms);
+  }
+
+  /** Keeps the average particle life (~2 s smoke) inside the ring capacity. */
+  private updatePressure(realDt: number): void {
+    const k = this.kit;
+    const dCel = k.cel.pool.allocated - this.lastAllocCel;
+    const dGlow = k.glow.pool.allocated - this.lastAllocGlow;
+    this.lastAllocCel = k.cel.pool.allocated;
+    this.lastAllocGlow = k.glow.pool.allocated;
+    const dt = Math.max(1 / 240, realDt);
+    const a = 1 - Math.exp(-dt * 3);
+    this.rateCel += (dCel / dt - this.rateCel) * a;
+    this.rateGlow += (dGlow / dt - this.rateGlow) * a;
+    const celOk = k.cel.pool.ringCap / Math.max(1, this.rateCel * 2.2);
+    const glowOk = k.glow.pool.ringCap / Math.max(1, this.rateGlow * 1.2);
+    const target = Math.max(0.3, Math.min(1, celOk, glowOk));
+    this.pressure += (target - this.pressure) * (target < this.pressure ? 0.5 : 0.05);
+    this.stats.pressure = this.pressure;
   }
 
   private updateUniforms(ctx: FrameContext): void {

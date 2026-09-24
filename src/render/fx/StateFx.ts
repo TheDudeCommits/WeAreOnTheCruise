@@ -39,7 +39,7 @@ const KINDS: Record<ProjectileKind, KindVis> = {
   'chain-shot': V(Head.Chain, 2.6, 0x30303c, 0.15, 0.7, GlowPal.Muzzle, { spin: 16 }),
   'heavy-shot': V(Head.Ball, 1.8, 0x3a2622, 0.22, 0.95, GlowPal.Explosion, { glow: 4.5, glowPal: GlowPal.Explosion }),
   'chaser-shot': V(Head.Slug, 1.1, 0x6a5234, 0.2, 0.5, GlowPal.Spark, { stretch: 2, mode: Mode.Velocity }),
-  lance: V(Head.Pellet, 2.2, 0xfff0b0, 0.14, 2.0, GlowPal.Gold, { glow: 9, glowPal: GlowPal.Gold, swell: 1.2 }),
+  lance: V(Head.Pellet, 2.2, 0xfff0b0, 0.3, 2.2, GlowPal.Gold, { glow: 9, glowPal: GlowPal.Gold, swell: 1.2 }),
   'mortar-shell': V(Head.Shell, 2.0, 0x2c2c38, 0.4, 0.75, GlowPal.Muzzle, { ballistic: true, smoke: 14 }),
   bomblet: V(Head.Ball, 1.0, 0x2c2c38, 0.25, 0.45, GlowPal.Muzzle, { ballistic: true }),
   'swivel-shot': V(Head.Pellet, 0.55, 0xfff2b0, 0.09, 0.28, GlowPal.Spark),
@@ -773,10 +773,24 @@ export class StateFx {
     for (let i = 0; i < p.weapons.length; i++) if (p.weapons[i]!.id === 'broadside') level = p.weapons[i]!.level;
     const range = CONTENT.weapons.broadside.levels[Math.max(0, Math.min(5, level - 1))]!.range * rangeMul(p.stats);
     d.imm(Decal.Wedge, p.x, p.z, range, range, angle, ready, (40 * Math.PI) / 180, PLAYER_MARK_HEX, 1, INK_HEX, 0, 0.5);
-    // aimed special/ultimate target preview when ready
+    // aimed special/ultimate target previews while ready (quiet: outline only)
     const ship = CONTENT.ships[run.shipId];
-    if (p.skills.special.cooldown <= 0 && ship.special === 'signal-flare') {
-      d.imm(Decal.Circle, ctx.aim.x, ctx.aim.z, 30, 30, 0, 0, 0, PLAYER_MARK_HEX, 0.45, 0x5a4210, 0, 0.5);
+    let ax = ctx.aim.x - p.x, az = ctx.aim.z - p.z;
+    const al = Math.hypot(ax, az) || 1; ax /= al; az /= al;
+    const aimAngle = Math.atan2(ax, az);
+    if (p.skills.special.cooldown <= 0) {
+      if (ship.special === 'signal-flare') d.imm(Decal.Circle, ctx.aim.x, ctx.aim.z, 30, 30, 0, 0, 0, PLAYER_MARK_HEX, 0.45, 0x5a4210, 0, 0.5);
+      else if (ship.special === 'lionburst') {
+        const len = Math.min(180, al);
+        const start = p.length * 0.6;
+        if (len > start + 10) {
+          d.imm(Decal.Line, p.x + ax * (start + len) * 0.5, p.z + az * (start + len) * 0.5, 2, (len - start) * 0.5, aimAngle, 0, 0, PLAYER_MARK_HEX, 0.28, 0x5a4210, 0, 0.5);
+          d.imm(Decal.Reticle, p.x + ax * len, p.z + az * len, 8, 8, this.k.clock * -0.6, 0.35, 0, PLAYER_MARK_HEX, 0.6, INK_HEX, 0, 0.5);
+        }
+      }
+    }
+    if (p.skills.ultimate.charge >= 1 && ship.ultimate === 'admirals-judgment') {
+      d.imm(Decal.Line, p.x + ax * 160, p.z + az * 160, 14, 160, aimAngle, 0, 0, PLAYER_MARK_HEX, 0.3, 0x5a4210, 0, 0.5);
     }
   }
 }

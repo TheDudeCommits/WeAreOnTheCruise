@@ -532,6 +532,7 @@ export class EventFx {
       fx.sparks(hx, wy + 3.5, hz, 8, 26, GlowPal.Enemy, -dx, 0.6, -dz, 0.4, 0.4);
       fx.planks(hx, wy + 3.5, hz, 2 + Math.min(4, frac * 40), 6, 10, 0.6, 1.6, 0.2, -dx * 3, -dz * 3);
       fx.burst(hx, wy + 3.5, hz, 5, GlowPal.Enemy, 0.07);
+      fx.soft(p.x, wy + 4, p.z, p.length * 0.9, GlowPal.Enemy, 0.14, Math.min(0.8, 0.35 + frac * 6));
       this.k.numbers.add(-1, e.amount, false, p.x, wy + 12, p.z, 0xff5a4a);
     }
     this.k.juice.shake(Math.min(0.9, 0.22 + frac * 5), 0.3);

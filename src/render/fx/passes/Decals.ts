@@ -105,13 +105,13 @@ void main() {
     float fill = inside * (1.0 - smoothstep(frontR - aa, frontR, r));
     float front = band(r - frontR + 0.02, 0.02, aa) * inside * step(0.02, prog);
     float hatch = step(0.55, fract((uv.x - uv.y) * 3.2 * max(vHalf.x, 1.0) / 8.0 - uRealTime * 0.8));
-    float a = inside * 0.1 + fill * (0.24 + 0.1 * hatch) + outline * (0.78 + 0.22 * pulse) + innerLine * 0.7;
+    float a = (inside * 0.1 + fill * (0.24 + 0.1 * hatch) + outline * (0.78 + 0.22 * pulse) + innerLine * 0.7) * vColor.a;
     vec3 col = c1 * (1.0 + blink * 0.8);
     paint = col * a;
     alpha = a;
-    add = c1 * (front * 0.7 + outline * blink * 0.5);
-    paint = mix(paint, c2 * alpha, ink);
-    alpha = max(alpha, ink * 0.9);
+    add = c1 * (front * 0.7 + outline * blink * 0.5) * vColor.a;
+    paint = mix(paint, c2 * alpha, ink * vColor.a);
+    alpha = max(alpha, ink * 0.9 * vColor.a);
   } else if (shape == 2) {
     float along = uv.y * 0.5 + 0.5;
     float across = abs(uv.x);
@@ -124,10 +124,10 @@ void main() {
     float fill = step(along, prog);
     float ratio = vHalf.y / max(vHalf.x, 0.5);
     float chev = step(0.6, fract(along * ratio * 0.9 - across * 0.45 - uRealTime * 1.8));
-    float a = 0.1 + fill * (0.22 + 0.1 * chev) + (outline + ends * edge) * (0.8 + 0.2 * pulse);
+    float a = (0.1 + fill * (0.22 + 0.1 * chev) + (outline + ends * edge) * (0.8 + 0.2 * pulse)) * vColor.a;
     paint = c1 * a;
     alpha = a;
-    add = c1 * band(along - prog, 0.012, aay) * 1.3;
+    add = c1 * band(along - prog, 0.012, aay) * 1.3 * vColor.a;
   } else if (shape == 3) {
     float along = uv.y * 0.5 + 0.5;
     vec2 q = vec2(uv.x * vHalf.x, along * vHalf.y * 2.0);
@@ -143,7 +143,7 @@ void main() {
     float sideLine = smoothstep(halfAngle - 0.05, halfAngle - 0.02, ang);
     float arc = smoothstep(0.95, 0.975, rr);
     float fill = step(rr, prog);
-    float a = inside * (0.1 + fill * 0.26 + max(sideLine, arc) * (0.75 + 0.25 * pulse));
+    float a = inside * (0.1 + fill * 0.26 + max(sideLine, arc) * (0.75 + 0.25 * pulse)) * vColor.a;
     paint = c1 * a;
     alpha = a;
     add = c1 * band(rr - prog, 0.01, aar) * inside * 1.2 + edge * 0.0;
