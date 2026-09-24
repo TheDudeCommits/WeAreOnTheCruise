@@ -8,7 +8,7 @@
 import { CAPTAIN } from '../content/captains';
 import type { CaptainState } from '../types';
 import type { Target } from './context';
-import { targetable, type CoreSim } from './core-runtime';
+import { acquirable, type CoreSim } from './core-runtime';
 import { lobShell } from './weapons/common';
 
 const DEG = Math.PI / 180;
@@ -38,7 +38,7 @@ function scanBeams(c: CoreSim, k: CaptainState, range: number): void {
   const enemies = c.state.enemies, bosses = c.state.bosses;
   for (let i = 0; i < enemies.length + bosses.length; i++) {
     const t: Target = i < enemies.length ? enemies[i]! : bosses[i - enemies.length]!;
-    if (!targetable(t)) continue;
+    if (!acquirable(t)) continue;
     const dx = t.x - k.x, dz = t.z - k.z, d = Math.sqrt(dx * dx + dz * dz);
     if (d < 1e-3 || d - t.radius > range) continue;
     if (Math.abs((dx * fx + dz * fz) / d) > SIN_ARC) continue;
@@ -132,7 +132,7 @@ function chaser(c: CoreSim, k: CaptainState): void {
   const list = c.state.enemies, bosses = c.state.bosses;
   for (let i = 0; i < list.length + bosses.length; i++) {
     const t: Target = i < list.length ? list[i]! : bosses[i - list.length]!;
-    if (!targetable(t)) continue;
+    if (!acquirable(t)) continue;
     const dx = t.x - bowX, dz = t.z - bowZ, d = Math.sqrt(dx * dx + dz * dz);
     if (d < 1e-3 || d - t.radius > C.range || (dx * fx + dz * fz) / d < CHASER_COS) continue;
     if (d < bestD) { bestD = d; best = t; }
@@ -160,7 +160,7 @@ function mortar(c: CoreSim, k: CaptainState): void {
   const r2 = M.area * M.area;
   for (let s = 0; s < n && s < 24; s++) {
     const t = enemies[Math.floor(s * stride)]!;
-    if (!targetable(t)) continue;
+    if (!acquirable(t)) continue;
     const d = Math.hypot(t.x - k.x, t.z - k.z);
     if (d < M.minRange || d > M.range) continue;
     let score = 0;

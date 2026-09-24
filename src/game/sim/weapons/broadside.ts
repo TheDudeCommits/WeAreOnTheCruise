@@ -10,7 +10,7 @@
 import type { ProjectileKind } from '../../ids';
 import type { WeaponSlot } from '../../types';
 import type { Target } from '../context';
-import { clamp, GUN_QUEUE, PF_BURN, PF_SLOW, targetable, type CoreSim } from '../core-runtime';
+import { clamp, GUN_QUEUE, PF_BURN, PF_SLOW, acquirable, type CoreSim } from '../core-runtime';
 import { ULTIMATES } from '../core-skills';
 import { cooldownMul, damageMul, extraAmount, projectileSpeedMul, rangeMul } from '../stats';
 import { AIM, crit, CRIT, DEG, ex, lead, levelOf } from './common';
@@ -66,7 +66,7 @@ function scanSides(c: CoreSim, range: number, arc: number): void {
   SCAN.port = null; SCAN.star = null; SCAN.any = false;
   for (let i = 0; i < n; i++) {
     const t = buf[i]!;
-    if (!targetable(t)) continue;
+    if (!acquirable(t)) continue;
     SCAN.any = true;
     const dx = t.x - p.x, dz = t.z - p.z, d = Math.sqrt(dx * dx + dz * dz);
     if (d < 1e-3) continue;

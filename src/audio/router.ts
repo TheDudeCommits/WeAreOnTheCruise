@@ -45,6 +45,7 @@ const ENEMY_FIRE_CUE: Record<ProjectileKind, CueId> = {
   'mortar-shell': 'mortar-launch', bomblet: 'mortar-launch', 'swivel-shot': 'swivel-shot', grapeshot: 'swivel-shot', harpoon: 'harpoon-throw',
   rocket: 'rocket-launch', torpedo: 'rocket-launch', 'skiff-shot': 'swivel-shot',
   'enemy-cannonball': 'cannon-near', 'enemy-chaser': 'bow-chaser', 'enemy-mortar': 'mortar-launch', 'water-bolt': 'water-bolt', 'boss-shell': 'heavy-shot',
+  'enemy-harpoon': 'harpoon-throw', 'enemy-bomb': 'mortar-launch', 'enemy-flare': 'rocket-launch',
 };
 
 /** Ship hit by a projectile kind (non-boss targets). */
@@ -53,6 +54,7 @@ const HIT_CUE: Record<ProjectileKind, CueId> = {
   'mortar-shell': 'hit-wood-heavy', bomblet: 'hit-wood', 'swivel-shot': 'hit-wood-light', grapeshot: 'hit-wood-light', harpoon: 'harpoon-hit',
   rocket: 'explosion-small', torpedo: 'explosion-water', 'skiff-shot': 'hit-wood-light',
   'enemy-cannonball': 'hit-wood', 'enemy-chaser': 'hit-wood', 'enemy-mortar': 'hit-wood-heavy', 'water-bolt': 'splash-small', 'boss-shell': 'hit-wood-heavy',
+  'enemy-harpoon': 'harpoon-hit', 'enemy-bomb': 'hit-wood-heavy', 'enemy-flare': 'hit-wood-light',
 };
 
 const BIG_SPLASH = new Set<ProjectileKind>(['heavy-shot', 'mortar-shell', 'enemy-mortar', 'boss-shell', 'torpedo', 'lance']);
@@ -556,6 +558,7 @@ export class EventRouter {
     if (n.includes('blockade') || n.includes('armada')) { this.p('director-event', 'war-horn'); this.p('director-event', 'alarm-bell', { delay: 0.5, gain: 0.7 }); return; }
     if (n.includes('ghost') || n.includes('drowned')) { this.p('director-event', 'boss-horn', { pitch: 4, gain: 0.55 }); this.p('director-event', 'hull-creak', { delay: 0.6 }); return; }
     if (n.includes('erupt') || n.includes('volcan')) { this.p('director-event', 'explosion-large', { gain: 0.9 }); this.p('director-event', 'thunder-far', { delay: 0.3 }); return; }
+    if (n.includes('claimed') || n.includes('complete')) { this.p('director-event', 'doubloon'); this.p('director-event', 'ship-bell', { delay: 0.2 }); return; }
     if (n.includes('bounty') || n.includes('contract') || n.includes('wanted')) { this.p('director-event', 'war-horn', { pitch: 2, gain: 0.7 }); this.p('director-event', 'elite-spawn', { delay: 0.3 }); return; }
     if (n.includes('sunken') || n.includes('dig')) { this.p('director-event', 'compass'); this.p('director-event', 'treasure-sparkle', { delay: 0.3 }); return; }
     if (n.includes('treasure') || n.includes('convoy')) { this.p('director-event', 'ship-bell'); this.p('director-event', 'treasure-sparkle', { delay: 0.3 }); return; }

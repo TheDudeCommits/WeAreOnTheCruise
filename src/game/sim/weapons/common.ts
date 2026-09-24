@@ -8,7 +8,7 @@
  */
 import type { WeaponLevelDef, WeaponSlot } from '../../types';
 import type { Target } from '../context';
-import { GRAVITY, targetable, type CoreSim } from '../core-runtime';
+import { GRAVITY, acquirable, type CoreSim } from '../core-runtime';
 import {
   areaMul, cooldownMul, critChance, critMultiplier, damageMul, durationMul, extraAmount, projectileSpeedMul, rangeMul,
 } from '../stats';
@@ -81,7 +81,7 @@ export function selectNearest(c: CoreSim, x: number, z: number, radius: number, 
   let count = 0;
   for (let i = 0; i < n; i++) {
     const t = buf[i]!;
-    if (!targetable(t)) continue;
+    if (!acquirable(t)) continue;
     const dx = t.x - x, dz = t.z - z;
     count = insertSel(c, t, dx * dx + dz * dz, count, k);
   }
@@ -97,7 +97,7 @@ export function selectCone(
   let count = 0;
   for (let i = 0; i < n; i++) {
     const t = buf[i]!;
-    if (!targetable(t)) continue;
+    if (!acquirable(t)) continue;
     const dx = t.x - x, dz = t.z - z, d2 = dx * dx + dz * dz;
     const d = Math.sqrt(d2);
     if (d > 1e-3 && (dx * fx + dz * fz) / d < cosCone) continue;
@@ -126,7 +126,7 @@ export function densest(buf: Target[], n: number, radius: number, exclude: numbe
   for (let s = 0; s < n && s < 24; s++) {
     const i = Math.floor(s * stride);
     const t = buf[i]!;
-    if (!targetable(t)) continue;
+    if (!acquirable(t)) continue;
     if (m2 > 0) { const ax = t.x - minX, az = t.z - minZ; if (ax * ax + az * az < m2) continue; }
     let skip = false;
     for (let k = 0; k < chosenCount; k++) {
@@ -170,6 +170,6 @@ export function sideOf(c: CoreSim, dx: number, dz: number): 'port' | 'starboard'
 export function anyNear(c: CoreSim, radius: number, buf: Target[]): boolean {
   const p = c.state.player;
   const n = c.core.near(c.state, p.x, p.z, radius, buf);
-  for (let i = 0; i < n; i++) if (targetable(buf[i]!)) return true;
+  for (let i = 0; i < n; i++) if (acquirable(buf[i]!)) return true;
   return false;
 }

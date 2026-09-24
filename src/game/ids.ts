@@ -63,13 +63,17 @@ export type ProjectileKind =
   | 'cannonball' | 'chain-shot' | 'heavy-shot' | 'chaser-shot' | 'lance'
   | 'mortar-shell' | 'bomblet' | 'swivel-shot' | 'grapeshot' | 'harpoon'
   | 'rocket' | 'torpedo' | 'skiff-shot'
-  | 'enemy-cannonball' | 'enemy-chaser' | 'enemy-mortar' | 'water-bolt' | 'boss-shell';
+  | 'enemy-cannonball' | 'enemy-chaser' | 'enemy-mortar' | 'water-bolt' | 'boss-shell'
+  // Round 1 (FOES): harpooner lines, bomb-ketch powder kegs, signal-cutter flares (event-only: the flare is drawn from AI state).
+  | 'enemy-harpoon' | 'enemy-bomb' | 'enemy-flare';
 
 export type HazardKind =
   | 'fire-patch' | 'barrel' | 'powder-keg' | 'mine' | 'whirlpool' | 'storm-cloud'
   | 'shockwave' | 'wave-front' | 'lightning-strike' | 'burning-wreck'
   /** Player summons (Escort Skiffs weapon): positions are updated by the sim; SHIPS renders them as small boats. */
-  | 'escort-skiff';
+  | 'escort-skiff'
+  /** Round 1 (FOES): smoke-runner screens. Static, harmless; enemy ships inside are hidden from auto-targeting. */
+  | 'smoke-screen';
 
 export type StatusKind = 'burning' | 'slowed' | 'stunned' | 'hooked' | 'submerged' | 'shielded' | 'invulnerable' | 'airborne' | 'frenzy';
 

@@ -34,6 +34,7 @@ import { WaveWallPass } from './passes/WaveWalls';
 import { Sakuga } from './Sakuga';
 import { StateFx } from './StateFx';
 import { WorldEventFx } from './WorldEventFx';
+import { FoeFx } from './FoeFx';
 
 const QUALITY_SCALE: Record<QualityTier, number> = { low: 0.5, medium: 0.75, high: 1, ultra: 1.2 };
 
@@ -54,6 +55,8 @@ export class FxSystem implements RenderSystem {
   readonly kit: FxKit;
   readonly sakuga: Sakuga;
   readonly worldEvents: WorldEventFx;
+  /** Round-1 foes (FOES): harpoon lines, kegs, smoke screens, wisps, flares, affix dressing. */
+  readonly foes: FoeFx;
   readonly events: EventFx;
   readonly state: StateFx;
   private readonly passes: SpritePass[];
@@ -95,6 +98,7 @@ export class FxSystem implements RenderSystem {
     };
     this.sakuga = new Sakuga(this.kit);
     this.worldEvents = new WorldEventFx(this.kit, this.sakuga);
+    this.foes = new FoeFx(this.kit, this.sakuga);
     this.events = new EventFx(this.kit, this.sakuga);
     this.state = new StateFx(this.kit, this.sakuga, this.events);
     debris.splash = (x, z, size) => this.sakuga.plop(x, z, size);
@@ -158,6 +162,7 @@ export class FxSystem implements RenderSystem {
       this.events.process(ctx, run);
       this.state.render(ctx, run, dt);
       this.worldEvents.update(ctx, run, dt);
+      this.foes.update(ctx, run, dt);
     }
     k.debris.update(dt, this.waterHeight, ctx.time);
     k.flotsam.update(dt, this.clock, k.water, k.props);
@@ -243,6 +248,7 @@ export class FxSystem implements RenderSystem {
     this.events.reset();
     this.state.reset();
     this.worldEvents.reset();
+    this.foes.reset();
   }
 
   dispose(): void {

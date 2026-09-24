@@ -23,6 +23,7 @@ const HIT_SCALE: Record<ProjectileKind, number> = {
   cannonball: 1, 'chain-shot': 1.1, 'heavy-shot': 1.35, 'chaser-shot': 1.15, lance: 1.2, 'mortar-shell': 1.3, bomblet: 0.8,
   'swivel-shot': 0.45, grapeshot: 0.4, harpoon: 0.7, rocket: 1.1, torpedo: 1.4, 'skiff-shot': 0.6, 'enemy-cannonball': 0.95,
   'enemy-chaser': 1.0, 'enemy-mortar': 1.3, 'water-bolt': 1.2, 'boss-shell': 1.4,
+  'enemy-harpoon': 0.7, 'enemy-bomb': 1.3, 'enemy-flare': 0.5,
 };
 
 const enum Job { FinaleBurst = 1, FinaleEnd = 2, Shake = 3 }
@@ -457,7 +458,17 @@ export class EventFx {
     const f = this.frame;
     if (!shipFrame(run, this.k.ships, e.source, f, water)) return;
     const s = Math.max(0.6, Math.min(1.4, f.length / 30));
-    if (e.projectile === 'enemy-mortar') {
+    if (e.projectile === 'enemy-flare') {
+      // Signal cutter: a red flare streaks up (FoeFx draws its arc and the burst).
+      this.fx.burst(f.x, f.gunY + 2, f.z, 4 * s, GlowPal.FlareRed, 0.08);
+      this.fx.smoke(f.x, f.gunY + 2, f.z, 3, 1.5, 4, CelPal.FlareSmoke, 1.6, 0, 6, 0, 2, 1.2, 1, 0, 0.35);
+      return;
+    }
+    if (e.projectile === 'enemy-harpoon') {
+      this.fx.muzzle(e.x, f.gunY, e.z, e.dirX, e.dirZ, 0.7 * s, 0, 1, false);
+      return;
+    }
+    if (e.projectile === 'enemy-mortar' || e.projectile === 'enemy-bomb') {
       const g = this.k.glow;
       g.spec.reset().at(f.x, f.gunY + 1, f.z).vel(e.dirX * 0.004, 0.01, e.dirZ * 0.004).look(Glow.DirFlash, GlowPal.Enemy, Mode.Velocity, true).sized(7 * s, 8 * s, 2).stretched(1.5).lived(0.09);
       g.emit();

@@ -11,7 +11,7 @@ import type { CaptainState } from '../types';
 import type { Target } from './context';
 import { broadsideRange } from './captains-guns';
 import { captainSlot } from './captains-runtime';
-import { targetable, type CoreSim } from './core-runtime';
+import { acquirable, type CoreSim } from './core-runtime';
 
 export const MODE_ESCORT = 0, MODE_ENGAGE = 1, MODE_RETREAT = 2, MODE_RECALL = 3;
 
@@ -40,7 +40,7 @@ export function steerCaptain(c: CoreSim, k: CaptainState): void {
   // Target: re-evaluated every ~1.2 s or when lost; only fights near the player count.
   ai.tgtT = (ai.tgtT ?? 0) - dt;
   let t: Target | null = ai.tgt ? c.findTarget(ai.tgt) ?? null : null;
-  if (t && (!targetable(t) || Math.hypot(t.x - p.x, t.z - p.z) > CAPTAIN.engageRadius + 60 + t.radius)) t = null;
+  if (t && (!acquirable(t) || Math.hypot(t.x - p.x, t.z - p.z) > CAPTAIN.engageRadius + 60 + t.radius)) t = null;
   if (ai.mode !== MODE_RETREAT && (!t || ai.tgtT <= 0)) {
     t = pickTarget(c, k);
     ai.tgtT = 1.1 + c.random() * 0.4;
@@ -101,7 +101,7 @@ function pickTarget(c: CoreSim, k: CaptainState): Target | null {
   const list = s.enemies, bosses = s.bosses;
   for (let i = 0; i < list.length + bosses.length; i++) {
     const t: Target = i < list.length ? list[i]! : bosses[i - list.length]!;
-    if (!targetable(t)) continue;
+    if (!acquirable(t)) continue;
     const dp = Math.hypot(t.x - p.x, t.z - p.z) - t.radius;
     if (dp > CAPTAIN.engageRadius) continue;
     const dk = Math.hypot(t.x - k.x, t.z - k.z) - t.radius;

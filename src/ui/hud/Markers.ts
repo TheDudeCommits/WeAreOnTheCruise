@@ -1,21 +1,43 @@
 /**
- * Offscreen arrows for bosses, elites and chests, placed on the screen edge via UiFrame.project().
+ * Offscreen arrows for bosses, bounty captains, elites, chests and marking signal cutters, placed on the screen edge
+ * via UiFrame.project(); on-screen nameplates over elites and named captains (title or class, affix tags, hull bar
+ * with the Shielded bubble on top). FOES owns this file this round.
  * Split into measure() (all project() calls, before any DOM write this frame: project() reads layout) and
  * apply() (DOM writes only).
  */
 import type { ScreenPoint, UiFrame } from '../contracts';
-import type { RunState } from '../../game/types';
+import type { EliteAffixId } from '../../game/ids';
+import type { EnemyState, RunState } from '../../game/types';
+import { AFFIXES, ENEMIES } from '../../game/content/enemies';
 import { h, TextCell } from '../core/dom';
-import { glyph } from '../core/icons';
+import { glyph, icon, setIcon, type GlyphId } from '../core/icons';
 import type { ScreenBasis } from './camera';
+import '../../styles/foes.css';
 
-type Kind = 'boss' | 'elite' | 'chest';
+type Kind = 'boss' | 'bounty' | 'elite' | 'chest' | 'signal';
 const MAX = 8;
 const TARGETS = 64;
+const PLATES = 6;
 
-interface Marker { el: HTMLElement; arrow: HTMLElement; icon: HTMLElement; dist: TextCell; kind: Kind | ''; on: boolean; x: number; y: number; a: number; lastDist: number }
-interface Target { kind: Kind; x: number; z: number; d: number; rank: number }
-interface Placement { kind: Kind; x: number; y: number; a: number; d: number }
+/** Glyph fallbacks until PACE's affix-<id> icons land in /assets/icons. */
+export const AFFIX_GLYPH: Readonly<Record<EliteAffixId, GlyphId>> = {
+  swift: 'speed', armored: 'shield', volatile: 'burst', vampiric: 'plus', shielded: 'quake', splitting: 'skiff', burning: 'flame', commander: 'crown',
+};
+const affixIcon = (id: EliteAffixId): string => `/assets/icons/affix-${id}.png`;
+const hex = (n: number): string => `#${n.toString(16).padStart(6, '0')}`;
+
+interface Marker {
+  el: HTMLElement; arrow: HTMLElement; icon: HTMLElement; dist: TextCell; label: HTMLElement; labelText: TextCell; tags: HTMLElement[];
+  kind: Kind | ''; key: string; on: boolean; x: number; y: number; a: number; lastDist: number;
+}
+interface Target { kind: Kind; x: number; z: number; d: number; rank: number; e: EnemyState | null }
+interface Placement { kind: Kind; x: number; y: number; a: number; d: number; e: EnemyState | null }
+
+interface Plate {
+  el: HTMLElement; name: TextCell; sub: TextCell; hp: HTMLElement; shield: HTMLElement; tags: { el: HTMLElement; ico: HTMLElement; text: TextCell }[];
+  id: number; on: boolean; x: number; y: number; hpv: number; shv: number; key: string;
+}
+interface PlateSpot { e: EnemyState | null; x: number; y: number; d: number }
 
 export class Markers {
   readonly el: HTMLElement;
@@ -23,7 +45,15 @@ export class Markers {
   private readonly targets: Target[] = [];
   private readonly order: Target[] = [];
   private readonly placed: Placement[] = [];
+  private readonly plates: Plate[] = [];
+  private readonly spots: PlateSpot[] = [];
+  private readonly markChip: HTMLElement;
+  private markOn = false;
+  private markX = 0;
+  private markY = 0;
+  private markWant = false;
   private count = 0;
+  private plateCount = 0;
   private readonly sp: ScreenPoint = { x: 0, y: 0, visible: false };
   private readonly v = { x: 0, y: 0 };
   private readonly blocks: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -32,22 +62,54 @@ export class Markers {
 
   constructor() {
     this.el = h('div', 'cr-markers');
-    for (let i = 0; i < MAX; i++) {
-      const arrow = h('span', 'cr-marker__arrow');
-      const icon = h('span', 'cr-marker__icon');
-      const dist = h('span', 'cr-marker__dist');
-      const el = h('div', 'cr-marker', arrow, icon, dist);
+    for (let i = 0; i < PLATES; i++) {
+      const name = h('span', 'cr-plate__name');
+      const sub = h('span', 'cr-plate__sub');
+      const hp = h('span', 'cr-plate__hp');
+      const shield = h('span', 'cr-plate__shield');
+      const tagsEl = h('span', 'cr-plate__tags');
+      const tags = [0, 1].map(() => {
+        const ico = icon(null, 'star', 'cr-plate__ico');
+        const text = h('span', 'cr-plate__tagtext');
+        const el = h('span', 'cr-plate__tag', ico, text);
+        tagsEl.append(el);
+        return { el, ico, text: new TextCell(text) };
+      });
+      const el = h('div', 'cr-plate', h('span', 'cr-plate__head', name, sub), tagsEl, h('span', 'cr-plate__bar', hp, shield));
       el.hidden = true;
       this.el.append(el);
-      this.pool.push({ el, arrow, icon, dist: new TextCell(dist), kind: '', on: false, x: -1e4, y: -1e4, a: 99, lastDist: -1 });
-      this.placed.push({ kind: 'chest', x: 0, y: 0, a: 0, d: 0 });
+      this.plates.push({ el, name: new TextCell(name), sub: new TextCell(sub), hp, shield, tags, id: -1, on: false, x: -1e4, y: -1e4, hpv: -1, shv: -1, key: '' });
+      this.spots.push({ e: null, x: 0, y: 0, d: 0 });
     }
-    for (let i = 0; i < TARGETS; i++) this.targets.push({ kind: 'chest', x: 0, z: 0, d: 0, rank: 0 });
+    for (let i = 0; i < MAX; i++) {
+      const arrow = h('span', 'cr-marker__arrow');
+      const ic = h('span', 'cr-marker__icon');
+      const dist = h('span', 'cr-marker__dist');
+      const labelText = h('span', 'cr-marker__labeltext');
+      const tagA = h('span', 'cr-marker__tag'), tagB = h('span', 'cr-marker__tag');
+      const label = h('span', 'cr-marker__label', labelText, tagA, tagB);
+      const el = h('div', 'cr-marker', arrow, ic, dist, label);
+      el.hidden = true;
+      label.hidden = true;
+      this.el.append(el);
+      this.pool.push({ el, arrow, icon: ic, dist: new TextCell(dist), label, labelText: new TextCell(labelText), tags: [tagA, tagB], kind: '', key: '', on: false, x: -1e4, y: -1e4, a: 99, lastDist: -1 });
+      this.placed.push({ kind: 'chest', x: 0, y: 0, a: 0, d: 0, e: null });
+    }
+    for (let i = 0; i < TARGETS; i++) this.targets.push({ kind: 'chest', x: 0, z: 0, d: 0, rank: 0, e: null });
+    this.markChip = h('div', 'cr-markchip', h('span', 'cr-markchip__icon', glyph('flare')), h('span', 'cr-markchip__text', 'Marked!'));
+    this.markChip.hidden = true;
+    this.el.append(this.markChip);
   }
 
-  reset(): void { this.count = 0; for (const m of this.pool) { m.on = false; m.el.hidden = true; } }
+  reset(): void {
+    this.count = 0; this.plateCount = 0;
+    for (const m of this.pool) { m.on = false; m.el.hidden = true; m.key = ''; }
+    for (const p of this.plates) { p.on = false; p.el.hidden = true; p.id = -1; p.key = ''; }
+    for (const s of this.spots) s.e = null;
+    this.markWant = false; this.markOn = false; this.markChip.hidden = true;
+  }
 
-  /** Read phase: gathers targets and computes edge placements (calls project()). */
+  /** Read phase: gathers targets and computes edge placements and nameplate spots (calls project()). */
   measure(f: UiFrame, run: Readonly<RunState>, basis: ScreenBasis): void {
     const p = run.player;
     const order = this.order;
@@ -55,17 +117,25 @@ export class Markers {
     let n = 0;
     for (const b of run.bosses) {
       if (b.life !== 'alive' || n >= TARGETS) continue;
-      const t = this.targets[n++]!; t.kind = 'boss'; t.x = b.x; t.z = b.z; t.d = Math.hypot(b.x - p.x, b.z - p.z); t.rank = t.d; order.push(t);
+      const t = this.targets[n++]!; t.kind = 'boss'; t.x = b.x; t.z = b.z; t.d = Math.hypot(b.x - p.x, b.z - p.z); t.rank = t.d; t.e = null; order.push(t);
     }
+    let marked = false;
     for (const e of run.enemies) {
-      if (!e.elite || e.life !== 'alive' || e.hidden >= 1 || n >= TARGETS) continue;
-      const t = this.targets[n++]!; t.kind = 'elite'; t.x = e.x; t.z = e.z; t.d = Math.hypot(e.x - p.x, e.z - p.z); t.rank = 1e6 + t.d; order.push(t);
+      if (e.life !== 'alive' || e.hidden >= 1 || n >= TARGETS) continue;
+      const signal = e.defId === 'signal-cutter' && (e.ai.markT ?? 0) > 0 && (e.ai.markRef ?? 0) === 0;
+      if (signal) marked = true;
+      if (!e.elite && !signal) continue;
+      const t = this.targets[n++]!;
+      t.kind = e.title ? 'bounty' : signal ? 'signal' : 'elite';
+      t.x = e.x; t.z = e.z; t.d = Math.hypot(e.x - p.x, e.z - p.z); t.e = e;
+      t.rank = (t.kind === 'bounty' ? 5e5 : t.kind === 'signal' ? 7e5 : 1e6) + t.d;
+      order.push(t);
     }
     for (const k of run.pickups) {
       if (!k.alive || k.kind !== 'chest' || n >= TARGETS) continue;
-      const t = this.targets[n++]!; t.kind = 'chest'; t.x = k.x; t.z = k.z; t.d = Math.hypot(k.x - p.x, k.z - p.z); t.rank = 1e6 + t.d; order.push(t);
+      const t = this.targets[n++]!; t.kind = 'chest'; t.x = k.x; t.z = k.z; t.d = Math.hypot(k.x - p.x, k.z - p.z); t.rank = 1e6 + t.d; t.e = null; order.push(t);
     }
-    // Insertion sort by rank (bosses first, then nearest).
+    // Insertion sort by rank (bosses first, then bounty captains, signal cutters, nearest).
     for (let i = 1; i < order.length; i++) {
       const t = order[i]!;
       let j = i - 1;
@@ -81,12 +151,22 @@ export class Markers {
     const blocks = this.blocks;
     blocks[0] = W - 262 * u; blocks[1] = 0; blocks[2] = W; blocks[3] = 266 * u;
     blocks[4] = 0; blocks[5] = H - 334 * u; blocks[6] = 436 * u; blocks[7] = H;
-    let used = 0;
-    for (let i = 0; i < order.length && used < MAX; i++) {
+    let used = 0, plates = 0;
+    for (let i = 0; i < order.length; i++) {
       const t = order[i]!;
-      f.project(t.x, 4, t.z, this.sp);
+      const e = t.e;
+      const topY = e ? Math.max(6, ENEMIES[e.defId].length * 0.55) : 4;
+      f.project(t.x, topY, t.z, this.sp);
       const inside = this.sp.visible && this.sp.x > L && this.sp.x < R && this.sp.y > T && this.sp.y < B;
-      if (inside || !basis.ok) continue;
+      if (inside) {
+        // On screen: elites and bounty captains get a nameplate instead of an arrow.
+        if (e && e.elite && plates < PLATES) {
+          const s = this.spots[plates++]!;
+          s.e = e; s.x = this.sp.x; s.y = this.sp.y; s.d = t.d;
+        }
+        continue;
+      }
+      if (used >= MAX || !basis.ok) continue;
       basis.dir(t.x - p.x, t.z - p.z, this.v);
       const len = Math.hypot(this.v.x, this.v.y);
       if (len < 1e-6) continue;
@@ -107,9 +187,13 @@ export class Markers {
         if (Math.abs(o.x - x) < 46 * u && Math.abs(o.y - y) < 50 * u) { if (onSide) y = o.y + (y >= o.y ? 52 : -52) * u; else x = o.x + (x >= o.x ? 50 : -50) * u; }
       }
       const pl = this.placed[used++]!;
-      pl.kind = t.kind; pl.x = x; pl.y = y; pl.a = Math.atan2(dx, -dy); pl.d = t.d;
+      pl.kind = t.kind; pl.x = x; pl.y = y; pl.a = Math.atan2(dx, -dy); pl.d = t.d; pl.e = e;
     }
     this.count = used;
+    this.plateCount = plates;
+    // "Marked!" chip under the player's ship while a signal flare marks it.
+    this.markWant = marked && p.alive && basis.ok;
+    if (this.markWant) { this.markX = basis.sx; this.markY = basis.sy + 64 * u; }
   }
 
   /** Write phase. */
@@ -122,12 +206,71 @@ export class Markers {
       if (m.kind !== pl.kind) {
         m.kind = pl.kind;
         m.el.dataset.kind = pl.kind;
-        m.icon.replaceChildren(glyph(pl.kind === 'boss' ? 'skull' : pl.kind === 'elite' ? 'star' : 'chest'));
+        const g: GlyphId = pl.kind === 'boss' || pl.kind === 'bounty' ? 'skull' : pl.kind === 'elite' ? 'star' : pl.kind === 'signal' ? 'flare' : 'chest';
+        m.icon.replaceChildren(glyph(g));
+      }
+      const e = pl.e;
+      const key = e ? `${e.id}:${e.affixes.join(',')}:${e.title ?? ''}:${pl.kind}` : pl.kind;
+      if (key !== m.key) {
+        m.key = key;
+        const label = e?.title ?? (pl.kind === 'signal' ? 'Signal' : '');
+        m.labelText.set(label);
+        let tags = 0;
+        for (let t = 0; t < 2; t++) {
+          const tag = m.tags[t]!;
+          const id = e?.affixes[t];
+          if (!id) { tag.hidden = true; continue; }
+          tags++;
+          tag.hidden = false;
+          tag.style.setProperty('--ax', hex(AFFIXES[id].color));
+          tag.replaceChildren(icon(affixIcon(id), AFFIX_GLYPH[id], 'cr-marker__tagico'));
+          tag.title = AFFIXES[id].name;
+        }
+        m.label.hidden = !label && tags === 0;
       }
       if (Math.abs(pl.x - m.x) >= 1 || Math.abs(pl.y - m.y) >= 1) { m.x = pl.x; m.y = pl.y; m.el.style.transform = `translate3d(${pl.x.toFixed(0)}px,${pl.y.toFixed(0)}px,0)`; }
       if (Math.abs(pl.a - m.a) > 0.02) { m.a = pl.a; m.arrow.style.transform = `rotate(${pl.a.toFixed(2)}rad)`; }
       const d = Math.round(pl.d / 10) * 10;
       if (d !== m.lastDist) { m.lastDist = d; m.dist.set(`${d}m`); }
+    }
+    this.applyPlates();
+    if (this.markWant !== this.markOn) { this.markOn = this.markWant; this.markChip.hidden = !this.markWant; }
+    if (this.markOn) this.markChip.style.transform = `translate3d(${this.markX.toFixed(0)}px,${this.markY.toFixed(0)}px,0)`;
+  }
+
+  private applyPlates(): void {
+    for (let i = 0; i < PLATES; i++) {
+      const plate = this.plates[i]!;
+      const s = this.spots[i]!;
+      const e = s.e;
+      if (i >= this.plateCount || !e) { if (plate.on) { plate.on = false; plate.el.hidden = true; plate.id = -1; } continue; }
+      if (!plate.on) { plate.on = true; plate.el.hidden = false; }
+      const key = `${e.id}:${e.affixes.join(',')}:${e.title ?? ''}`;
+      if (key !== plate.key) {
+        plate.key = key;
+        plate.id = e.id;
+        plate.el.classList.toggle('is-named', e.title !== null);
+        plate.name.set(e.title ?? ENEMIES[e.defId].name);
+        plate.sub.set(e.title ? ENEMIES[e.defId].name : '');
+        for (let t = 0; t < 2; t++) {
+          const tag = plate.tags[t]!;
+          const id = e.affixes[t];
+          if (!id) { tag.el.hidden = true; continue; }
+          tag.el.hidden = false;
+          tag.el.style.setProperty('--ax', hex(AFFIXES[id].color));
+          setIcon(tag.ico, affixIcon(id), AFFIX_GLYPH[id]);
+          tag.text.set(AFFIXES[id].name);
+        }
+      }
+      const shield = e.ai.shield ?? 0;
+      const hull = Math.max(0, Math.min(1, (e.hp - shield) / Math.max(1, e.maxHp)));
+      const sh = Math.max(0, Math.min(1, shield / Math.max(1, e.maxHp)));
+      if (Math.abs(hull - plate.hpv) > 0.004) { plate.hpv = hull; plate.hp.style.transform = `scaleX(${hull.toFixed(3)})`; }
+      if (Math.abs(sh - plate.shv) > 0.004) { plate.shv = sh; plate.shield.style.transform = `scaleX(${sh.toFixed(3)})`; }
+      if (Math.abs(s.x - plate.x) >= 1 || Math.abs(s.y - plate.y) >= 1) {
+        plate.x = s.x; plate.y = s.y;
+        plate.el.style.transform = `translate3d(${s.x.toFixed(0)}px,${s.y.toFixed(0)}px,0)`;
+      }
     }
   }
 }

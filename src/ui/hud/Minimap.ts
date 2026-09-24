@@ -179,6 +179,14 @@ export class Minimap {
         ctx.strokeStyle = en.elite ? '#ffcf33' : FACTION_EDGE[en.faction];
         ctx.lineWidth = en.elite ? 2 : 1.2;
         ctx.stroke();
+        if (en.title) {
+          // Named bounty captain (FOES): a pulsing orange halo around the elite dot.
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 7.5 + Math.sin(this.pulse * 5) * 1.5, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255, 138, 28, .95)';
+          ctx.lineWidth = 2.2;
+          ctx.stroke();
+        }
       }
     }
     ctx.globalAlpha = 1;

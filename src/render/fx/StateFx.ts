@@ -55,6 +55,10 @@ const KINDS: Record<ProjectileKind, KindVis> = {
   'enemy-mortar': V(Head.Shell, 2.0, 0x2e2428, 0.4, 0.75, GlowPal.Enemy, { ballistic: true, smoke: 14 }),
   'water-bolt': V(Head.Orb, 2.8, 0x2ab8ff, 0.28, 1.5, GlowPal.WaterBolt, { glow: 5, glowPal: GlowPal.WaterBolt, smoke: 0, arc: 6 }),
   'boss-shell': V(Head.Shell, 2.6, 0x2e2428, 0.45, 0.95, GlowPal.Enemy, { ballistic: true, smoke: 16 }),
+  // Round 1 (FOES): the harpoon's rope and the bomb's keg body are drawn by FoeFx.
+  'enemy-harpoon': V(Head.Spear, 1.5, 0xd8d0c0, 0, 0, GlowPal.Enemy, { stretch: 3.2, mode: Mode.Velocity }),
+  'enemy-bomb': V(Head.Ball, 0.6, 0x2e2428, 0.4, 0.55, GlowPal.Ember, { ballistic: true, smoke: 10 }),
+  'enemy-flare': V(Head.Pellet, 1.2, 0xff6a5a, 0.3, 0.8, GlowPal.FlareRed, { glow: 4, glowPal: GlowPal.FlareRed }),
 };
 
 const KIND_LIN = new Map<ProjectileKind, Lin>();
