@@ -151,7 +151,8 @@
   flex-direction: column;
   align-items: center;
   width: calc(252 * var(--u));
-  height: calc(372 * var(--u));
+  /* Grows with long generated text; the level-up row stretches its cards to the tallest. */
+  min-height: calc(372 * var(--u));
   padding: calc(46 * var(--u)) calc(18 * var(--u)) calc(16 * var(--u));
   color: var(--white);
   text-align: center;
@@ -236,6 +237,7 @@
 .cr-card__pip.is-star.is-new, .cr-card__pip.is-fork.is-new { animation-name: cr-pip-pulse; }
 @keyframes cr-pip-pulse { 50% { scale: 1.3; } }
 .cr-card__text { margin-top: calc(8 * var(--u)); font: 700 var(--fs-16)/1.3 var(--f-ui); color: #e8eeff; text-wrap: balance; }
+.cr-card.is-long .cr-card__text { font-size: var(--fs-14); line-height: 1.25; }
 .cr-card__tags { display: flex; flex-wrap: wrap; justify-content: center; gap: calc(5 * var(--u)); margin-top: calc(8 * var(--u)); }
 .cr-card__tag { padding: calc(2 * var(--u)) calc(8 * var(--u)); border-radius: 999px; background: rgba(255, 255, 255, .12); font: 800 var(--fs-12)/1.3 var(--f-ui); letter-spacing: .06em; text-transform: uppercase; }
 .cr-card__rarity { margin-top: auto; font: 400 var(--fs-16)/1 var(--f-comic); letter-spacing: .14em; text-transform: uppercase; color: var(--rc); opacity: .9; }
@@ -282,7 +284,7 @@
   mask: radial-gradient(circle, #000 25%, transparent 68%);
   animation: cr-spin 9s linear infinite;
 }
-.cr-card.is-compact { width: calc(200 * var(--u)); height: calc(250 * var(--u)); padding-top: calc(34 * var(--u)); }
+.cr-card.is-compact { width: calc(200 * var(--u)); min-height: 0; height: calc(250 * var(--u)); padding-top: calc(34 * var(--u)); }
 .cr-card.is-compact .cr-card__medal { width: calc(84 * var(--u)); height: calc(84 * var(--u)); }
 .cr-card.is-compact .cr-card__icon { width: calc(66 * var(--u)); height: calc(66 * var(--u)); }
 .cr-card.is-compact .cr-card__title { font-size: var(--fs-24); }

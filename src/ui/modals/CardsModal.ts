@@ -77,7 +77,7 @@ export function buildOfferCard(o: CardOffer, index: number | null, compact = fal
     pips.append(h('i', cls.join(' ')));
   }
   const kind = o.kind === 'weapon-branch' && o.branch ? `Branch ${o.branch}` : KIND_LABEL[o.kind] ?? o.kind;
-  const el = h('div', `cr-card is-${rarity}${od ? ' is-overdrive' : ''}${o.kind === 'weapon-branch' ? ' is-branch' : ''}${compact ? ' is-compact' : ''}`,
+  const el = h('div', `cr-card is-${rarity}${od ? ' is-overdrive' : ''}${o.kind === 'weapon-branch' ? ' is-branch' : ''}${compact ? ' is-compact' : ''}${o.text.length > 140 ? ' is-long' : ''}`,
     h('span', 'cr-card__frame'),
     od ? h('span', 'cr-card__rays') : null,
     h('span', 'cr-card__ribbon', od ? glyph('star') : null, kind),

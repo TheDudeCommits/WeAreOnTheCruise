@@ -67,6 +67,7 @@ export function installDebugBridge(app: GameApp): void {
         passives: p.passives.map((x) => `${x.id}:${x.rank}`),
         enemies: s.enemies.length, bosses: s.bosses.map((b) => `${b.defId}:${Math.round(b.hp)}/${Math.round(b.maxHp)}:p${b.phase}`),
         projectiles: s.projectiles.filter((x) => x.alive).length, pickups: s.pickups.filter((x) => x.alive).length,
+        hazards: s.hazards.filter((x) => x.alive).reduce<Record<string, string>>((acc, x) => { acc[x.kind] = `${(Number(acc[x.kind]?.split('×')[0] ?? 0) + 1)}×r${Math.round(x.radius)}`; return acc; }, {}),
         offers: s.offers?.map((o) => o.title) ?? null, stats: { kills: s.stats.kills, bounty: s.stats.bounty, doubloons: s.stats.doubloons },
         weather: { weather: s.sea.weather, hour: +s.sea.timeOfDay.toFixed(2) },
       };

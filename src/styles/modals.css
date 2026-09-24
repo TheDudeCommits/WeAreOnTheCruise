@@ -14,13 +14,13 @@
 .cr-levelup__lv { font: 400 var(--fs-48)/1 var(--f-comic); letter-spacing: .06em; color: var(--white); -webkit-text-stroke: var(--stroke-l) var(--ink); paint-order: stroke fill; }
 .cr-levelup__more { font: 900 var(--fs-14)/1 var(--f-ui); letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); }
 .cr-cards__stage { position: relative; }
-.cr-cards__row { display: flex; align-items: center; justify-content: center; gap: calc(26 * var(--u)); }
+.cr-cards__row { display: flex; align-items: stretch; justify-content: center; gap: calc(26 * var(--u)); }
 .cr-cards__row.is-ghost { position: absolute; inset: 0; pointer-events: none; }
 .cr-cards__row.is-ghost .cr-cardbtn-wrap { animation: cr-card-out .34s ease-in forwards; }
 .cr-cards__row.is-ghost .cr-cardbtn-wrap.is-picked { animation: cr-card-picked .4s var(--ease-out) forwards; }
 @keyframes cr-card-out { to { transform: translateY(calc(120 * var(--u))) rotate(6deg) scale(.8); opacity: 0; } }
 @keyframes cr-card-picked { 30% { transform: translateY(calc(-30 * var(--u))) scale(1.12); filter: brightness(2); opacity: 1; } to { transform: translateY(calc(-160 * var(--u))) scale(.6); opacity: 0; } }
-.cr-cardbtn-wrap { position: relative; pointer-events: auto; transition: transform .16s var(--ease-pop), filter .16s; }
+.cr-cardbtn-wrap { position: relative; display: flex; pointer-events: auto; transition: transform .16s var(--ease-pop), filter .16s; }
 .cr-cardbtn-wrap:hover, .cr-cardbtn-wrap:focus { transform: translateY(calc(-16 * var(--u))) scale(1.05); z-index: 2; }
 .cr-cardbtn-wrap:hover .cr-card__frame, .cr-cardbtn-wrap:focus .cr-card__frame {
   box-shadow:
@@ -32,12 +32,12 @@
 }
 .cr-cardbtn-wrap:focus .cr-card__key .cr-key { background: var(--gold); }
 .cr-cards__row.has-pick .cr-cardbtn-wrap:not(.is-picked) { filter: brightness(.5); }
-.cr-fork { display: flex; flex-direction: column; align-items: center; gap: calc(10 * var(--u)); padding: calc(10 * var(--u)) calc(14 * var(--u)) calc(14 * var(--u)); border-radius: calc(22 * var(--u)); background: rgba(88, 180, 255, .1); border: calc(3 * var(--u)) dashed rgba(88, 180, 255, .55); }
+.cr-fork { display: flex; flex-direction: column; align-items: center; gap: calc(40 * var(--u)); padding: calc(10 * var(--u)) calc(14 * var(--u)) calc(14 * var(--u)); border-radius: calc(22 * var(--u)); background: rgba(88, 180, 255, .1); border: calc(3 * var(--u)) dashed rgba(88, 180, 255, .55); }
 .cr-fork__head { display: flex; align-items: center; gap: calc(10 * var(--u)); font: 400 var(--fs-24)/1 var(--f-comic); letter-spacing: .06em; text-transform: uppercase; color: var(--white); -webkit-text-stroke: var(--stroke-s) var(--ink); paint-order: stroke fill; }
 .cr-fork__head small { font: 900 var(--fs-12)/1 var(--f-ui); letter-spacing: .2em; color: #9fd0ff; -webkit-text-stroke: 0; }
 .cr-fork__head .cr-glyph { width: calc(22 * var(--u)); height: calc(22 * var(--u)); color: #9fd0ff; }
-.cr-fork__pair { display: flex; align-items: center; gap: calc(14 * var(--u)); }
-.cr-fork__or { display: grid; place-items: center; width: calc(52 * var(--u)); height: calc(52 * var(--u)); border-radius: 50%; background: var(--ink); border: calc(3 * var(--u)) solid #58b4ff; font: 400 var(--fs-24)/1 var(--f-brush); color: var(--white); }
+.cr-fork__pair { display: flex; align-items: stretch; gap: calc(14 * var(--u)); }
+.cr-fork__or { align-self: center; flex: none; display: grid; place-items: center; width: calc(52 * var(--u)); height: calc(52 * var(--u)); border-radius: 50%; background: var(--ink); border: calc(3 * var(--u)) solid #58b4ff; font: 400 var(--fs-24)/1 var(--f-brush); color: var(--white); }
 .cr-levelup__foot { display: flex; align-items: center; gap: calc(22 * var(--u)); padding: calc(10 * var(--u)) calc(22 * var(--u)); border-radius: 999px; background: rgba(8, 12, 30, .8); margin-top: calc(18 * var(--u)); }
 .cr-cardbtn { display: inline-flex; align-items: center; gap: calc(8 * var(--u)); padding: calc(6 * var(--u)) calc(14 * var(--u)); border-radius: 999px; background: #243064; border: calc(3 * var(--u)) solid var(--ink); pointer-events: auto; transition: transform .14s var(--ease-pop); }
 .cr-cardbtn .cr-glyph { width: calc(20 * var(--u)); height: calc(20 * var(--u)); color: var(--cyan); }

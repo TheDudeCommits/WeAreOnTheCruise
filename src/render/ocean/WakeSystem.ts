@@ -186,8 +186,10 @@ export class WakeSystem {
       if (track.lastAir > 0.25 && src.airborne < 0.05) this.burst(src.x, src.z, hullLength * 0.7, 1.7);
       else if (track.lastAir < 0.05 && src.airborne > 0.2) this.splash(src.x, src.z, hullLength * 0.45, 1.2);
       if ((track.lastSub < 0.5) !== (src.submerged < 0.5)) {
-        this.ring(src.x, src.z, Math.max(hullLength, src.beam * 6) * 0.9, 1.1);
-        this.foam(src.x, src.z, Math.max(hullLength, src.beam * 6) * 0.35, 0.8);
+        // Sized by the hull, not a multiple of the beam: frequent divers (wyrmlings) must not carpet the sea in foam.
+        const size = Math.max(hullLength, src.beam * 3);
+        this.ring(src.x, src.z, size * 0.9, 1.1);
+        this.foam(src.x, src.z, size * 0.3, 0.5);
       }
     }
 
@@ -357,9 +359,12 @@ export class WakeSystem {
     src.length = e.length; src.beam = e.beam || e.length * 0.3;
     src.sink = e.life === 'sinking' ? Math.max(0.001, e.sink) : 0;
     src.contact = e.life === 'sinking' ? 1 - smooth(0.4, 1, e.sink) : 1;
-    let submerged = e.hidden;
+    // Wyrmlings dive (hidden = depth); phasing wraiths just leave the water: no wake, no dive splash.
+    const serpent = e.defId === 'wyrmling';
+    let submerged = serpent ? e.hidden : 0;
     for (let i = 0; i < e.statuses.length; i++) if (e.statuses[i]!.kind === 'submerged') submerged = 1;
     src.submerged = submerged;
+    if (!serpent) src.contact *= 1 - e.hidden;
     src.airborne = 0;
     src.wake = (e.faction === 'wraith' ? 0.55 : 1) * scale;
     src.serpent = e.defId === 'wyrmling';

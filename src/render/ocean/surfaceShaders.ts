@@ -381,7 +381,10 @@ void main() {
   col += (uSunColor * glint * uLookA.x + sheenCol * sheen) * sunUp * (1.0 - foamSolid * 0.85);
 
   // ── Night: bioluminescent wake and crests ──
-  col += uBiolum * (solidI * 1.7 + lace * 1.2 + max(edgeI, 0.0) * 0.7 + tr.a * 0.35 + solidC * 0.35) * 1.6;
+  // The glow lives where the water was just stirred and the foam is thin (wake lines, lace, edges, the transient
+  // layer); saturated foam fields (a melee's pile-up) only glimmer, so a crowd never turns the sea into a lit carpet.
+  float freshSolid = solidI * (1.0 - smoothstep(0.35, 0.9, covE));
+  col += uBiolum * (freshSolid * 1.5 + solidI * 0.22 + lace * 1.1 + max(edgeI, 0.0) * 0.8 + tr.a * 0.45 + solidC * 0.25) * 1.35;
 
   // ── Aerial perspective (matches the linear scene fog written by the sky) ──
   float fogF = smoothstep(uFog.x, uFog.y, vViewDepth);

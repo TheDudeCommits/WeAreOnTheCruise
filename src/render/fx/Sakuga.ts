@@ -313,7 +313,8 @@ export class Sakuga {
     this.foam(x, z, 5.5 * s, 1.9, delay, 1);
     this.shock(x, z, 7.5 * s, 0.42, 0xe8f8ff, 0.4, 0.7, delay);
     const o = this.k.ocean;
-    if (o) { o.stampRing(x, z, 3 * s, 0.8); o.stampFoam(x, z, 2.5 * s, 0.9); }
+    // Persistent foam stays light: a broadside of misses must not pile into a foam field (the ring carries the hit).
+    if (o) { o.stampRing(x, z, 3 * s, 0.8); o.stampFoam(x, z, 2 * s, 0.45); }
     this.k.spawned += 24;
   }
 
@@ -360,7 +361,7 @@ export class Sakuga {
     const n = Math.min(30, Math.max(10, Math.round(radius / 5)));
     this.crown(x, z, radius * 0.92, n, 13, 2.8, 0.08);
     const o = this.k.ocean;
-    if (o) { o.stampRing(x, z, radius * 0.9, 1); o.stampFoam(x, z, radius * 0.6, 0.6); }
+    if (o) { o.stampRing(x, z, radius * 0.9, 1); o.stampFoam(x, z, Math.min(radius * 0.35, 9), 0.35); }
   }
 
   /** Every explosion kind; `onHero` = centred on the player's hull (skill blasts: no core blast over the ship). */
@@ -389,7 +390,7 @@ export class Sakuga {
       if (kind === 'mine') { this.burst(x, wy + 2, z, 12 * s, GlowPal.Explosion, 0.08); this.fireballs(x, wy + 1, z, 4, 5 * s, 2 * s, 7, 0.5); }
       this.foam(x, z, 12 * s, 2.6, 0, 1.2);
       this.shock(x, z, 20 * s, 0.55, 0xeaf8ff, 0.8, 1);
-      if (o) { o.stampRing(x, z, 8 * s, 1); o.stampFoam(x, z, 7 * s, 1); o.stampDisplace(x, z, 6 * s, -1.2 * s); }
+      if (o) { o.stampRing(x, z, 8 * s, 1); o.stampFoam(x, z, 6 * s, 0.6); o.stampDisplace(x, z, 6 * s, -1.2 * s); }
       this.k.juice.shakeAt(0.28 * s, dist, 0.35);
       return;
     }
@@ -444,7 +445,7 @@ export class Sakuga {
     if (onWater) {
       if (!nearShip) { this.column(x, z, 5.5 * s, 2.2, 1.05, 0.03); this.crown(x, z, 2 * s, 8, 14 * Math.sqrt(s), 2 * s, 0.03); }
       this.foam(x, z, 9 * s, 2.2, 0.05, 1.1);
-      if (o) { o.stampRing(x, z, 7 * s, 1); o.stampFoam(x, z, 6 * s, 0.9); o.stampDisplace(x, z, 5 * s, -0.9 * s); }
+      if (o) { o.stampRing(x, z, 7 * s, 1); o.stampFoam(x, z, 5 * s, 0.55); o.stampDisplace(x, z, 5 * s, -0.9 * s); }
     }
     this.shock(x, z, 18 * s, 0.5, kind === 'powder' ? 0xfff0b0 : 0xfff6e0, 0.9, 1);
     this.k.decals.emit(Decal.Glow, x, z, 12 * s, 0.6, 0xff9a3a, 0, 0xff9a3a, 1.2, 20);
@@ -479,7 +480,7 @@ export class Sakuga {
     this.k.decals.emit(Decal.Glow, x, z, 18 * s, 0.9, 0xff8a2a, 0, 0xff8a2a, 1.4, 18);
     this.column(x + fz * length * 0.3, z - fx * length * 0.3, 4 * s, 2.4, 1.0, 0.08);
     const o = this.k.ocean;
-    if (o) { o.stampRing(x, z, length * 0.6, 1); o.stampFoam(x, z, length * 0.5, 1); o.stampDisplace(x, z, length * 0.4, -1.4); }
+    if (o) { o.stampRing(x, z, length * 0.6, 1); o.stampFoam(x, z, length * 0.4, 0.7); o.stampDisplace(x, z, length * 0.4, -1.4); }
     if (elite) {
       this.ring(x, y + 4, z, 6, 42 * s, GlowPal.Gold, 0.55, 1.4);
       this.sparkles(x, y + 4, z, 16, 14, GlowPal.Gold, 1.4);
@@ -506,7 +507,8 @@ export class Sakuga {
     this.bubbles(x, z, 14, length * 0.3, 1.8 * s);
     this.planks(x, this.wy(x, z) + 0.5, z, 3, 3, 3, 1, 2.4);
     const o = this.k.ocean;
-    if (o) { o.stampFoam(x, z, length * 0.5, 1); o.stampRing(x, z, length * 0.5, 0.8); }
+    // The ocean already draws the sinking whirl; this is only the final gulp.
+    if (o) { o.stampFoam(x, z, length * 0.35, 0.45); o.stampRing(x, z, length * 0.5, 0.8); }
   }
 
   /** Storm lightning strike from the sky: forked bolt, restrike, flash (the burst comes from the explosion event). */
