@@ -174,7 +174,7 @@ void main() {
 		float live = step( 1.0 - uRain.x * 0.55, hash12( vec2( lane, floor( fall ) ) ) );
 		float across = abs( fract( q.x * lanes ) - 0.5 );
 		float streak = live * smoothstep( 0.0, 0.08, seg ) * ( 1.0 - smoothstep( 0.14, 0.3, seg ) ) * ( 1.0 - smoothstep( 0.06, 0.2, across ) );
-		c = mix( c, vec3( 0.86, 0.93, 0.98 ), streak * 0.32 * uRain.x );
+		c = mix( c, vec3( 0.86, 0.93, 0.98 ), streak * 0.22 * uRain.x );
 	}
 
 	// Flash (screen blend).

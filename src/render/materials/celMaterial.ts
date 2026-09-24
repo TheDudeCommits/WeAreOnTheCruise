@@ -198,7 +198,8 @@ const FRAGMENT_LIGHTING = /* glsl */ `
 			celColor = mix( celColor, uCelSpectralColor * ( celG * 1.5 + 0.06 ), celTint.z * 0.85 );
 			celColor += uCelSpectralColor * pow( celFres, 2.0 ) * 2.4 * celTint.z;
 		}
-		celColor += uCelGlowColor * celTint.y * ( 0.16 + pow( celFres, 2.2 ) * 2.6 );
+		// Elite glow: a hot rim (blooms) over a faint body tint, never a wash.
+		celColor += uCelGlowColor * celTint.y * ( 0.045 + pow( celFres, 3.0 ) * 2.4 );
 		celColor = mix( celColor, vec3( 1.9, 1.78, 1.6 ), clamp( celTint.x, 0.0, 1.0 ) * 0.8 );
 	}
 

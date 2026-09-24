@@ -50,7 +50,7 @@ export class RainField {
     uBox: { value: new THREE.Vector3(170, 150, 170) },
     uTime: { value: 0 },
     uVelocity: { value: new THREE.Vector3(6, -42, 3) },
-    uLength: { value: 7 },
+    uLength: { value: 5.5 },
     uWidth: { value: 0.14 },
     uColor: { value: new THREE.Color(0.82, 0.9, 0.96) },
     uOpacity: { value: 0 },
@@ -79,7 +79,8 @@ export class RainField {
   }
 
   update(time: number, intensity: number, origin: THREE.Vector3, windX: number, windZ: number, windStrength: number, density: number, color: THREE.Color): void {
-    const count = Math.round(this.max * THREE.MathUtils.clamp(intensity, 0, 1) * density);
+    // 60% of the pool at full storm: enough to read as a downpour without hiding the fight.
+    const count = Math.round(this.max * 0.6 * THREE.MathUtils.clamp(intensity, 0, 1) * density);
     this.mesh.count = count;
     this.mesh.visible = count > 0;
     if (!count) return;

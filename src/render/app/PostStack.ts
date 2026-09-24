@@ -73,6 +73,7 @@ export class PostStack implements PostServices {
   private width = 0;
   private height = 0;
   private warmed = false;
+  private dummies: THREE.Group | null = null;
   private time = 0;
   private screenFx = 1;
   private readonly scratchGrade: Grade = createGrade();
@@ -240,17 +241,14 @@ export class PostStack implements PostServices {
   }
 
   private warmupScene(scene: THREE.Scene, camera: THREE.Camera): void {
-    const dummies = this.variantDummies();
-    scene.add(dummies);
+    // The dummies stay alive (never disposed): disposing them would delete programs that are still linking in
+    // parallel (Chrome then polls deleted programs) and would throw the warm-up away before real meshes use it.
+    this.dummies ??= this.variantDummies();
+    scene.add(this.dummies);
     try {
       this.compileInto(scene, camera, scene);
     } finally {
-      scene.remove(dummies);
-      dummies.traverse((o) => {
-        const mesh = o as THREE.Mesh;
-        if (!mesh.isMesh) return;
-        (mesh.material as THREE.Material).dispose();
-      });
+      scene.remove(this.dummies);
     }
     // Post materials.
     const previous = this.renderer.getRenderTarget();
@@ -475,6 +473,10 @@ export class PostStack implements PostServices {
     for (const m of [this.prefilter, this.down, this.up, this.composite]) m.dispose();
     this.quad.geometry.dispose();
     this.black.dispose();
+    this.dummies?.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (mesh.isMesh) { (mesh.material as THREE.Material).dispose(); mesh.geometry.dispose(); }
+    });
     stacks.delete(this.renderer);
   }
 }

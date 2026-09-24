@@ -188,7 +188,7 @@ export class CameraDirector implements RenderSystem, CameraServices {
     this.showcaseYaw += dt * 0.07;
     this.yaw = wrapAngle(this.yaw + wrapAngle(this.showcaseYaw + this.userYaw - this.yaw) * (1 - Math.exp(-dt * 1.5)));
     this.pitch = damp(this.pitch, THREE.MathUtils.clamp(0.13 + this.userPitch * 0.5, 0.04, 0.6), 1.5, dt);
-    this.distance = damp(this.distance, (length * 1.35 + 26) * THREE.MathUtils.clamp(this.zoom, 0.7, 1.6), 1.5, dt);
+    this.distance = damp(this.distance, (length * 1.15 + 22) * THREE.MathUtils.clamp(this.zoom, 0.7, 1.6), 1.5, dt);
     this.fov = damp(this.fov, SHOWCASE_FOV, 1.5, dt);
     this.target.x = damp(this.target.x, ctx.focus.x, 3, dt);
     this.target.z = damp(this.target.z, ctx.focus.z, 3, dt);

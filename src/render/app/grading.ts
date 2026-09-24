@@ -79,7 +79,7 @@ export const GRADES = Object.fromEntries(Object.entries(SPECS).map(([k, v]) => [
 
 /** Hour keyframes (0–24) for the time-of-day grade. */
 const HOUR_KEYS: readonly [number, keyof typeof SPECS][] = [
-  [0, 'night'], [4.9, 'night'], [6.4, 'dawn'], [8.6, 'noon'], [15.6, 'noon'], [17.7, 'golden'], [19.0, 'dusk'], [20.3, 'night'], [24, 'night'],
+  [0, 'night'], [4.9, 'night'], [6.4, 'dawn'], [8.6, 'noon'], [15.0, 'noon'], [17.3, 'golden'], [19.0, 'dusk'], [20.3, 'night'], [24, 'night'],
 ];
 
 export function createGrade(): Grade { return toGrade(SPECS.noon); }

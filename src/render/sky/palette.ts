@@ -76,10 +76,17 @@ const KEYS: readonly [number, LookSpec][] = [
     shadow: [0.44, 0.49, 0.78], rim: [1.0, 0.97, 0.9], cloudLit: 0xffffff, cloudShade: 0x9fb4e8, ink: 0x1b2340,
     fogNear: 360, fogFar: 2800, stars: 0,
   }],
-  [15.6, {
+  [15.2, {
     zenith: 0x2462cf, horizon: 0xb5d8ee, haze: 0xc3def0, key: [1.0, 0.93, 0.8], keyIntensity: 1.03,
     shadow: [0.44, 0.46, 0.76], rim: [1.0, 0.92, 0.78], cloudLit: 0xfffaf0, cloudShade: 0xa0aee2, ink: 0x1b2340,
     fogNear: 340, fogFar: 2700, stars: 0,
+  }],
+  // Late-afternoon gold: blue overhead, a pale-gold horizon and a warm key light. Without it the lerp from blue to
+  // amber passes through grey (the menu showcase sits at 16.5 h).
+  [16.5, {
+    zenith: 0x2a5cc6, horizon: 0xffdca0, haze: 0xf6ddb2, key: [1.0, 0.82, 0.58], keyIntensity: 1.06,
+    shadow: [0.43, 0.4, 0.72], rim: [1.0, 0.8, 0.52], cloudLit: 0xfff0d4, cloudShade: 0x9a98d8, ink: 0x1d2142,
+    fogNear: 320, fogFar: 2600, stars: 0,
   }],
   [17.6, {
     zenith: 0x3456ae, horizon: 0xffc48a, haze: 0xf0c49c, key: [1.0, 0.7, 0.4], keyIntensity: 1.05,
