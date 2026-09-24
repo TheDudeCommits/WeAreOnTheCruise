@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="512" viewBox="0 0 1024 512">
+  <!-- left half: canvas with the Admiralty wave-crest; right half: plain canvas -->
+  <rect width="1024" height="512" fill="#f4f0e6"/>
+  <g stroke="#e3dccb" stroke-width="5">
+    <line x1="64" y1="0" x2="64" y2="512"/><line x1="160" y1="0" x2="160" y2="512"/><line x1="352" y1="0" x2="352" y2="512"/><line x1="448" y1="0" x2="448" y2="512"/>
+    <line x1="576" y1="0" x2="576" y2="512"/><line x1="704" y1="0" x2="704" y2="512"/><line x1="832" y1="0" x2="832" y2="512"/><line x1="960" y1="0" x2="960" y2="512"/>
+  </g>
+  <rect x="0" y="0" width="512" height="512" fill="none" stroke="#1d2b53" stroke-width="10"/>
+  <rect x="512" y="0" width="512" height="512" fill="none" stroke="#1d2b53" stroke-width="10"/>
+  <g transform="translate(256 262)">
+    <circle r="150" fill="#f4f0e6" stroke="#1d2b53" stroke-width="40"/>
+    <circle r="150" fill="none" stroke="#e2b23a" stroke-width="24"/>
+    <!-- curling wave -->
+    <path d="M -112 58 C -118 -30 -52 -104 30 -96 C 98 -88 128 -22 96 22 C 70 58 16 52 8 16 C 2 -12 30 -28 50 -14 C 40 -48 -26 -44 -40 6 C -52 48 -18 78 22 84 L -112 84 Z"
+          fill="#e2b23a" stroke="#1d2b53" stroke-width="14" stroke-linejoin="round"/>
+    <path d="M -118 104 C -80 86 -40 86 0 104 C 40 122 80 122 118 104" fill="none" stroke="#1d2b53" stroke-width="14" stroke-linecap="round"/>
+  </g>
+</svg>

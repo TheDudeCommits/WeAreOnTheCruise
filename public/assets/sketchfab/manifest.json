@@ -1,4 +1,5 @@
 {
+  "note": "Six downloaded hero ships kept for now (owner decision 2026-09-24). The game shows them under original names (see `game`). Licences re-checked on Sketchfab on 2026-09-24 (all still CC BY or CC BY-SA and downloadable). They are fan-art of a third-party franchise: credit is required, but the credits do not cover the franchise itself, so replace them before any commercial release. The four crew figures listed here earlier were removed from the game (three showed signs of extraction from a commercial game); see docs/aaa-overhaul/audits/assets-and-licensing.md. New v2 models (enemies, bosses, props, crew, nature) are in /assets/fleet/manifest.json.",
   "ships": [
     {
       "kind": "going-merry",
@@ -42,12 +43,18 @@
           "triangles": 16843,
           "draws": 4
         }
-      ]
+      ],
+      "game": {
+        "shipId": "dawn-ram",
+        "name": "Dawn Ram"
+      },
+      "licenseVerified": "2026-09-24",
+      "provenance": "No extraction indicators in the 2026-09-23 audit; creator upload of a game-ready model."
     },
     {
       "kind": "thousand-sunny",
       "uid": "99986d1c93654c9d8889017435b5fe06",
-      "title": "One piece Thousand Sunny\ud83c\udf1e",
+      "title": "One piece Thousand Sunny🌞",
       "author": "Miraculousetabug",
       "authorUrl": "https://sketchfab.com/descendienteslamasmendieta",
       "source": "https://sketchfab.com/3d-models/one-piece-thousand-sunny-99986d1c93654c9d8889017435b5fe06",
@@ -86,7 +93,13 @@
           "triangles": 14508,
           "draws": 36
         }
-      ]
+      ],
+      "game": {
+        "shipId": "sunlion",
+        "name": "Sunlion"
+      },
+      "licenseVerified": "2026-09-24",
+      "provenance": "Medium-confidence doubt: five texture files are byte-identical to an unrelated earlier upload (8cf21462, a Going Merry by RadhruinT), suggesting a shared unknown source. First to replace if provenance is questioned."
     },
     {
       "kind": "navy-galleon",
@@ -130,7 +143,13 @@
           "triangles": 157613,
           "draws": 7
         }
-      ]
+      ],
+      "game": {
+        "shipId": "seawarden",
+        "name": "Seawarden"
+      },
+      "licenseVerified": "2026-09-24",
+      "provenance": "No extraction indicators. The source carries a 73-joint rig with named cannon bones that the runtime file drops."
     },
     {
       "kind": "moby-dick",
@@ -175,7 +194,13 @@
           "triangles": 7287,
           "draws": 1
         }
-      ]
+      ],
+      "game": {
+        "shipId": "white-leviathan",
+        "name": "White Leviathan"
+      },
+      "licenseVerified": "2026-09-24",
+      "provenance": "Provenance check pending: several uploads by the same account are byte-identical to other creators' earlier uploads, and this model was converted from an STL. CC BY-SA 4.0: the adapted runtime GLBs stay CC BY-SA 4.0."
     },
     {
       "kind": "polar-tang",
@@ -219,7 +244,13 @@
           "triangles": 14162,
           "draws": 10
         }
-      ]
+      ],
+      "game": {
+        "shipId": "yellowfin",
+        "name": "Yellowfin"
+      },
+      "licenseVerified": "2026-09-24",
+      "provenance": "No extraction indicators in the 2026-09-23 audit."
     },
     {
       "kind": "baratie",
@@ -264,99 +295,13 @@
           "triangles": 21687,
           "draws": 1
         }
-      ]
-    }
-  ],
-  "crew": [
-    {
-      "id": "luffy",
-      "uid": "44b58336c7344f058a02c6944b7ad843",
-      "height": 2.9,
-      "author": "Ricardo3D",
-      "title": "Luffy - One Piece",
-      "animation": "Idle",
-      "source": "https://sketchfab.com/3d-models/none-44b58336c7344f058a02c6944b7ad843",
-      "authorUrl": "https://sketchfab.com/creadordemu",
-      "license": {
-        "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
-        "label": "CC Attribution",
-        "fullName": "Creative Commons Attribution",
-        "requirements": "Author must be credited. Commercial use is allowed.",
-        "url": "http://creativecommons.org/licenses/by/4.0/",
-        "slug": "by"
+      ],
+      "game": {
+        "shipId": "grand-galley",
+        "name": "Grand Galley"
       },
-      "sourceSha256": "25bc87830accd0946d23873f605456d6bf8f989501210dc85cb5627818348be9",
-      "url": "/assets/sketchfab/crew/luffy.glb",
-      "bytes": 392728,
-      "sha256": "e542c0cfb222f235320a03a06b6d9d29baae115474d08ac2124f1d973a83a59a",
-      "changes": "Meshopt compression, WebP texture optimization, retained source skeleton and available animation clips; runtime uniform scale and materials."
-    },
-    {
-      "id": "nami",
-      "uid": "182735247cfb45b5853684ac54a6e767",
-      "height": 2.8,
-      "author": "jvmartins",
-      "title": "Nami one piece",
-      "source": "https://sketchfab.com/3d-models/none-182735247cfb45b5853684ac54a6e767",
-      "authorUrl": "https://sketchfab.com/jvmb1208",
-      "license": {
-        "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
-        "label": "CC Attribution",
-        "fullName": "Creative Commons Attribution",
-        "requirements": "Author must be credited. Commercial use is allowed.",
-        "url": "http://creativecommons.org/licenses/by/4.0/",
-        "slug": "by"
-      },
-      "sourceSha256": "2669dba3c4b2ee202d9df404c0b40274936e1a57c92f2cbcd15c845bb7d13962",
-      "url": "/assets/sketchfab/crew/nami.glb",
-      "bytes": 122508,
-      "sha256": "07b5608f69d45f0ea2e2c9316e24eb5546f040f3f43b621ba0b6cdd9429503ff",
-      "changes": "Meshopt compression, WebP texture optimization, retained source skeleton and available animation clips; runtime uniform scale and materials."
-    },
-    {
-      "id": "sanji",
-      "uid": "7dfddca8f50c45d7a430b538118d3f9a",
-      "height": 3.0,
-      "author": "Justin Rajan",
-      "title": "Sanji (One Piece)",
-      "animation": "mixamo.com",
-      "source": "https://sketchfab.com/3d-models/none-7dfddca8f50c45d7a430b538118d3f9a",
-      "authorUrl": "https://sketchfab.com/justin.rajan.6619",
-      "license": {
-        "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
-        "label": "CC Attribution",
-        "fullName": "Creative Commons Attribution",
-        "requirements": "Author must be credited. Commercial use is allowed.",
-        "url": "http://creativecommons.org/licenses/by/4.0/",
-        "slug": "by"
-      },
-      "sourceSha256": "295258ad77f4ce690d000ee9c7b8e0af2579a8da6b29717dd867450674608ebd",
-      "url": "/assets/sketchfab/crew/sanji.glb",
-      "bytes": 490936,
-      "sha256": "7956b1a284e084ce7669737906a749d915a3cff206926eacb801a065c50e5d23",
-      "changes": "Meshopt compression, WebP texture optimization, retained source skeleton and available animation clips; runtime uniform scale and materials."
-    },
-    {
-      "id": "whitebeard",
-      "uid": "13ebbf108c7949959608b341dbde80d3",
-      "height": 8.0,
-      "author": "VorLucky",
-      "title": "One Piece - WhiteBeard",
-      "source": "https://sketchfab.com/3d-models/none-13ebbf108c7949959608b341dbde80d3",
-      "authorUrl": "https://sketchfab.com/bladeeee",
-      "license": {
-        "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
-        "label": "CC Attribution",
-        "fullName": "Creative Commons Attribution",
-        "requirements": "Author must be credited. Commercial use is allowed.",
-        "url": "http://creativecommons.org/licenses/by/4.0/",
-        "slug": "by"
-      },
-      "sourceSha256": "5b34cb328bb29551fd9dc1b5ea10e923680167fe717061e89bd2f3c44664e66d",
-      "url": "/assets/sketchfab/crew/whitebeard.glb",
-      "bytes": 205272,
-      "sha256": "309a2775b1fac78976599385a005d4be6cce9223650d1817cd19faf9436e704e",
-      "changes": "Meshopt compression, WebP texture optimization, retained source skeleton and available animation clips; runtime uniform scale and materials."
+      "licenseVerified": "2026-09-24",
+      "provenance": "No extraction indicators; the source is untextured (the runtime paints it)."
     }
   ]
 }

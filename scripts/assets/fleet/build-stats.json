@@ -1,0 +1,1489 @@
+{
+  "man-o-war": {
+    "file": "/assets/fleet/man-o-war.glb",
+    "bytes": 1000460,
+    "sha256": "6f1c9638832cabb5b30159ccbe04044e60442b549f299b30e232cf3972fa0888",
+    "sourceSha256": "598184016ed347593a9fb6fbd503ba0157b7a3c434d92aafc651c86e7d328839",
+    "tris": 23519,
+    "sourceTris": 24469,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 1024,
+    "size": [
+      17.65,
+      41.87,
+      50
+    ],
+    "min": [
+      -8.83,
+      -4.2,
+      -25
+    ],
+    "max": [
+      8.83,
+      37.67,
+      25
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "mortar-barge": {
+    "file": "/assets/fleet/mortar-barge.glb",
+    "bytes": 686776,
+    "sha256": "45b392ce9fa7043a5d7a324b8ed5959cad481b0200fd0118318fb152b83b1614",
+    "sourceSha256": "bc61a3fc1b11e162a365db72837677e0347219174a971c06797e4d325327b2e8",
+    "tris": 19578,
+    "sourceTris": 19578,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 1024,
+    "size": [
+      11.87,
+      13.47,
+      24
+    ],
+    "min": [
+      -5.93,
+      -1.6,
+      -12
+    ],
+    "max": [
+      5.93,
+      11.87,
+      12
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "dreadnought": {
+    "file": "/assets/fleet/dreadnought.glb",
+    "bytes": 1977116,
+    "sha256": "2a283994f3b083508d4167f0b72d7163a06612142438c6a9dd5d42527ca19474",
+    "sourceSha256": "6423f6ba3d05f24f59ceacf77ac0bef6b4f24795a0d985f8a630ef459fd02c8d",
+    "tris": 48999,
+    "sourceTris": 50269,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 2048,
+    "size": [
+      34.76,
+      46.13,
+      90
+    ],
+    "min": [
+      -17.38,
+      -6.5,
+      -45
+    ],
+    "max": [
+      17.38,
+      39.63,
+      45
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "sovereign": {
+    "file": "/assets/fleet/sovereign.glb",
+    "bytes": 2747948,
+    "sha256": "bc848bef2bbb46af4719b7cd6ff59665e8d8f6243070c30c854f69b2573df479",
+    "sourceSha256": "f1fd1f6ff834606eb5f711d37e187aae85c867432725824facace908304ad419",
+    "tris": 51386,
+    "sourceTris": 51386,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 2048,
+    "size": [
+      45.36,
+      96.49,
+      120
+    ],
+    "min": [
+      -22.68,
+      -8.5,
+      -60
+    ],
+    "max": [
+      22.68,
+      87.99,
+      60
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "fort": {
+    "file": "/assets/fleet/fort.glb",
+    "bytes": 617836,
+    "sha256": "0d5ae473b89d1de51fada9089660e76f3490b0c50fcca1baae1ff8e4f5077fa2",
+    "sourceSha256": "e8b024c616b89d6e4efc839766b8aeb53f1b6f4a0b2f175f7add129cae7d2338",
+    "tris": 19599,
+    "sourceTris": 20183,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 1024,
+    "size": [
+      18.97,
+      20.37,
+      20
+    ],
+    "min": [
+      -9.48,
+      -1.2,
+      -10
+    ],
+    "max": [
+      9.48,
+      19.17,
+      10
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "tidewyrm-head": {
+    "file": "/assets/fleet/tidewyrm-head.glb",
+    "bytes": 1339860,
+    "sha256": "5f2e5508e19e3e86f3215845fde90dd51c9c0fc14971c94dee2e6dda4fb4ae27",
+    "sourceSha256": "64238c352843274556f1c7e0d2304aa3df5f35b5d6745b498f438d77f055a8dc",
+    "tris": 29400,
+    "sourceTris": 30864,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 2048,
+    "size": [
+      7.11,
+      18,
+      17.18
+    ],
+    "min": [
+      -3.55,
+      0,
+      -8.59
+    ],
+    "max": [
+      3.55,
+      18,
+      8.59
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "corsair-brig": {
+    "file": "/assets/fleet/corsair-brig.glb",
+    "bytes": 401872,
+    "sha256": "ccfc508d57fc0275b7281257feee0d81caba10cc46bf0e8b5e91fea8f8d15fdc",
+    "sourceSha256": "87b11caf397171abdc5dfe80c79358ee2a2c80736d07a0a87370ce9af3875ffa",
+    "tris": 21558,
+    "sourceTris": 30994,
+    "materials": 3,
+    "draws": 3,
+    "textures": 3,
+    "maxTexture": 1024,
+    "size": [
+      7.42,
+      20.35,
+      28
+    ],
+    "min": [
+      -3.71,
+      -2.4,
+      -14
+    ],
+    "max": [
+      3.71,
+      17.95,
+      14
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "corsair-galleon": {
+    "file": "/assets/fleet/corsair-galleon.glb",
+    "bytes": 304436,
+    "sha256": "938059b630e7e1426e68a4b01c0865130de9917b114adbd59f8965bd8732ebc9",
+    "sourceSha256": "c9048bce2695ed9c4d6fd65f3f824d6a1f9c034c8572e2111dc890cc34980f03",
+    "tris": 21618,
+    "sourceTris": 74146,
+    "materials": 2,
+    "draws": 2,
+    "textures": 2,
+    "maxTexture": 1024,
+    "size": [
+      14.14,
+      26.1,
+      43.97
+    ],
+    "min": [
+      -7.07,
+      -3.6,
+      -21.97
+    ],
+    "max": [
+      7.07,
+      22.5,
+      22
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "sloop": {
+    "file": "/assets/fleet/sloop.glb",
+    "bytes": 162632,
+    "sha256": "33c9f37e46c56b3bd4f976bf14f7cd76417531954a1329e50e73c2bc3a65975f",
+    "sourceSha256": "47e1b1ed42ea2bc66695667dbcf12ca87eb682b694f2b0ae361c9382388612c5",
+    "tris": 10699,
+    "sourceTris": 10699,
+    "materials": 2,
+    "draws": 2,
+    "textures": 2,
+    "maxTexture": 1024,
+    "size": [
+      4.85,
+      15.47,
+      20
+    ],
+    "min": [
+      -2.42,
+      -1.5,
+      -10
+    ],
+    "max": [
+      2.42,
+      13.97,
+      10
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "brig": {
+    "file": "/assets/fleet/brig.glb",
+    "bytes": 227568,
+    "sha256": "3013ffbc6119bd1c75ad8dbcf193ee75d9018b1c28fa7825a8bc646250740ad7",
+    "sourceSha256": "6b12d15106dab8f727d9d99395a96c6b80a28d9f030db35d5202114a09063082",
+    "tris": 9731,
+    "sourceTris": 9731,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 1024,
+    "size": [
+      9.78,
+      20.6,
+      28
+    ],
+    "min": [
+      -4.89,
+      -2.2,
+      -14
+    ],
+    "max": [
+      4.89,
+      18.4,
+      14
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "frigate": {
+    "file": "/assets/fleet/frigate.glb",
+    "bytes": 191584,
+    "sha256": "b965a2f59f663d79512a6a177995e264fa76112a39f5eb880409bb59a66a2f71",
+    "sourceSha256": "2e0ffe3f451ed6399e560ec4859ed3af8efca8666eedcd7fbf49e27607695eed",
+    "tris": 23132,
+    "sourceTris": 73141,
+    "materials": 2,
+    "draws": 2,
+    "textures": 2,
+    "maxTexture": 1024,
+    "size": [
+      20.59,
+      35.91,
+      38
+    ],
+    "min": [
+      -10.3,
+      -3.2,
+      -19
+    ],
+    "max": [
+      10.29,
+      32.71,
+      19
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "fireship": {
+    "file": "/assets/fleet/fireship.glb",
+    "bytes": 216092,
+    "sha256": "9caef79c290d5e83398193d7cdf41a55a84fcf11b6721629b306b8265738c979",
+    "sourceSha256": "152d711258da9ea58bdd9d7961c08db8c8f6aaca628293298bd7dc33d6e6f18f",
+    "tris": 13272,
+    "sourceTris": 13272,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 1024,
+    "size": [
+      7.53,
+      21.55,
+      22
+    ],
+    "min": [
+      -3.77,
+      -1.8,
+      -11
+    ],
+    "max": [
+      3.77,
+      19.75,
+      11
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "skiff": {
+    "file": "/assets/fleet/skiff.glb",
+    "bytes": 102304,
+    "sha256": "347bacb9071639bb3fec1f043087349e6edc4410ef89fb5773ff403fd01bd1e6",
+    "sourceSha256": "977e03cf75b9a5c96061a92ffc76bed01b4c8fa50fe498290e57f3ed32dfc060",
+    "tris": 7364,
+    "sourceTris": 7292,
+    "materials": 2,
+    "draws": 2,
+    "textures": 2,
+    "maxTexture": 512,
+    "size": [
+      5.4,
+      8.2,
+      12
+    ],
+    "min": [
+      -2.7,
+      -0.6,
+      -6
+    ],
+    "max": [
+      2.7,
+      7.6,
+      6
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "wraith": {
+    "file": "/assets/fleet/wraith.glb",
+    "bytes": 303496,
+    "sha256": "dafa149a4214319a5f3427f618ad665fb8e8fe3b9bea86d56acf4eb17473605a",
+    "sourceSha256": "b58740bec63b2141d6539a955f46c3ca1e1cc2f92c783c8f905a0985453ef646",
+    "tris": 21559,
+    "sourceTris": 105535,
+    "materials": 2,
+    "draws": 2,
+    "textures": 2,
+    "maxTexture": 1024,
+    "size": [
+      12.28,
+      26.54,
+      30
+    ],
+    "min": [
+      -6.14,
+      -2.2,
+      -15
+    ],
+    "max": [
+      6.14,
+      24.34,
+      15
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "sailor-a": {
+    "file": "/assets/fleet/sailor-a.glb",
+    "bytes": 344120,
+    "sha256": "731114c430015b6901f2187b7571a300b84533b60ade61081a9aaa74b9bd4537",
+    "sourceSha256": "fc52c1ea8b87a8c24e1710a75290e9f0b520d3f30d2e4be6d3616d82e41fef7e",
+    "tris": 5684,
+    "sourceTris": 11062,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      2.35,
+      1.92,
+      0.91
+    ],
+    "min": [
+      -1.18,
+      0,
+      -0.45
+    ],
+    "max": [
+      1.18,
+      1.92,
+      0.45
+    ],
+    "clips": [
+      "Death",
+      "Duck",
+      "HitReact",
+      "Idle",
+      "Punch",
+      "Run",
+      "Sword",
+      "Walk",
+      "Wave",
+      "Yes"
+    ],
+    "built": "2026-09-24"
+  },
+  "sailor-b": {
+    "file": "/assets/fleet/sailor-b.glb",
+    "bytes": 343744,
+    "sha256": "bcd000f5d8acf84d96b10916b1f6ca6e2f9adfda094b22f2140181450800e72d",
+    "sourceSha256": "9eafbfc1250652bbfd338cfd29c258ba0e0fee31586162696ee4bc3217ac3485",
+    "tris": 5684,
+    "sourceTris": 12368,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      2.25,
+      1.92,
+      0.92
+    ],
+    "min": [
+      -1.12,
+      0,
+      -0.46
+    ],
+    "max": [
+      1.12,
+      1.92,
+      0.46
+    ],
+    "clips": [
+      "Death",
+      "Duck",
+      "HitReact",
+      "Idle",
+      "Punch",
+      "Run",
+      "Sword",
+      "Walk",
+      "Wave",
+      "Yes"
+    ],
+    "built": "2026-09-24"
+  },
+  "sailor-c": {
+    "file": "/assets/fleet/sailor-c.glb",
+    "bytes": 344120,
+    "sha256": "330c8b5ed82643c6f64f3b0fcdab6ef044fcaa862ec8a173e37849d489704698",
+    "sourceSha256": "fc52c1ea8b87a8c24e1710a75290e9f0b520d3f30d2e4be6d3616d82e41fef7e",
+    "tris": 5684,
+    "sourceTris": 11062,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      2.35,
+      1.92,
+      0.91
+    ],
+    "min": [
+      -1.18,
+      0,
+      -0.45
+    ],
+    "max": [
+      1.18,
+      1.92,
+      0.45
+    ],
+    "clips": [
+      "Death",
+      "Duck",
+      "HitReact",
+      "Idle",
+      "Punch",
+      "Run",
+      "Sword",
+      "Walk",
+      "Wave",
+      "Yes"
+    ],
+    "built": "2026-09-24"
+  },
+  "admiralty-sailor": {
+    "file": "/assets/fleet/admiralty-sailor.glb",
+    "bytes": 344120,
+    "sha256": "f50f6caa8427a8defe85654a2278a1a17d96a726f752c5a2a8ec099ce6239c6d",
+    "sourceSha256": "fc52c1ea8b87a8c24e1710a75290e9f0b520d3f30d2e4be6d3616d82e41fef7e",
+    "tris": 5684,
+    "sourceTris": 11062,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      2.35,
+      1.92,
+      0.91
+    ],
+    "min": [
+      -1.18,
+      0,
+      -0.45
+    ],
+    "max": [
+      1.18,
+      1.92,
+      0.45
+    ],
+    "clips": [
+      "Death",
+      "Duck",
+      "HitReact",
+      "Idle",
+      "Punch",
+      "Run",
+      "Sword",
+      "Walk",
+      "Wave",
+      "Yes"
+    ],
+    "built": "2026-09-24"
+  },
+  "corsair": {
+    "file": "/assets/fleet/corsair.glb",
+    "bytes": 300584,
+    "sha256": "4ea3d4e662a84082c61bc4caf817654040669311ca2e46b313d60e4329f8f604",
+    "sourceSha256": "db9499c91a143750031bcff287cab6c9b63a0682801bb120c128e244f0d6d5c4",
+    "tris": 5396,
+    "sourceTris": 10576,
+    "materials": 1,
+    "draws": 3,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      2.2,
+      1.95,
+      1.63
+    ],
+    "min": [
+      -1.1,
+      0,
+      -0.81
+    ],
+    "max": [
+      1.1,
+      1.95,
+      0.81
+    ],
+    "clips": [
+      "Death",
+      "Duck",
+      "HitReact",
+      "Idle",
+      "Punch",
+      "Run",
+      "Sword",
+      "Walk",
+      "Wave",
+      "Yes"
+    ],
+    "built": "2026-09-24"
+  },
+  "wraith-crew": {
+    "file": "/assets/fleet/wraith-crew.glb",
+    "bytes": 368656,
+    "sha256": "bcb669c148ca3b62f57feecb214088d0700d13738f6c5144b37a58c4748dbb68",
+    "sourceSha256": "c4f060ac42cd3e761a0726dbd339b6e9ae10e153ff10540dffefc44c6270092b",
+    "tris": 5952,
+    "sourceTris": 14260,
+    "materials": 1,
+    "draws": 2,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      2.48,
+      1.93,
+      1.56
+    ],
+    "min": [
+      -1.24,
+      0,
+      -0.78
+    ],
+    "max": [
+      1.24,
+      1.94,
+      0.78
+    ],
+    "clips": [
+      "Death",
+      "Duck",
+      "HitReact",
+      "Idle",
+      "Punch",
+      "Run",
+      "Sword",
+      "Walk",
+      "Wave",
+      "Yes"
+    ],
+    "built": "2026-09-24"
+  },
+  "cannon": {
+    "file": "/assets/fleet/cannon.glb",
+    "bytes": 25496,
+    "sha256": "7e326f6a54803c9c075d7a70f43cbd225535dff563c210569caf3c78b23051dc",
+    "sourceSha256": "3461566b94dd978a52d27461d687d086db10abb932c812d332d38620f9141695",
+    "tris": 2362,
+    "sourceTris": 2362,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      1.54,
+      1.68,
+      2.2
+    ],
+    "min": [
+      -0.77,
+      0,
+      -1.1
+    ],
+    "max": [
+      0.77,
+      1.68,
+      1.1
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "mortar": {
+    "file": "/assets/fleet/mortar.glb",
+    "bytes": 102136,
+    "sha256": "a196ca3591a09073764edac39ebf9b1643d786adc7908e9beeb8f62f6b6479f7",
+    "sourceSha256": "1572d575476737c314cf302cd8ebcfe9b798632f3aa6279a2c1f964456958b46",
+    "tris": 2775,
+    "sourceTris": 2775,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 512,
+    "size": [
+      2.2,
+      1.78,
+      2.2
+    ],
+    "min": [
+      -1.1,
+      0,
+      -1.1
+    ],
+    "max": [
+      1.1,
+      1.78,
+      1.1
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "rocket-rack": {
+    "file": "/assets/fleet/rocket-rack.glb",
+    "bytes": 120392,
+    "sha256": "a74e9b1ea35892a590608614cb168977f5e0feb9070e4fb03b7670a04a5828c1",
+    "sourceSha256": "a6aed54e010a86e680ea36dc7d8b72428821f20c0819c2c8381a0e9bd0e553ce",
+    "tris": 2851,
+    "sourceTris": 2851,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 512,
+    "size": [
+      1.84,
+      2,
+      2
+    ],
+    "min": [
+      -0.92,
+      0,
+      -1
+    ],
+    "max": [
+      0.92,
+      2,
+      1
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "swivel-gun": {
+    "file": "/assets/fleet/swivel-gun.glb",
+    "bytes": 111340,
+    "sha256": "6bc6f370e688ccf477c305d720e4bfd68b9ae169ea8e6404fa722ceebd08edb4",
+    "sourceSha256": "e91aa61338d6d53c0ec49fabcfc331a722804b6321007040df19a386869ef40d",
+    "tris": 2966,
+    "sourceTris": 2966,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 512,
+    "size": [
+      1.6,
+      1.6,
+      1.58
+    ],
+    "min": [
+      -0.8,
+      0,
+      -0.79
+    ],
+    "max": [
+      0.8,
+      1.6,
+      0.79
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "harpoon-gun": {
+    "file": "/assets/fleet/harpoon-gun.glb",
+    "bytes": 96816,
+    "sha256": "425b519d37339d6de1015e81ea829bac9ede3ca7b25863293b8b57f525fe36fb",
+    "sourceSha256": "09cecab82a615825f1dc9e9437925905278a4d082b7173b599e361287bc19adf",
+    "tris": 2816,
+    "sourceTris": 2816,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 512,
+    "size": [
+      1.44,
+      1.92,
+      2.6
+    ],
+    "min": [
+      -0.72,
+      0,
+      -1.3
+    ],
+    "max": [
+      0.72,
+      1.92,
+      1.3
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "storm-rod": {
+    "file": "/assets/fleet/storm-rod.glb",
+    "bytes": 122900,
+    "sha256": "b5f1ceb8d39e65fd8ac2f126e45b9c8dcb368db065a8d24da1ef3ffbd95f681c",
+    "sourceSha256": "ab0437f724d6b6a840f360c874c1ceaf89e1c90093f4081531070460cb4afd0e",
+    "tris": 2939,
+    "sourceTris": 3151,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 512,
+    "size": [
+      0.88,
+      4,
+      0.78
+    ],
+    "min": [
+      -0.44,
+      0,
+      -0.39
+    ],
+    "max": [
+      0.44,
+      4,
+      0.39
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "mine": {
+    "file": "/assets/fleet/mine.glb",
+    "bytes": 68040,
+    "sha256": "2be5fa28cdcdb76eca2cca7c92939654d0d015a60bf526556ee4ac2e68b959d9",
+    "sourceSha256": "c0a0a8cc433f0ece81d4dcee896720dfea41ade70ed91b0123f166a714469034",
+    "tris": 2940,
+    "sourceTris": 3004,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 512,
+    "size": [
+      1.31,
+      1.6,
+      1.17
+    ],
+    "min": [
+      -0.66,
+      0,
+      -0.58
+    ],
+    "max": [
+      0.66,
+      1.6,
+      0.58
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "lantern": {
+    "file": "/assets/fleet/lantern.glb",
+    "bytes": 61896,
+    "sha256": "06993519069f968b7ce768eed7232568c3230839d7b039d7b7207512224f9618",
+    "sourceSha256": "9c8f6cb857021322e7eecf037951828a70d15a59214adfb8cf8266f737bb715b",
+    "tris": 2940,
+    "sourceTris": 3267,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 512,
+    "size": [
+      0.32,
+      0.7,
+      0.31
+    ],
+    "min": [
+      -0.16,
+      0,
+      -0.16
+    ],
+    "max": [
+      0.16,
+      0.7,
+      0.16
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "powder-keg": {
+    "file": "/assets/fleet/powder-keg.glb",
+    "bytes": 95164,
+    "sha256": "3f320f04c9a5476d09370ec733860388f09b2bf2e8ab1c63618e9b9c8d9c3d00",
+    "sourceSha256": "6f0819e851b617a1bb487709ff4ad899bbf5bd45b6796a939498df520804c675",
+    "tris": 2353,
+    "sourceTris": 2353,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 512,
+    "size": [
+      0.74,
+      1,
+      0.73
+    ],
+    "min": [
+      -0.37,
+      0,
+      -0.37
+    ],
+    "max": [
+      0.37,
+      1,
+      0.37
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "iron-ram": {
+    "file": "/assets/fleet/iron-ram.glb",
+    "bytes": 86996,
+    "sha256": "fe692a3032faad5a47bae798a791a870e1828dc260c595efb90538642fb82bca",
+    "sourceSha256": "b85fb43efda0a133bfec680a47ee04ec89eaff06667127133e7588e09b3a1677",
+    "tris": 2940,
+    "sourceTris": 3030,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 512,
+    "size": [
+      2.36,
+      2.17,
+      3.2
+    ],
+    "min": [
+      -1.18,
+      0,
+      -1.6
+    ],
+    "max": [
+      1.18,
+      2.17,
+      1.6
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "barrel": {
+    "file": "/assets/fleet/barrel.glb",
+    "bytes": 10480,
+    "sha256": "109c5c9218d0f4f2311d2a89da9fb877b049471611b70413e3cad40a56af11fb",
+    "sourceSha256": "5180ba3e2dd3a3485bf24a2e309dc5e24ec22deb2a2da15a516a02085fef66c4",
+    "tris": 640,
+    "sourceTris": 640,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      1.19,
+      1.1,
+      1.19
+    ],
+    "min": [
+      -0.6,
+      0,
+      -0.6
+    ],
+    "max": [
+      0.6,
+      1.1,
+      0.6
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "chest": {
+    "file": "/assets/fleet/chest.glb",
+    "bytes": 28144,
+    "sha256": "c31d4e999ca3fcd5ed88ec02999b65a53b22e2e3ea50113b692e9e7ae780075d",
+    "sourceSha256": "18e2bcb8be38d7f1922079c7138ec9559dd423cb6688dee3ccccaba76f3f204c",
+    "tris": 1636,
+    "sourceTris": 1636,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      1.3,
+      0.82,
+      0.83
+    ],
+    "min": [
+      -0.65,
+      0,
+      -0.41
+    ],
+    "max": [
+      0.65,
+      0.82,
+      0.41
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "chest-open": {
+    "file": "/assets/fleet/chest-open.glb",
+    "bytes": 42952,
+    "sha256": "752c8a6b3ac76ea7d83686a981d4a3f983b61e205fe3fee8404dc137b894de82",
+    "sourceSha256": "6810efd30cd1a072c2f272ee76a046b278984f3f050e4d9b256d50242d958811",
+    "tris": 2868,
+    "sourceTris": 7368,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      1.5,
+      1.06,
+      1.31
+    ],
+    "min": [
+      -0.75,
+      0,
+      -0.66
+    ],
+    "max": [
+      0.75,
+      1.06,
+      0.66
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "crate": {
+    "file": "/assets/fleet/crate.glb",
+    "bytes": 5448,
+    "sha256": "82fc49c13f7573a5b5f3a819b529692944d038b9f02ea44e3aaf6d81e46862c6",
+    "sourceSha256": "b525674e07c8b83667512a8dd93be0d7684358347d0e64d2bb16b156ac382ed1",
+    "tris": 76,
+    "sourceTris": 76,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      1.26,
+      0.9,
+      1.53
+    ],
+    "min": [
+      -0.63,
+      0,
+      -0.77
+    ],
+    "max": [
+      0.63,
+      0.9,
+      0.77
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "anchor": {
+    "file": "/assets/fleet/anchor.glb",
+    "bytes": 9668,
+    "sha256": "71c0f28bc85719143049e1282de0fed7591ce745afb3907c07a17b160d4bd7c7",
+    "sourceSha256": "98504894d03160b86f8b4a34d6e1b9b31bac173ce424378100f13143fd0223fc",
+    "tris": 544,
+    "sourceTris": 544,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      1.64,
+      2,
+      0.2
+    ],
+    "min": [
+      -0.82,
+      0,
+      -0.1
+    ],
+    "max": [
+      0.82,
+      2,
+      0.1
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "coins": {
+    "file": "/assets/fleet/coins.glb",
+    "bytes": 23596,
+    "sha256": "039d7ee23599394ccf76ec086c4e0a447168bf3351497cfac31ffc3e0cdab98c",
+    "sourceSha256": "13ab5a39537fc661731b2053fb00c7f2799f3ab0d542a36c1c413eae60ebdf4d",
+    "tris": 2024,
+    "sourceTris": 2024,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      0.6,
+      0.45,
+      0.83
+    ],
+    "min": [
+      -0.3,
+      0,
+      -0.42
+    ],
+    "max": [
+      0.3,
+      0.45,
+      0.42
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "gold-bag": {
+    "file": "/assets/fleet/gold-bag.glb",
+    "bytes": 30848,
+    "sha256": "3310b5033f4869ef181e2aad5d864a1042c0ae7174709555ca6e83b3bf7033fb",
+    "sourceSha256": "cb9bfa79277c5da163ce94c5c2ab9b2567aa4b59ff02776b277b53570c2dfc00",
+    "tris": 2250,
+    "sourceTris": 3954,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      0.76,
+      0.7,
+      0.59
+    ],
+    "min": [
+      -0.38,
+      0,
+      -0.3
+    ],
+    "max": [
+      0.38,
+      0.7,
+      0.3
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "flag": {
+    "file": "/assets/fleet/flag.glb",
+    "bytes": 8992,
+    "sha256": "56bafef04a96d3d679944cfcbed169ecc1c3f57f60c884aa6e6c0852e06203f1",
+    "sourceSha256": null,
+    "tris": 96,
+    "sourceTris": 96,
+    "materials": 3,
+    "draws": 3,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      0.24,
+      4.44,
+      2.58
+    ],
+    "min": [
+      -0.12,
+      0,
+      -1.29
+    ],
+    "max": [
+      0.12,
+      4.44,
+      1.29
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "flag-redtide": {
+    "file": "/assets/fleet/flag-redtide.glb",
+    "bytes": 9044,
+    "sha256": "35c1ae262a32f8c54011c85a264d6f4235ad7ac274b0820b58ce6efbc305c368",
+    "sourceSha256": null,
+    "tris": 96,
+    "sourceTris": 96,
+    "materials": 3,
+    "draws": 3,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      0.24,
+      4.44,
+      2.58
+    ],
+    "min": [
+      -0.12,
+      0,
+      -1.29
+    ],
+    "max": [
+      0.12,
+      4.44,
+      1.29
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "palm-a": {
+    "file": "/assets/fleet/palm-a.glb",
+    "bytes": 34828,
+    "sha256": "8ae9dd8f073aa768385008078b82a8cdd2544b97ebc16072bc06d75838c84efe",
+    "sourceSha256": "c38f9ee0f5385422a69863a0948d088b1119611b017e872417fceefdaf20ed94",
+    "tris": 3208,
+    "sourceTris": 3208,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      7.28,
+      10,
+      7.02
+    ],
+    "min": [
+      -3.64,
+      0,
+      -3.51
+    ],
+    "max": [
+      3.64,
+      10,
+      3.51
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "palm-b": {
+    "file": "/assets/fleet/palm-b.glb",
+    "bytes": 36256,
+    "sha256": "33d622d5b6060ea5e4d9a552da2f024eb6239170f2a983a3639a94f0c7554e82",
+    "sourceSha256": "5bc795e2010d4ee0a6ed8e1a96446478151f804c2ac2ddeb5a01b1dadea632ca",
+    "tris": 3134,
+    "sourceTris": 3134,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      8.52,
+      8,
+      8.19
+    ],
+    "min": [
+      -4.26,
+      0,
+      -4.1
+    ],
+    "max": [
+      4.26,
+      8,
+      4.1
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "rock-a": {
+    "file": "/assets/fleet/rock-a.glb",
+    "bytes": 41396,
+    "sha256": "249b3e03d710a7203352916a5d5ee69d795356cfbd25a4428e1e15bdbe79cf9d",
+    "sourceSha256": "c5c022324a365158e1f2df9b53efde31cd0c2bb27fa4ec198665714c928d2826",
+    "tris": 4898,
+    "sourceTris": 19144,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      13.89,
+      12,
+      12.34
+    ],
+    "min": [
+      -6.95,
+      0,
+      -6.17
+    ],
+    "max": [
+      6.95,
+      12,
+      6.17
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "rock-b": {
+    "file": "/assets/fleet/rock-b.glb",
+    "bytes": 22284,
+    "sha256": "693f49de46a13032d022a62f7f3caca3d86f9d7d64efbea4faceeff2fcb38079",
+    "sourceSha256": "06c5012110d3a513ebb05c2f9080a3232c457e19cfd4246b63311a1ee2c1518b",
+    "tris": 2940,
+    "sourceTris": 3072,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      3.73,
+      5,
+      3.61
+    ],
+    "min": [
+      -1.87,
+      0,
+      -1.81
+    ],
+    "max": [
+      1.87,
+      5,
+      1.81
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "bush": {
+    "file": "/assets/fleet/bush.glb",
+    "bytes": 6476,
+    "sha256": "846b6dc90d0bffb898939dffbeecfaa7bd671fc77c47240e820786d5c6b8f629",
+    "sourceSha256": "f422f991fdf75df2b7bd7cd642d67f9ec884279590130e7a213e2ddaea5d0a54",
+    "tris": 144,
+    "sourceTris": 144,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      2.57,
+      1.2,
+      2.86
+    ],
+    "min": [
+      -1.29,
+      0,
+      -1.43
+    ],
+    "max": [
+      1.29,
+      1.2,
+      1.43
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "hut": {
+    "file": "/assets/fleet/hut.glb",
+    "bytes": 90812,
+    "sha256": "b97f9d13bf64e3b555602f2d978f831537101de32f06292309fcbbe7f15eaa3a",
+    "sourceSha256": "d4da178f124de86a7c21a66e009689dff7ad1b9a19c7a70777782343ca2511a2",
+    "tris": 5799,
+    "sourceTris": 9172,
+    "materials": 2,
+    "draws": 2,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      8.74,
+      11,
+      3.91
+    ],
+    "min": [
+      -4.37,
+      0,
+      -1.95
+    ],
+    "max": [
+      4.37,
+      11,
+      1.95
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "dock": {
+    "file": "/assets/fleet/dock.glb",
+    "bytes": 23272,
+    "sha256": "5b105bd13c41262b62c0307e879431538909a242477c26e6aa2ddf7edb4169a5",
+    "sourceSha256": "cdbcd1dc78b7adb0a83f9ef475e61c5df5302c2cac9a340266b986165636d940",
+    "tris": 1912,
+    "sourceTris": 1912,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      2.9,
+      4,
+      3.53
+    ],
+    "min": [
+      -1.45,
+      0,
+      -1.76
+    ],
+    "max": [
+      1.45,
+      4,
+      1.76
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "tower": {
+    "file": "/assets/fleet/tower.glb",
+    "bytes": 11264,
+    "sha256": "3aecfa02fccdc68f8ca81383232d230b71d08caa160521e9cd8d19640e5bf830",
+    "sourceSha256": "3e65bcb990840a59c0b7c0c1237ba41da5a2b5434cab65d6f904a732d4899eb0",
+    "tris": 604,
+    "sourceTris": 604,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 256,
+    "size": [
+      4.97,
+      14,
+      4.97
+    ],
+    "min": [
+      -2.48,
+      0,
+      -2.48
+    ],
+    "max": [
+      2.48,
+      14,
+      2.48
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "escort-skiff": {
+    "file": "/assets/fleet/escort-skiff.glb",
+    "bytes": 66764,
+    "sha256": "3bf1f74a9ba0d6c381abfcfa50543ac74e75d68c961354c1b9da8e2f660c6b1f",
+    "sourceSha256": "977e03cf75b9a5c96061a92ffc76bed01b4c8fa50fe498290e57f3ed32dfc060",
+    "tris": 2913,
+    "sourceTris": 7292,
+    "materials": 2,
+    "draws": 2,
+    "textures": 2,
+    "maxTexture": 512,
+    "size": [
+      5.4,
+      8.05,
+      9
+    ],
+    "min": [
+      -2.7,
+      -0.45,
+      -4.5
+    ],
+    "max": [
+      2.7,
+      7.6,
+      4.5
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "merchant": {
+    "file": "/assets/fleet/merchant.glb",
+    "bytes": 207164,
+    "sha256": "de97bee74a36998b8c24af03d80f74820643a722840490eb5c49ed9b7daa5c23",
+    "sourceSha256": "6b12d15106dab8f727d9d99395a96c6b80a28d9f030db35d5202114a09063082",
+    "tris": 9731,
+    "sourceTris": 9731,
+    "materials": 1,
+    "draws": 1,
+    "textures": 1,
+    "maxTexture": 1024,
+    "size": [
+      9.08,
+      19.13,
+      26
+    ],
+    "min": [
+      -4.54,
+      -2,
+      -13
+    ],
+    "max": [
+      4.54,
+      17.13,
+      13
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  }
+}
