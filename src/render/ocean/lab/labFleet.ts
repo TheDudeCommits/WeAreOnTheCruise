@@ -135,7 +135,7 @@ export class LabFleet {
     this.sinkerMesh = this.boats[this.boats.length - 1]!.mesh;
     Object.assign(this.sinker, { x: -150, z: -120, heading: 1.0 });
 
-    this.wyrmMover = new Mover(circle(-320, -300, 150, 1), 16, 0);
+    this.wyrmMover = new Mover(circle(-30, -20, 115, -1), 16, 0);
     this.wyrm = { id: 201, defId: 'tidewyrm', life: 'alive', sink: 0, submerged: 0, x: 0, z: 0, heading: 0, speed: 0, vx: 0, vz: 0, length: 140, beam: 9, radius: 16, hp: 1, maxHp: 1, phase: 0 };
     const wyrmMat = new THREE.MeshToonMaterial({ color: 0x2f6f63 });
     const seg = new THREE.SphereGeometry(1, 12, 8);
@@ -148,7 +148,7 @@ export class LabFleet {
     }
 
     this.hazards = [
-      { id: 301, alive: true, kind: 'whirlpool', team: 'player', x: 60, z: -300, radius: 26, ttl: 14, age: 0, vx: 0, vz: 0 },
+      { id: 301, alive: true, kind: 'whirlpool', team: 'player', x: 150, z: -110, radius: 26, ttl: 14, age: 0, vx: 0, vz: 0 },
       { id: 302, alive: true, kind: 'mine', team: 'enemy', x: 40, z: 120, radius: 6, ttl: 1e9, age: 0, vx: 0, vz: 0 },
       { id: 303, alive: true, kind: 'barrel', team: 'player', x: -70, z: 150, radius: 5, ttl: 1e9, age: 0, vx: 0, vz: 0 },
       { id: 304, alive: false, kind: 'wave-front', team: 'player', x: 0, z: 0, radius: 110, ttl: 14, age: 0, vx: 0, vz: 0 },

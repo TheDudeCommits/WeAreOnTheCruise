@@ -170,8 +170,11 @@ export class WakeSystem {
     const fwdZ = -Math.cos(src.heading);
     const rightX = Math.cos(src.heading);
     const rightZ = -Math.sin(src.heading);
-    const halfL = Math.max(2, src.length * 0.4);
-    const halfB = Math.max(0.8, src.beam * 0.5 * 1.05);
+    // Serpents push water with their head; the body trails along the path (see serpentBody).
+    const hullLength = src.serpent ? Math.max(6, src.beam * 3.2) : src.length;
+    const halfL = Math.max(2, hullLength * 0.4);
+    // Visual waterlines run ~80% of the overall length and are often a little wider than the gameplay beam.
+    const halfB = Math.max(0.8, src.beam * 0.5 * 1.12);
     const speed = Math.max(0, src.speed);
     const s = Math.min(1.45, speed / 18);
     const inWater = src.contact * (1 - smooth(0.25, 0.75, src.submerged)) * (1 - smooth(0.04, 0.3, src.airborne));
@@ -180,17 +183,17 @@ export class WakeSystem {
 
     // Transitions: take-off / landing splashes, dive / surface rings.
     if (track.hasPrev) {
-      if (track.lastAir > 0.25 && src.airborne < 0.05) this.burst(src.x, src.z, src.length * 0.7, 1.7);
-      else if (track.lastAir < 0.05 && src.airborne > 0.2) this.splash(src.x, src.z, src.length * 0.45, 1.2);
+      if (track.lastAir > 0.25 && src.airborne < 0.05) this.burst(src.x, src.z, hullLength * 0.7, 1.7);
+      else if (track.lastAir < 0.05 && src.airborne > 0.2) this.splash(src.x, src.z, hullLength * 0.45, 1.2);
       if ((track.lastSub < 0.5) !== (src.submerged < 0.5)) {
-        this.ring(src.x, src.z, src.length * 0.9, 1.1);
-        this.foam(src.x, src.z, src.length * 0.35, 0.8);
+        this.ring(src.x, src.z, Math.max(hullLength, src.beam * 6) * 0.9, 1.1);
+        this.foam(src.x, src.z, Math.max(hullLength, src.beam * 6) * 0.35, 0.8);
       }
     }
 
     if (src.serpent) this.serpentBody(track, src, fwdX, fwdZ, inWater, s);
     else if (inWater > 0.01) {
-      const bowH = Math.min(2.8, 0.3 + 0.032 * src.length) * Math.min(s, 1.3) * wakeK;
+      const bowH = Math.min(3.6, 0.4 + 0.045 * src.length) * Math.min(s, 1.3) * wakeK;
       f.transientBatch.push(
         f.relX(src.x), f.relZ(src.z), fwdX, fwdZ, halfL + 6 + 5 * s + halfB * 0.4, halfB + 5 + 4 * s, SHAPE_HULL,
         halfL, halfB, s, inWater, bowH, 1, 1, wakeK, 1,
@@ -213,7 +216,7 @@ export class WakeSystem {
         this.time * (1.4 + src.sink * 1.2) + src.key * 1.7, 3, (0.5 + 0.022 * src.length) * env, 2.2, 0,
         1, 1, env, env,
       );
-      f.persistentBatch.push(f.relX(src.x), f.relZ(src.z), 1, 0, radius * 0.8, radius * 0.8, SHAPE_BLOB, 1, 0.55, 0.3, 0, 0, 0, 0, 0.75 * env, env);
+      f.persistentBatch.push(f.relX(src.x), f.relZ(src.z), 1, 0, radius * 0.8, radius * 0.8, SHAPE_BLOB, 1, 0.55, 0.3, 0, 0, 0, 0, 0.42 * env, env);
     }
 
     // Persistent wake deposits swept from the previous pose.
@@ -233,7 +236,7 @@ export class WakeSystem {
         );
         const shoulderU = halfL * 0.05;
         const sideR = 0.7 + 0.7 * Math.min(s, 1.2) + halfB * 0.06;
-        const sideFoam = 0.6 * smooth(0.12, 0.65, s) * deposit * wakeK;
+        const sideFoam = 0.38 * smooth(0.12, 0.65, s) * deposit * wakeK;
         for (let side = -1; side <= 1; side += 2) {
           const off = halfB * 1.02 * side;
           this.capsule(
@@ -251,12 +254,12 @@ export class WakeSystem {
     if (track.hasPrev && armStrength > 0.05 && speed > 2.5) {
       const travelled = Math.hypot(src.x - track.prevX, src.z - track.prevZ);
       if (travelled < 40) track.emitAcc += travelled;
-      const spacing = clamp(src.length * 0.1, 2.2, 7);
+      const spacing = clamp(hullLength * 0.1, 2.2, 7);
       const ue = Math.max(halfL - 2.83 * halfB, -halfL * 0.5);
-      const life = clamp(2.2 + src.length / 18, 2.2, 6.5) * (0.75 + 0.25 * Math.min(s, 1));
-      const width = 1.1 + src.length * 0.035;
+      const life = clamp(2.2 + hullLength / 18, 2.2, 6.5) * (0.75 + 0.25 * Math.min(s, 1));
+      const width = 1.1 + hullLength * 0.035;
       const strength = (0.45 + 0.55 * Math.min(s, 1)) * wakeK * armStrength * (src.submerged > 0.35 ? 0.4 : 1);
-      const raise = (0.1 + 0.012 * src.length) * Math.min(s, 1.2) * wakeK * armStrength;
+      const raise = (0.1 + 0.012 * hullLength) * Math.min(s, 1.2) * wakeK * armStrength;
       let guard = 0;
       while (track.emitAcc >= spacing && guard++ < 8) {
         track.emitAcc -= spacing;

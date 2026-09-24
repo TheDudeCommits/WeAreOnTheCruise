@@ -214,7 +214,7 @@ void main() {
   float deepness = smoothstep(0.18, 0.9, NdV);
   vec3 body = mix(uMid, uDeep, deepness);
   // Sun-facing faces lighter; the sensitivity drops with a low sun so dusk light does not stripe the swells.
-  float tone = clamp(0.52 + (dot(Nm, L) - L.y) * 1.6 * mix(0.4, 1.0, clamp(L.y * 1.4, 0.0, 1.0)) + hN * 0.42 + lift * 0.12, 0.0, 1.0);
+  float tone = clamp(0.52 + (dot(Nm, L) - L.y) * 1.6 * mix(0.3, 1.0, clamp(L.y * 1.4, 0.0, 1.0)) + hN * 0.42 + lift * 0.12, 0.0, 1.0);
   vec3 cShadow = uDeep * 0.78;
   vec3 cLight = mix(uMid, uSSS, 0.22);
   vec3 col = mix(cShadow, body, smoothstep(0.16, 0.4, tone));
@@ -303,7 +303,9 @@ void main() {
   float sheenDay = pow(max(dot(Rr, L), 0.0), 18.0);
   float sheenNight = pow(max(dot(R, L), 0.0), 140.0) * 1.6 + pow(max(dot(Rr, L), 0.0), 60.0) * 0.25;
   float sheen = mix(sheenDay, sheenNight, uLookC.y) * uLookA.y;
-  col += uSunColor * (glint * uLookA.x + sheen) * sunUp * (1.0 - foamSolid * 0.85);
+  // Sheen is tinted toward the horizon so a warm sun does not turn blue water lavender; glints stay sun-coloured.
+  vec3 sheenCol = mix(uSunColor, uHorizon * 1.15, 0.45);
+  col += (uSunColor * glint * uLookA.x + sheenCol * sheen) * sunUp * (1.0 - foamSolid * 0.85);
 
   // ── Night: bioluminescent wake and crests ──
   col += uBiolum * (solidI * 1.7 + lace * 1.2 + max(edgeI, 0.0) * 0.7 + tr.a * 0.35 + solidC * 0.35) * 1.6;

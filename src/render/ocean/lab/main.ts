@@ -15,7 +15,7 @@ import { applyLabSky, createAtmosphere, createSea, LabSky, WEATHER_PRESETS } fro
 import { LabFleet } from './labFleet';
 import { buildIslandMesh, LabWorld } from './labWorld';
 
-type CameraMode = 'tactical' | 'hero' | 'chase' | 'top' | 'orbit' | 'horizon';
+type CameraMode = 'tactical' | 'hero' | 'chase' | 'top' | 'orbit' | 'horizon' | 'free';
 
 const params = new URLSearchParams(location.search);
 if (params.get('clean') === '1') document.body.classList.add('clean');
@@ -85,6 +85,8 @@ const ctx: FrameContext = {
 const target = new THREE.Vector3();
 const desired = new THREE.Vector3();
 const WHITE = new THREE.Color(0xffffff);
+const freeEye = new THREE.Vector3(0, 120, 200);
+const freeTarget = new THREE.Vector3();
 function updateCamera(dt: number, snap: boolean): void {
   const h = fleet.hero;
   const fx = -Math.sin(h.heading);
@@ -125,6 +127,10 @@ function updateCamera(dt: number, snap: boolean): void {
     case 'orbit':
       controls.target.lerp(desired.set(h.x, 0, h.z), k);
       controls.update();
+      return;
+    case 'free':
+      camera.position.copy(freeEye);
+      camera.lookAt(freeTarget);
       return;
   }
   camera.position.lerp(desired, k);
@@ -304,6 +310,9 @@ window.__OCEAN_LAB__ = {
     for (let i = 0; i < frames; i++) frame(1 / 60, snap && i === frames - 1);
   },
   splash,
+  /** Fixed camera: eye and target in world space. */
+  view(ex: number, ey: number, ez: number, tx: number, ty: number, tz: number) { state.cam = 'free'; freeEye.set(ex, ey, ez); freeTarget.set(tx, ty, tz); },
+  explode: (x: number, z: number, radius = 16) => fleet.events.push({ type: 'explosion', x, z, radius, kind: 'large', team: 'player' }),
   jump: () => fleet.jump(),
   waveFront: () => fleet.waveFront(),
   bench,

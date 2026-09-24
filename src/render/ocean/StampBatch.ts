@@ -127,12 +127,15 @@ void main() {
     // Sides stay lacy (partial coverage), the bow is solid white.
     float contactFoam = band * mix(0.42, 1.0, bowness) * mix(0.55, 1.0, moving);
     // Bow wave: a ridge pushed ahead of the stem and along the shoulders.
-    float ridgeOff = 0.4 + 1.5 * s + halfB * 0.06;
-    float ridgeW = 1.1 + 1.9 * s + halfB * 0.07;
+    float ridgeOff = 0.2 + 1.2 * s + halfB * 0.05;
+    float ridgeW = 1.2 + 2.0 * s + halfB * 0.08;
     float rd = (sd - ridgeOff) / ridgeW;
-    float bowRidge = exp(-rd * rd) * pow(bowness, 1.4);
+    // Pile-up is highest at the stem and runs back along the shoulders.
+    float bowRidge = exp(-rd * rd) * pow(bowness, 1.25);
     float raise = bowH * bowRidge;
-    float bowFoam = smoothstep(0.3, 0.8, bowRidge) * smoothstep(0.12, 0.55, s);
+    // White crest on the upper, outer part of the ridge; the inner face stays turquoise (aeration).
+    float crestSide = smoothstep(-0.2, 0.6, rd);
+    float bowFoam = smoothstep(0.22, 0.7, bowRidge) * mix(0.55, 1.0, crestSide) * smoothstep(0.1, 0.5, s);
     // Trough along the sides and the hollow under the counter; the inside of the hull is pushed down so
     // wave crests never poke through the deck.
     float tr = (sd - (1.0 + 1.6 * s)) / (1.4 + 2.2 * s);
@@ -159,7 +162,7 @@ void main() {
     float theta = atan(vLocal.y, vLocal.x);
     float env = (1.0 - smoothstep(0.55, 1.0, rn)) * smoothstep(0.02, 0.14, rn);
     float spiral = 0.5 + 0.5 * cos(vP.y * theta + vP.w * log(1.0 + rn * 6.0) * 3.0 - vP.x);
-    float arms = smoothstep(0.45, 0.85, spiral + rag(0.3)) * env;
+    float arms = smoothstep(0.4, 0.75, spiral + rag(0.3)) * env * 1.15;
     float bowl = pow(max(1.0 - rn * rn, 0.0), 2.0);
     float rim = exp(-pow((rn - 0.82) / 0.12, 2.0));
     prof = vec4(rim * vP.z * 0.15, bowl * vP.z, arms, env * 0.9);
