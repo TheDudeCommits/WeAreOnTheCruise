@@ -1430,10 +1430,10 @@
   },
   "escort-skiff": {
     "file": "/assets/fleet/escort-skiff.glb",
-    "bytes": 170208,
-    "sha256": "2293799452738f57b9d8d2da8537ffcebabf85e5b95427a0bb2ee68aa30c78a1",
+    "bytes": 115404,
+    "sha256": "bf87d654d69c5f782304b7fcffa751b54f14dfe6e3ec617466b99010d8ac57e4",
     "sourceSha256": "977e03cf75b9a5c96061a92ffc76bed01b4c8fa50fe498290e57f3ed32dfc060",
-    "tris": 7364,
+    "tris": 2767,
     "sourceTris": 7292,
     "materials": 4,
     "draws": 4,

@@ -87,7 +87,7 @@ export const JOBS = [
   },
   {
     key: 'skiff', role: 'enemy', src: 'src/c9b94c52d0704614930ad5e076e02198/source.glb', yaw: 90, length: 12, draft: 0.6, tris: 8000, tex: 512,
-    recolor: (ctx) => RECOLOR.raiderSkiff(ctx),
+    recolor: (ctx) => RECOLOR.raiderSkiff(ctx), post: (ctx) => RECOLOR.raiderSkiffRig(ctx),
     source: SKETCHFAB('c9b94c52d0704614930ad5e076e02198', 'Boat', 'local.yany'),
     notes: 'Raider Skiff: rowboat hull stained black with a red gunwale; a simple mast, yard and red square sail (cutlass-and-sun) were added so skiffs read as Redtide at a distance. Also suitable for escort-skiff summons with a different tint.',
   },
@@ -174,8 +174,8 @@ export const JOBS = [
   { key: 'tower', role: 'nature', src: 'kenney/pirate-kit/Models/GLB format/tower-complete-large.glb', yaw: 0, height: 14, tris: 3000, tex: 256, source: KENNEY('tower-complete-large.glb'), notes: 'Stone watchtower with a blue conical roof, 14 m (Admiralty outposts / lighthouse stand-in).' },
   // ───────────── Extras: player escort skiff, Treasure-convoy trader ─────────────
   {
-    key: 'escort-skiff', role: 'prop', origin: 'waterline', src: 'src/c9b94c52d0704614930ad5e076e02198/source.glb', yaw: 90, length: 9, draft: 0.45, tris: 8000, tex: 512,
-    recolor: (ctx) => RECOLOR.escortSkiff(ctx),
+    key: 'escort-skiff', role: 'prop', origin: 'waterline', src: 'src/c9b94c52d0704614930ad5e076e02198/source.glb', yaw: 90, length: 9, draft: 0.45, tris: 3000, tex: 512,
+    post: (ctx) => RECOLOR.escortSkiffRig(ctx),
     source: SKETCHFAB('c9b94c52d0704614930ad5e076e02198', 'Boat', 'local.yany'),
     notes: 'Extra: friendly escort boat for the Escort Skiffs weapon (hazard kind escort-skiff): the rowboat in its original blue/amber paint with an added mast and plain cream sail. Waterline origin, bow −Z, 9 m.',
   },

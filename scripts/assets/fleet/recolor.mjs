@@ -154,7 +154,8 @@ export const RECOLOR = {
   },
 
   /** local.yany "Boat" → player escort skiff: original blue/amber paint kept, mast and plain cream sail added. */
-  async escortSkiff(ctx) { await addSkiffRig(ctx.doc, 'admiralty-sail', 'plain'); },
+  async escortSkiffRig(ctx) { await addSkiffRig(ctx.doc, 'admiralty-sail', 'plain'); },
+  async raiderSkiffRig(ctx) { await addSkiffRig(ctx.doc, 'redtide-sail', 'emblem'); },
   /** anagvf brig → neutral trader for the Treasure convoy: natural wood hull, russet-striped sails with a coin mark. */
   async merchant({ doc }) {
     await L.sailify(doc, { name: 'merchant-sail', svg: SVG('merchant-sail'), select: (t, i) => i.texel && Math.min(...i.texel) > 150 && t.centroid[1] > 4 });
@@ -165,7 +166,7 @@ export const RECOLOR = {
     const mats = doc.getRoot().listMaterials();
     await hslMaterial(mats.find((x) => x.getName() === 'Planks'), (h, s, l) => [230, 0.08, l * 0.32]);
     await hslMaterial(mats.find((x) => x.getName() === 'Wood'), (h, s, l) => [2, 0.72, l * 0.62]);
-    await addSkiffRig(doc, 'redtide-sail', 'emblem');
+
   },
 
   /** Sololopenko "Ghost ship" → Gloam Wraith: spectral teal hull, torn pale-teal sails, teal lantern glow. */

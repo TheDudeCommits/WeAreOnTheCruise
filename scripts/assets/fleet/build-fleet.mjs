@@ -110,6 +110,8 @@ async function build(job) {
     if (now >= tris * 0.995 && job.sloppy !== false) await sloppy(doc, target / now);
     tris = countTris(doc);
   }
+  // geometry added after decimation (procedural rigging, sails) so the simplifier never touches it
+  if (job.post) { await job.post({ doc, L, core, fn, sharp, job }); if (!skinned) await doc.transform(fn.join({ keepNamed: false })); }
   await doc.transform(fn.dedup(), fn.prune(), fn.resample());
   if (job.palette) {
     // after simplification (per-material primitives), bake flat colours into one palette strip and merge
