@@ -396,6 +396,36 @@ const scenes: Record<string, () => void> = {
     const e3 = enemy('cutter', -70, 10); e3!.statuses.push({ kind: 'slowed', time: 30, magnitude: 1 }, { kind: 'hooked', time: 30, magnitude: 1 });
   },
   barrage: () => { resetSim(); camPreset = 'director'; barrage = true; },
+  seaquake: () => { shipId = 'white-leviathan'; resetSim(); frameShot(0, 0, 0, 260, 2.2, 0.62); skill('special', 'seaquake'); },
+  inferno: () => { shipId = 'sunlion'; resetSim(); frameShot(0, 0, 4, 150, 2.4, 0.45); skill('ultimate', 'kitchen-inferno'); },
+  flare: () => { shipId = 'sunlion'; resetSim(); frameShot(45, 0, 16, 150, 2.2, 0.28); skill('special', 'signal-flare'); },
+  sunfire: () => { shipId = 'sunlion'; resetSim(); frameShot(0, 0, 8, 140, 2.2, 0.35); skill('ultimate', 'sunfire-barrage'); },
+  tidal: () => {
+    shipId = 'sunlion'; resetSim(); frameShot(-40, 60, 8, 170, 1.2, 0.2);
+    skill('ultimate', 'tidal-colossus');
+    const p = P();
+    hazard('wave-front', 0, 40, 70, 8, { vx: -Math.sin(p.heading) * 30, vz: -Math.cos(p.heading) * 30 });
+  },
+  deepdive: () => { shipId = 'sunlion'; resetSim(); frameShot(0, 0, 2, 110, 2.2, 0.4); skill('special', 'deep-dive'); },
+  levelup: () => { resetSim(); frameShot(0, 0, 10, 140, 2.2, 0.3); inject({ type: 'level-up', level: 5 }); inject({ type: 'tier-up', tier: 1 }); },
+  parry: () => { resetSim(); frameShot(0, 0, 4, 110, 2.0, 0.35); const p = P(); p.skills.brace.active = 1.2; inject({ type: 'player-hit', amount: 0, x: p.x + 20, z: p.z, braced: true, parried: true }); },
+  boost: () => { resetSim(); frameShot(0, 0, 4, 90, 2.5, 0.3); sim.press('gear-up'); sim.press('gear-up'); skill('boost', 'boost'); },
+  finale: () => {
+    resetSim(); frameShot(90, 40, 12, 230, 2.1, 0.3);
+    const at = ahead(40, 100);
+    const b = sim.spawnBoss('iron-warden', at.x, at.z, P().heading + 1.3);
+    sim.damageTarget(b, 1e9, { pierceArmor: true });
+  },
+  wavewall: () => {
+    resetSim(); frameShot(40, 110, 8, 150, 2.9, 0.12);
+    const p = P();
+    hazard('wave-front', 60, 160, 90, 14, { vx: Math.sin(p.heading) * 10, vz: Math.cos(p.heading) * 10 });
+  },
+  enemyfire: () => {
+    resetSim(); frameShot(70, 0, 6, 120, 2.6, 0.25);
+    const e1 = enemy('frigate', 110, -10, false, P().heading + Math.PI); const e2 = enemy('brig', 95, 50, false, P().heading + Math.PI);
+    if (e1) e1.attackCooldown = 0; if (e2) e2.attackCooldown = 0.2;
+  },
 };
 
 // ───────────────────────── UI ─────────────────────────

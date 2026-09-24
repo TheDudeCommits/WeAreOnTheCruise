@@ -51,6 +51,7 @@ export class EventFx {
   /** Seconds since the last Lionburst/Deep Dive event (so state transitions don't double the launch FX). */
   launchAge = 99;
   diveAge = 99;
+  private lastLevelUp = -99;
 
   private readonly waterY = (x: number, z: number): number => this.fx.wy(x, z);
 
@@ -173,8 +174,10 @@ export class EventFx {
         break;
       }
       case 'pickup-collected': this.pickupCollected(e, run); break;
-      case 'level-up': fx.levelUp(run.player.x, run.player.z, false); break;
-      case 'tier-up': fx.levelUp(run.player.x, run.player.z, true); break;
+      case 'level-up':
+        if (this.k.clock - this.lastLevelUp > 0.6) { this.lastLevelUp = this.k.clock; fx.levelUp(run.player.x, run.player.z, false); }
+        break;
+      case 'tier-up': this.lastLevelUp = this.k.clock; fx.levelUp(run.player.x, run.player.z, true); break;
       case 'skill-used': this.skillUsed(e.slot, e.skill, e.x, e.z, e.aimX, e.aimZ, run, water); break;
       case 'status-changed': if (e.on) this.statusOn(e.target, e.status, run, water); break;
       case 'lightning': this.lightning(e.points, e.team, run, water); break;
@@ -339,7 +342,7 @@ export class EventFx {
       const sideSign = e.side === 'port' ? -1 : 1;
       const sk = p.skills.broadside;
       const manual = e.owner === 0 && sk.cooldownMax > 0 && sk.cooldown > sk.cooldownMax - 0.15;
-      this.broadside(f, sideSign, e.count, manual ? 1.3 : 1, manual ? 0.045 : 0.028, manual ? 5 : 3, true, GlowPal.Muzzle);
+      this.broadside(f, sideSign, e.count, manual ? 1.3 : 1, manual ? 0.045 : 0.028, manual ? 4 : 2, true, GlowPal.Muzzle);
       if (manual) {
         this.k.juice.kick(5, 0.35);
         this.k.juice.shake(0.28, 0.3);
@@ -714,7 +717,7 @@ export class EventFx {
         k.decals.emit(Decal.Cracks, x, z, 170, 1.4, 0xbff2ff, 1, 0x1b2340, 1.2);
         fx.shock(x, z, 170, 1.1, 0xffffff, 1.6, 1.8);
         fx.shock(x, z, 120, 0.9, 0xbfeaff, 1.0, 1.2, 0.12);
-        fx.foam(x, z, 60, 3.0, 0, 1.6);
+        fx.foam(x, z, 60, 3.0, 0, 1.0);
         const n = 18;
         for (let i = 0; i < n; i++) {
           const a = (i / n) * TAU;

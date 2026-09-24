@@ -282,7 +282,7 @@ export class Sakuga {
     const c = this.k.cel;
     const n = this.n(smokePuffs, 1);
     for (let i = 0; i < n; i++) {
-      const along = (1.2 + i * 1.5) * s;
+      const along = (2.6 + i * 1.8) * s;
       const v = range(8, 20) * s;
       const sp = c.spec.reset();
       sp.at(x + dx * along, y + spread(0.5 * s), z + dz * along)
@@ -382,7 +382,7 @@ export class Sakuga {
       this.sparks(x, wy + 1, z, 14, 30, GlowPal.Lightning, 0, 1, 0, 0.35, 0.4);
       this.smoke(x, wy + 1, z, 4, 3 * s, 8 * s, CelPal.Steam, 1.1, 0, 3, 0, 4, 2, 2 * s, 0.05, 0.3);
       this.shock(x, z, 16 * s, 0.4, 0xbfeaff, 1.2, 1);
-      this.k.decals.emit(Decal.Glow, x, z, 14 * s, 0.4, 0x9fe2ff, 0, 0x9fe2ff, 1.4, 30);
+      this.k.decals.emit(Decal.Glow, x, z, 12 * s, 0.35, 0x9fe2ff, 0, 0x9fe2ff, 0.8, 30);
       if (onWater) { this.column(x, z, 3.5 * s, 2.2, 0.7, 0.02); if (o) o.stampRing(x, z, 6 * s, 1); }
       this.k.juice.shakeAt(0.35, dist, 0.3);
       if (dist < 260) this.k.juice.flash(0xdff4ff, 0.22 * (1 - dist / 260), 0.1);
@@ -506,9 +506,9 @@ export class Sakuga {
     const s = big ? 1.5 : 1;
     this.shock(x, z, 38 * s, 0.8, 0xffd84a, 1.5, 1.4);
     this.k.decals.emit(Decal.Shock, x, z, 24 * s, 0.6, 0xffffff, 0.4, 0xfff0b0, 1.0, 1, 0, 0.1);
-    this.ring(x, wy + 8, z, 10, 46 * s, GlowPal.Gold, 0.6, 1.3);
+    this.ring(x, wy + 8, z, 10, 46 * s, GlowPal.Gold, 0.6, 1.0);
     const g = this.k.glow;
-    g.spec.reset().at(x, wy - 1, z).look(Glow.Shaft, GlowPal.Gold, Mode.Upright, true).sized(16 * s, 22 * s, 3).stretched(big ? 7 : 5).lived(big ? 1.6 : 1.1);
+    g.spec.reset().at(x, wy - 1, z).look(Glow.Shaft, GlowPal.Gold, Mode.Upright, true).sized(9 * s, 13 * s, 3).stretched(big ? 7 : 5).lived(big ? 1.4 : 1.0).bright(0.75);
     g.emit();
     this.sparkles(x, wy + 4, z, big ? 40 : 22, 12, GlowPal.Gold, 1.4);
     if (big) {
@@ -541,7 +541,7 @@ export class Sakuga {
   parry(x: number, z: number, radius: number): void {
     const wy = this.wy(x, z);
     this.k.decals.emit(Decal.Shock, x, z, radius * 1.6, 0.4, 0xffffff, 0.8, 0xbfeaff, 2.0, 1.6);
-    this.ring(x, wy + 5, z, radius * 0.8, radius * 2.4, GlowPal.Shield, 0.35, 1.8);
+    this.ring(x, wy + 5, z, radius * 0.8, radius * 2.4, GlowPal.Shield, 0.35, 1.0);
     this.burst(x, wy + 5, z, radius * 0.9, GlowPal.Shield, 0.08);
     this.sparks(x, wy + 4, z, 16, 40, GlowPal.Shield, 0, 0.3, 0, 0.1, 0.4);
     this.k.juice.flash(0xdff6ff, 0.28, 0.1);

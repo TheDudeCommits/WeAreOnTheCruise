@@ -155,7 +155,7 @@ void main() {
     if (shape == 4) {
       // expanding lace ring + a thinner inner ring; only a small footprint blot at the impact point
       float R = mix(0.22, 1.0, 1.0 - pow(1.0 - t, 3.0));
-      float th = mix(0.11, 0.03, t) * vP.x;
+      float th = min(mix(0.11, 0.03, t) * vP.x, 3.0 * vP.x / max(vHalf.x, 1.0));
       m = th - abs(r - R) + (n - 0.5) * 0.12;
       float inner = th * 0.55 - abs(r - R * 0.6) + (n2 - 0.5) * 0.1;
       m = max(m, inner - (1.0 - smoothstep(0.05, 0.2, t)) * 0.2);
@@ -176,9 +176,10 @@ void main() {
   } else if (shape == 5) {
     // thin, fast shock line (anime timing: out fast, thin out, gone) with a brief inner wash
     float R = 1.0 - pow(1.0 - t, 3.0);
-    float th = mix(0.03, 0.006, t) * max(vP.x, 0.2);
+    float thick = max(vP.x, 0.2);
+    float th = min(0.03 * thick, 1.6 * thick / max(vHalf.x, 1.0)) * mix(1.0, 0.25, t);
     float ring = band(r - R, th, aa);
-    float wash = step(r, R) * smoothstep(R - 0.3, R, r) * (1.0 - smoothstep(0.0, 0.3, t)) * 0.3;
+    float wash = step(r, R) * smoothstep(R - 0.16, R, r) * (1.0 - smoothstep(0.0, 0.22, t)) * 0.18;
     float fade = pow(1.0 - t, 1.2);
     alpha = (ring * 0.7 + wash * 0.4) * fade * vColor.a;
     paint = c1 * alpha;
@@ -225,13 +226,13 @@ void main() {
     float inside = (1.0 - smoothstep(halfA - aa2, halfA, ang)) * (1.0 - smoothstep(1.0 - aa, 1.0, rr)) * smoothstep(0.08, 0.12, rr);
     if (inside <= 0.0) discard;
     // compact fan at the hull (which side fires) + a faint dotted arc at the gun range
-    float near = 1.0 - smoothstep(0.2, 0.36, rr);
+    float near = 1.0 - smoothstep(0.14, 0.27, rr);
     float edgeA = band(ang - halfA + 0.01, 0.01, aa2) * smoothstep(0.08, 0.14, rr) * near;
     float arc = band(rr - 0.99, 0.0035, aa) * step(0.6, fract(ang * 16.0));
     float ready = clamp(vP.x, 0.0, 1.0);
     float fill = (0.05 + 0.09 * ready) * near * smoothstep(0.08, 0.3, rr);
-    float chev = band(fract(rr * 10.0 - uRealTime * 1.2) - 0.5, 0.05, 0.02) * near * smoothstep(0.1, 0.16, rr) * ready;
-    float a = inside * (fill + chev * 0.35 + edgeA * (0.3 + 0.45 * ready) + arc * (0.08 + 0.12 * ready));
+    float chev = band(fract(rr * 12.0 - uRealTime * 1.2) - 0.5, 0.03, 0.02) * near * smoothstep(0.1, 0.16, rr) * ready;
+    float a = inside * (fill + chev * 0.2 + edgeA * (0.3 + 0.45 * ready) + arc * (0.08 + 0.12 * ready));
     alpha = a;
     paint = c1 * a;
     add = c1 * (edgeA + arc) * inside * 0.25 * ready;
@@ -244,13 +245,17 @@ void main() {
     float wob = (fxNoise(vec2(r * 9.0, cell + seed)) - 0.5) * 0.12;
     float da = abs(mod(ang - center + wob + 3.14159265, 6.2831853) - 3.14159265) * r;
     float reach = t * 1.6 * mix(0.6, 1.0, fxHash11(cell * 3.1 + seed));
-    float crack = band(da, mix(0.022, 0.005, r), max(fwidth(da), 1e-4)) * step(r, reach) * step(0.08, r);
+    float wCore = mix(0.9, 0.3, r) / max(vHalf.x, 1.0);
+    float live = step(r, reach) * step(0.06, r);
+    float daa = max(fwidth(da), 1e-4);
+    float crack = band(da, wCore, daa) * live;
+    float inkLine = band(da, wCore * 2.6, daa) * live;
     float ringR = 1.0 - pow(1.0 - t, 2.0);
-    float ring = band(r - ringR, 0.035 * (1.0 - t) + 0.01, aa);
+    float ring = band(r - ringR, (1.4 * (1.0 - t) + 0.4) / max(vHalf.x, 1.0), aa);
     float fade = 1.0 - smoothstep(0.6, 1.0, t);
-    alpha = (crack * 0.9 + ring * 0.6) * fade;
-    paint = c2 * crack * 0.9 * fade + c1 * ring * 0.6 * fade;
-    add = c1 * (crack * 1.6 + ring * 0.8) * fade;
+    alpha = max(inkLine * 0.85, ring * 0.5) * fade;
+    paint = (c2 * inkLine * 0.85 * (1.0 - crack) + c1 * ring * 0.5) * fade;
+    add = c1 * (crack * 1.5 + ring * 0.6) * fade;
   } else if (shape == 11) {
     vec2 q = vec2(uv.x / 0.22, max(abs(uv.y - 0.45) - 0.35, 0.0) / 0.22);
     float body = 1.0 - length(q);

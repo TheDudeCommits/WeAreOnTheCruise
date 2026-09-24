@@ -33,6 +33,23 @@ const SHOTS = [
   ['numbers', 'numbers', 0.35, {}],
   ['night-broadside', 'broadside', 0.3, { hour: 22.5 }],
   ['barrage', 'barrage', 3, {}],
+  ['seaquake-a', 'seaquake', 0.15, {}],
+  ['seaquake-b', 'seaquake', 0.6, {}],
+  ['inferno', 'inferno', 0.5, {}],
+  ['flare', 'flare', 1.4, {}],
+  ['sunfire', 'sunfire', 0.12, {}],
+  ['tidal', 'tidal', 1.0, {}],
+  ['deepdive-a', 'deepdive', 0.2, {}],
+  ['deepdive-b', 'deepdive', 1.6, {}],
+  ['deepdive-c', 'deepdive', 3.25, {}],
+  ['levelup', 'levelup', 0.35, {}],
+  ['parry', 'parry', 0.08, {}],
+  ['boost', 'boost', 0.5, {}],
+  ['finale-a', 'finale', 0.2, {}],
+  ['finale-b', 'finale', 1.2, {}],
+  ['finale-c', 'finale', 2.6, {}],
+  ['wavewall', 'wavewall', 1.5, {}],
+  ['enemyfire', 'enemyfire', 0.35, {}],
 ];
 
 const browser = await chromium.launch({ headless: true, args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] });

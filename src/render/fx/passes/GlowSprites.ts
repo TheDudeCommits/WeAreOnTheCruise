@@ -90,13 +90,13 @@ void main() {
     float v = max(star, dot0);
     add = mix(mid * 1.4, core * 2.6, dot0) * v * v * tw * (1.0 - smoothstep(0.7, 1.0, t));
   } else if (shape == 5) {
-    float m = 0.1 - abs(r - 0.86);
+    float m = mix(0.045, 0.012, t) - abs(r - 0.9);
     float w = max(fwidth(m), 1e-4);
     float cover = smoothstep(0.0, w, m) * (1.0 - smoothstep(0.55, 1.0, t));
-    float inner = max(0.0, 0.3 - abs(r - 0.78)) * 1.5;
+    float inner = max(0.0, 0.18 - abs(r - 0.84)) * 1.2 * (1.0 - smoothstep(0.0, 0.5, t));
     alpha = cover * 0.9;
     paint = mid * alpha;
-    add = core * cover * 0.8 + outer * inner * pow(1.0 - t, 1.4) * 0.6;
+    add = core * cover * 0.3 + outer * inner * 0.35;
   } else if (shape == 6) {
     float fl = 0.7 + 0.3 * sin(vAge * 30.0 + seed * 5.0);
     float m = 1.0 - r;
