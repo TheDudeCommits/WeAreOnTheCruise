@@ -143,7 +143,7 @@ export class PostStack implements PostServices {
     if (ctx.quality !== this.profile.tier) this.setQuality(ctx.quality);
     const dt = Math.min(0.1, Math.max(0, ctx.dt));
     this.time += dt;
-    this.screenFx = THREE.MathUtils.clamp(ctx.settings.cameraShake ?? 1, 0, 1);
+    this.screenFx = ctx.settings.reduceFlashing ? 0 : 1;
     this.impactCooldown = Math.max(0, this.impactCooldown - dt);
     this.speed.time = Math.max(0, this.speed.time - dt);
     this.flashState.time = Math.max(0, this.flashState.time - dt);

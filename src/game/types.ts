@@ -610,6 +610,8 @@ export interface Settings {
   sfxVolume: number;
   muted: boolean;
   cameraShake: number;
+  /** Tones down impact frames, flashes and chromatic pulses (photosensitivity). Optional for older saves. */
+  reduceFlashing?: boolean;
   damageNumbers: boolean;
   quality: QualitySetting;
   showFps: boolean;

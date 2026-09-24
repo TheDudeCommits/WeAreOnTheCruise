@@ -99,6 +99,8 @@ export class GameApp {
     this.input.attach();
     this.audio.setSettings(this.settings);
     await this.ships.preload(CONTENT.ships[this.selectedShip].modelKey).catch(() => undefined);
+    // Compile every program with the real post targets bound so the first frames don't hitch.
+    await this.post.precompile(this.host.scene, this.host.camera).catch(() => undefined);
     installDebugBridge(this);
     document.addEventListener('visibilitychange', this.onVisibility);
     this.setScreen('title');
