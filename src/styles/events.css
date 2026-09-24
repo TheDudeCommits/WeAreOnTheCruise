@@ -33,6 +33,7 @@
 .cr-evtrack[data-event='volcanic-eruption'] { --ev: #ff8a1c; --ev-2: #b31d1d; }
 .cr-evtrack[data-event='sunken-treasure'] { --ev: #ffd84a; --ev-2: #b86d00; }
 .cr-evtrack[data-event='bounty-contract'] { --ev: #ff6a5a; --ev-2: #8f1420; }
+.cr-evtrack[data-event='treasure-convoy'] { --ev: #ffc93a; --ev-2: #8f5a12; }
 
 .cr-evtrack__icon {
   flex: none;

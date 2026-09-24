@@ -273,6 +273,21 @@ describe('world events', () => {
     for (const s of starts) if (EVENT_IDS.includes(s.id)) expect(s.t + DIRECTOR_EVENTS[s.id].duration).toBeLessThanOrEqual(300);
   });
 
+  it("mirrors META's treasure convoy on the tracker", () => {
+    const sim = makeSim('convoy-track', 'sunward-shallows', 4);
+    run(sim, 0.5);
+    startEvent(sim, 'treasure-convoy');
+    const evs = run(sim, 0.2);
+    expect(phases(evs, 'treasure-convoy')[0]).toBe('start');
+    const ev = sim.state.worldEvent!;
+    const convoy = sim.state.enemies.filter((e) => e.life === 'alive' && e.ai.convoy === 1);
+    expect(ev.goal).toBe(convoy.length);
+    for (const e of convoy) sim.damageTarget(e, 1e7, { pierceArmor: true });
+    const after = run(sim, EVENT_TUNING.linger + 0.5);
+    expect(phases(after, 'treasure-convoy')).toEqual(['success', 'end']);
+    expect(sim.state.worldEvent).toBeNull();
+  });
+
   it('points of interest: trade winds carry ships, salvage pays, beacons bless', () => {
     const sim = makeSim('poi', 'sunward-shallows', 2);
     const evs = run(sim, EVENT_TUNING.poiFirst + 45, 0.2);

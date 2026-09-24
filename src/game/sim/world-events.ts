@@ -14,23 +14,42 @@
 import { DIRECTOR_EVENTS, EVENT_TUNING, SEA_EVENTS, type DirectorEventId } from '../content/director';
 import type { SimContext } from './context';
 import { SCRATCH } from './meta-runtime';
+import { CONVOY_TRACKER } from './events/convoy';
 import { HANDLERS } from './events/registry';
 import { updatePois } from './events/poi';
-import { OUTCOME_END, OUTCOME_NONE, eventRuntime, type EventRuntime } from './events/runtime';
+import { OUTCOME_END, OUTCOME_NONE, eventRuntime, type EventRuntime, type WorldEventHandler } from './events/runtime';
 
 export function startWorldEvent(c: SimContext, id: DirectorEventId, minute: number): boolean {
   const handler = HANDLERS[id];
   if (!handler) return false;
   const rt = eventRuntime(c);
   if (rt.id) clear(c, rt, true);
+  if (begin(c, rt, id, handler, minute)) return true;
+  const d = c.state.director;
+  if (d.event === DIRECTOR_EVENTS[id].name) { d.event = null; d.eventTime = 0; }
+  return false;
+}
+
+/**
+ * META set pieces the tracker mirrors (they run themselves; EVENTS only publishes their objective): started when
+ * the director opens one (startEvent has just set d.event and a full d.eventTime; one tick of slack for QA calls).
+ */
+const TRACKED: Readonly<Partial<Record<DirectorEventId, WorldEventHandler>>> = { 'treasure-convoy': CONVOY_TRACKER };
+
+function trackMeta(c: SimContext, rt: EventRuntime): void {
+  const d = c.state.director;
+  if (!d.event) return;
+  for (const id in TRACKED) {
+    const def = DIRECTOR_EVENTS[id as DirectorEventId];
+    if (d.event === def.name && d.eventTime >= def.duration - c.dt * 1.5) { begin(c, rt, id as DirectorEventId, TRACKED[id as DirectorEventId]!, c.state.time / 60); return; }
+  }
+}
+
+function begin(c: SimContext, rt: EventRuntime, id: DirectorEventId, handler: WorldEventHandler, minute: number): boolean {
   rt.reset();
   const ev = handler.start(c, rt, minute);
   const d = c.state.director;
-  if (!ev) {
-    rt.reset();
-    if (d.event === DIRECTOR_EVENTS[id].name) { d.event = null; d.eventTime = 0; }
-    return false;
-  }
+  if (!ev) { rt.reset(); return false; }
   rt.id = id;
   rt.lastId = id;
   rt.def = DIRECTOR_EVENTS[id];
@@ -45,6 +64,7 @@ export function startWorldEvent(c: SimContext, id: DirectorEventId, minute: numb
 export function updateWorldEvents(c: SimContext): void {
   const rt = eventRuntime(c);
   const s = c.state;
+  if (!rt.id) trackMeta(c, rt);
   if (rt.id && rt.handler && rt.ev) {
     const ev = rt.ev;
     rt.t += c.dt;

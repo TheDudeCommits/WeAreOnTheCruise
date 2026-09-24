@@ -18,6 +18,7 @@ const GLYPH: Readonly<Record<string, GlyphId>> = {
   'volcanic-eruption': 'flame',
   'sunken-treasure': 'chest',
   'bounty-contract': 'crosshair',
+  'treasure-convoy': 'coin',
 };
 
 /** Objectives measured in seconds (progress = seconds done). */
@@ -29,9 +30,11 @@ const DISTANCE = new Set(['sunken-treasure', 'admiralty-blockade']);
 const WIN: Readonly<Record<string, string>> = {
   'kraken-rising': 'Repelled!', 'rogue-wave': 'Rode it!', maelstrom: 'Fed!', 'admiralty-blockade': 'Broken!',
   'ghost-fleet': 'Laid to rest!', 'volcanic-eruption': 'Survived!', 'sunken-treasure': 'Raised!', 'bounty-contract': 'Collected!',
+  'treasure-convoy': 'Plundered!',
 };
 const LOSE: Readonly<Record<string, string>> = {
   'kraken-rising': 'Escaped', 'admiralty-blockade': 'Holds', 'ghost-fleet': 'Sunk back', 'sunken-treasure': 'Lost', 'bounty-contract': 'Expired',
+  'treasure-convoy': 'Escaped',
 };
 
 const FADE_S = 0.42;
