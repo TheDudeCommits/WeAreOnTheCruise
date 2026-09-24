@@ -185,3 +185,182 @@ void sampleGerstnerWaves(
   crestSignal = crest / max(0.0001, crestWeight);
 }
 `;
+
+// ───────────────────────── Non-allocating, footprint-filtered sampling (OCEAN) ─────────────────────────
+//
+// The ocean renders the waves on a camera-projected grid. Waves shorter than the grid can resolve are faded
+// out (instead of aliasing into crawling noise), so the rendered surface is the Gerstner sum with each wave
+// weighted by `gerstnerFilter(wavelength, footprint)`. `footprint` is the local sample spacing in metres (0 =
+// unfiltered). The ocean's OceanServices.heightAt/normalAt pass the same footprint the vertex shader used, so
+// ships float on exactly the surface that is drawn.
+//
+// Positions are world XZ of the *displaced* surface: the samplers invert the horizontal Gerstner displacement
+// with two fixed-point steps before evaluating height/normal, matching what the rendered mesh shows at (x, z).
+
+/** 1 when the spacing resolves the wave comfortably (≤ λ/8), 0 when it cannot (≥ λ/3). Mirrors GERSTNER_FILTER_GLSL. */
+export function gerstnerFilter(wavelength: number, footprint: number): number {
+  const lo = wavelength * 0.125;
+  const hi = wavelength * 0.33;
+  if (footprint <= lo) return 1;
+  if (footprint >= hi) return 0;
+  const t = (footprint - lo) / (hi - lo);
+  return 1 - t * t * (3 - 2 * t);
+}
+
+/** GLSL twin of gerstnerFilter (smoothstep is identical to the JS polynomial). */
+export const GERSTNER_FILTER_GLSL = /* glsl */ `
+float gerstnerFilter(float wavelength, float footprint) {
+  return 1.0 - smoothstep(wavelength * 0.125, wavelength * 0.33, footprint);
+}
+`;
+
+/** Per-wave constants derived once per wave set (normalized direction, wave number, angular frequency). */
+export interface PreparedWaves {
+  readonly count: number;
+  readonly dirX: Float64Array;
+  readonly dirZ: Float64Array;
+  readonly k: Float64Array;
+  readonly omega: Float64Array;
+  readonly amplitude: Float64Array;
+  readonly steepness: Float64Array;
+  readonly wavelength: Float64Array;
+}
+
+const preparedCache = new WeakMap<readonly GerstnerWave[], PreparedWaves>();
+
+export function prepareGerstnerWaves(waves: readonly GerstnerWave[] = DEFAULT_GERSTNER_WAVES): PreparedWaves {
+  const cached = preparedCache.get(waves);
+  if (cached) return cached;
+  const n = waves.length;
+  const prepared: PreparedWaves = {
+    count: n,
+    dirX: new Float64Array(n), dirZ: new Float64Array(n), k: new Float64Array(n), omega: new Float64Array(n),
+    amplitude: new Float64Array(n), steepness: new Float64Array(n), wavelength: new Float64Array(n),
+  };
+  waves.forEach((wave, i) => {
+    const len = Math.hypot(wave.directionX, wave.directionZ) || 1;
+    const wavelength = Math.max(0.001, wave.wavelength);
+    prepared.dirX[i] = wave.directionX / len;
+    prepared.dirZ[i] = wave.directionZ / len;
+    prepared.k[i] = TAU / wavelength;
+    prepared.omega[i] = prepared.k[i]! * wave.speed;
+    prepared.amplitude[i] = wave.amplitude;
+    prepared.steepness[i] = Math.min(0.95, Math.max(0, wave.steepness));
+    prepared.wavelength[i] = wavelength;
+  });
+  preparedCache.set(waves, prepared);
+  return prepared;
+}
+
+const filterScratch = new Float64Array(16);
+
+function fillFilters(p: PreparedWaves, strength: number, footprint: number): void {
+  for (let i = 0; i < p.count; i++) filterScratch[i] = strength * (footprint > 0 ? gerstnerFilter(p.wavelength[i]!, footprint) : 1);
+}
+
+/** Fixed-point inversion of the horizontal displacement: returns the base point via the out array [bx, bz]. */
+function invertBase(p: PreparedWaves, x: number, z: number, time: number, out: Float64Array): void {
+  let bx = x;
+  let bz = z;
+  for (let iteration = 0; iteration < 2; iteration++) {
+    let ox = 0;
+    let oz = 0;
+    for (let i = 0; i < p.count; i++) {
+      const weight = filterScratch[i]!;
+      if (weight <= 0) continue;
+      const horizontal = p.amplitude[i]! * p.steepness[i]! * weight;
+      if (horizontal <= 0) continue;
+      const phase = p.k[i]! * (p.dirX[i]! * bx + p.dirZ[i]! * bz) - p.omega[i]! * time;
+      const c = Math.cos(phase) * horizontal;
+      ox += p.dirX[i]! * c;
+      oz += p.dirZ[i]! * c;
+    }
+    bx = x - ox;
+    bz = z - oz;
+  }
+  out[0] = bx;
+  out[1] = bz;
+}
+
+const baseScratch = new Float64Array(2);
+
+/**
+ * Height of the rendered surface at world (x, z). No allocations. `footprint` (metres) fades waves the render
+ * grid cannot resolve; pass 0 for the full-detail surface.
+ */
+export function sampleGerstnerHeight(
+  x: number,
+  z: number,
+  time: number,
+  waves: readonly GerstnerWave[] = DEFAULT_GERSTNER_WAVES,
+  strength = 1,
+  footprint = 0,
+): number {
+  const p = prepareGerstnerWaves(waves);
+  fillFilters(p, Math.max(0, strength), footprint);
+  invertBase(p, x, z, time, baseScratch);
+  const bx = baseScratch[0]!;
+  const bz = baseScratch[1]!;
+  let height = 0;
+  for (let i = 0; i < p.count; i++) {
+    const weight = filterScratch[i]!;
+    if (weight <= 0) continue;
+    const phase = p.k[i]! * (p.dirX[i]! * bx + p.dirZ[i]! * bz) - p.omega[i]! * time;
+    height += p.amplitude[i]! * weight * Math.sin(phase);
+  }
+  return height;
+}
+
+/** Unit normal of the rendered surface at world (x, z), written into `out`. No allocations. */
+export function sampleGerstnerNormal<T extends WaveVector>(
+  x: number,
+  z: number,
+  time: number,
+  out: T,
+  waves: readonly GerstnerWave[] = DEFAULT_GERSTNER_WAVES,
+  strength = 1,
+  footprint = 0,
+): T {
+  const p = prepareGerstnerWaves(waves);
+  fillFilters(p, Math.max(0, strength), footprint);
+  invertBase(p, x, z, time, baseScratch);
+  const bx = baseScratch[0]!;
+  const bz = baseScratch[1]!;
+  let tx = 1, ty = 0, tz = 0;
+  let sx = 0, sy = 0, sz = 1;
+  for (let i = 0; i < p.count; i++) {
+    const weight = filterScratch[i]!;
+    if (weight <= 0) continue;
+    const dx = p.dirX[i]!;
+    const dz = p.dirZ[i]!;
+    const k = p.k[i]!;
+    const amplitude = p.amplitude[i]! * weight;
+    const phase = k * (dx * bx + dz * bz) - p.omega[i]! * time;
+    const s = Math.sin(phase);
+    const c = Math.cos(phase);
+    const slope = amplitude * p.steepness[i]! * k * s;
+    const vertical = amplitude * k * c;
+    tx -= dx * dx * slope;
+    ty += dx * vertical;
+    tz -= dx * dz * slope;
+    sx -= dx * dz * slope;
+    sy += dz * vertical;
+    sz -= dz * dz * slope;
+  }
+  // normal = bitangent × tangent (same orientation as sampleGerstnerWaves).
+  const nx = sy * tz - sz * ty;
+  const ny = sz * tx - sx * tz;
+  const nz = sx * ty - sy * tx;
+  const len = Math.hypot(nx, ny, nz) || 1;
+  out.x = nx / len;
+  out.y = ny / len;
+  out.z = nz / len;
+  return out;
+}
+
+/** Sum of amplitudes (metres at strength 1) — used to normalise crest signals. */
+export function gerstnerAmplitudeSum(waves: readonly GerstnerWave[] = DEFAULT_GERSTNER_WAVES): number {
+  let sum = 0;
+  for (const wave of waves) sum += wave.amplitude;
+  return sum;
+}

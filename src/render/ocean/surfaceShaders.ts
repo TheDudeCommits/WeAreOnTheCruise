@@ -1,0 +1,289 @@
+/**
+ * Ocean surface GLSL (OCEAN-owned).
+ *
+ * Vertex: a screen-space grid (NDC with overscan) is projected onto the y = 0 plane from the camera, so the mesh
+ * is always centred on the camera with uniform on-screen density (dense near, coarse far, continuous LOD, no
+ * snapping or popping). Each Gerstner wave is faded by the local grid footprint (the same filter heightAt uses),
+ * then the interaction target's raise - lower is added as visual-only displacement.
+ *
+ * Fragment: shading is evaluated per pixel at the interpolated *base* (Lagrangian) position, so normals, crests
+ * and whitecaps are exact and do not swim with the grid. Detail normals are two mipmapped wind-aligned
+ * textures that fade with distance; glints use a Toksvig-widened lobe with fwidth anti-aliasing. Foam is shaped
+ * (rounded blobs + lace + blue-grey edge) from a mipmapped shape texture with footprint-aware thresholds.
+ */
+import { GERSTNER_FILTER_GLSL, GERSTNER_WAVE_COUNT } from '../../core/waves';
+
+const COMMON = /* glsl */ `
+#define WAVE_COUNT ${GERSTNER_WAVE_COUNT}
+uniform vec2 uOrigin;
+uniform vec4 uWaveA[WAVE_COUNT]; // dir.x, dir.z, k, wavelength
+uniform vec4 uWaveB[WAVE_COUNT]; // amplitude, horizontal amplitude, phase at origin (mod 2pi), 0
+uniform sampler2D uTransient;
+uniform vec4 uRtRect;            // origin.x, origin.z, size, 1/size
+uniform vec4 uShoreRect;         // centre.x, centre.z, valid half span, 1/(n*texel)
+${GERSTNER_FILTER_GLSL}
+`;
+
+export const OCEAN_VERTEX = /* glsl */ `
+${COMMON}
+uniform mat4 uInvViewProj;
+uniform float uFarDist;
+uniform float uGridAngle;
+
+varying vec3 vWorld;
+varying vec2 vRel;
+varying vec2 vWRel;
+varying vec2 vRtUv;
+varying vec2 vShoreUv;
+varying float vFoot;
+varying float vViewDepth;
+
+vec3 projectToWater(vec2 ndc) {
+  vec4 a = uInvViewProj * vec4(ndc, -1.0, 1.0);
+  vec4 b = uInvViewProj * vec4(ndc, 1.0, 1.0);
+  vec3 o = a.xyz / a.w;
+  vec3 dir = b.xyz / b.w - o;
+  float horiz = length(dir.xz);
+  vec2 hd = horiz > 1e-6 ? dir.xz / horiz : vec2(0.0, 1.0);
+  float dist = uFarDist;
+  if (dir.y < -1e-6) dist = min(max(o.y, 0.05) * horiz / -dir.y, uFarDist);
+  return vec3(o.x + hd.x * dist, 0.0, o.z + hd.y * dist);
+}
+
+void main() {
+  vec3 base = projectToWater(position.xy);
+  float d = distance(cameraPosition, base);
+  float h = max(cameraPosition.y, 1.0);
+  float foot = uGridAngle * d * d / h;
+  vec2 rel = base.xz - uOrigin;
+  vec3 disp = vec3(0.0);
+  for (int i = 0; i < WAVE_COUNT; i++) {
+    vec4 A = uWaveA[i];
+    vec4 B = uWaveB[i];
+    float f = gerstnerFilter(A.w, foot);
+    float ph = A.z * dot(A.xy, rel) + B.z;
+    disp.xz += A.xy * (B.y * f * cos(ph));
+    disp.y += B.x * f * sin(ph);
+  }
+  vec3 world = vec3(base.x + disp.x, disp.y, base.z + disp.z);
+  vec2 rtUv = (world.xz - uRtRect.xy) * uRtRect.w;
+  vec2 e = smoothstep(vec2(0.0), vec2(0.06), rtUv) * smoothstep(vec2(1.0), vec2(0.94), rtUv);
+  vec4 tr = textureLod(uTransient, rtUv, 0.0);
+  world.y += (tr.r - tr.g) * e.x * e.y * (1.0 - smoothstep(1.6, 4.5, foot));
+  vWorld = world;
+  vRel = rel;
+  vWRel = world.xz - uOrigin;
+  vRtUv = rtUv;
+  vShoreUv = world.xz * uShoreRect.w;
+  vFoot = foot;
+  vec4 mv = viewMatrix * vec4(world, 1.0);
+  vViewDepth = -mv.z;
+  gl_Position = projectionMatrix * mv;
+}
+`;
+
+export const OCEAN_FRAGMENT = /* glsl */ `
+precision highp float;
+${COMMON}
+uniform sampler2D uPersist;
+uniform float uRtTexel;          // 1 / resolution
+uniform float uRtWorldTexel;     // metres per texel
+uniform sampler2D uShore;
+uniform float uShoreMax;
+uniform sampler2D uDetailA;
+uniform sampler2D uDetailB;
+uniform sampler2D uFoamTex;
+uniform vec4 uDetailOff;         // offsets A.xy, B.xy (texture space)
+uniform vec2 uDetailScale;       // 1/tileA, 1/tileB (metres)
+uniform vec4 uFoamOff;           // Eulerian.xy, Lagrangian.xy
+uniform vec2 uCloudOff;
+uniform vec4 uWind;              // dir.xy, strength, streak
+uniform vec3 uSunDir;
+uniform vec3 uSunColor;
+uniform vec3 uSky;
+uniform vec3 uHorizon;
+uniform vec3 uFogColor;
+uniform vec2 uFog;               // near, far
+uniform vec3 uDeep;
+uniform vec3 uMid;
+uniform vec3 uSSS;
+uniform vec3 uShallow;
+uniform vec3 uFoamColor;
+uniform vec3 uFoamShadow;
+uniform vec3 uBiolum;
+uniform vec4 uLookA;             // glint, sheen, spec power, detail strength
+uniform vec4 uLookB;             // cap lo, cap hi, reflectivity, sss strength
+uniform vec4 uLookC;             // cloud patch, night, flash, sun level
+uniform float uAmpSum;
+uniform float uTime;             // wrapped render clock (surf animation)
+uniform float uDebug;
+
+varying vec3 vWorld;
+varying vec2 vRel;
+varying vec2 vWRel;
+varying vec2 vRtUv;
+varying vec2 vShoreUv;
+varying float vFoot;
+varying float vViewDepth;
+
+void main() {
+  vec3 toCam = cameraPosition - vWorld;
+  float dist = length(toCam);
+  vec3 V = toCam / max(dist, 1e-4);
+  float pix = max(max(length(dFdx(vRel)), length(dFdy(vRel))), 1e-3);
+
+  // ── Gerstner at the base point, filtered by the pixel footprint ──
+  vec3 T = vec3(1.0, 0.0, 0.0);
+  vec3 Bt = vec3(0.0, 0.0, 1.0);
+  float height = 0.0;
+  for (int i = 0; i < WAVE_COUNT; i++) {
+    vec4 A = uWaveA[i];
+    vec4 B = uWaveB[i];
+    float f = gerstnerFilter(A.w, pix * 2.0);
+    float ph = A.z * dot(A.xy, vRel) + B.z;
+    float s = sin(ph);
+    float c = cos(ph);
+    float slope = B.y * f * A.z * s;
+    float vert = B.x * f * A.z * c;
+    T += vec3(-A.x * A.x * slope, A.x * vert, -A.x * A.y * slope);
+    Bt += vec3(-A.x * A.y * slope, A.y * vert, -A.y * A.y * slope);
+    height += B.x * f * s;
+  }
+  vec3 Ng = normalize(cross(Bt, T));
+  float jac = T.x * Bt.z - Bt.x * T.z;
+  vec2 slope = -Ng.xz / max(Ng.y, 0.2);
+  float hN = height / max(uAmpSum, 0.05);
+
+  // ── Interaction targets ──
+  vec2 e2 = smoothstep(vec2(0.0), vec2(0.06), vRtUv) * smoothstep(vec2(1.0), vec2(0.94), vRtUv);
+  float rtEdge = e2.x * e2.y;
+  vec4 trRaw = texture(uTransient, vRtUv);
+  vec4 trX = texture(uTransient, vRtUv + vec2(uRtTexel, 0.0));
+  vec4 trZ = texture(uTransient, vRtUv + vec2(0.0, uRtTexel));
+  vec4 pr = texture(uPersist, vRtUv) * rtEdge;
+  vec4 tr = trRaw * rtEdge;
+  float h0 = trRaw.r - trRaw.g;
+  vec2 rtSlope = vec2((trX.r - trX.g) - h0, (trZ.r - trZ.g) - h0) / uRtWorldTexel;
+  rtSlope *= rtEdge * (1.0 - smoothstep(1.2, 4.0, pix));
+  slope += rtSlope;
+  float lift = h0 * rtEdge;
+  vec3 Nm = normalize(vec3(-slope.x, 1.0, -slope.y));
+
+  // ── Detail normals: wind aligned, scrolling, faded with distance ──
+  vec2 wd = uWind.xy;
+  vec2 wp = vec2(-wd.y, wd.x);
+  vec2 pw = vec2(dot(vRel, wd), dot(vRel, wp));
+  vec3 nA = texture(uDetailA, pw * uDetailScale.x + uDetailOff.xy).xyz * 2.0 - 1.0;
+  vec2 pwB = vec2(dot(pw, vec2(0.94, 0.34)), dot(pw, vec2(-0.34, 0.94)));
+  vec3 nB = texture(uDetailB, pwB * uDetailScale.y + uDetailOff.zw).xyz * 2.0 - 1.0;
+  float fadeA = uLookA.w * (1.0 - smoothstep(160.0, 1300.0, dist));
+  float fadeB = uLookA.w * (1.0 - smoothstep(45.0, 380.0, dist));
+  vec2 sA = nA.xz / max(nA.y, 0.35) * fadeA;
+  vec2 sB = nB.xz / max(nB.y, 0.35) * fadeB;
+  sB = vec2(sB.x * 0.94 - sB.y * 0.34, sB.x * 0.34 + sB.y * 0.94);
+  vec2 sDet = sA + sB;
+  vec2 detWorld = wd * sDet.x + wp * sDet.y;
+  vec3 Nd = normalize(vec3(-(slope.x + detWorld.x), 1.0, -(slope.y + detWorld.y)));
+  float ft = mix(1.0, clamp(min(length(nA), length(nB)), 0.05, 1.0), clamp(max(fadeA, fadeB) * 1.5, 0.0, 1.0));
+  float P = uLookA.z;
+  float Peff = max(P * ft / (ft + P * (1.0 - ft)), 6.0);
+
+  // ── Light & view ──
+  vec3 L = normalize(uSunDir);
+  float sunUp = smoothstep(-0.04, 0.1, L.y);
+  float NdV = clamp(dot(Nm, V), 0.0, 1.0);
+
+  // ── Shore field ──
+  float shoreD = texture(uShore, vShoreUv).r;
+  vec2 sdd = abs(vWorld.xz - uShoreRect.xy);
+  float shoreValid = 1.0 - smoothstep(uShoreRect.z - 40.0, uShoreRect.z, max(sdd.x, sdd.y));
+  shoreD = mix(uShoreMax, shoreD, shoreValid);
+  vec4 cloud = texture(uFoamTex, vWRel * (1.0 / 230.0) + uCloudOff);
+  float shallowAmt = 1.0 - smoothstep(4.0, 90.0, shoreD + (cloud.b - 0.5) * 34.0);
+
+  // ── Body colour: deep cobalt looking down, turquoise-leaning at grazing faces, soft cel bands ──
+  float deepness = smoothstep(0.18, 0.9, NdV);
+  vec3 body = mix(uMid, uDeep, deepness);
+  float tone = clamp(0.52 + (dot(Nm, L) - L.y) * 1.6 + hN * 0.42 + lift * 0.12, 0.0, 1.0);
+  vec3 cShadow = uDeep * 0.78;
+  vec3 cLight = mix(uMid, uSSS, 0.22);
+  vec3 col = mix(cShadow, body, smoothstep(0.16, 0.4, tone));
+  col = mix(col, cLight, smoothstep(0.64, 0.92, tone) * 0.55);
+
+  // Back-lit crest glow (sun through thin water), incl. water piled up by the bow wave.
+  vec2 Lh = normalize(L.xz + vec2(1e-4, 0.0));
+  vec2 Vh = normalize(-V.xz + vec2(0.0, 1e-4));
+  float backLit = clamp(dot(Vh, Lh), 0.0, 1.0);
+  float thin = clamp(hN * 1.25 + 0.05, 0.0, 1.0) + clamp(lift * 0.5, 0.0, 1.3);
+  float faceView = clamp(dot(Nm.xz, -Vh) * 3.0 + 0.4, 0.0, 1.0);
+  float sss = thin * (0.22 + 0.78 * backLit * backLit) * (0.55 + 0.45 * faceView) * (1.0 - 0.45 * L.y) * uLookB.w * sunUp;
+  col += uSSS * uSunColor * sss * 0.6;
+
+  // Aerated churn from wakes/bow waves reads lighter and turquoise.
+  float aer = clamp(max(pr.g, tr.a), 0.0, 1.0);
+  col = mix(col, mix(uSSS, uShallow, 0.45) * (0.45 + 0.55 * uLookC.w), aer * 0.5);
+
+  // Teal shallows near coasts.
+  col = mix(col, uShallow * mix(0.82, 1.08, smoothstep(0.3, 0.7, tone)), shallowAmt * 0.82);
+  col = mix(col, uShallow * 1.22 + vec3(0.02, 0.035, 0.0), (1.0 - smoothstep(0.0, 16.0, shoreD)) * 0.45);
+
+  // ── Sky reflection (Fresnel), painterly cloud tint, lightning flash ──
+  vec3 R = reflect(-V, Nd);
+  float F = 0.02 + 0.98 * pow(1.0 - clamp(dot(Nd, V), 0.0, 1.0), 5.0);
+  vec3 refl = mix(uHorizon, uSky, smoothstep(0.0, 0.45, R.y));
+  refl = mix(refl, mix(uHorizon, vec3(1.0), 0.35), (cloud.b - 0.45) * uLookC.x * 2.0);
+  refl += vec3(0.85, 0.9, 1.0) * uLookC.z * 0.9;
+  col = mix(col, refl, clamp(F * uLookB.z * (1.0 - shallowAmt * 0.35), 0.0, 1.0));
+
+  // ── Foam: interaction + shore (Eulerian) and whitecaps (Lagrangian, wind-stretched strokes) ──
+  vec4 fE = texture(uFoamTex, vWRel * (1.0 / 26.0) + uFoamOff.xy);
+  vec4 fL = texture(uFoamTex, pw * vec2(1.0 / 34.0, 1.0 / 12.0) + uFoamOff.zw);
+  float farBlur = smoothstep(0.35, 2.6, pix);
+  float covI = clamp(max(pr.r, tr.b), 0.0, 1.5);
+  float capSig = (1.0 - jac) * 3.2 + hN * 0.95;
+  float covC = smoothstep(uLookB.x, uLookB.y, capSig);
+  covC *= mix(1.0, fL.a * 1.7, uWind.w);
+  covC *= 1.0 - smoothstep(3.0, 12.0, pix);
+  float coast = (1.0 - smoothstep(0.5, 6.0, shoreD)) * step(-6.0, shoreD);
+  float surfPhase = fract(shoreD / 9.0 + uTime * 0.21 + fE.b * 0.4);
+  float surf = smoothstep(0.7, 0.9, surfPhase) * (1.0 - smoothstep(3.0, 34.0, shoreD)) * smoothstep(0.32, 0.6, fE.b + 0.08);
+  float covS = max(coast, surf * 0.9) * shoreValid;
+  float xI = max(covI, covS) * 1.05 - (1.0 - fE.r);
+  float xC = covC * 1.05 - (1.0 - fL.r);
+  float aaI = fwidth(xI) * 0.85 + 0.015 + farBlur * 0.35;
+  float aaC = fwidth(xC) * 0.85 + 0.015 + farBlur * 0.35;
+  float solidI = smoothstep(-aaI, aaI, xI);
+  float solidC = smoothstep(-aaC, aaC, xC);
+  float edgeI = smoothstep(-0.16 - aaI, -0.16 + aaI, xI) - solidI;
+  float edgeC = smoothstep(-0.13 - aaC, -0.13 + aaC, xC) - solidC;
+  float lace = fE.g * smoothstep(0.03, 0.32, max(covI, covS * 0.6)) * (1.0 - solidI) * (1.0 - farBlur) * 0.9;
+  float foamSolid = max(solidI, solidC);
+  float foamEdge = clamp(max(edgeI, edgeC), 0.0, 1.0) * (1.0 - foamSolid);
+  float foamLight = 0.74 + 0.26 * smoothstep(-0.35, 0.45, dot(Nm, L) - L.y + 0.2);
+  vec3 foamLit = uFoamColor * mix(vec3(1.0), uSunColor, 0.22) * foamLight * mix(0.55, 1.0, uLookC.w);
+  col = mix(col, uFoamShadow * mix(0.6, 1.0, uLookC.w), foamEdge * 0.8);
+  col = mix(col, foamLit, max(foamSolid, lace));
+
+  // ── Sun glints (HDR, bloom-ready) and the broad sun/moon path ──
+  float rl = max(dot(R, L), 0.0);
+  float spec = pow(rl, Peff);
+  float aaS = fwidth(spec) + 0.05;
+  float glint = smoothstep(0.42 - aaS, 0.42 + aaS, spec) * (1.0 - smoothstep(0.8, 3.5, pix));
+  float sheen = pow(rl, 16.0) * uLookA.y;
+  col += uSunColor * (glint * uLookA.x + sheen) * sunUp * (1.0 - foamSolid * 0.85);
+
+  // ── Night: bioluminescent wake and crests ──
+  col += uBiolum * (solidI * 1.7 + lace * 1.2 + max(edgeI, 0.0) * 0.7 + tr.a * 0.35 + solidC * 0.35) * 1.6;
+
+  // ── Aerial perspective (matches the linear scene fog written by the sky) ──
+  float fogF = smoothstep(uFog.x, uFog.y, vViewDepth);
+  col = mix(col, uFogColor, fogF);
+
+  if (uDebug > 0.5) {
+    col = uDebug < 1.5 ? vec3(tr.r, tr.g, tr.b) : uDebug < 2.5 ? vec3(pr.r, pr.g, 0.0) : vec3(shoreD / uShoreMax);
+  }
+  gl_FragColor = vec4(col, 1.0);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}
+`;
