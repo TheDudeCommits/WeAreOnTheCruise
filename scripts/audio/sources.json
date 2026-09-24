@@ -2417,5 +2417,173 @@
   "download": "https://opengameart.org/sites/default/files/Dark%20Descent_0.mp3",
   "host": "opengameart.org",
   "licenseChecked": "2026-09-24: page licence field 'CC-BY 3.0' (attribution in CREDITS.md)"
+ },
+ "kenney-music-jingles-jingles_STEEL08": {
+  "title": "Music Jingles: jingles_STEEL08",
+  "author": "Kenney (kenney.nl)",
+  "page": "https://kenney.nl/assets/music-jingles",
+  "license": "CC0-1.0",
+  "zip": "https://kenney.nl/media/pages/assets/music-jingles/f37e530b9e-1677590399/kenney_music-jingles.zip",
+  "member": "Audio/Steel jingles/jingles_STEEL08.ogg",
+  "host": "kenney.nl"
+ },
+ "kenney-music-jingles-jingles_STEEL11": {
+  "title": "Music Jingles: jingles_STEEL11",
+  "author": "Kenney (kenney.nl)",
+  "page": "https://kenney.nl/assets/music-jingles",
+  "license": "CC0-1.0",
+  "zip": "https://kenney.nl/media/pages/assets/music-jingles/f37e530b9e-1677590399/kenney_music-jingles.zip",
+  "member": "Audio/Steel jingles/jingles_STEEL11.ogg",
+  "host": "kenney.nl"
+ },
+ "fs-71778": {
+  "title": "Steam Whistle.mp3",
+  "author": "Bidone",
+  "page": "https://freesound.org/people/Bidone/sounds/71778/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/71/71778_706955-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 3.20107,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-664929": {
+  "title": "rope leathery creaking.wav",
+  "author": "vestibule-door",
+  "page": "https://freesound.org/people/vestibule-door/sounds/664929/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/664/664929_14100561-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 5.44229,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-559079": {
+  "title": "Foley_Leather_Stress_Mono.wav",
+  "author": "Nox_Sound",
+  "page": "https://freesound.org/people/Nox_Sound/sounds/559079/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/559/559079_9250976-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 19.5254,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-540266": {
+  "title": "cut rope.wav",
+  "author": "zepurple",
+  "page": "https://freesound.org/people/zepurple/sounds/540266/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/540/540266_11242864-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 0.888229,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-529925": {
+  "title": "Whip Crack.m4a",
+  "author": "SciFiSounds",
+  "page": "https://freesound.org/people/SciFiSounds/sounds/529925/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/529/529925_11751070-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 0.534059,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-348766": {
+  "title": "ROAD FLARE.wav",
+  "author": "frankelmedico",
+  "page": "https://freesound.org/people/frankelmedico/sounds/348766/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/348/348766_299928-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 11.6406,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-140711": {
+  "title": "Firecracker",
+  "author": "j1987",
+  "page": "https://freesound.org/people/j1987/sounds/140711/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/140/140711_367313-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 1.05252,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-807221": {
+  "title": "Mysterious_Weird_Wind_Drone_Cave_Whistle_Darkness_Ghost_Haunted_Spirit_24bit_48k_2ch_8s",
+  "author": "BlueShrimp-",
+  "page": "https://freesound.org/people/BlueShrimp-/sounds/807221/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/807/807221_13037035-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 8.511,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-752478": {
+  "title": "HF Sound 016 - Ghostly Harmonics",
+  "author": "xperseai",
+  "page": "https://freesound.org/people/xperseai/sounds/752478/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/752/752478_2093688-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 18.0812,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-221528": {
+  "title": "Glass Break",
+  "author": "unfa",
+  "page": "https://freesound.org/people/unfa/sounds/221528/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/221/221528_1038806-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 1.90508,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-202093": {
+  "title": "Bottle Shattering.wav",
+  "author": "spookymodem",
+  "page": "https://freesound.org/people/spookymodem/sounds/202093/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/202/202093_3756348-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 1.53463,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-360942": {
+  "title": "splat.ogg",
+  "author": "gprosser",
+  "page": "https://freesound.org/people/gprosser/sounds/360942/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/360/360942_5406151-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 0.770839,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-445118": {
+  "title": "Cartoon - Splat!",
+  "author": "Breviceps",
+  "page": "https://freesound.org/people/Breviceps/sounds/445118/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/445/445118_9159316-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 0.785646,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-447929": {
+  "title": "Step on a slug (Splat!) 1",
+  "author": "Breviceps",
+  "page": "https://freesound.org/people/Breviceps/sounds/447929/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/447/447929_9159316-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 1.35014,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-234782": {
+  "title": "Steam/hiss",
+  "author": "wubitog",
+  "page": "https://freesound.org/people/wubitog/sounds/234782/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/234/234782_3501487-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 1.47447,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
  }
 }

@@ -5,7 +5,8 @@
 
 /** Voice categories: each has a voice cap, a bus and a spatial model (see categories.ts). */
 export type CategoryId =
-  | 'ui' | 'stinger' | 'cannon' | 'weapon' | 'impact' | 'explosion' | 'pickup' | 'player' | 'boss' | 'world' | 'ambience';
+  | 'ui' | 'stinger' | 'cannon' | 'weapon' | 'impact' | 'explosion' | 'pickup' | 'player' | 'boss' | 'world' | 'alert' | 'voice'
+  | 'ambience';
 
 export interface DuckSpec {
   /** Which bus dips: music, the ducked SFX sub-bus, or the ambience beds. */
@@ -97,4 +98,6 @@ export interface PlayOptions {
   variant?: number;
   /** Ignore minInterval (layers scheduled by the router). */
   force?: boolean;
+  /** Play on another category's voices and bus (e.g. an incoming-shell whistle promoted to 'alert'). */
+  category?: CategoryId;
 }

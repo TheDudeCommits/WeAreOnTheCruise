@@ -33,6 +33,27 @@ const CANNON_C = F(187767, { trim: [6.35, 9.3], fadeOut: 0.7 });
 const CANNON_D = F(853281, { trim: [0, 2.09], fadeOut: 0.5 });
 const SHIP_BELL = F(353233, { trim: [0.1, 2.9], fadeOut: 0.8 });
 
+/**
+ * Volleys (router.ts plays ONE of these per broadside volley): `n` reports `step` s apart like the in-game ripple
+ * (50 ms per gun, 35 ms for Full Broadside), alternating the four cannon cuts, plus optional extra layers.
+ */
+const GUN_CUTS = [CANNON_A, CANNON_B, CANNON_D, CANNON_C];
+const GUN_SEMIS = [0, -1, 1, -2, 0.5, -1.5, 1.5, -0.5, 0.8];
+const ripple = (n, step, rot, extra = [], opts = {}) => ({
+  layers: [
+    ...Array.from({ length: n }, (_, i) => ({
+      ...GUN_CUTS[(i + rot) % GUN_CUTS.length], delay: +(i * step + (i % 3 === 1 ? 0.007 : 0)).toFixed(3),
+      semis: GUN_SEMIS[(i + rot) % GUN_SEMIS.length], gainDb: -2 - Math.min(5, i * 0.7),
+    })),
+    ...extra,
+  ],
+  fadeOut: 0.9,
+  ...opts,
+});
+/** Low rolling tail for the bigger volleys: the report rolling away across the water. */
+const GUN_TAIL = (delay, gainDb) => F(187767, { trim: [6.35, 9.3], lowpass: 650, delay, gainDb, fadeOut: 1.2 });
+const HEAVY_BOOM = (delay, gainDb) => F(853280, { trim: [0, 3.2], delay, gainDb, fadeOut: 0.8 });
+
 export const CUES = {
   // ───────────── UI (Kenney CC0 packs) ─────────────
   'ui-hover': { category: 'ui', gain: 0.22, pitch: 0.4, minInterval: 0.04, desc: 'button hover tick', files: [K('ui-audio', 'rollover2'), K('ui-audio', 'rollover3')] },
@@ -53,7 +74,7 @@ export const CUES = {
   'passive-upgrade': { category: 'ui', gain: 0.45, pitch: 0.2, minInterval: 0.2, desc: 'passive rank up', files: [K('interface-sounds', 'select_003'), K('interface-sounds', 'select_005')] },
   'skill-ready': { category: 'ui', gain: 0.35, minInterval: 0.5, desc: 'special ready', files: [K('interface-sounds', 'pluck_002')] },
   'ultimate-ready': { category: 'ui', gain: 0.45, minInterval: 1, desc: 'ultimate charged', files: [{ layers: [K('interface-sounds', 'glass_005'), K('interface-sounds', 'bong_001', { delay: 0.06, gainDb: -2 })] }] },
-  'level-up': { category: 'ui', gain: 0.6, minInterval: 1.2, priority: 90, desc: 'level-up jingle (steel drum / pizzicato)', files: [K('music-jingles', 'jingles_STEEL02'), K('music-jingles', 'jingles_PIZZI02')] },
+  'level-up': { category: 'ui', gain: 0.55, minInterval: 1.2, priority: 90, desc: 'level-up sting under 1 s (steel drum / pizzicato)', files: [K('music-jingles', 'jingles_STEEL08'), K('music-jingles', 'jingles_STEEL11'), K('music-jingles', 'jingles_PIZZI10')] },
   'set-sail': { category: 'ui', gain: 0.55, minInterval: 2, desc: 'run starts: two bells + sail snap', files: [{ layers: [F(353232, { trim: [0.3, 2.6], fadeOut: 0.6 }), F(428337, { trim: [0.06, 0.8], delay: 0.55, gainDb: -3 })] }] },
 
   // ───────────── music stingers (music bus) ─────────────
@@ -62,7 +83,11 @@ export const CUES = {
   'stinger-boss-defeated': { category: 'stinger', gain: 0.8, desc: 'boss defeated fanfare', files: [O('medieval-victory-theme', { trim: [0, 6.2], fadeOut: 2, norm: 'stinger', channels: 2 })] },
 
   // ───────────── guns ─────────────
-  'cannon-near': { category: 'cannon', gain: 0.85, pitch: 1.2, gainJitter: 1.5, priority: 55, minInterval: 0.02, maxPerFrame: 6, desc: 'black-powder cannon, near', files: [CANNON_A, CANNON_B, CANNON_C, CANNON_D] },
+  'cannon-near': { category: 'cannon', gain: 0.85, pitch: 1.2, gainJitter: 1.5, priority: 55, minInterval: 0.02, maxPerFrame: 3, desc: 'black-powder cannon, near (one or two guns)', files: [CANNON_A, CANNON_B, CANNON_C, CANNON_D] },
+  'volley-small': { category: 'cannon', gain: 0.85, pitch: 0.8, gainJitter: 1, priority: 58, minInterval: 0.02, maxPerFrame: 2, desc: 'broadside volley, 3–4 guns rippling', files: [ripple(3, 0.05, 0), ripple(3, 0.05, 2)] },
+  'volley-mid': { category: 'cannon', gain: 0.85, pitch: 0.8, gainJitter: 1, priority: 62, minInterval: 0.02, maxPerFrame: 2, desc: 'broadside volley, 5–7 guns + rolling tail', files: [ripple(5, 0.05, 1, [GUN_TAIL(0.28, -7)]), ripple(5, 0.05, 3, [GUN_TAIL(0.3, -7)])] },
+  'volley-big': { category: 'cannon', gain: 0.85, pitch: 0.6, gainJitter: 1, priority: 66, minInterval: 0.02, maxPerFrame: 2, desc: 'broadside volley, 8+ guns + heavy boom + tail', files: [ripple(8, 0.045, 0, [HEAVY_BOOM(0.02, -5), GUN_TAIL(0.36, -5)], { trimDb: 1 }), ripple(8, 0.045, 2, [HEAVY_BOOM(0.03, -5), GUN_TAIL(0.4, -5)], { trimDb: 1 })] },
+  'volley-full': { category: 'cannon', gain: 1, pitch: 0.5, priority: 85, minInterval: 0.3, maxPerFrame: 1, desc: 'Full Broadside: every gun at once, the loudest gun on the sea', files: [ripple(9, 0.035, 1, [HEAVY_BOOM(0, -3), HEAVY_BOOM(0.14, -6), GUN_TAIL(0.3, -3)], { trimDb: 2.5, fadeOut: 1.2 }), ripple(9, 0.035, 3, [HEAVY_BOOM(0.01, -3), HEAVY_BOOM(0.16, -6), GUN_TAIL(0.34, -3)], { trimDb: 2.5, fadeOut: 1.2 })] },
   'cannon-far': { category: 'cannon', gain: 0.8, pitch: 1.5, gainJitter: 2, priority: 35, minInterval: 0.04, maxPerFrame: 3, desc: 'cannon boom rolling across the water', files: [F(149966, { trim: [0, 3.2], fadeOut: 0.8 }), F(565794, { trim: [0, 2.8], fadeOut: 0.7 }), { ...CANNON_C, lowpass: 700, fadeOut: 0.9 }] },
   'broadside-ripple': {
     category: 'cannon', gain: 0.8, pitch: 0.8, priority: 60, minInterval: 0.15, maxPerFrame: 1, desc: 'rolling broadside (5 guns)',
@@ -73,11 +98,13 @@ export const CUES = {
   },
   'heavy-shot': { category: 'cannon', gain: 0.95, pitch: 1, priority: 65, minInterval: 0.03, maxPerFrame: 3, desc: 'heavy gun / boss shell', files: [F(853280, { trim: [0, 3.2], fadeOut: 0.8 }), F(127845, { trim: [0, 3.0], semis: -2, fadeOut: 0.8 })] },
   'bow-chaser': { category: 'cannon', gain: 0.75, pitch: 1.2, priority: 50, minInterval: 0.05, maxPerFrame: 2, desc: 'long gun crack', files: [F(702245, { trim: [0.02, 1.1], fadeOut: 0.35 }), F(175430, { trim: [0, 0.78], semis: 1, fadeOut: 0.25 })] },
-  'swivel-shot': { category: 'cannon', gain: 0.55, pitch: 1.5, priority: 40, minInterval: 0.03, maxPerFrame: 4, desc: 'swivel gun / musket crack', files: [F(234869, { trim: [0.68, 1.7], fadeOut: 0.3 }), F(347647, { trim: [0, 1.0], fadeOut: 0.3 }), F(538795, { trim: [0.14, 1.7], fadeOut: 0.4 }), F(593908, { trim: [0, 0.95], fadeOut: 0.25 })] },
+  'swivel-shot': { category: 'cannon', gain: 0.5, pitch: 1.5, priority: 40, minInterval: 0.05, maxPerFrame: 2, desc: 'swivel gun / musket crack', files: [F(234869, { trim: [0.68, 1.7], fadeOut: 0.3 }), F(347647, { trim: [0, 1.0], fadeOut: 0.3 }), F(538795, { trim: [0.14, 1.7], fadeOut: 0.4 }), F(593908, { trim: [0, 0.95], fadeOut: 0.25 })] },
+  'swivel-burst': { category: 'cannon', gain: 0.5, pitch: 1.2, priority: 42, minInterval: 0.08, maxPerFrame: 1, desc: 'swivel guns: three cracks in a burst', files: [{ layers: [F(234869, { trim: [0.68, 1.7] }), F(593908, { trim: [0, 0.95], delay: 0.05, gainDb: -2 }), F(347647, { trim: [0, 1.0], delay: 0.11, gainDb: -3 })], fadeOut: 0.3 }, { layers: [F(538795, { trim: [0.14, 1.7] }), F(234869, { trim: [0.68, 1.7], delay: 0.06, semis: 1, gainDb: -2 }), F(593908, { trim: [0, 0.95], delay: 0.1, semis: -1, gainDb: -3 })], fadeOut: 0.3 }] },
   'mortar-launch': { category: 'cannon', gain: 0.75, pitch: 1, priority: 50, minInterval: 0.08, maxPerFrame: 2, desc: 'mortar thump', files: [F(529239, { trim: [0, 2.2], fadeOut: 0.6 }), F(187542, { trim: [0, 1.6], fadeOut: 0.4 }), F(854478, { trim: [0, 1.8], fadeOut: 0.4 })] },
-  'chain-rattle': { category: 'weapon', gain: 0.45, pitch: 1.5, minInterval: 0.1, maxPerFrame: 1, desc: 'chain shot whirr', files: [F(506146, { trim: [0, 1.25], fadeOut: 0.3 }), F(370877, { trim: [0.4, 1.8], fadeOut: 0.3, highpass: 300 })] },
+  'chain-rattle': { category: 'weapon', gain: 0.45, pitch: 1.5, minInterval: 0.3, maxPerFrame: 1, desc: 'chain shot whirr', files: [F(506146, { trim: [0, 1.25], fadeOut: 0.3 }), F(370877, { trim: [0.4, 1.8], fadeOut: 0.3, highpass: 300 })] },
   'mortar-whistle': { category: 'weapon', gain: 0.6, pitch: 1, priority: 60, minInterval: 0.12, maxPerFrame: 2, desc: 'incoming shell whistle (ends at impact)', files: [F(241840, { trim: [0, 1.68], fadeOut: 0.08 }), F(506313, { trim: [0, 2.9], fadeOut: 0.1 }), F(398255, { trim: [0.8, 3.4], fadeOut: 0.1 })] },
-  'rocket-launch': { category: 'weapon', gain: 0.55, pitch: 1.5, minInterval: 0.04, maxPerFrame: 3, desc: 'rocket whoosh + fizz', files: [F(140726, { trim: [0, 1.4], fadeOut: 0.3 }), F(455547, { trim: [0, 1.6], fadeOut: 0.4 }), F(587173, { trim: [0.06, 2.28], fadeOut: 0.4 }), F(186933, { trim: [0, 1.44], fadeOut: 0.3 })] },
+  'rocket-launch': { category: 'weapon', gain: 0.5, pitch: 1.5, minInterval: 0.06, maxPerFrame: 2, desc: 'rocket whoosh + fizz', files: [F(140726, { trim: [0, 1.4], fadeOut: 0.3 }), F(455547, { trim: [0, 1.6], fadeOut: 0.4 }), F(587173, { trim: [0.06, 2.28], fadeOut: 0.4 }), F(186933, { trim: [0, 1.44], fadeOut: 0.3 })] },
+  'rocket-salvo': { category: 'weapon', gain: 0.5, pitch: 1.2, minInterval: 0.1, maxPerFrame: 1, desc: 'rocket rack salvo: three whooshes', files: [{ layers: [F(140726, { trim: [0, 1.4] }), F(455547, { trim: [0, 1.6], delay: 0.08, gainDb: -2 }), F(186933, { trim: [0, 1.44], delay: 0.17, gainDb: -3 })], fadeOut: 0.4 }, { layers: [F(587173, { trim: [0.06, 2.28] }), F(140726, { trim: [0, 1.4], delay: 0.09, semis: 1, gainDb: -2 }), F(455547, { trim: [0, 1.6], delay: 0.16, gainDb: -3 })], fadeOut: 0.4 }] },
   'harpoon-throw': { category: 'weapon', gain: 0.6, pitch: 1, minInterval: 0.08, maxPerFrame: 2, desc: 'harpoon launch', files: [{ layers: [F(163453), F(523230, { trim: [0, 0.5], delay: 0.02, gainDb: -3 })] }, { layers: [F(249810, { trim: [0.54, 0.85] }), F(523230, { trim: [0, 0.5], delay: 0.01, semis: -2, gainDb: -3 })] }] },
   'harpoon-hit': { category: 'weapon', gain: 0.6, pitch: 1.2, minInterval: 0.06, maxPerFrame: 2, desc: 'harpoon strikes timber', files: [{ layers: [F(534956, { trim: [0.05, 0.62], fadeOut: 0.15 }), K('impact-sounds', 'impactMetal_heavy_000', { gainDb: -6, semis: -3 })] }, { layers: [F(205938, { trim: [0, 0.61], fadeOut: 0.15 }), K('impact-sounds', 'impactMetal_heavy_001', { gainDb: -6, semis: -4 })] }] },
   'lightning-zap': { category: 'weapon', gain: 0.6, pitch: 1.5, minInterval: 0.05, maxPerFrame: 2, desc: 'electric arc', files: [F(136542, { trim: [0, 0.75], fadeOut: 0.15 }), F(403252, { trim: [0.74, 1.25], fadeOut: 0.1 }), F(403252, { trim: [1.62, 2.1], fadeOut: 0.1 }), F(264779, { trim: [0.09, 0.4], fadeOut: 0.06 })] },
@@ -91,22 +118,22 @@ export const CUES = {
   reload: { category: 'weapon', gain: 0.35, pitch: 1, minInterval: 0.5, desc: 'manual broadside reloaded', files: [{ layers: [K('rpg-audio', 'metalLatch', { semis: -3 }), K('impact-sounds', 'impactPlank_medium_001', { delay: 0.12, semis: -4, gainDb: -2 })] }] },
 
   // ───────────── impacts ─────────────
-  'hit-wood': { category: 'impact', gain: 0.6, pitch: 1.5, gainJitter: 1.5, minInterval: 0.03, maxPerFrame: 4, desc: 'shot hits a hull', files: [F(853277, { trim: [0, 0.6], fadeOut: 0.15 }), F(257752, { trim: [0, 1.4], fadeOut: 0.4 }), F(536777, { trim: [0, 0.9], fadeOut: 0.2 }), F(66772, { trim: [0, 1.0], fadeOut: 0.25 })] },
-  'hit-wood-light': { category: 'impact', gain: 0.45, pitch: 2, minInterval: 0.03, maxPerFrame: 4, desc: 'small shot hits wood', files: [K('impact-sounds', 'impactWood_medium_000'), K('impact-sounds', 'impactWood_medium_001'), K('impact-sounds', 'impactPlank_medium_001')] },
+  'hit-wood': { category: 'impact', gain: 0.6, pitch: 1.5, gainJitter: 1.5, minInterval: 0.05, maxPerFrame: 2, desc: 'shot hits a hull', files: [F(853277, { trim: [0, 0.6], fadeOut: 0.15 }), F(257752, { trim: [0, 1.4], fadeOut: 0.4 }), F(536777, { trim: [0, 0.9], fadeOut: 0.2 }), F(66772, { trim: [0, 1.0], fadeOut: 0.25 })] },
+  'hit-wood-light': { category: 'impact', gain: 0.45, pitch: 2, minInterval: 0.05, maxPerFrame: 2, desc: 'small shot hits wood', files: [K('impact-sounds', 'impactWood_medium_000'), K('impact-sounds', 'impactWood_medium_001'), K('impact-sounds', 'impactPlank_medium_001')] },
   'hit-wood-heavy': { category: 'impact', gain: 0.7, pitch: 1.2, minInterval: 0.05, maxPerFrame: 3, desc: 'heavy shot splinters timber', files: [F(443293, { trim: [0, 0.86], fadeOut: 0.2 }), F(183450, { trim: [0.05, 1.1], fadeOut: 0.25 }), F(501302, { trim: [0, 1.2], fadeOut: 0.3 })] },
   splinters: { category: 'impact', gain: 0.45, pitch: 2, minInterval: 0.08, maxPerFrame: 2, desc: 'wood debris', files: [F(452554, { trim: [0, 0.58], fadeOut: 0.15 }), F(562187, { trim: [0.45, 1.8], fadeOut: 0.3 })] },
-  'sail-rip': { category: 'impact', gain: 0.4, pitch: 1.5, minInterval: 0.15, maxPerFrame: 1, desc: 'chain shot shreds canvas', files: [F(591195, { trim: [0, 0.7], fadeOut: 0.15 }), F(565970, { trim: [0, 0.8], fadeOut: 0.15 })] },
+  'sail-rip': { category: 'impact', gain: 0.4, pitch: 1.5, minInterval: 0.45, maxPerFrame: 1, desc: 'chain shot shreds canvas', files: [F(591195, { trim: [0, 0.7], fadeOut: 0.15 }), F(565970, { trim: [0, 0.8], fadeOut: 0.15 })] },
   'hit-metal': { category: 'impact', gain: 0.55, pitch: 1.5, minInterval: 0.05, maxPerFrame: 2, desc: 'shot rings off iron plate', files: [K('impact-sounds', 'impactMetal_heavy_000', { semis: -3 }), K('impact-sounds', 'impactMetal_heavy_002', { semis: -4 }), K('impact-sounds', 'impactPlate_heavy_000', { semis: -3 })] },
   'hit-flesh': { category: 'impact', gain: 0.6, pitch: 1.5, minInterval: 0.06, maxPerFrame: 2, desc: 'shot thumps the serpent', files: [K('impact-sounds', 'impactPunch_heavy_000', { semis: -6, lowpass: 2500 }), K('impact-sounds', 'impactPunch_heavy_001', { semis: -7, lowpass: 2500 })] },
   'hit-rock': { category: 'impact', gain: 0.5, pitch: 1.5, minInterval: 0.08, maxPerFrame: 2, desc: 'shot hits rock / hull scrapes an island', files: [F(385938, { trim: [0.1, 0.62], fadeOut: 0.12 }), F(522099, { trim: [0, 0.9], fadeOut: 0.25 })] },
-  'splash-small': { category: 'impact', gain: 0.45, pitch: 2, gainJitter: 2, priority: 25, minInterval: 0.035, maxPerFrame: 3, desc: 'shot plunges into the sea', files: [F(404829, { trim: [0, 0.8], fadeOut: 0.2 }), F(398032, { trim: [0, 1.3], fadeOut: 0.3 }), F(189504, { trim: [0.05, 1.2], fadeOut: 0.35 }), F(583348, { trim: [0, 2.0], fadeOut: 0.5 })] },
+  'splash-small': { category: 'impact', gain: 0.45, pitch: 2, gainJitter: 2, priority: 25, minInterval: 0.06, maxPerFrame: 2, desc: 'shot plunges into the sea', files: [F(404829, { trim: [0, 0.8], fadeOut: 0.2 }), F(398032, { trim: [0, 1.3], fadeOut: 0.3 }), F(189504, { trim: [0.05, 1.2], fadeOut: 0.35 }), F(583348, { trim: [0, 2.0], fadeOut: 0.5 })] },
   'splash-large': { category: 'impact', gain: 0.65, pitch: 1.5, priority: 45, minInterval: 0.08, maxPerFrame: 2, desc: 'big splash', files: [F(442773, { trim: [0, 2.17], fadeOut: 0.4 }), F(469608, { trim: [0, 1.75], fadeOut: 0.4 }), F(436792, { trim: [0, 1.78], fadeOut: 0.4 })] },
   crit: { category: 'impact', gain: 0.5, pitch: 1, priority: 50, minInterval: 0.07, maxPerFrame: 1, desc: 'critical hit accent', files: [{ layers: [K('impact-sounds', 'impactBell_heavy_001', { semis: 5, gainDb: -3 }), K('impact-sounds', 'impactPunch_heavy_002', { semis: -2 })], fadeOut: 0.2 }, { layers: [K('impact-sounds', 'impactMetal_light_002', { semis: 2 }), K('impact-sounds', 'impactPunch_heavy_000', { semis: -3 })], fadeOut: 0.2 }] },
   'ram-crash': { category: 'impact', gain: 0.85, pitch: 1, priority: 75, minInterval: 0.15, maxPerFrame: 1, desc: 'ramming crunch', files: [{ layers: [F(257752, { trim: [0, 2.2] }), K('impact-sounds', 'impactWood_heavy_002', { semis: -5 })], fadeOut: 0.5 }, F(139952, { trim: [0.7, 3.2], fadeOut: 0.7 })] },
   'collide-ship': { category: 'impact', gain: 0.55, pitch: 1.5, minInterval: 0.2, maxPerFrame: 1, desc: 'hulls bump', files: [K('impact-sounds', 'impactWood_heavy_003', { semis: -4 }), F(449955, { trim: [0, 0.48], semis: -3, fadeOut: 0.12 })] },
 
   // ───────────── explosions ─────────────
-  'explosion-small': { category: 'explosion', gain: 0.75, pitch: 1.2, priority: 55, minInterval: 0.05, maxPerFrame: 3, desc: 'small blast', files: [F(207322, { trim: [0, 1.42], fadeOut: 0.4 }), F(609587, { trim: [0, 2.6], fadeOut: 0.8 }), F(182429, { trim: [0, 2.2], fadeOut: 0.6 }), F(258195, { trim: [0, 1.9], fadeOut: 0.5 })] },
+  'explosion-small': { category: 'explosion', gain: 0.75, pitch: 1.2, priority: 55, minInterval: 0.07, maxPerFrame: 2, desc: 'small blast', files: [F(207322, { trim: [0, 1.42], fadeOut: 0.4 }), F(609587, { trim: [0, 2.6], fadeOut: 0.8 }), F(182429, { trim: [0, 2.2], fadeOut: 0.6 }), F(258195, { trim: [0, 1.9], fadeOut: 0.5 })] },
   'explosion-large': { category: 'explosion', gain: 0.95, pitch: 1, priority: 75, minInterval: 0.12, maxPerFrame: 2, desc: 'big blast with debris', files: [F(235968, { trim: [0.3, 6.0], fadeOut: 1.5 }), F(132929, { trim: [0, 4.6], fadeOut: 1.2 }), F(259300, { trim: [0, 4.2], fadeOut: 1.2 })] },
   'explosion-powder': { category: 'explosion', gain: 1, pitch: 0.8, priority: 85, minInterval: 0.2, maxPerFrame: 1, desc: 'powder keg', files: [{ layers: [F(259300, { trim: [0, 5.0] }), F(132929, { trim: [2.1, 6.5], delay: 0.4, gainDb: -4 })], fadeOut: 1.5 }, { layers: [F(235968, { trim: [0.3, 5.5] }), F(241601, { trim: [0, 1.4], delay: 0.2, gainDb: -3 })], fadeOut: 1.4 }] },
   'explosion-water': { category: 'explosion', gain: 0.8, pitch: 1, priority: 60, minInterval: 0.1, maxPerFrame: 2, desc: 'underwater blast / geyser', files: [F(212689, { trim: [0, 2.5], fadeOut: 0.6 }), F(519008, { trim: [0, 1.99], fadeOut: 0.5 }), F(147876, { trim: [0, 3.5], fadeOut: 1.0 })] },
@@ -118,13 +145,13 @@ export const CUES = {
   // ───────────── world ─────────────
   'fire-ignite': { category: 'world', gain: 0.5, pitch: 1.5, minInterval: 0.1, maxPerFrame: 2, desc: 'fire catches', files: [F(260554, { trim: [0, 1.8], fadeOut: 0.5 }), F(539972, { trim: [0, 0.76], fadeOut: 0.2 }), F(348767, { trim: [0, 2.0], fadeOut: 0.6, limitDb: 9 })] },
   'thunder-far': { category: 'world', gain: 0.6, pitch: 1, minInterval: 1, maxPerFrame: 1, ref: 400, maxDistance: 3000, desc: 'distant thunder', files: [F(581124, { trim: [0.4, 7.6], fadeOut: 2.0 }), F(347562, { trim: [3.7, 14.0], fadeOut: 3.0 })] },
-  'ship-break': { category: 'world', gain: 0.7, pitch: 1.2, priority: 50, minInterval: 0.1, maxPerFrame: 2, desc: 'hull breaking up', files: [F(494071, { trim: [2.4, 6.6], fadeOut: 1.0 }), F(183452, { trim: [0.15, 2.9], fadeOut: 0.6 }), F(257752, { trim: [0, 3.3], fadeOut: 0.8 })] },
-  'ship-sink': { category: 'world', gain: 0.55, pitch: 1.2, minInterval: 0.3, maxPerFrame: 1, desc: 'sinking: groan + bubbles', files: [{ layers: [F(173439, { trim: [0, 5.5] }), F(338286, { trim: [0.7, 3.9], semis: -5, gainDb: -2 }), F(423959, { trim: [1.6, 5.0], delay: 0.5, gainDb: -6 })], fadeOut: 1.2 }, { layers: [F(539823, { trim: [0.8, 4.3] }), F(496836, { trim: [0.4, 4.5], semis: -3, lowpass: 2500, gainDb: -3 })], fadeOut: 1.2 }] },
+  'ship-break': { category: 'world', gain: 0.7, pitch: 1.2, priority: 50, minInterval: 0.15, maxPerFrame: 1, desc: 'hull breaking up', files: [F(494071, { trim: [2.4, 6.6], fadeOut: 1.0 }), F(183452, { trim: [0.15, 2.9], fadeOut: 0.6 }), F(257752, { trim: [0, 3.3], fadeOut: 0.8 })] },
+  'ship-sink': { category: 'world', gain: 0.55, pitch: 1.2, minInterval: 0.6, maxPerFrame: 1, desc: 'sinking: groan + bubbles', files: [{ layers: [F(173439, { trim: [0, 5.5] }), F(338286, { trim: [0.7, 3.9], semis: -5, gainDb: -2 }), F(423959, { trim: [1.6, 5.0], delay: 0.5, gainDb: -6 })], fadeOut: 1.2 }, { layers: [F(539823, { trim: [0.8, 4.3] }), F(496836, { trim: [0.4, 4.5], semis: -3, lowpass: 2500, gainDb: -3 })], fadeOut: 1.2 }] },
   'hull-creak': { category: 'player', gain: 0.4, pitch: 1.5, minInterval: 1.2, maxPerFrame: 1, desc: 'timbers creak', files: [F(31574, { trim: [3.2, 5.3], fadeIn: 0.05, fadeOut: 0.5 }), K('rpg-audio', 'creak3', { semis: -3 }), K('rpg-audio', 'creak1', { semis: -4 }), K('rpg-audio', 'creak2', { semis: -5 })] },
   gull: { category: 'world', gain: 0.35, pitch: 1, minInterval: 1.2, maxPerFrame: 1, desc: 'seagull call', files: [F(683400, { trim: [0.02, 1.05], fadeOut: 0.2 }), F(683400, { trim: [3.03, 3.62], fadeOut: 0.15 }), F(73497, { trim: [0.4, 1.4], fadeOut: 0.2 }), F(75195, { trim: [0.08, 0.9], fadeOut: 0.2 })] },
   'ship-bell': { category: 'world', gain: 0.5, pitch: 0.3, minInterval: 0.5, maxPerFrame: 1, desc: "ship's bell", files: [SHIP_BELL, F(353232, { trim: [0.3, 2.6], fadeOut: 0.6 })] },
   'alarm-bell': { category: 'world', gain: 0.55, minInterval: 2, maxPerFrame: 1, ref: 400, desc: 'tall-ship alarm bell (director events)', files: [F(418705, { trim: [0.95, 4.6], fadeOut: 0.8 })] },
-  warning: { category: 'world', gain: 0.5, pitch: 1, minInterval: 0.4, maxPerFrame: 1, desc: 'telegraph warning drum', files: [F(369394, { trim: [0, 2.0], fadeOut: 0.6 })] },
+  warning: { category: 'alert', gain: 0.55, pitch: 1, priority: 95, minInterval: 0.25, maxPerFrame: 1, desc: 'telegraph warning drum (alert: never stolen)', files: [F(369394, { trim: [0, 2.0], fadeOut: 0.6 })] },
 
   // ───────────── player ─────────────
   'player-hit': { category: 'player', gain: 0.85, pitch: 1, priority: 90, minInterval: 0.08, maxPerFrame: 1, desc: 'our hull is hit', files: [{ layers: [F(853277, { trim: [0, 0.6] }), K('impact-sounds', 'impactPunch_heavy_000', { semis: -6, lowpass: 1200, gainDb: -2 })], fadeOut: 0.2 }, { layers: [F(443293, { trim: [0, 0.8] }), K('impact-sounds', 'impactWood_heavy_004', { semis: -4, gainDb: -3 })], fadeOut: 0.2 }, { layers: [F(66772, { trim: [0, 1.0] }), K('impact-sounds', 'impactPunch_heavy_001', { semis: -6, lowpass: 1200, gainDb: -2 })], fadeOut: 0.25 }] },
@@ -147,8 +174,8 @@ export const CUES = {
   'metal-groan': { category: 'boss', gain: 0.6, minInterval: 1, maxPerFrame: 1, desc: 'armour plates tear', files: [F(496836, { trim: [0.38, 4.5], fadeOut: 0.8 }), F(556714, { trim: [0.28, 3.55], fadeOut: 0.6 })] },
 
   // ───────────── pickups ─────────────
-  'coin-copper': { category: 'pickup', gain: 0.3, pitch: 0.5, gainJitter: 1, priority: 20, minInterval: 0.03, maxPerFrame: 2, desc: 'copper coin tink', files: [F(146723, { trim: [0, 0.14] }), F(17502, { trim: [0.22, 0.5], fadeOut: 0.08, limitDb: 12 }), F(17502, { trim: [0.48, 0.8], fadeOut: 0.08, limitDb: 12 })] },
-  'coin-silver': { category: 'pickup', gain: 0.33, pitch: 0.5, priority: 25, minInterval: 0.04, maxPerFrame: 2, desc: 'silver coins clink', files: [F(512216, { trim: [0, 0.44], fadeOut: 0.1 }), F(248143, { trim: [0, 0.6], fadeOut: 0.15 })] },
+  'coin-copper': { category: 'pickup', gain: 0.3, pitch: 0.5, gainJitter: 1, priority: 20, minInterval: 0.055, maxPerFrame: 1, desc: 'copper coin tink', files: [F(146723, { trim: [0, 0.14] }), F(17502, { trim: [0.22, 0.5], fadeOut: 0.08, limitDb: 12 }), F(17502, { trim: [0.48, 0.8], fadeOut: 0.08, limitDb: 12 })] },
+  'coin-silver': { category: 'pickup', gain: 0.33, pitch: 0.5, priority: 25, minInterval: 0.06, maxPerFrame: 1, desc: 'silver coins clink', files: [F(512216, { trim: [0, 0.44], fadeOut: 0.1 }), F(248143, { trim: [0, 0.6], fadeOut: 0.15 })] },
   'coin-gold': { category: 'pickup', gain: 0.4, pitch: 0.5, priority: 30, minInterval: 0.06, maxPerFrame: 2, desc: 'gold bar / coin pile', files: [K('rpg-audio', 'handleCoins'), F(338260, { trim: [0.2, 1.2], fadeOut: 0.3 })] },
   doubloon: { category: 'pickup', gain: 0.45, pitch: 0.5, priority: 40, minInterval: 0.06, maxPerFrame: 2, desc: 'doubloon: coin + shimmer', files: [{ layers: [F(248143, { trim: [0, 0.6] }), F(545238, { delay: 0.05, gainDb: -4 })], fadeOut: 0.15 }, { layers: [F(512216, { trim: [0, 0.44], semis: 2 }), F(545238, { delay: 0.04, semis: 2, gainDb: -4 })], fadeOut: 0.15 }] },
   'chest-open': { category: 'pickup', gain: 0.6, priority: 70, minInterval: 0.3, desc: 'treasure chest opens', files: [F(202092, { trim: [0.1, 3.0], fadeOut: 0.6 }), F(573654, { trim: [0, 2.3], fadeOut: 0.4, limitDb: 10 })] },

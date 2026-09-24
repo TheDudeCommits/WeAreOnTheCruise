@@ -192,13 +192,14 @@
   },
   "level-up": {
    "category": "ui",
-   "gain": 0.6,
+   "gain": 0.55,
    "minInterval": 1.2,
    "priority": 90,
-   "desc": "level-up jingle (steel drum / pizzicato)",
+   "desc": "level-up sting under 1 s (steel drum / pizzicato)",
    "files": [
     "sfx/level-up-1.ogg",
-    "sfx/level-up-2.ogg"
+    "sfx/level-up-2.ogg",
+    "sfx/level-up-3.ogg"
    ]
   },
   "set-sail": {
@@ -241,13 +242,68 @@
    "gainJitter": 1.5,
    "priority": 55,
    "minInterval": 0.02,
-   "maxPerFrame": 6,
-   "desc": "black-powder cannon, near",
+   "maxPerFrame": 3,
+   "desc": "black-powder cannon, near (one or two guns)",
    "files": [
     "sfx/cannon-near-1.ogg",
     "sfx/cannon-near-2.ogg",
     "sfx/cannon-near-3.ogg",
     "sfx/cannon-near-4.ogg"
+   ]
+  },
+  "volley-small": {
+   "category": "cannon",
+   "gain": 0.85,
+   "pitch": 0.8,
+   "gainJitter": 1,
+   "priority": 58,
+   "minInterval": 0.02,
+   "maxPerFrame": 2,
+   "desc": "broadside volley, 3–4 guns rippling",
+   "files": [
+    "sfx/volley-small-1.ogg",
+    "sfx/volley-small-2.ogg"
+   ]
+  },
+  "volley-mid": {
+   "category": "cannon",
+   "gain": 0.85,
+   "pitch": 0.8,
+   "gainJitter": 1,
+   "priority": 62,
+   "minInterval": 0.02,
+   "maxPerFrame": 2,
+   "desc": "broadside volley, 5–7 guns + rolling tail",
+   "files": [
+    "sfx/volley-mid-1.ogg",
+    "sfx/volley-mid-2.ogg"
+   ]
+  },
+  "volley-big": {
+   "category": "cannon",
+   "gain": 0.85,
+   "pitch": 0.6,
+   "gainJitter": 1,
+   "priority": 66,
+   "minInterval": 0.02,
+   "maxPerFrame": 2,
+   "desc": "broadside volley, 8+ guns + heavy boom + tail",
+   "files": [
+    "sfx/volley-big-1.ogg",
+    "sfx/volley-big-2.ogg"
+   ]
+  },
+  "volley-full": {
+   "category": "cannon",
+   "gain": 1,
+   "pitch": 0.5,
+   "priority": 85,
+   "minInterval": 0.3,
+   "maxPerFrame": 1,
+   "desc": "Full Broadside: every gun at once, the loudest gun on the sea",
+   "files": [
+    "sfx/volley-full-1.ogg",
+    "sfx/volley-full-2.ogg"
    ]
   },
   "cannon-far": {
@@ -306,17 +362,30 @@
   },
   "swivel-shot": {
    "category": "cannon",
-   "gain": 0.55,
+   "gain": 0.5,
    "pitch": 1.5,
    "priority": 40,
-   "minInterval": 0.03,
-   "maxPerFrame": 4,
+   "minInterval": 0.05,
+   "maxPerFrame": 2,
    "desc": "swivel gun / musket crack",
    "files": [
     "sfx/swivel-shot-1.ogg",
     "sfx/swivel-shot-2.ogg",
     "sfx/swivel-shot-3.ogg",
     "sfx/swivel-shot-4.ogg"
+   ]
+  },
+  "swivel-burst": {
+   "category": "cannon",
+   "gain": 0.5,
+   "pitch": 1.2,
+   "priority": 42,
+   "minInterval": 0.08,
+   "maxPerFrame": 1,
+   "desc": "swivel guns: three cracks in a burst",
+   "files": [
+    "sfx/swivel-burst-1.ogg",
+    "sfx/swivel-burst-2.ogg"
    ]
   },
   "mortar-launch": {
@@ -337,7 +406,7 @@
    "category": "weapon",
    "gain": 0.45,
    "pitch": 1.5,
-   "minInterval": 0.1,
+   "minInterval": 0.3,
    "maxPerFrame": 1,
    "desc": "chain shot whirr",
    "files": [
@@ -361,16 +430,28 @@
   },
   "rocket-launch": {
    "category": "weapon",
-   "gain": 0.55,
+   "gain": 0.5,
    "pitch": 1.5,
-   "minInterval": 0.04,
-   "maxPerFrame": 3,
+   "minInterval": 0.06,
+   "maxPerFrame": 2,
    "desc": "rocket whoosh + fizz",
    "files": [
     "sfx/rocket-launch-1.ogg",
     "sfx/rocket-launch-2.ogg",
     "sfx/rocket-launch-3.ogg",
     "sfx/rocket-launch-4.ogg"
+   ]
+  },
+  "rocket-salvo": {
+   "category": "weapon",
+   "gain": 0.5,
+   "pitch": 1.2,
+   "minInterval": 0.1,
+   "maxPerFrame": 1,
+   "desc": "rocket rack salvo: three whooshes",
+   "files": [
+    "sfx/rocket-salvo-1.ogg",
+    "sfx/rocket-salvo-2.ogg"
    ]
   },
   "harpoon-throw": {
@@ -501,8 +582,8 @@
    "gain": 0.6,
    "pitch": 1.5,
    "gainJitter": 1.5,
-   "minInterval": 0.03,
-   "maxPerFrame": 4,
+   "minInterval": 0.05,
+   "maxPerFrame": 2,
    "desc": "shot hits a hull",
    "files": [
     "sfx/hit-wood-1.ogg",
@@ -515,8 +596,8 @@
    "category": "impact",
    "gain": 0.45,
    "pitch": 2,
-   "minInterval": 0.03,
-   "maxPerFrame": 4,
+   "minInterval": 0.05,
+   "maxPerFrame": 2,
    "desc": "small shot hits wood",
    "files": [
     "sfx/hit-wood-light-1.ogg",
@@ -553,7 +634,7 @@
    "category": "impact",
    "gain": 0.4,
    "pitch": 1.5,
-   "minInterval": 0.15,
+   "minInterval": 0.45,
    "maxPerFrame": 1,
    "desc": "chain shot shreds canvas",
    "files": [
@@ -604,8 +685,8 @@
    "pitch": 2,
    "gainJitter": 2,
    "priority": 25,
-   "minInterval": 0.035,
-   "maxPerFrame": 3,
+   "minInterval": 0.06,
+   "maxPerFrame": 2,
    "desc": "shot plunges into the sea",
    "files": [
     "sfx/splash-small-1.ogg",
@@ -671,8 +752,8 @@
    "gain": 0.75,
    "pitch": 1.2,
    "priority": 55,
-   "minInterval": 0.05,
-   "maxPerFrame": 3,
+   "minInterval": 0.07,
+   "maxPerFrame": 2,
    "desc": "small blast",
    "files": [
     "sfx/explosion-small-1.ogg",
@@ -807,8 +888,8 @@
    "gain": 0.7,
    "pitch": 1.2,
    "priority": 50,
-   "minInterval": 0.1,
-   "maxPerFrame": 2,
+   "minInterval": 0.15,
+   "maxPerFrame": 1,
    "desc": "hull breaking up",
    "files": [
     "sfx/ship-break-1.ogg",
@@ -820,7 +901,7 @@
    "category": "world",
    "gain": 0.55,
    "pitch": 1.2,
-   "minInterval": 0.3,
+   "minInterval": 0.6,
    "maxPerFrame": 1,
    "desc": "sinking: groan + bubbles",
    "files": [
@@ -880,12 +961,13 @@
    ]
   },
   "warning": {
-   "category": "world",
-   "gain": 0.5,
+   "category": "alert",
+   "gain": 0.55,
    "pitch": 1,
-   "minInterval": 0.4,
+   "priority": 95,
+   "minInterval": 0.25,
    "maxPerFrame": 1,
-   "desc": "telegraph warning drum",
+   "desc": "telegraph warning drum (alert: never stolen)",
    "files": [
     "sfx/warning.ogg"
    ]
@@ -1075,8 +1157,8 @@
    "pitch": 0.5,
    "gainJitter": 1,
    "priority": 20,
-   "minInterval": 0.03,
-   "maxPerFrame": 2,
+   "minInterval": 0.055,
+   "maxPerFrame": 1,
    "desc": "copper coin tink",
    "files": [
     "sfx/coin-copper-1.ogg",
@@ -1089,8 +1171,8 @@
    "gain": 0.33,
    "pitch": 0.5,
    "priority": 25,
-   "minInterval": 0.04,
-   "maxPerFrame": 2,
+   "minInterval": 0.06,
+   "maxPerFrame": 1,
    "desc": "silver coins clink",
    "files": [
     "sfx/coin-silver-1.ogg",
@@ -2859,27 +2941,39 @@
    ]
   },
   "sfx/level-up-1.ogg": {
-   "bytes": 11481,
-   "sha256": "4292386fdfd08e6c37dd4821d7c0aeda9fa8d7472843722f0b941e542eb8ed6e",
-   "duration": 1.394,
+   "bytes": 6796,
+   "sha256": "307db73bd8841d590936539f93df31ec54b2f31d2354bd379d4ae477d0529a02",
+   "duration": 0.808,
    "channels": 1,
-   "lufs": -18.1,
-   "truePeak": -5.9,
+   "lufs": -19.7,
+   "truePeak": -6.4,
    "rms100": -17,
    "sources": [
-    "kenney-music-jingles-jingles_STEEL02"
+    "kenney-music-jingles-jingles_STEEL08"
    ]
   },
   "sfx/level-up-2.ogg": {
-   "bytes": 8064,
-   "sha256": "35d9c3b1243e1e64bc3c13e56d5012859768cd1be87ca8f308f28706c330683a",
-   "duration": 0.956,
+   "bytes": 7057,
+   "sha256": "ded8bb85cf0c00d92a7c003a51a6ddf0539040fb6bd79b5a9bfceebb41ecf1eb",
+   "duration": 0.832,
    "channels": 1,
-   "lufs": -18.5,
-   "truePeak": -8.9,
+   "lufs": -18.4,
+   "truePeak": -5.9,
    "rms100": -17,
    "sources": [
-    "kenney-music-jingles-jingles_PIZZI02"
+    "kenney-music-jingles-jingles_STEEL11"
+   ]
+  },
+  "sfx/level-up-3.ogg": {
+   "bytes": 6964,
+   "sha256": "be00469c795d55e09f32f0daa271fc1e511895463325ebeca9fd65e0aa7087af",
+   "duration": 0.804,
+   "channels": 1,
+   "lufs": -18.5,
+   "truePeak": -9.2,
+   "rms100": -17,
+   "sources": [
+    "kenney-music-jingles-jingles_PIZZI10"
    ]
   },
   "sfx/lightning-zap-1.ogg": {
@@ -3276,6 +3370,34 @@
     "fs-186933"
    ]
   },
+  "sfx/rocket-salvo-1.ogg": {
+   "bytes": 11602,
+   "sha256": "12ee0037e5a6f51cd8f09e1dc65e9182fc9c89cd360c9433c18af5c562fb97c3",
+   "duration": 1.687,
+   "channels": 1,
+   "lufs": -11.1,
+   "truePeak": -2.1,
+   "rms100": -12.8,
+   "sources": [
+    "fs-140726",
+    "fs-455547",
+    "fs-186933"
+   ]
+  },
+  "sfx/rocket-salvo-2.ogg": {
+   "bytes": 16589,
+   "sha256": "53076b048f03e6936fe0ee92f2ae3cf1534f9b593b4cfb70017cf22f5ccbf354",
+   "duration": 2.227,
+   "channels": 1,
+   "lufs": -10.5,
+   "truePeak": -1.8,
+   "rms100": -13.1,
+   "sources": [
+    "fs-587173",
+    "fs-140726",
+    "fs-455547"
+   ]
+  },
   "sfx/sail-rip-1.ogg": {
    "bytes": 4643,
    "sha256": "3b75972ee2f7988c7224bc0c3c2433a65e9c5325e37e5332869313ee18a729af",
@@ -3640,6 +3762,34 @@
     "oga-victory-fanfare-short"
    ]
   },
+  "sfx/swivel-burst-1.ogg": {
+   "bytes": 7814,
+   "sha256": "e7484783f33b94975d9ea614183ab0ebb131f80fd0ab570d711c041df780dc8b",
+   "duration": 1.117,
+   "channels": 1,
+   "lufs": -18.7,
+   "truePeak": -6.5,
+   "rms100": -15.3,
+   "sources": [
+    "fs-234869",
+    "fs-593908",
+    "fs-347647"
+   ]
+  },
+  "sfx/swivel-burst-2.ogg": {
+   "bytes": 10123,
+   "sha256": "31a29a17441959429fd812187977c5e45450c5a37f7dbf0509ecf86d26b757d6",
+   "duration": 1.53,
+   "channels": 1,
+   "lufs": -16.7,
+   "truePeak": -5.1,
+   "rms100": -13.8,
+   "sources": [
+    "fs-538795",
+    "fs-234869",
+    "fs-593908"
+   ]
+  },
   "sfx/swivel-shot-1.ogg": {
    "bytes": 6270,
    "sha256": "7bdd0b9583f29f386d753fbfb728679f3b674ae4ce4400965dba3d9593605da7",
@@ -3975,6 +4125,122 @@
    "rms100": -13,
    "sources": [
     "fs-427803"
+   ]
+  },
+  "sfx/volley-big-1.ogg": {
+   "bytes": 21380,
+   "sha256": "a68a4fcf17a7a381fbc202f8c08c939c9af68aecc081c7c17e3c577266748f57",
+   "duration": 3.453,
+   "channels": 1,
+   "lufs": -14.8,
+   "truePeak": -2.8,
+   "rms100": -12.2,
+   "sources": [
+    "fs-125348",
+    "fs-187767",
+    "fs-853281",
+    "fs-853280"
+   ]
+  },
+  "sfx/volley-big-2.ogg": {
+   "bytes": 20623,
+   "sha256": "38e9fb1495a2ecbeb9d8be9948ecc987c36f35927f37abfb94708101f8ed84ae",
+   "duration": 3.334,
+   "channels": 1,
+   "lufs": -14.2,
+   "truePeak": -2.1,
+   "rms100": -12.4,
+   "sources": [
+    "fs-853281",
+    "fs-187767",
+    "fs-125348",
+    "fs-853280"
+   ]
+  },
+  "sfx/volley-full-1.ogg": {
+   "bytes": 21212,
+   "sha256": "a7993b2cb11ee7a1eb788713eeee05d76c214dd6ab171ea3d4f840c59fb6d92d",
+   "duration": 3.388,
+   "channels": 1,
+   "lufs": -12.4,
+   "truePeak": -0.3,
+   "rms100": -10.5,
+   "sources": [
+    "fs-187767",
+    "fs-853281",
+    "fs-125348",
+    "fs-853280"
+   ]
+  },
+  "sfx/volley-full-2.ogg": {
+   "bytes": 19215,
+   "sha256": "7c83cd109a3ea62d1d3327886628da91b800bedfacea91a7361d8afe43895801",
+   "duration": 3.327,
+   "channels": 1,
+   "lufs": -12.8,
+   "truePeak": -1.4,
+   "rms100": -10.7,
+   "sources": [
+    "fs-187767",
+    "fs-125348",
+    "fs-853281",
+    "fs-853280"
+   ]
+  },
+  "sfx/volley-mid-1.ogg": {
+   "bytes": 20947,
+   "sha256": "5cad3776ef5d1007df710de2f6048c70388f8464128bf5101b17811c27206a9b",
+   "duration": 3.418,
+   "channels": 1,
+   "lufs": -15.5,
+   "truePeak": -3.8,
+   "rms100": -13,
+   "sources": [
+    "fs-187767",
+    "fs-853281",
+    "fs-125348"
+   ]
+  },
+  "sfx/volley-mid-2.ogg": {
+   "bytes": 18969,
+   "sha256": "40b57bd69840197d352d759398b3a46ad003826a8b42bac801d75e2cb7e53fab",
+   "duration": 3.278,
+   "channels": 1,
+   "lufs": -15.5,
+   "truePeak": -4.4,
+   "rms100": -13.1,
+   "sources": [
+    "fs-187767",
+    "fs-125348",
+    "fs-853281"
+   ]
+  },
+  "sfx/volley-small-1.ogg": {
+   "bytes": 18593,
+   "sha256": "a6999d2e4c791e2566768cf805f2cd166f26aaa66d7df71bd06d4378764424b2",
+   "duration": 3.168,
+   "channels": 1,
+   "lufs": -18.1,
+   "truePeak": -4.3,
+   "rms100": -13.5,
+   "sources": [
+    "fs-125348",
+    "fs-187767",
+    "fs-853281"
+   ]
+  },
+  "sfx/volley-small-2.ogg": {
+   "bytes": 20092,
+   "sha256": "6f5a35fe5f2b3f6dcf1a81b0f52878469bc20f4652305ab33bea7c877234f5c3",
+   "duration": 3.339,
+   "channels": 1,
+   "lufs": -18.2,
+   "truePeak": -4,
+   "rms100": -13.1,
+   "sources": [
+    "fs-853281",
+    "fs-187767",
+    "fs-125348"
    ]
   },
   "sfx/war-horn.ogg": {

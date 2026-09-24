@@ -383,7 +383,8 @@ export class AudioEngine implements AudioSystem {
       const count = this.frameCounts.get(cue) ?? 0;
       if (def.maxPerFrame && count >= def.maxPerFrame) return this.drop(cue, 'frame');
     }
-    const cat = CATEGORIES[def.category];
+    const catId = opts.category ?? def.category;
+    const cat = CATEGORIES[catId];
     let gain = def.gain * (opts.gain ?? 1);
     let pan = 0, cutoff = 20000, spatialGain = 1;
     let distance: number | undefined;
@@ -392,17 +393,20 @@ export class AudioEngine implements AudioSystem {
       distance = Math.round(s.distance);
       if (s.gain < 0.004) return this.drop(cue, 'distance', 0, distance);
       spatialGain = s.gain; pan = s.pan; cutoff = s.cutoff;
+      // Reserved (alert) cues: off-screen threats pan wide so the player hears which side they come from.
+      if (cat.reserved && s.distance > 60) pan = Math.max(-0.97, Math.min(0.97, pan * 1.15));
       gain *= s.gain;
     }
     gain *= dbToGain((Math.random() * 2 - 1) * (def.gainJitter ?? 1));
-    gain /= Math.sqrt(1 + cat.density * pool.active(def.category, now));
+    gain /= Math.sqrt(1 + cat.density * pool.active(catId, now));
     const semis = (opts.pitch ?? 0) + (Math.random() * 2 - 1) * (def.pitch ?? 0);
     const rate = Math.pow(2, semis / 12);
     const file = this.pickFile(cue, def, opts.variant);
     const buffer = this.bank.get(file);
     if (!buffer) return this.drop(cue, 'not-ready', gain, distance);
-    const priority = ((def.priority ?? cat.priority) + (opts.priority ?? 0)) * (0.45 + 0.55 * spatialGain);
-    const ok = pool.play(buffer, def.category, { cue, when, gain, rate, pan, cutoff, priority });
+    const base = (opts.category ? cat.priority : def.priority ?? cat.priority) + (opts.priority ?? 0);
+    const priority = cat.reserved ? base : base * (0.45 + 0.55 * spatialGain);
+    const ok = pool.play(buffer, catId, { cue, when, gain, rate, pan, cutoff, priority });
     if (!ok) return this.drop(cue, pool.lastDrop ?? 'cap', gain, distance);
     this.lastPlayed.set(cue, when);
     this.frameCounts.set(cue, (this.frameCounts.get(cue) ?? 0) + 1);
