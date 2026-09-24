@@ -936,7 +936,7 @@
   "chest": {
     "file": "/assets/fleet/chest.glb",
     "bytes": 28088,
-    "sha256": "36e9a59b58f2ab05acaebb47b25a43fce08935d08a59eb26551c5d429ce8badd",
+    "sha256": "aea92646121cba0be96b7cf478da5471e854f76efec443470f04699b1a6840d5",
     "sourceSha256": "18e2bcb8be38d7f1922079c7138ec9559dd423cb6688dee3ccccaba76f3f204c",
     "tris": 1636,
     "materials": 1,
@@ -944,47 +944,47 @@
     "textures": 1,
     "maxTexture": 32,
     "size": [
-      0.83,
+      1.3,
       0.82,
-      1.3
+      0.83
     ],
     "min": [
-      -0.41,
+      -0.65,
       0,
-      -0.65
+      -0.41
     ],
     "max": [
-      0.41,
+      0.65,
       0.82,
-      0.65
+      0.41
     ],
     "clips": [],
     "built": "2026-09-24"
   },
   "chest-open": {
     "file": "/assets/fleet/chest-open.glb",
-    "bytes": 43028,
-    "sha256": "fb7aff957bc82f544bf76b85fcf954e57b60ff309105d8d78a9bf6bd870f3979",
+    "bytes": 42896,
+    "sha256": "5bb2d92954bbd48facd574423f2eb4cda0a883e873ef88b93343324373d7e5de",
     "sourceSha256": "6810efd30cd1a072c2f272ee76a046b278984f3f050e4d9b256d50242d958811",
-    "tris": 2866,
+    "tris": 2868,
     "materials": 1,
     "draws": 1,
     "textures": 1,
     "maxTexture": 32,
     "size": [
-      1.31,
+      1.5,
       1.06,
-      1.5
+      1.31
     ],
     "min": [
-      -0.66,
+      -0.75,
       0,
-      -0.75
+      -0.66
     ],
     "max": [
-      0.66,
+      0.75,
       1.06,
-      0.75
+      0.66
     ],
     "clips": [],
     "built": "2026-09-24"
