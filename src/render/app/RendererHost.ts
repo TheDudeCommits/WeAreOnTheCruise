@@ -133,6 +133,7 @@ export class RendererHost {
   private readonly resizeObserver: ResizeObserver;
   private readonly gpu: GpuTimer;
   private pixelRatio = 1;
+  private viewport = { width: 1, height: 1 };
   private profile: QualityProfile;
   private readonly frameSamples: number[] = [];
   private readonly scratch: number[] = [];
@@ -244,11 +245,9 @@ export class RendererHost {
     };
   }
 
+  /** CSS size of the game root, cached on resize so per-frame projections never force a layout read. */
   getViewport(): { width: number; height: number } {
-    return {
-      width: Math.max(1, this.container.clientWidth),
-      height: Math.max(1, this.container.clientHeight),
-    };
+    return this.viewport;
   }
 
   setAdaptiveQualityEnabled(enabled: boolean): void {
@@ -293,6 +292,7 @@ export class RendererHost {
   private resize(): void {
     const width = Math.max(1, this.container.clientWidth);
     const height = Math.max(1, this.container.clientHeight);
+    this.viewport = { width, height };
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height, false);
