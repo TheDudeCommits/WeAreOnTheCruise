@@ -27,7 +27,7 @@ const OUT = join(ROOT, 'public/audio');
 const REPORT = join(ROOT, 'output/ovh-audio');
 const FFMPEG = process.env.FFMPEG ?? (existsSync('/opt/homebrew/bin/ffmpeg') ? '/opt/homebrew/bin/ffmpeg' : 'ffmpeg');
 const FFPROBE = process.env.FFPROBE ?? (existsSync('/opt/homebrew/bin/ffprobe') ? '/opt/homebrew/bin/ffprobe' : 'ffprobe');
-const PIPELINE_VERSION = 4;
+const PIPELINE_VERSION = 7;
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
 
 const args = process.argv.slice(2);
@@ -86,7 +86,7 @@ async function download(url, dst) {
 const zipDone = new Map();
 async function ensureZip(url) {
   const name = basename(new URL(url).pathname).replace(/%20/g, ' ');
-  const zipPath = join(CACHE, 'zips', name);
+  const zipPath = join(CACHE, url.includes('kenney.nl') ? 'kenney' : 'zips', name);
   const dir = zipPath.replace(/\.zip$/i, '');
   if (zipDone.has(url)) return zipDone.get(url);
   const p = (async () => {
@@ -118,6 +118,20 @@ function findInDir(dir, member) {
   throw new Error(`member ${member} not found in ${dir}`);
 }
 
+/** Scratch copies left by earlier sourcing passes (output/audio-cache/{music,sfx}); avoids re-downloading. */
+function localCopy(id, s) {
+  if (id.startsWith('oga-')) {
+    const dir = join(CACHE, 'music', id.slice(4));
+    const name = decodeURIComponent(basename(new URL(s.download).pathname));
+    if (existsSync(join(dir, name))) return join(dir, name);
+  }
+  if (id.startsWith('fs-')) {
+    const sfx = join(CACHE, 'sfx');
+    if (existsSync(sfx)) for (const d of readdirSync(sfx)) { const p = join(sfx, d, `freesound-${id.slice(3)}.ogg`); if (existsSync(p)) return p; }
+  }
+  return null;
+}
+
 /** Resolves a source id to a local file path, downloading on first use. Records the original's sha256. */
 const sourceInfo = new Map();
 async function resolveSource(id) {
@@ -132,7 +146,8 @@ async function resolveSource(id) {
     const ext = (s.download.match(/\.(ogg|mp3|wav|flac|m4a)(?:$|\?)/i)?.[1] ?? 'bin').toLowerCase();
     path = join(SRC_CACHE, `${id.replace(/[^a-z0-9._-]+/gi, '_')}.${ext}`);
     if (!existsSync(path)) {
-      if (s.local && existsSync(s.local)) writeFileSync(path, readFileSync(s.local));
+      const local = localCopy(id, s);
+      if (local) writeFileSync(path, readFileSync(local));
       else {
         if (NO_FETCH) throw new Error(`missing ${path} (--no-fetch)`);
         await download(s.download, path);
@@ -154,12 +169,92 @@ function probe(path) {
 
 /** Integrated loudness, max momentary loudness (padded so sub-400 ms sounds still register) and true peak. */
 async function loudness(path) {
-  const err = await runAsync(FFMPEG, ['-hide_banner', '-nostats', '-i', path, '-af', 'apad=pad_dur=0.5,ebur128=peak=true:framelog=verbose', '-f', 'null', '-']);
+  const err = await runAsync(FFMPEG, ['-hide_banner', '-nostats', '-v', 'verbose', '-i', path, '-af', 'apad=pad_dur=0.5,ebur128=peak=true:framelog=verbose', '-f', 'null', '-']);
   let mMax = -Infinity;
   for (const m of err.matchAll(/ M:\s*(-?[\d.]+)/g)) { const v = +m[1]; if (v > mMax) mMax = v; }
   const I = err.match(/I:\s+(-?[\d.]+) LUFS\s*\n\s*Threshold/);
   const TP = [...err.matchAll(/Peak:\s+(-?[\d.]+|-inf) dBFS/g)].pop();
   return { I: I ? +I[1] : null, mMax: Number.isFinite(mMax) ? mMax : null, tp: TP && TP[1] !== '-inf' ? +TP[1] : null };
+}
+
+// ───────────────────────── segmentation ─────────────────────────
+
+function pcmMono(path, sr = 16000) {
+  const r = spawnSync(FFMPEG, ['-v', 'error', '-i', path, '-ac', '1', '-ar', String(sr), '-f', 'f32le', '-'], { maxBuffer: 1 << 30 });
+  if (r.status !== 0) throw new Error(`decode failed ${path}`);
+  const b = r.stdout;
+  return new Float32Array(b.buffer, b.byteOffset, Math.floor(b.byteLength / 4));
+}
+
+const segCache = new Map();
+/**
+ * Splits a recording into events: [start, end, peakDb]. An event starts when the 10 ms RMS envelope rises
+ * above (file peak − 30 dB) or jumps ≥ 14 dB over the last 60 ms inside a tail; it ends after 150 ms below
+ * max(file peak − 52, event peak − 42) dB.
+ */
+function segments(path) {
+  if (segCache.has(path)) return segCache.get(path);
+  const x = pcmMono(path);
+  const hop = 160;
+  const n = Math.floor(x.length / hop);
+  const env = new Float32Array(n);
+  for (let i = 0; i < n; i++) { let acc = 0; for (let j = 0; j < hop; j++) { const v = x[i * hop + j]; acc += v * v; } env[i] = 10 * Math.log10(acc / hop + 1e-12); }
+  let peak = -120; for (const v of env) if (v > peak) peak = v;
+  const on = peak - 30;
+  const segs = [];
+  let i = 0;
+  while (i < n) {
+    if (env[i] <= on) { i++; continue; }
+    let s0 = i; while (s0 > 0 && i - s0 < 6 && env[s0 - 1] < env[s0] - 0.5) s0--;
+    let segPeak = env[i], quiet = 0, j = i + 1;
+    for (; j < n; j++) {
+      if (env[j] > segPeak) segPeak = env[j];
+      let recentMin = Infinity; for (let k = Math.max(i, j - 6); k < j; k++) recentMin = Math.min(recentMin, env[k]);
+      if (j - i > 20 && env[j] > on && env[j] - recentMin >= 14) break; // a new attack inside this tail
+      if (env[j] < Math.max(peak - 52, segPeak - 42)) { if (++quiet >= 15) break; } else quiet = 0;
+    }
+    const e = quiet >= 15 ? j - quiet + 1 : j;
+    segs.push([+(s0 * 0.01).toFixed(3), +(e * 0.01).toFixed(3), +segPeak.toFixed(1)]);
+    i = Math.max(j, i + 1);
+  }
+  segCache.set(path, segs);
+  return segs;
+}
+
+/** Resolves `hit` (event index, or 'loudest') to a trim window, honouring maxLen and a pre-roll. */
+async function resolveHit(L) {
+  if (L.hit === undefined) return L;
+  const src = await resolveSource(L.src);
+  const segs = segments(src.path);
+  if (!segs.length) throw new Error(`no events in ${L.src}`);
+  let seg;
+  if (L.hit === 'loudest') seg = segs.reduce((a, b) => (b[2] > a[2] ? b : a));
+  else { seg = segs[L.hit]; if (!seg) throw new Error(`${L.src} has ${segs.length} events, wanted #${L.hit}: ${JSON.stringify(segs)}`); }
+  const pre = L.preRoll ?? 0.008;
+  const start = Math.max(0, seg[0] - pre + (L.offset ?? 0));
+  let end = seg[1] + (L.tail ?? 0.05);
+  if (L.maxLen) end = Math.min(end, start + L.maxLen);
+  const { hit: _h, maxLen: _m, preRoll: _p, tail: _t, offset: _o, ...rest } = L;
+  return { ...rest, trim: [+start.toFixed(3), +end.toFixed(3)], fadeOut: rest.fadeOut ?? Math.min(0.35, Math.max(0.04, (end - start) * 0.2)), _auto: true };
+}
+
+async function resolveSpec(spec) {
+  if (spec.layers) return { ...spec, layers: await Promise.all(spec.layers.map(resolveHit)) };
+  return resolveHit(spec);
+}
+
+/** Max RMS (dBFS) over a sliding window — a transient-friendly level for short one-shots. */
+function maxWindowRms(path, win = 0.1) {
+  const sr = 48000, x = pcmMono(path, sr);
+  // Full band (bright coins/chimes carry most energy above 8 kHz); sub-100 ms clicks use their own length.
+  const w = Math.min(win, Math.max(0.02, (x.length / sr) * 0.8));
+  const n = Math.max(1, Math.round(w * sr)), hop = Math.round(0.005 * sr);
+  const sq = new Float64Array(x.length + 1);
+  for (let i = 0; i < x.length; i++) sq[i + 1] = sq[i] + x[i] * x[i];
+  let best = 0;
+  if (x.length <= n) best = sq[x.length] / Math.max(1, x.length);
+  else for (let i = 0; i + n <= x.length; i += hop) { const e = (sq[i + n] - sq[i]) / n; if (e > best) best = e; }
+  return 10 * Math.log10(best + 1e-12);
 }
 
 // ───────────────────────── rendering ─────────────────────────
@@ -178,7 +273,7 @@ async function renderRaw(spec, channels, tmpWav) {
     inputs.push('-i', src.path);
     const f = [];
     const [s, e] = L.trim ?? [0, null];
-    const loopX = spec.loop?.xfade ?? 0;
+    const loopX = typeof spec.loop === 'object' ? spec.loop.xfade : 0;
     const end = e === null || e === undefined ? null : e + (layers.length === 1 ? loopX : 0);
     f.push(`atrim=start=${s}${end !== null ? `:end=${end}` : ''}`, 'asetpts=PTS-STARTPTS', 'aresample=48000');
     f.push(`aformat=sample_fmts=fltp:channel_layouts=${channels === 1 ? 'mono' : 'stereo'}`);
@@ -189,7 +284,12 @@ async function renderRaw(spec, channels, tmpWav) {
     if (L.gainDb) f.push(`volume=${L.gainDb}dB`);
     if (L.fadeIn) f.push(`afade=t=in:d=${L.fadeIn}:curve=qsin`);
     const dur = ((end ?? probe(src.path).duration) - s) / rate;
-    if (L.fadeOut && layers.length > 1) f.push(`afade=t=out:st=${Math.max(0, dur - L.fadeOut)}:d=${L.fadeOut}`);
+    const fo = L.fadeOut ?? (layers.length === 1 ? spec.fadeOut : undefined);
+    if (fo && typeof spec.loop !== 'object') f.push(`afade=t=out:st=${Math.max(0, dur - fo).toFixed(3)}:d=${fo}`);
+    if (L.pan !== undefined && channels === 2) {
+      const l = Math.cos(((L.pan + 1) * Math.PI) / 4), r = Math.sin(((L.pan + 1) * Math.PI) / 4);
+      f.push(`pan=stereo|c0=${(l * Math.SQRT2).toFixed(3)}*c0|c1=${(r * Math.SQRT2).toFixed(3)}*c1`);
+    }
     if (L.delay) f.push(`adelay=${Math.round(L.delay * 1000)}:all=1`);
     total = Math.max(total, (L.delay ?? 0) + dur);
     chains.push(`[${i}:a]${f.join(',')}[l${i}]`);
@@ -198,7 +298,7 @@ async function renderRaw(spec, channels, tmpWav) {
   let last;
   if (layers.length > 1) { graph += `;${layers.map((_, i) => `[l${i}]`).join('')}amix=inputs=${layers.length}:duration=longest:normalize=0[mix]`; last = 'mix'; }
   else last = 'l0';
-  if (spec.loop) {
+  if (typeof spec.loop === 'object') {
     // Seamless loop: out(t) = head(t)·sin + tail(L+t)·cos over the first X seconds.
     const X = spec.loop.xfade;
     const L = total - X;
@@ -207,7 +307,7 @@ async function renderRaw(spec, channels, tmpWav) {
     total = L;
   } else {
     const post = [];
-    if (spec.fadeOut && layers.length === 1) post.push(`afade=t=out:st=${Math.max(0, total - spec.fadeOut)}:d=${spec.fadeOut}`);
+    if (spec.fadeOut && layers.length > 1) post.push(`afade=t=out:st=${Math.max(0, total - spec.fadeOut).toFixed(3)}:d=${spec.fadeOut}`);
     if (spec.silenceTrim !== false && !spec.music) post.push('silenceremove=start_periods=1:start_threshold=-60dB:start_silence=0.004');
     if (post.length) { graph += `;[${last}]${post.join(',')}[post]`; last = 'post'; }
   }
@@ -220,8 +320,11 @@ function targetFor(spec, kind) {
   return t;
 }
 
-async function encode(spec, kind, outPath, channels, bitrate) {
-  const key = createHash('sha1').update(JSON.stringify({ spec, kind, channels, bitrate, PIPELINE_VERSION })).digest('hex');
+const resolvedSpecs = new Map();
+async function encode(rawSpec, kind, outPath, channels, bitrate) {
+  const spec = await resolveSpec(rawSpec);
+  resolvedSpecs.set(outPath, spec);
+  const key = createHash('sha1').update(JSON.stringify({ spec, kind, channels, bitrate, target: targetFor(spec, kind), PIPELINE_VERSION })).digest('hex');
   const stamp = `${outPath}.buildkey`;
   const stampPath = join(CACHE, 'stamps', relative(OUT, outPath).replace(/[\\/]/g, '__'));
   mkdirSync(dirname(stampPath), { recursive: true });
@@ -231,13 +334,15 @@ async function encode(spec, kind, outPath, channels, bitrate) {
   await renderRaw(spec, channels, tmpWav);
   const m = await loudness(tmpWav);
   const t = targetFor(spec, kind);
-  const measured = t.mode === 'integrated' ? (m.I ?? m.mMax) : (m.mMax ?? m.I);
-  let gain = (t.lufs + (spec.trimDb ?? 0)) - (measured ?? t.lufs);
+  const measured = t.mode === 'integrated' ? (m.I ?? m.mMax) : t.mode === 'rms100' ? maxWindowRms(tmpWav) : (m.mMax ?? m.I);
+  const level = t.mode === 'rms100' ? t.rms : t.lufs;
+  let gain = (level + (spec.trimDb ?? 0)) - (measured ?? level);
   const headroom = t.ceiling - (m.tp ?? -20);
+  const maxLimit = spec.limitDb ?? t.maxLimitDb;
   let limit = false;
   if (gain > headroom) {
     const over = gain - headroom;
-    if (over > t.maxLimitDb) gain = headroom + t.maxLimitDb;
+    if (over > maxLimit) gain = headroom + maxLimit;
     limit = true;
   }
   const af = [`volume=${gain.toFixed(2)}dB`];
@@ -251,11 +356,19 @@ async function encode(spec, kind, outPath, channels, bitrate) {
 
 // ───────────────────────── main ─────────────────────────
 
-const CATEGORY_KIND = (cat, spec) => (spec.loop ? 'bed' : cat === 'stinger' ? 'stinger' : cat === 'ui' ? 'ui' : 'sfx');
-const DEFAULT_CHANNELS = (cat, spec) => spec.channels ?? (spec.loop || cat === 'stinger' ? 2 : 1);
+const CATEGORY_KIND = (cat, spec) => (typeof spec.loop === 'object' ? 'bed' : cat === 'stinger' ? 'stinger' : cat === 'ui' ? 'ui' : 'sfx');
+const DEFAULT_CHANNELS = (cat, spec) => spec.channels ?? (typeof spec.loop === 'object' || cat === 'stinger' ? 2 : 1);
 
 async function main() {
   const t0 = Date.now();
+  if (args.includes('--segments')) {
+    for (const id of args.slice(args.indexOf('--segments') + 1)) {
+      const src = await resolveSource(id);
+      const p = probe(src.path);
+      console.log(`${id} (${p.duration.toFixed(2)} s, ${p.channels} ch): ${JSON.stringify(segments(src.path))}`);
+    }
+    return;
+  }
   const jobs = [];
   for (const [id, cue] of Object.entries(CUES)) {
     if (ONLY && ONLY !== id) continue;
@@ -297,6 +410,7 @@ async function main() {
     fileMeta[j.file] = {
       bytes: buf.length, sha256: sha256(buf), duration: round(p.duration, 3), channels: p.channels,
       lufs: round(j.norm === 'music' || j.norm === 'bed' ? l.I : l.mMax, 1), truePeak: round(l.tp, 1),
+      rms100: j.norm === 'music' || j.norm === 'bed' ? undefined : round(maxWindowRms(path), 1),
       sources: [...new Set((j.spec.layers ?? [j.spec]).map((L) => L.src))],
     };
   });
@@ -359,19 +473,20 @@ function describeChanges(spec) {
   const parts = [];
   for (const L of spec.layers ?? [spec]) {
     const p = [];
-    if (L.trim) p.push(`trim ${L.trim[0]}–${L.trim[1] ?? 'end'} s`);
+    if (L.trim) p.push(`${L._auto ? 'event' : 'trim'} ${L.trim[0]}–${L.trim[1] ?? 'end'} s`);
     if (L.semis) p.push(`pitch ${L.semis > 0 ? '+' : ''}${L.semis} st`);
     if (L.rate) p.push(`rate ×${L.rate}`);
     if (L.lowpass) p.push(`low-pass ${L.lowpass} Hz`);
     if (L.highpass) p.push(`high-pass ${L.highpass} Hz`);
     if (L.delay) p.push(`delayed ${L.delay} s`);
+    if (L.pan !== undefined) p.push(`pan ${L.pan}`);
     if (L.gainDb) p.push(`${L.gainDb > 0 ? '+' : ''}${L.gainDb} dB`);
     if (spec.layers) parts.push(`${L.src}: ${p.join(', ') || 'as is'}`);
     else parts.push(p.join(', '));
   }
   const tail = [];
   if (spec.layers) tail.push(`mixed ${spec.layers.length} layers`);
-  if (spec.loop) tail.push(`seamless loop (${spec.loop.xfade} s crossfade)`);
+  if (typeof spec.loop === 'object') tail.push(`seamless loop (${spec.loop.xfade} s crossfade)`);
   if (spec.fadeOut) tail.push(`fade-out ${spec.fadeOut} s`);
   tail.push('loudness-normalized', 'Opus encode');
   return [...parts.filter(Boolean), ...tail].join('; ');
@@ -383,7 +498,8 @@ function creditsMd(manifest) {
   const allSpecs = [];
   for (const [id, cue] of Object.entries(CUES)) cue.files.forEach((spec, i) => allSpecs.push({ file: `sfx/${id}${cue.files.length > 1 ? `-${i + 1}` : ''}.ogg`, spec, cue: id }));
   for (const [key, m] of Object.entries(MUSIC)) allSpecs.push({ file: `music/${key}.ogg`, spec: m, cue: `music:${key}` });
-  for (const { file, spec, cue } of allSpecs) {
+  for (const { file, spec: raw, cue } of allSpecs) {
+    const spec = resolvedSpecs.get(join(OUT, file)) ?? raw;
     const meta = manifest.files[file];
     const srcIds = [...new Set((spec.layers ?? [spec]).map((L) => L.src))];
     for (const s of srcIds) { const list = usedSources.get(s) ?? []; list.push(file); usedSources.set(s, list); }
@@ -434,7 +550,7 @@ ${rows.join('\n')}
 function writeReport(manifest) {
   const cats = {};
   for (const [id, cue] of Object.entries(manifest.cues)) {
-    const c = CUES[id].files.some((f) => f.loop) ? 'ambience (beds)' : cue.category;
+    const c = CUES[id].files.some((f) => typeof f.loop === 'object') ? 'ambience (beds)' : cue.category;
     for (const f of cue.files) {
       const m = manifest.files[f];
       (cats[c] ??= []).push({ file: f, lufs: m.lufs, tp: m.truePeak, gain: cue.gain });

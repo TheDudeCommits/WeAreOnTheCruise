@@ -64,9 +64,10 @@ export class VoicePool {
     const voices = {} as Record<CategoryId, Voice[]>;
     for (const id of CATEGORY_IDS) {
       const spec = CATEGORIES[id];
-      if (id === 'ambience') { voices[id] = []; continue; }
       const out = mixer.bus(spec.bus);
-      voices[id] = Array.from({ length: spec.cap }, () => new Voice(ctx, out, spec.spatial));
+      // Ambience beds run on dedicated loop voices (ambience.ts); two one-shot voices remain for previews.
+      const count = id === 'ambience' ? 2 : spec.cap;
+      voices[id] = Array.from({ length: count }, () => new Voice(ctx, out, spec.spatial));
     }
     this.voices = voices;
   }
