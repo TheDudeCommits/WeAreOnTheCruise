@@ -3,7 +3,7 @@
  * skill cut-ins for specials/ultimates, and small toasts. Each slot restarts cleanly (Web Animations API).
  */
 import { h, play, TextCell } from '../core/dom';
-import { glyph, type GlyphId } from '../core/icons';
+import { glyph, icon, setIcon, type GlyphId } from '../core/icons';
 
 type Tone = 'gold' | 'red' | 'cyan' | 'white' | 'teal';
 
@@ -71,7 +71,7 @@ export class Banners {
 
     const cn = h('span', 'cr-cutin__name');
     const ck = h('span', 'cr-cutin__kind');
-    this.cutIcon = h('span', 'cr-cutin__icon', glyph('sun'));
+    this.cutIcon = icon(null, 'sun', 'cr-cutin__icon');
     this.cutin = new Slot(h('div', 'cr-cutin', h('div', 'cr-cutin__band', h('span', 'cr-cutin__lines'), this.cutIcon, h('span', 'cr-cutin__words', ck, cn))));
     this.cutName = new TextCell(cn);
     this.cutKind = new TextCell(ck);
@@ -145,22 +145,27 @@ export class Banners {
     ], duration);
   }
 
-  cutIn(kind: string, name: string, g: GlyphId, accent: string, big: boolean): void {
+  cutIn(kind: string, name: string, src: string | null, g: GlyphId, accent: string, big: boolean): void {
     this.cutKind.set(kind);
     this.cutName.set(name);
-    this.cutIcon.replaceChildren(glyph(g));
+    setIcon(this.cutIcon, src, g);
     this.cutin.el.style.setProperty('--accent', accent);
     this.cutin.el.classList.toggle('is-big', big);
-    this.cutin.show([
+    this.cutin.show(big ? [
       { opacity: 0, transform: 'translateX(60%) skewX(-12deg)' },
       { opacity: 1, transform: 'translateX(0) skewX(-12deg)', offset: 0.14 },
       { opacity: 1, transform: 'translateX(-3%) skewX(-12deg)', offset: 0.8 },
       { opacity: 0, transform: 'translateX(-70%) skewX(-12deg)' },
+    ] : [
+      { opacity: 0, transform: 'translateX(-100%) skewX(-12deg)' },
+      { opacity: 1, transform: 'translateX(0) skewX(-12deg)', offset: 0.16 },
+      { opacity: 1, transform: 'translateX(2%) skewX(-12deg)', offset: 0.78 },
+      { opacity: 0, transform: 'translateX(-40%) skewX(-12deg)' },
     ], big ? 1500 : 1100);
   }
 
-  toast(text: string, g: GlyphId, tone: Tone = 'white'): void {
-    const t = h('div', `cr-toast is-${tone}`, glyph(g), h('span', '', text));
+  toast(text: string, g: GlyphId, tone: Tone = 'white', src: string | null = null): void {
+    const t = h('div', `cr-toast is-${tone}`, src ? icon(src, g, 'cr-toast__icon') : glyph(g), h('span', '', text));
     this.toasts.prepend(t);
     while (this.toasts.childElementCount > 4) this.toasts.lastElementChild!.remove();
     play(t, [

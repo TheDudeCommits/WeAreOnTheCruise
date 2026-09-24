@@ -8,7 +8,7 @@ import type { RunState, SimEvent } from '../../game/types';
 import type { UiFrame } from '../contracts';
 import { h, hex, TextCell } from '../core/dom';
 import { ROMAN } from '../core/format';
-import { PASSIVE_GLYPH, SPECIALS, ULTIMATES, WEAPON_GLYPH, WEATHER_LABEL } from '../core/names';
+import { iconPath, PASSIVE_GLYPH, SPECIALS, ULTIMATES, WEAPON_GLYPH, WEATHER_LABEL } from '../core/names';
 import { Banners } from './Banners';
 import { BossBar } from './BossBar';
 import { ScreenBasis } from './camera';
@@ -97,7 +97,7 @@ export class Hud {
     this.minimap.update(run, this.basis, f.dt); mark?.('minimap');
     this.markers.apply(); mark?.('markers');
     this.feedback.update(p); mark?.('feedback');
-    if (this.skills.ultJustReady) this.banners.toast(`${ULTIMATES[ship.ultimate].name} ready — press R`, ULTIMATES[ship.ultimate].glyph, 'gold');
+    if (this.skills.ultJustReady) this.banners.toast(`${ULTIMATES[ship.ultimate].name} ready — press R`, ULTIMATES[ship.ultimate].glyph, 'gold', iconPath(ship.ultimate));
     // FPS readout.
     this.fpsEl.hidden = !f.settings.showFps;
     if (f.settings.showFps) { const v = Math.round(f.fps); if (v !== this.lastFps) { this.lastFps = v; this.fps.set(`${v} FPS`); } }
@@ -119,8 +119,8 @@ export class Hud {
       case 'skill-used': {
         if (e.slot === 'broadside' || e.slot === 'special' || e.slot === 'ultimate') this.skills.used(e.slot);
         const ship = CONTENT.ships[run.shipId];
-        if (e.slot === 'ultimate') { const u = ULTIMATES[ship.ultimate]; this.banners.cutIn('Ultimate', u.name, u.glyph, hex(ship.accent), true); this.feedback.whiteFlash(0.35, 300); }
-        else if (e.slot === 'special') { const s = SPECIALS[ship.special]; this.banners.cutIn('Special', s.name, s.glyph, hex(ship.accent), false); }
+        if (e.slot === 'ultimate') { const u = ULTIMATES[ship.ultimate]; this.banners.cutIn('Ultimate', u.name, iconPath(ship.ultimate), u.glyph, hex(ship.accent), true); this.feedback.whiteFlash(0.35, 300); }
+        else if (e.slot === 'special') { const s = SPECIALS[ship.special]; this.banners.cutIn('Special', s.name, iconPath(ship.special), s.glyph, hex(ship.accent), false); }
         break;
       }
       case 'player-hit': {
@@ -164,17 +164,17 @@ export class Hud {
       case 'weapon-changed': {
         this.loadout.pop(e.weapon);
         const def = CONTENT.weapons[e.weapon];
-        if (e.isNew) this.banners.toast(`New weapon · ${def.name}`, WEAPON_GLYPH[e.weapon], 'gold');
-        else if (e.overdrive) this.banners.toast(`Overdrive · ${def.overdrive.name}`, 'star', 'gold');
+        if (e.isNew) this.banners.toast(`New weapon · ${def.name}`, WEAPON_GLYPH[e.weapon], 'gold', iconPath(e.weapon));
+        else if (e.overdrive) this.banners.toast(`Overdrive · ${def.overdrive.name}`, 'star', 'gold', iconPath(e.weapon));
         break;
       }
       case 'passive-changed':
         this.loadout.pop(e.passive);
-        if (e.isNew) this.banners.toast(`New passive · ${CONTENT.passives[e.passive].name}`, PASSIVE_GLYPH[e.passive], 'white');
+        if (e.isNew) this.banners.toast(`New passive · ${CONTENT.passives[e.passive].name}`, PASSIVE_GLYPH[e.passive], 'white', iconPath(e.passive));
         break;
       case 'pickup-collected':
-        if (e.kind === 'repair') this.banners.toast('Hull repaired +25%', 'plus', 'teal');
-        else if (e.kind === 'compass') this.banners.toast('Compass! All treasure drawn in', 'compass', 'gold');
+        if (e.kind === 'repair') this.banners.toast('Hull repaired +25%', 'plus', 'teal', iconPath('repair'));
+        else if (e.kind === 'compass') this.banners.toast('Compass! All treasure drawn in', 'compass', 'gold', iconPath('compass'));
         else if (e.kind === 'powder-keg') { this.banners.showStamp('Kaboom!', 'Powder keg', 'red', 1, 1000); this.feedback.whiteFlash(0.45, 350); }
         break;
       case 'player-died':
