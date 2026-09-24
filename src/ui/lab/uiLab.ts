@@ -127,6 +127,7 @@ const callbacks: UiCallbacks = {
   onPurchaseUpgrade: (id) => { purchaseUpgrade(state.profile, id); },
   onUnlockShip: (id) => { if (unlockShip(state.profile, id)) state.selectedShip = id; },
   onSettingsChange: (s: Settings) => { state.settings = s; },
+  onHintSeen: (id) => { const list = (state.profile.seenHints ??= []); if (!list.includes(id)) list.push(id); },
 };
 
 function showResults(outcome: RunResult['outcome']): void {

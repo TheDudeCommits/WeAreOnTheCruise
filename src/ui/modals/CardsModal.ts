@@ -16,6 +16,8 @@ export interface CardsDeps {
   choose(index: number): void;
   reroll(): void;
   banish(index: number): void;
+  /** First-voyage coach: a one-time explainer for these offers (first branch pair / first OVERDRIVE), or null. */
+  tip?(offers: readonly CardOffer[]): { title: string; text: string; icon: GlyphId } | null;
 }
 
 const KIND_LABEL: Record<CardOffer['kind'], string> = {
@@ -124,6 +126,10 @@ export class CardsModal {
   private readonly rewards: HTMLElement;
   private readonly chestPrompt: HTMLElement;
   private rewardEls: HTMLElement[] = [];
+  private readonly tipEl: HTMLElement;
+  private readonly tipIcon: HTMLElement;
+  private readonly tipTitle: TextCell;
+  private readonly tipText: TextCell;
 
   constructor(private readonly deps: CardsDeps) {
     const lv = h('span', 'cr-levelup__lv');
@@ -155,8 +161,28 @@ export class CardsModal {
     this.chest = h('div', 'cr-chest', h('div', 'cr-chest__rays'), h('h2', 'cr-chest__title', 'Treasure!'), this.chestBox, this.rewards, this.chestPrompt);
     this.chest.addEventListener('pointerdown', (e) => { if (e.button === 0) this.chestInput(); });
 
+    const tipTitle = h('b', 'cr-cards__tiptitle');
+    const tipText = h('span', 'cr-cards__tiptext');
+    this.tipIcon = h('span', 'cr-cards__tipicon');
+    this.tipEl = h('div', 'cr-cards__tip', h('span', 'cr-cards__tiptag', 'Tip'), this.tipIcon, h('span', 'cr-cards__tipbody', tipTitle, tipText));
+    this.tipTitle = new TextCell(tipTitle);
+    this.tipText = new TextCell(tipText);
+    this.tipEl.hidden = true;
+
     this.el = h('div', 'cr-modal cr-cards', h('div', 'cr-modal__shade is-cards'), this.levelup, this.chest);
     this.el.hidden = true;
+  }
+
+  /** Shows the coach's explainer for these offers, if it has one (kept until the card screen closes). */
+  private offerTip(offers: readonly CardOffer[], host: HTMLElement, before: Element | null): void {
+    const tip = this.deps.tip?.(offers);
+    if (!tip) return;
+    this.tipIcon.replaceChildren(glyph(tip.icon));
+    this.tipTitle.set(tip.title);
+    this.tipText.set(tip.text);
+    host.insertBefore(this.tipEl, before);
+    this.tipEl.hidden = false;
+    play(this.tipEl, [{ opacity: 0, transform: 'translateY(-10px) rotate(-1deg) scale(.9)' }, { opacity: 1, transform: 'rotate(-1deg)' }], { duration: 360, delay: 260, easing: 'cubic-bezier(.2,1.3,.3,1)', fill: 'backwards' });
   }
 
   /**
@@ -183,6 +209,7 @@ export class CardsModal {
   /** Hard reset when leaving the run screen. */
   reset(): void {
     this.mode = null; this.offers = null; this.open = false; this.el.hidden = true; this.el.classList.remove('is-leaving');
+    this.tipEl.hidden = true;
     window.clearTimeout(this.leaveTimer);
   }
 
@@ -245,6 +272,7 @@ export class CardsModal {
       used.add(i);
       this.row.append(make(i));
     });
+    this.offerTip(offers, this.levelup.querySelector('.cr-levelup__head')!, null);
     this.lvText.set(`Lv ${run.player.level}`);
     this.moreText.set(run.pendingLevelUps > 1 ? `+${run.pendingLevelUps - 1} more` : '');
     // Deal animation per card (WAAPI: no forced reflow to restart a CSS animation).
@@ -316,6 +344,7 @@ export class CardsModal {
       return c;
     });
     this.rewards.replaceChildren(...this.rewardEls);
+    this.offerTip(run.offers!, this.chest, null);
     this.chest.classList.remove('is-open', 'is-done');
     this.chestPrompt.classList.remove('is-on');
     this.chestBox.classList.remove('is-shake');
@@ -347,6 +376,7 @@ export class CardsModal {
   }
 
   private close(): void {
+    this.tipEl.hidden = true;
     this.mode = null;
     this.offers = null;
     this.open = false;

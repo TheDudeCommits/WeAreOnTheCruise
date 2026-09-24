@@ -20,6 +20,8 @@ export interface UiCallbacks {
   onPurchaseUpgrade(id: MetaUpgradeId): void;
   onUnlockShip(id: ShipId): void;
   onSettingsChange(settings: Settings): void;
+  /** Round 2 (FLOW): a first-voyage coach hint was shown (or retired); the app adds it to MetaProfile.seenHints and saves. */
+  onHintSeen(id: string): void;
 }
 
 export interface ScreenPoint { x: number; y: number; visible: boolean }

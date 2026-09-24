@@ -331,3 +331,21 @@
 .cr-slot.is-max .cr-slot__frame { box-shadow: 0 0 0 calc(2 * var(--u)) var(--cyan); }
 .cr-slot.is-empty .cr-slot__frame { background: rgba(255, 255, 255, .04); border-style: dashed; border-color: rgba(255, 255, 255, .25); box-shadow: none; }
 .cr-slot.is-empty .cr-slot__icon, .cr-slot.is-empty .cr-slot__pips, .cr-slot.is-empty .cr-slot__badge { display: none; }
+
+/* ── First-voyage coach: a paper tip above the skill bar (one at a time; ticks green when done) ── */
+.cr-coach { position: absolute; left: 50%; bottom: calc(160 * var(--u)); transform: translateX(-50%); display: none; align-items: center; gap: calc(12 * var(--u)); width: max-content; max-width: calc(600 * var(--u)); padding: calc(11 * var(--u)) calc(20 * var(--u)) calc(13 * var(--u)) calc(12 * var(--u)); border-radius: calc(12 * var(--u)); background: var(--paper); color: var(--paper-ink); box-shadow: 0 0 0 calc(3 * var(--u)) var(--ink), 0 calc(6 * var(--u)) 0 rgba(4, 8, 22, .55); z-index: 4; }
+.cr-coach.is-on { display: flex; }
+.cr-coach__tag, .cr-cards__tiptag { position: absolute; left: calc(-10 * var(--u)); top: calc(-14 * var(--u)); padding: calc(3 * var(--u)) calc(9 * var(--u)); border-radius: calc(4 * var(--u)); background: var(--gold); border: calc(2.5 * var(--u)) solid var(--ink); font: 400 var(--fs-14)/1 var(--f-comic); letter-spacing: .12em; text-transform: uppercase; color: var(--ink); transform: rotate(-7deg); }
+.cr-coach__icon, .cr-cards__tipicon { flex: none; display: grid; place-items: center; width: calc(46 * var(--u)); height: calc(46 * var(--u)); border-radius: 50%; background: radial-gradient(circle at 40% 35%, #33458a, #121a42 72%); border: calc(3 * var(--u)) solid var(--ink); color: var(--gold); }
+.cr-coach__icon .cr-glyph, .cr-cards__tipicon .cr-glyph { width: calc(26 * var(--u)); height: calc(26 * var(--u)); }
+.cr-coach__body { display: flex; flex-direction: column; gap: calc(4 * var(--u)); min-width: 0; }
+.cr-coach__head { display: flex; align-items: center; gap: calc(10 * var(--u)); }
+.cr-coach__keys, .cr-coach__kb, .cr-coach__pad { display: inline-flex; align-items: center; gap: calc(3 * var(--u)); }
+.cr-ui:not(.is-pad) .cr-coach__pad { display: none; }
+.cr-ui.is-pad .cr-coach__kb { display: none; }
+.cr-coach__title { font: 400 var(--fs-24)/1 var(--f-comic); letter-spacing: .05em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+.cr-coach__text { font: 800 var(--fs-14)/1.3 var(--f-ui); color: var(--paper-ink); max-width: calc(500 * var(--u)); }
+.cr-coach__timer { position: absolute; left: calc(14 * var(--u)); right: calc(14 * var(--u)); bottom: calc(5 * var(--u)); height: calc(3 * var(--u)); border-radius: 2px; background: rgba(58, 34, 15, .35); transform-origin: left; }
+.cr-coach.is-done { background: #dff7d2; }
+.cr-coach.is-done .cr-coach__icon { background: radial-gradient(circle at 40% 35%, #7fe08a, #23a843 72%); color: var(--white); }
+.cr-coach.is-done .cr-coach__timer { opacity: 0; }

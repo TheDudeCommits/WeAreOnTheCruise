@@ -20,6 +20,7 @@ import { SettingsPanel } from './modals/SettingsPanel';
 import { HarborScreen } from './screens/HarborScreen';
 import { ResultsScreen } from './screens/ResultsScreen';
 import { TitleScreen } from './screens/TitleScreen';
+import { mergeRestored, readRestorable, type Restorable } from './core/restore';
 
 const LEAVE_MS = 320;
 
@@ -56,6 +57,8 @@ export class Ui implements UiSystem {
   /** Seed of the run whose `run-ended` event has been seen (cleared when an endless voyage sails on). */
   private endedSeed = '';
   private lapPickAt = -1;
+  /** Round-2 fields read from the raw saves at mount (see core/restore.ts); applied on the first frame. */
+  private restored: Restorable | null = null;
 
   get blockingInput(): boolean {
     return this.mounted && (this.pause.open || this.settings.open || this.cards.open);
@@ -68,11 +71,14 @@ export class Ui implements UiSystem {
     this.title = new TitleScreen(() => this.goHarbor());
     this.harbor = new HarborScreen({ cb: callbacks, openSettings: () => this.openSettings() });
     this.results = new ResultsScreen(callbacks);
-    this.hud = new Hud();
+    this.restored = readRestorable();
+    this.hud = new Hud({ hintSeen: (id) => this.cb.onHintSeen(id) });
+    this.hud.coach.restore(this.restored.hints);
     this.cards = new CardsModal({
       choose: (i) => this.cb.onChooseCard(i),
       reroll: () => this.cb.onReroll(),
       banish: (i) => this.cb.onBanish(i),
+      tip: (offers) => (this.frame ? this.hud.coach.cardTip(this.frame, offers) : null),
     });
     this.pause = new PauseMenu({
       resume: () => this.setPaused(false),
@@ -108,6 +114,7 @@ export class Ui implements UiSystem {
       spikes: () => this.spikes.slice(),
       screen: () => this.screen,
       blocking: () => this.blockingInput,
+      coach: () => ({ showing: this.hud.coach.showing, log: this.hud.coach.log.slice() }),
     };
     this.mounted = true;
   }
@@ -142,6 +149,7 @@ export class Ui implements UiSystem {
     const t0 = performance.now();
     this.frame = f;
     this.settingsValue = f.settings;
+    if (this.restored) this.applyRestored(f);
     const calm = !!(f.settings as { reduceFlashing?: boolean }).reduceFlashing;
     if (calm !== this.layer.classList.contains('is-calm')) this.layer.classList.toggle('is-calm', calm);
     this.pollPad(f.dt);
@@ -159,6 +167,15 @@ export class Ui implements UiSystem {
       for (const e of f.events) types.add(e.type);
       this.spikes.push({ ms: +dt.toFixed(2), screen: this.screen, status: f.run?.status ?? '-', events: [...types].join(',') });
     }
+  }
+
+  /** Hands back round-2 fields the loaders dropped (once): seen hints into the profile, settings into Settings. */
+  private applyRestored(f: UiFrame): void {
+    const r = this.restored!;
+    this.restored = null;
+    for (const id of r.hints) if (!f.profile.seenHints?.includes(id)) this.cb.onHintSeen(id);
+    const next = mergeRestored(f.settings, r);
+    if (next) { this.settingsValue = next; this.cb.onSettingsChange(next); }
   }
 
   private updateRun(f: UiFrame): void {

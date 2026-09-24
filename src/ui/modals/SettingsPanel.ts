@@ -9,7 +9,10 @@ import { prompt } from '../core/prompts';
 /** `reduceFlashing` is optional on the base contract; the local extension keeps this compiling before the merge. */
 export type UiSettings = Settings & { reduceFlashing?: boolean };
 type SliderKey = 'masterVolume' | 'musicVolume' | 'sfxVolume' | 'cameraShake';
-type ToggleKey = 'muted' | 'damageNumbers' | 'showFps' | 'reduceFlashing';
+type ToggleKey = 'muted' | 'damageNumbers' | 'showFps' | 'reduceFlashing' | 'coach' | 'cinematicCamera';
+/** Toggles whose missing value means on. */
+const DEFAULT_ON: ReadonlySet<ToggleKey> = new Set(['coach']);
+const toggleValue = (s: UiSettings, key: ToggleKey): boolean => (DEFAULT_ON.has(key) ? s[key] !== false : !!s[key]);
 const QUALITIES: readonly QualitySetting[] = ['auto', 'low', 'medium', 'high', 'ultra'];
 
 interface Row { el: HTMLElement; left(): void; right(): void; activate(): void; sync(s: UiSettings): void }
@@ -34,6 +37,7 @@ export class SettingsPanel {
     this.quality();
     this.captains();
     this.toggle('showFps', 'Show FPS', 'clock');
+    this.toggle('coach', 'First-voyage tips', 'book');
     const back = navButton('cr-btn is-primary cr-settings__done', prompt(['ESC'], 'B', ''), h('span', 'cr-btn__label', 'Done'));
     back.addEventListener('click', () => this.close());
     this.el = h('div', 'cr-modal cr-settings',
@@ -114,11 +118,11 @@ export class SettingsPanel {
     const el = this.row(label, g, h('span', 'cr-setting__control', btn));
     const flip = (v?: boolean) => {
       if (!this.settings) return;
-      this.settings[key] = v ?? !this.settings[key];
+      this.settings[key] = v ?? !toggleValue(this.settings, key);
       this.commit();
     };
     btn.addEventListener('click', () => flip());
-    const sync = (s: UiSettings) => { const on = !!s[key]; btn.classList.toggle('is-on', on); btn.setAttribute('aria-checked', String(on)); };
+    const sync = (s: UiSettings) => { const on = toggleValue(s, key); btn.classList.toggle('is-on', on); btn.setAttribute('aria-checked', String(on)); };
     this.rows.push({ el, left: () => flip(false), right: () => flip(true), activate: () => flip(), sync });
   }
 

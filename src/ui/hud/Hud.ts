@@ -24,6 +24,7 @@ import { TopBar } from './TopBar';
 import { EventTracker } from './EventTracker';
 import { Roster } from './Roster';
 import { SafeZone } from './SafeZone';
+import { Coach, type HintId } from './Coach';
 
 export class Hud {
   readonly el: HTMLElement;
@@ -40,6 +41,8 @@ export class Hud {
   private readonly roster = new Roster();
   private readonly tracker = new EventTracker();
   readonly feedback = new Feedback();
+  /** First-voyage coach (prompts above the skill bar; card-screen explainers through Ui). */
+  readonly coach: Coach;
   private readonly basis = new ScreenBasis();
   private readonly fps: TextCell;
   private readonly fpsEl: HTMLElement;
@@ -51,7 +54,8 @@ export class Hud {
   width = 1600;
   height = 900;
 
-  constructor() {
+  constructor(opts: { hintSeen(id: HintId): void }) {
+    this.coach = new Coach(opts.hintSeen);
     const fps = h('span', 'cr-fps');
     this.fpsEl = fps;
     this.fps = new TextCell(fps);
@@ -64,11 +68,12 @@ export class Hud {
       stack,
       column,
       this.banners.el,
+      this.coach.el,
       this.ring.el,
       this.skills.el,
       this.loadout.el,
     );
-    this.zone.track(this.top.badge, this.top.plate, this.top.timerEl, stack, column, this.ring.el, this.ring.statusesEl, this.skills.el, this.loadout.el, this.banners.toastsEl);
+    this.zone.track(this.coach.el, this.top.badge, this.top.plate, this.top.timerEl, stack, column, this.ring.el, this.ring.statusesEl, this.skills.el, this.loadout.el, this.banners.toastsEl);
     // Kept laid out (visibility) rather than display:none so the first sailing frame does not pay for the
     // HUD's first style/layout pass.
     this.el.classList.add('is-off');
@@ -84,7 +89,7 @@ export class Hud {
   reset(): void {
     this.top.reset(); this.boss.reset(); this.banners.reset(); this.ring.reset(); this.skills.reset();
     this.loadout.reset(); this.minimap.reset(); this.markers.reset(); this.feedback.reset();
-    this.roster.reset(); this.tracker.reset();
+    this.roster.reset(); this.tracker.reset(); this.coach.reset();
     this.ended = false;
   }
 
@@ -130,6 +135,7 @@ export class Hud {
     this.markers.apply(); mark?.('markers');
     this.feedback.update(p); mark?.('feedback');
     this.roster.update(run, f); this.tracker.update(run, f); mark?.('roster');
+    this.coach.update(f, run, this.over); mark?.('coach');
     if (this.skills.ultJustReady) this.banners.toast(`${ULTIMATES[ship.ultimate].name} ready — press R`, ULTIMATES[ship.ultimate].glyph, 'gold', iconPath(ship.ultimate), 'ult-ready', 60);
     this.feedback.reduce = !!(f.settings as { reduceFlashing?: boolean }).reduceFlashing;
     // FPS readout.
