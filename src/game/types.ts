@@ -656,6 +656,32 @@ export interface MetaProfile {
   wins: number;
   lastShip: ShipId;
   lastSea: SeaId;
+  // ── Round 2 (optional for older saves) ──
+  /** One-time coach hints already shown (FLOW). */
+  seenHints?: string[];
+  /** Quest progress by quest id (REPLAY). */
+  quests?: Record<string, { progress: number; done: boolean }>;
+  /** Highest heat cleared per sea (REPLAY; 0 = none). */
+  heat?: Partial<Record<SeaId, number>>;
+  /** Most recent runs, newest first, capped at 20 (REPLAY). */
+  history?: RunSummary[];
+  /** Best daily-voyage bounty by date key 'YYYY-MM-DD' (REPLAY). */
+  daily?: Record<string, number>;
+}
+
+/** A compact record of a finished run for the harbor's logbook (REPLAY). */
+export interface RunSummary {
+  at: number;
+  shipId: ShipId;
+  seaId: SeaId;
+  outcome: RunResult['outcome'];
+  time: number;
+  level: number;
+  kills: number;
+  bounty: number;
+  doubloons: number;
+  heat: number;
+  daily?: string;
 }
 
 export type QualitySetting = 'auto' | 'low' | 'medium' | 'high' | 'ultra';
@@ -672,6 +698,14 @@ export interface Settings {
   damageNumbers: boolean;
   quality: QualitySetting;
   showFps: boolean;
+  /** First-voyage coach prompts (FLOW). Default on. */
+  coach?: boolean;
+  /** Telegraph palette for colour-blind players (FLOW + IMPACT). */
+  colorBlind?: 'off' | 'deutan' | 'protan' | 'tritan';
+  /** HUD scale 0.8–1.2 (FLOW). */
+  hudScale?: number;
+  /** Lower, cinematic camera while the sea is quiet (IMPACT). Default off. */
+  cinematicCamera?: boolean;
   /** AI captains sailing with you (0–4). Optional for older saves (default 3). */
   captains?: number;
 }

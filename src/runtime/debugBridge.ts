@@ -45,6 +45,8 @@ export interface CruiseBridge {
     weapon(id: WeaponId, level?: number): void;
     killAll(): void;
     sinkBosses(): void;
+    teleport(x: number, z: number, heading?: number): void;
+    resetCooldowns(): void;
     chargeUltimate(): void;
     /** Sinks an AI captain (id −1…−4; default the first afloat) — QA for sinking and respawn. */
     sinkCaptain(id?: number): void;
@@ -152,6 +154,8 @@ export function installDebugBridge(app: GameApp): void {
       weapon: (id, level) => sim()?.debug.giveWeapon(id, level),
       killAll: () => sim()?.debug.killAll(),
       sinkBosses: () => sim()?.debug.sinkBosses(),
+      teleport: (x, z, heading) => sim()?.debug.teleport(x, z, heading),
+      resetCooldowns: () => sim()?.debug.resetCooldowns(),
       chargeUltimate: () => sim()?.debug.chargeUltimate(),
       sinkCaptain: (id) => {
         const s = sim();

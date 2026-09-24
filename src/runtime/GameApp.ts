@@ -28,6 +28,7 @@ import type { AppConfig } from './AppConfig';
 import { installDebugBridge } from './debugBridge';
 import { captainSetting, configureCaptains } from '../game/sim/captains-runtime';
 import { storedCaptainSetting } from './presence';
+import { warmup } from '../render/app/warmup';
 
 const SYSTEM_NAMES = ['sky', 'ocean', 'world', 'ships', 'fx', 'camera'] as const;
 
@@ -131,7 +132,10 @@ export class GameApp {
   setScreen(screen: AppScreen): void {
     this.screen = screen;
     this.ui.setScreen(screen);
+    // PERF: warm shaders and assets while the harbor shows (once), so the first battle doesn't hitch.
+    if (screen === 'harbor' && !this.warmed) { this.warmed = true; void warmup(this).catch(() => undefined); }
   }
+  private warmed = false;
 
   startRun(shipId: ShipId, seaId: SeaId): void {
     if (!this.profile.unlockedShips.includes(shipId)) return;

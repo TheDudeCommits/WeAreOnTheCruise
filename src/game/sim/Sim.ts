@@ -43,6 +43,10 @@ export interface SimOptions {
   meta: MetaProfile;
   world: WorldQuery;
   content?: ContentDb;
+  /** Heat 0–8 (REPLAY): harder seas for better rewards. */
+  heat?: number;
+  /** Daily voyage key 'YYYY-MM-DD' (REPLAY): a shared seed and fixed modifiers. */
+  daily?: string;
 }
 
 export interface SimDebug {
