@@ -3,6 +3,8 @@
 .cr-in-run:not(.cr-modal-open) #cruise-canvas { cursor: url('/ui/cursor-aim.svg') 16 16, crosshair; }
 
 .cr-hud { position: absolute; inset: 0; pointer-events: none; }
+.cr-hud.is-off { visibility: hidden; }
+.cr-hud.is-off * { animation-play-state: paused !important; }
 .cr-hud * { pointer-events: none !important; }
 
 /* ── Top: XP bar, level badge, timer, stat plate, boss ETA ── */

@@ -56,11 +56,13 @@ export class Hud {
       this.skills.el,
       this.loadout.el,
     );
-    this.el.hidden = true;
+    // Kept laid out (visibility) rather than display:none so the first sailing frame does not pay for the
+    // HUD's first style/layout pass.
+    this.el.classList.add('is-off');
   }
 
-  show(): void { this.el.hidden = false; }
-  hide(): void { this.el.hidden = true; }
+  show(): void { this.el.classList.remove('is-off'); }
+  hide(): void { this.el.classList.add('is-off'); }
   dispose(): void { this.minimap.dispose(); }
 
   /** Clears per-run caches (new run or leaving the run screen). */
@@ -81,7 +83,7 @@ export class Hud {
     const ship = CONTENT.ships[run.shipId];
     const prof = (window as unknown as { __CRUISE_UI_PROFILE__?: Record<string, number> }).__CRUISE_UI_PROFILE__;
     let t = prof ? performance.now() : 0;
-    const mark = prof ? (k: string) => { const n = performance.now(); prof[k] = (prof[k] ?? 0) + n - t; t = n; } : null;
+    const mark = prof ? (k: string) => { const n = performance.now(); prof[k] = (prof[k] ?? 0) + n - t; prof[`${k}_max`] = Math.max(prof[`${k}_max`] ?? 0, n - t); t = n; } : null;
     // Read phase first: project() reads layout (RendererHost.getViewport), so no DOM writes before it.
     this.basis.update(f, p.x, p.z);
     this.markers.measure(f, run, this.basis); mark?.('measure');

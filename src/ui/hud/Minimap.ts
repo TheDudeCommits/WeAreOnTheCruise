@@ -51,11 +51,24 @@ export class Minimap {
     this.el = h('div', 'cr-minimap', h('div', 'cr-minimap__sea'), this.canvas, rimSvg, h('div', 'cr-minimap__glass'));
     this.observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver((entries) => {
       for (const e of entries) this.cssSize = Math.round(e.contentRect.width);
+      this.allocate();
     }) : null;
     this.observer?.observe(this.el);
   }
 
   dispose(): void { this.observer?.disconnect(); }
+
+  /** Sizes the backing store (done when observed, not on the first sailing frame). */
+  private allocate(): void {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (this.cssSize === this.size && dpr === this.dpr) return;
+    this.size = this.cssSize; this.dpr = dpr;
+    this.canvas.width = Math.max(1, Math.round(this.size * dpr));
+    this.canvas.height = Math.max(1, Math.round(this.size * dpr));
+    // Warm the 2D context (first draw initialises the backing surface) outside the sailing frames.
+    const ctx = this.ctx;
+    if (ctx) { ctx.beginPath(); ctx.arc(4, 4, 2, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = '#000'; ctx.stroke(); ctx.fillRect(0, 0, 2, 2); ctx.strokeRect(0, 0, 2, 2); ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); }
+  }
 
   reset(): void { this.lastNorth = Number.NaN; this.acc = 1; }
 
@@ -66,13 +79,8 @@ export class Minimap {
     this.acc = 0;
     const ctx = this.ctx;
     if (!ctx) return;
-    const rect = this.cssSize;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    if (rect !== this.size || dpr !== this.dpr) {
-      this.size = rect; this.dpr = dpr;
-      this.canvas.width = Math.max(1, Math.round(rect * dpr));
-      this.canvas.height = Math.max(1, Math.round(rect * dpr));
-    }
+    this.allocate();
+    const dpr = this.dpr;
     const S = this.size;
     if (S <= 0) return;
     const theta = basis.ok ? basis.north : 0;
