@@ -123,7 +123,7 @@ export const GHOST_FLEET: WorldEventHandler = {
     let sunk = 0;
     for (let i = 0; i < g.ng; i++) {
       const e = ghost(c, g.galleons[i]!);
-      if (e && e.life === 'alive') { ev.x = e.x; ev.z = e.z; continue; }
+      if (e && e.life === 'alive') { ev.x = e.x; ev.z = e.z; ev.radius = 45; continue; }
       if (e) { g.lastX = e.x; g.lastZ = e.z; }
       sunk++;
     }
