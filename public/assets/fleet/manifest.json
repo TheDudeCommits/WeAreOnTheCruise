@@ -158,8 +158,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/1c62191534174bf7a67470fb02b97db1"
       },
-      "bytes": 708008,
-      "sha256": "3fcbdd75a0df9e0df874439900cd9136c50b1a786c598cf7d7a21b605e09793e",
+      "bytes": 708028,
+      "sha256": "7929aefeddfc28bcc04141be91e82021e0e1deeccab652af5d89bb67603bad1b",
       "sourceSha256": "87b11caf397171abdc5dfe80c79358ee2a2c80736d07a0a87370ce9af3875ffa",
       "notes": "Redtide brig: hull and rails recoloured black, new red sails with the original cutlass-and-sun emblem, black flags. Water plane and hold props removed; deck cannons kept."
     },
@@ -182,8 +182,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/fe0ea2cee119476fb1a7524d5ff380dc"
       },
-      "bytes": 304424,
-      "sha256": "0588fc703448907871d4d95e0e457709dbf87c54cf503193d4124e5b875714b7",
+      "bytes": 304436,
+      "sha256": "938059b630e7e1426e68a4b01c0865130de9917b114adbd59f8965bd8732ebc9",
       "sourceSha256": "c9048bce2695ed9c4d6fd65f3f824d6a1f9c034c8572e2111dc890cc34980f03",
       "notes": "Redtide galleon: flat colours remapped to the Redtide palette (black hull, red trim) and baked into one palette texture; new red sails with the original cutlass-and-sun emblem. Decimated from 74k tris."
     },
@@ -206,8 +206,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/1b27f1f60e0e49f886984ea099977757"
       },
-      "bytes": 162612,
-      "sha256": "8de6d326624be79a0b76f1237e718dbc0914925f9c359fc92332fe975ec3555d",
+      "bytes": 162632,
+      "sha256": "33c9f37e46c56b3bd4f976bf14f7cd76417531954a1329e50e73c2bc3a65975f",
       "sourceSha256": "47e1b1ed42ea2bc66695667dbcf12ca87eb682b694f2b0ae361c9382388612c5",
       "notes": "Admiralty Cutter (enemy id cutter uses modelKey sloop): palette swapped to white topsides / navy bottom / gold stripe; skull sail replaced by white canvas with the original gold wave-crest."
     },
@@ -230,8 +230,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/d9953f66583340c4879a3770f6d09a37"
       },
-      "bytes": 295896,
-      "sha256": "9761433e54af573871b557ad5d4806ad85daf784ac0540341f13b105a011fe3c",
+      "bytes": 295908,
+      "sha256": "5570ab59f974bf1c4e8b9931b0303f84013444c664b0c36b32f8c92852216ca5",
       "sourceSha256": "6b12d15106dab8f727d9d99395a96c6b80a28d9f030db35d5202114a09063082",
       "notes": "Admiralty Brig: hull sides repainted white with a navy boot-top (texture copies through luminance ramps), sails re-mapped to white canvas with the original gold wave-crest."
     },
