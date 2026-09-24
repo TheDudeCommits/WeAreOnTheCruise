@@ -11,6 +11,7 @@
  * Arm AI scratch (numbers; WorldEventFx reads the visual ones):
  *   kArm 1 · kIdx arm index · kSt state (see ST_*) · kT seconds in state · kCd attack cooldown ·
  *   kAng attack heading (forward = (−sin, −cos)) · kLen strip length · kTx/kTz circle or grab point ·
+ *   kLast the windup that led to the current slam (ARM_LINE / ARM_CIRCLE / ARM_GRAB_WINDUP) ·
  *   kGrab 0 none / 1 player / 2 ship (kGid = its id) · kHp HP when the grab began · kTick squeeze timer ·
  *   sub 0..1 submerged (ai.ts turns it into e.hidden) · tg telegraph id (ai.ts clears it when the arm dies).
  */
@@ -65,7 +66,10 @@ function armOf(c: SimContext, id: number): EnemyState | null {
   return t && !('phase' in t) ? t : null;
 }
 
-function setState(e: EnemyState, st: number): void { e.ai.kSt = st; e.ai.kT = 0; }
+function setState(e: EnemyState, st: number): void {
+  e.ai.kSt = st; e.ai.kT = 0;
+  if (st === ARM_LINE || st === ARM_CIRCLE || st === ARM_GRAB_WINDUP) e.ai.kLast = st;
+}
 
 export const KRAKEN: WorldEventHandler = {
   id: 'kraken-rising',
@@ -92,7 +96,7 @@ export const KRAKEN: WorldEventHandler = {
       const ai = e.ai;
       ai.kArm = 1; ai.kIdx = i; ai.kSt = ARM_RISE; ai.kT = -0.14 * i; ai.kCd = 2.2 + c.random() * 1.8 + i * 0.25;
       ai.kAng = headingTo(p.x - e.x, p.z - e.z); ai.kLen = 0; ai.kTx = e.x; ai.kTz = e.z;
-      ai.kGrab = 0; ai.kGid = 0; ai.kHp = 0; ai.kTick = 0; ai.sub = 1; ai.tg = 0;
+      ai.kGrab = 0; ai.kGid = 0; ai.kHp = 0; ai.kTick = 0; ai.sub = 1; ai.tg = 0; ai.kLast = ARM_LINE;
       e.hidden = 1;
       e.heading = ai.kAng;
       k.ids[k.n++] = e.id;
