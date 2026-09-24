@@ -177,7 +177,7 @@ export class Bosses {
     }
     v.flash = new FlashDriver(v.materials);
     if (v.defId === 'iron-warden') this.buildPlates(v, sampler, samplerScale);
-    if (v.defId === 'sovereign') this.buildSovereignFx(v);
+    if (v.defId === 'sovereign') this.buildSovereignFx(v, sampler, samplerScale);
   }
 
   /** Iron Warden armour: plates along both hull sides at the measured hull surface. */
@@ -233,11 +233,28 @@ export class Bosses {
     if (v.platesOff) for (const p of v.plates) { p.t = 99; p.mesh.visible = false; }
   }
 
-  private buildSovereignFx(v: BossVisual): void {
+  private buildSovereignFx(v: BossVisual, sampler: HullSampler | null, scale: number): void {
     const L = v.length;
     const j = new GeoBuilder();
-    // Gold rails along both sides + a sun halo over the stern castle.
-    for (const side of [1, -1]) j.box(0.5, 0.5, L * 0.7, { at: [side * (v.anchors.starboard.x - 0.4), v.anchors.deck.y + 1.2, 0], color: PALETTE.glowGold });
+    // Gold rails hugging both hull sides (measured on the model when it is a GLB) + a sun halo over the stern castle.
+    const railY = v.anchors.deck.y + 0.6;
+    const stations = 14;
+    for (const side of [1, -1] as const) {
+      let prev: THREE.Vector3 | null = null;
+      for (let i = 0; i <= stations; i++) {
+        const z = (-0.34 + (0.62 * i) / stations) * L;
+        let x = Math.abs(v.anchors.starboard.x) - 0.4;
+        if (sampler) { const sx = sampler.sideX(railY / scale, z / scale, side); x = Number.isNaN(sx) ? Number.NaN : Math.abs(sx) * scale + 0.25; }
+        if (Number.isNaN(x)) { prev = null; continue; }
+        const cur = new THREE.Vector3(side * x, railY, z);
+        if (prev) {
+          const len = prev.distanceTo(cur);
+          const yaw = Math.atan2(cur.x - prev.x, cur.z - prev.z);
+          j.box(0.55, 0.55, len + 0.1, { at: [(prev.x + cur.x) / 2, railY, (prev.z + cur.z) / 2], rot: [0, yaw, 0], color: PALETTE.glowGold });
+        }
+        prev = cur;
+      }
+    }
     j.torus(9, 0.6, 6, 40, { at: [0, v.height * 0.45, L * 0.44], color: PALETTE.glowGold });
     for (let i = 0; i < 16; i++) {
       const a = (i / 16) * Math.PI * 2;
