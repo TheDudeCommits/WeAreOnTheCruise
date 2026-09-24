@@ -72,11 +72,9 @@ export class TopBar {
     const frac = p.xpToNext > 0 ? Math.max(0, Math.min(1, p.xp / p.xpToNext)) : 0;
     if (p.level !== this.lastLevel) {
       if (this.lastLevel >= 0 && p.level > this.lastLevel) {
-        // Snap to empty without the smoothing transition, then fill.
+        // Snap (no backwards smoothing) this frame; restore the transition next frame. No forced reflow.
         this.xpFillEl.style.transition = 'none';
-        this.xpFill.set('scaleX(0)');
-        void this.xpFillEl.offsetWidth;
-        this.xpFillEl.style.transition = '';
+        requestAnimationFrame(() => { this.xpFillEl.style.transition = ''; });
       }
       this.lastLevel = p.level;
       this.level.set(p.level);

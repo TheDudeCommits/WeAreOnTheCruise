@@ -156,7 +156,10 @@ export class Ui implements UiSystem {
     if (!run) return;
     this.hud.setModal(run.status === 'levelup' || run.status === 'chest' || this.pause.open);
     this.hud.update(f, run);
+    const prof = (window as unknown as { __CRUISE_UI_PROFILE__?: Record<string, number> }).__CRUISE_UI_PROFILE__;
+    const c0 = prof ? performance.now() : 0;
     this.cards.update(f);
+    if (prof) { const d = performance.now() - c0; prof.cards = (prof.cards ?? 0) + d; prof.cards_max = Math.max(prof.cards_max ?? 0, d); }
     // The app can pause on its own (tab hidden): surface the pause menu so the player can resume.
     if (run.status === 'paused' && !this.pause.open) this.setPaused(true);
     const modal = this.blockingInput;
