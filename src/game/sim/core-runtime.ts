@@ -318,13 +318,21 @@ export const KNOCK_DECAY = 7;
 
 export const isBoss = (t: Target): t is BossState => 'phase' in t;
 
-/** Weapons skip untargetable ships (submerged serpents, phased wraiths). */
+/** Weapons skip untargetable ships: submerged serpents/wyrmlings ('submerged'), phased wraiths ('invulnerable'). */
 export function targetable(t: Target): boolean {
   if (t.life !== 'alive') return false;
   if (isBoss(t) && t.submerged > 0.6) return false;
+  return !untouchable(t);
+}
+
+/** True while a ship carries an active 'invulnerable' or 'submerged' status (damage is ignored). */
+export function untouchable(t: Target): boolean {
   const st = t.statuses;
-  for (let i = 0; i < st.length; i++) if (st[i]!.kind === 'invulnerable' && st[i]!.time > 0) return false;
-  return true;
+  for (let i = 0; i < st.length; i++) {
+    const s = st[i]!;
+    if ((s.kind === 'invulnerable' || s.kind === 'submerged') && s.time > 0) return true;
+  }
+  return false;
 }
 
 /** Knockback / pull scale by hull mass: light skiffs fly, men-o'-war barely budge. */

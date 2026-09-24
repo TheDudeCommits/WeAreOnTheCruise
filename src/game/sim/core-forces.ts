@@ -4,8 +4,8 @@
  *  - knockback: displacement impulses from DamageOpts.knockback / core.push, decaying over ~0.4 s;
  *  - harpoon tethers: hooked ships are hauled toward the player (or toward a Leviathan-hooked ship), and Tow Line
  *    ships smash into their neighbours;
- *  - burning: 'burning' status (magnitude = damage per second) ticks every BURN_TICK;
- *  - boss status timers (bosses.ts does not decay statuses; enemy statuses are decayed by ai.ts).
+ *  - burning: 'burning' status (magnitude = damage per second) ticks every BURN_TICK.
+ * Status timers are decayed by their owners: ai.ts (enemies), bosses.ts (bosses), player.ts (player).
  */
 import { WEAPON_IDS, type WeaponId } from '../ids';
 import type { Target } from './context';
@@ -61,18 +61,7 @@ export function applyShipForces(c: CoreSim): void {
   const bosses = s.bosses;
   for (let i = 0; i < bosses.length; i++) {
     const b = bosses[i]!;
-    if (b.life !== 'alive' || b.statuses.length === 0) continue;
-    burn(c, b, dt);
-    const list = b.statuses;
-    for (let k = list.length - 1; k >= 0; k--) {
-      const st = list[k]!;
-      st.time -= dt;
-      if (st.time <= 0) {
-        c.emit({ type: 'status-changed', target: b.id, status: st.kind, on: false });
-        for (let j = k; j < list.length - 1; j++) list[j] = list[j + 1]!;
-        list.length--;
-      }
-    }
+    if (b.life === 'alive' && b.statuses.length > 0) burn(c, b, dt);
   }
   updateTethers(c);
 }

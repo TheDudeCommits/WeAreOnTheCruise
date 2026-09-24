@@ -19,7 +19,7 @@ import type {
 import { updateBosses } from './bosses';
 import { resolveCollisions } from './collisions';
 import { applyShipForces, snapshotEnemies } from './core-forces';
-import { CoreRuntime, DEFAULT_TURN, isBoss, KIND_TRAITS, K_HOMING, statusOf, type CoreSim } from './core-runtime';
+import { CoreRuntime, DEFAULT_TURN, isBoss, KIND_TRAITS, K_HOMING, statusOf, untouchable, type CoreSim } from './core-runtime';
 import { parry, specialCooldown, ULT_CHARGE_DAMAGE } from './core-skills';
 import { updateDirector } from './director';
 import { updateEnemies } from './ai';
@@ -426,8 +426,7 @@ export class Sim implements CoreSim {
   ): number {
     if (t.life !== 'alive' || !(amount > 0)) return 0;
     const boss = isBoss(t);
-    if (boss && t.submerged > 0.6) return 0;
-    if (statusOf(t.statuses, 'invulnerable')) return 0;
+    if ((boss && t.submerged > 0.6) || untouchable(t)) return 0;
     const dealt = pierceArmor ? amount : Math.max(amount * 0.3, amount - t.armor);
     const effective = Math.min(dealt, t.hp);
     t.hp -= dealt;
