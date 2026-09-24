@@ -10,3 +10,9 @@
 html, body { margin: 0; height: 100%; overflow: hidden; background: #06283f; }
 #game-root { position: fixed; inset: 0; }
 #cruise-canvas { display: block; width: 100%; height: 100%; outline: none; }
+
+/* Reduced motion: stop the large ambient motion; banners, stamps and flashes still appear (never hidden). */
+@media (prefers-reduced-motion: reduce) {
+  .cr-levelup__burst, .cr-results__rays, .cr-chest__rays, .cr-card__rays, .cr-setsail__rose, .cr-settings__gear,
+  .cr-title.is-intro .cr-logo, .cr-title.is-intro .cr-logo__emblem, .cr-logo__shine, .cr-setsail, .cr-xp__shine { animation: none !important; }
+}
