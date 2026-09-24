@@ -238,6 +238,7 @@ function tickPlayerTimers(c: CoreSim): void {
     if (st.time > 0) continue;
     if (st.kind === 'shielded') p.shield = 0;
     c.emit({ type: 'status-changed', target: 0, status: st.kind, on: false });
-    list.splice(i, 1);
+    for (let j = i; j < list.length - 1; j++) list[j] = list[j + 1]!;
+    list.length--;
   }
 }

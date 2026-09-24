@@ -529,7 +529,8 @@ export class Sim implements CoreSim {
         let guard = 0;
         while (p.level < level && guard++ < 200) {
           p.xp = p.xpToNext; updateProgression(this);
-          while (this.state.offers) applyChosenCard(this, 0);
+          let cards = 0;
+          while (this.state.offers && cards++ < 50) if (!applyChosenCard(this, 0)) break;
         }
       },
       spawnEnemy: (defId, count = 1, elite = false) => {
