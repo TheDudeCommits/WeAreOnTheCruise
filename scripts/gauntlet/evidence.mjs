@@ -243,6 +243,23 @@ async function shot(name, opts = {}) {
     };
   });
   const audio = await audioSnapshot();
+  // Layout check: visible buttons/links that are clipped by the viewport or covered by another element.
+  const layout = await ev(() => {
+    const vw = innerWidth, vh = innerHeight, clipped = [], covered = [];
+    for (const el of document.querySelectorAll('#game-root button, #game-root a[href]')) {
+      if (el.closest('[hidden]') || el.closest('.hide-ui')) continue;
+      const cs = getComputedStyle(el);
+      if (cs.visibility === 'hidden' || cs.display === 'none' || +cs.opacity === 0) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) continue;
+      const text = (el.textContent || el.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+      const rect = [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)];
+      if (r.bottom > vh + 1 || r.right > vw + 1 || r.top < -1 || r.left < -1) { clipped.push({ text, rect }); continue; }
+      const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      if (top && top !== el && !el.contains(top) && !top.contains(el)) covered.push({ text, rect, by: `${top.tagName.toLowerCase()}.${String(top.className).split(' ')[0]}` });
+    }
+    return { clipped, covered };
+  });
   const entry = {
     name, file, plate: plateFile, stage, note: opts.note ?? null, wall: new Date().toISOString(), screen: data.screen,
     sim: data.summary, cpu: cpuSplit(data.cpu),
@@ -261,12 +278,14 @@ async function shot(name, opts = {}) {
         rmsDbMax: Math.max(...meter.map((m) => m.rmsDb)), peakDbMax: Math.max(...meter.map((m) => m.peakDb)), samples: meter.length,
       } : null,
     },
+    layout,
     errors: pendingErrors.splice(0),
   };
   lastAudio = audio;
   report.shots.push(entry);
   const c = entry.cpu;
-  log(`${file}: cpu mean ${c?.mean?.total ?? '-'} ms p95 ${c?.p95 ?? '-'} max ${c?.max?.total ?? '-'} | calls ${entry.render?.drawCalls} tris ${entry.render?.triangles} | enemies ${entry.sim?.enemies ?? '-'} | music ${entry.audio?.music?.state ?? '-'}${entry.errors.length ? ` | ${entry.errors.length} errors` : ''}`);
+  const lay = layout.clipped.length + layout.covered.length ? ` | layout: ${layout.clipped.length} clipped, ${layout.covered.length} covered` : '';
+  log(`${file}: cpu mean ${c?.mean?.total ?? '-'} ms p95 ${c?.p95 ?? '-'} max ${c?.max?.total ?? '-'} | calls ${entry.render?.drawCalls} tris ${entry.render?.triangles} | enemies ${entry.sim?.enemies ?? '-'} | music ${entry.audio?.music?.state ?? '-'}${lay}${entry.errors.length ? ` | ${entry.errors.length} errors` : ''}`);
   return entry;
 }
 
@@ -353,7 +372,7 @@ const stages = {
 
   async seas() {
     for (const sea of SEAS) {
-      const tag = sea.split('-')[0];
+      const tag = sea === 'the-gloam' ? 'gloam' : sea.split('-')[0];
       const ship = SEA_SHIP[sea];
       await startRun(ship, sea);
       // Early: the real opening, no clock jump. Record the first kill / level for pacing.
@@ -456,7 +475,11 @@ const stages = {
     report.checks.victoryApproach = { reason: approach.reason, seconds: approach.seconds, minDist: approach.minDist };
     await ev(() => window.__CRUISE__.debug.sinkBosses());
     await sleep(900);
-    await shot('victory-lap', { measure: 0.8 });
+    const lap = await shot('victory-lap', { measure: 0.8 });
+    // The final boss's XP can queue level-ups that pause the victory lap; record it, then pick through them.
+    report.checks.victoryLapStatus = { status: lap.sim?.status ?? null, level: lap.sim?.player?.level ?? null, offers: lap.sim?.offers ?? null };
+    const through = await pilot({ seconds: 25, mode: 'idle', until: 'results', autoCards: true });
+    report.checks.victoryLapStatus.cardsPicked = through.cards.length;
     await waitFor(() => window.__CRUISE__.screen() === 'results', null, 20000);
     await sleep(3200); // bounty count-up + stamp
     await shot('results-victory', { measure: 0.8 });
