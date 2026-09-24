@@ -153,9 +153,15 @@ export class SketchfabShipAssets {
     toonifyObject(scene, { keepMaps: true, normalScale: 0.15, rim: 0.35, tintable: true, doubleSided: true });
     const materials = new Set<THREE.Material>();
     const names = new Map<THREE.Material, string>();
+    // Only meshes big enough to shape the shadow cast one (halves the shadow-pass draw calls on the 36-part Sunlion).
+    const minCaster = HERO_SOURCE_LENGTH[kind] * 0.06;
+    const sphere = new THREE.Sphere();
     scene.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
-      object.castShadow = true;
+      const geometry = object.geometry as THREE.BufferGeometry;
+      if (!geometry.boundingSphere) geometry.computeBoundingSphere();
+      sphere.copy(geometry.boundingSphere!).applyMatrix4(object.matrixWorld);
+      object.castShadow = sphere.radius >= minCaster;
       object.receiveShadow = true;
       object.userData.assetSource = HERO_MODEL_SOURCES[kind].uid;
       for (const m of Array.isArray(object.material) ? object.material : [object.material]) {

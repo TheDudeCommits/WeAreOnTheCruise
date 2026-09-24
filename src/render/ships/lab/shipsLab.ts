@@ -38,7 +38,7 @@ function heroesMode(): void {
   const heroes: { id: ShipId; ship: HeroShip; pose: HeroPose; x: number }[] = [];
   const growth = { tier: Number(params.get('tier') ?? 0), weapons: [] as GrowthWeapon[] };
   let x = 0;
-  const only = params.get('ship') as ShipId | null;
+  const only = (params.get('ship') ?? (mode === 'crew' ? 'grand-galley' : null)) as ShipId | null;
   const ids = only ? [only] : [...SHIP_IDS];
   const widths: Record<string, number> = { 'grand-galley': 96, 'white-leviathan': 52, seawarden: 36, sunlion: 32, yellowfin: 36, 'dawn-ram': 22 };
   for (const id of ids) {
@@ -78,14 +78,21 @@ function heroesMode(): void {
   api.info = () => heroes.map((h) => ({ id: h.id, ready: h.ship.ready, probeMs: h.ship.profile?.probeMs, rails: h.ship.profile?.rails.map((r) => r.length), deckY: h.ship.profile?.deckY, masts: h.ship.profile?.masts.map((m) => m.toArray().map((v) => +v.toFixed(1))) }));
   api.hit = (id: ShipId) => { const h = heroes.find((e) => e.id === id); if (h) h.pose.sinceHit = 0; };
   api.pose = (id: ShipId, patch: Partial<HeroPose>) => { const h = heroes.find((e) => e.id === id); if (h) Object.assign(h.pose, patch); };
+  api.cheer = () => { for (const h of heroes) h.ship.crew?.cheer(); };
+  if (mode === 'crew' && heroes[0]) {
+    lab.chaseCamera(heroes[0].ship.root, SHIPS[heroes[0].id].length * 1.25, 0.6, 0.75);
+    heroes[0].pose.speed = 2;
+  }
 
   // Panel.
-  panel.innerHTML = `<h1>Ships lab — heroes</h1>
+  panel.innerHTML = `<h1>Ships lab — ${mode === 'crew' ? 'crew' : 'heroes'}</h1>
+    <div class="row"><a href="?mode=heroes">heroes</a> · <a href="?mode=enemies">enemies</a> · <a href="?mode=bosses">bosses</a> · <a href="?mode=crew">crew</a> <button id="cheer" class="off">Cheer</button></div>
     <div class="row">Tier <input id="tier" type="range" min="0" max="4" step="1" value="${growth.tier}"> <b id="tierv">${growth.tier}</b></div>
     <div class="row">Night <input id="night" type="range" min="0" max="1" step="0.05" value="0"></div>
     <div class="row" id="weapons"></div>
     <div class="row"><button id="all6">All weapons ★</button><button id="all3">All Lv3</button><button id="none" class="off">No weapons</button></div>
     <div class="row" id="focus"></div>`;
+  panel.querySelector<HTMLButtonElement>('#cheer')!.onclick = () => (api.cheer as () => void)();
   const tierInput = panel.querySelector<HTMLInputElement>('#tier')!;
   const tierV = panel.querySelector<HTMLElement>('#tierv')!;
   tierInput.oninput = () => { growth.tier = Number(tierInput.value); tierV.textContent = tierInput.value; };
