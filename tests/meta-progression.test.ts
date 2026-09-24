@@ -8,7 +8,7 @@ import type { CardOffer, MetaProfile, SimEvent } from '../src/game/types';
 import { IslandField } from '../src/world/IslandField';
 
 function makeSim(seed = 'meta-prog', meta: MetaProfile = defaultProfile()): Sim {
-  return new Sim({ seed, shipId: 'sunlion', seaId: 'sunward-shallows', meta, world: new IslandField(seed) });
+  return new Sim({ seed, shipId: 'sunlion', seaId: 'sunward-shallows', meta, world: new IslandField(seed, { sea: 'sunward-shallows' }) });
 }
 
 function drawMany(sim: Sim, n: number): CardOffer[][] {

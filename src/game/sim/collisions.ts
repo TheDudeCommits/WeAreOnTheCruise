@@ -20,6 +20,7 @@ import { spawnShockwave, ULTIMATES } from './core-skills';
 import { areaMul, damageMul, ramMul } from './stats';
 import { crit, CRIT, ex, levelOf } from './weapons/common';
 import { ironRamSlot } from './weapons/iron-ram';
+import { enemyContactDamage } from './meta-spawn';
 
 /** Ram damage per (m/s of closing speed × √tonnes). */
 export const RAM_K = 0.1;
@@ -47,7 +48,8 @@ export function resolveCollisions(c: CoreSim): void {
     const e = enemies[i]!;
     if (e.life !== 'alive') continue;
     if (e.ai.contactCd > 0) e.ai.contactCd -= c.dt;
-    pushOutOfIslands(c, e);
+    // Stationary forts sit on land (battery sites on fort islands); everything else is pushed back to sea.
+    if (c.content.enemies[e.defId].behavior !== 'stationary') pushOutOfIslands(c, e);
   }
   const bosses = c.state.bosses;
   for (let i = 0; i < bosses.length; i++) {
@@ -116,7 +118,8 @@ function speedOf(c: CoreSim, t: Target): number {
 
 function contactDamageOf(c: CoreSim, t: Target): number {
   if (isBoss(t)) return c.content.bosses[t.defId].contactDamage;
-  return c.content.enemies[t.defId]?.contactDamage ?? 0;
+  // META scaling: run time × sea difficulty × elite; fire ships deal their blast instead (0 on contact).
+  return enemyContactDamage(c, t);
 }
 
 function shipsVsPlayer(c: CoreSim, p: PlayerState): void {

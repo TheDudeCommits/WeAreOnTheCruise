@@ -26,8 +26,10 @@ export interface SeaBand {
 
 export interface MetaRuntime {
   strikes: PendingStrike[];
-  /** Islands that already carry a fort battery. */
+  /** Islands / battery sites that already carry a fort battery. */
   fortIslands: Set<string>;
+  /** Batteries placed per fort island. */
+  fortCount: Map<string, number>;
   /** Spawn bands filtered for this run's sea. */
   bands: SeaBand[];
   islands: IslandDef[];
@@ -44,6 +46,7 @@ export function metaRuntime(state: RunState, content: ContentDb): MetaRuntime {
     rt = {
       strikes: Array.from({ length: STRIKE_POOL }, () => ({ active: false, x: 0, z: 0, t: 0, radius: 0, damage: 0, enemyDamage: 0 })),
       fortIslands: new Set(),
+      fortCount: new Map(),
       bands: buildBands(state.seaId, content),
       islands: [],
       fire: 1,

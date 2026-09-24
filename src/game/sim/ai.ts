@@ -476,7 +476,7 @@ function fireMortars(c: SimContext, e: EnemyState, def: EnemyDef, dist: number):
       const a = c.random() * TAU, r = area * rand(c, 0.6, 1.8);
       tx += Math.sin(a) * r; tz += Math.cos(a) * r;
     }
-    lobShell(c, 'enemy-mortar', e.x, e.z, tx, tz, t, damage, area);
+    lobShell(c, 'enemy-mortar', e.x, e.z, tx, tz, t, damage, area, true, Math.max(0, e.y) + 4);
   }
   const inv = 1 / (dist || 1);
   c.emit({ type: 'enemy-fired', source: e.id, projectile: 'enemy-mortar', x: e.x, z: e.z, dirX: (p.x - e.x) * inv, dirZ: (p.z - e.z) * inv, count });

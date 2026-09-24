@@ -104,6 +104,7 @@ export function sanitizeSettings(raw: unknown): Settings {
     muted: typeof raw.muted === 'boolean' ? raw.muted : base.muted,
     cameraShake: finite(raw.cameraShake) ? Math.min(2, Math.max(0, raw.cameraShake)) : base.cameraShake,
     damageNumbers: typeof raw.damageNumbers === 'boolean' ? raw.damageNumbers : base.damageNumbers,
+    ...(typeof raw.reduceFlashing === 'boolean' ? { reduceFlashing: raw.reduceFlashing } : {}),
     quality: typeof raw.quality === 'string' && (QUALITIES as readonly string[]).includes(raw.quality) ? (raw.quality as QualitySetting) : base.quality,
     showFps: typeof raw.showFps === 'boolean' ? raw.showFps : base.showFps,
   };
