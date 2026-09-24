@@ -117,7 +117,8 @@ export class Markers {
       this.placed.push({ kind: 'chest', x: 0, y: 0, a: 0, d: 0, e: null, count: 1, up: 0, hw: 0 });
     }
     for (let i = 0; i < TARGETS; i++) this.targets.push({ kind: 'chest', x: 0, z: 0, d: 0, rank: 0, e: null });
-    this.markChip = h('div', 'cr-markchip', h('span', 'cr-markchip__icon', glyph('flare')), h('span', 'cr-markchip__text', 'Marked!'));
+    // Positioned by an inline transform; the pill inside pulses (a scale on the positioned element would scale its offset).
+    this.markChip = h('div', 'cr-markchip', h('span', 'cr-markchip__body', h('span', 'cr-markchip__icon', glyph('flare')), h('span', 'cr-markchip__text', 'Marked!')));
     this.markChip.hidden = true;
     this.el.append(this.markChip);
   }

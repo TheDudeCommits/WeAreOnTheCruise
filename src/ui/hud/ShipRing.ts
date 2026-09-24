@@ -1,13 +1,24 @@
 /**
  * Bottom-left ship ring (T7 adapted): hull gauge with shield overlay, sail gear telegraph, speed, and the
- * Boost (Shift) / Brace (Space) buttons with cooldown sweeps; status chips ride above it.
+ * Boost / Brace buttons (the player's keys) with cooldown sweeps; status chips ride above it.
+ * Round 2 (FLOW): an "In irons" warning while the bow points into the wind under sail, stored boost charges as
+ * pips under the Boost button (Trade Winds / Storm Sails give more than one), the live Momentum bonus on its chip,
+ * and an AUTO badge on Brace while its toggle mode is latched on.
  */
 import type { StatusKind } from '../../game/ids';
-import type { PlayerState, ShipDef } from '../../game/types';
+import type { RunState, ShipDef } from '../../game/types';
+import { boostChargesOf } from '../../game/sim/stats';
+import { controls, type BindAction } from '../../input/Input';
 import { ClassCell, h, hex, play, svg, TextCell, VarCell } from '../core/dom';
+import { knots } from '../core/format';
 import { glyph, type GlyphId } from '../core/icons';
 import { GEAR_NAMES } from '../core/names';
 import { keycap, padButton } from '../core/prompts';
+import { inIrons } from './wind';
+
+/** Director scratch key PACE stores the boost charges under (see src/game/sim/player.ts, boostChargesLeft). */
+const BOOST_STORED = 'pace:boostCharges';
+const MAX_CHARGE_PIPS = 4;
 
 const R = 92;
 const C = 2 * Math.PI * R;
@@ -32,14 +43,33 @@ class MiniSkill {
   private readonly secs: TextCell;
   private readonly ready: ClassCell;
   private readonly active: ClassCell;
+  private readonly keyEl: HTMLElement;
+  private keyVersion = -1;
   private lastSec = -1;
-  constructor(cls: string, g: GlyphId, key: string, pad: Parameters<typeof padButton>[0], label: string) {
+  /** Charge pips (boost) and the AUTO badge (brace toggle mode). */
+  readonly pips: HTMLElement;
+  readonly auto: ClassCell;
+  constructor(cls: string, g: GlyphId, private readonly action: BindAction, pad: Parameters<typeof padButton>[0], label: string) {
     const secs = h('span', 'cr-mini__secs');
-    this.el = h('div', `cr-mini ${cls}`, h('span', 'cr-mini__disc', glyph(g, 'cr-mini__glyph'), h('span', 'cr-mini__sweep'), secs), h('span', 'cr-mini__key', keycap(key), padButton(pad)), h('span', 'cr-mini__label', label));
+    this.keyEl = h('span', 'cr-mini__kb');
+    this.pips = h('span', 'cr-mini__charges');
+    this.el = h('div', `cr-mini ${cls}`,
+      h('span', 'cr-mini__disc', glyph(g, 'cr-mini__glyph'), h('span', 'cr-mini__sweep'), secs, h('span', 'cr-mini__auto', 'Auto')),
+      h('span', 'cr-mini__key', this.keyEl, padButton(pad)),
+      this.pips,
+      h('span', 'cr-mini__label', label));
     this.cd = new VarCell(this.el, '--cd', 1 / 120);
     this.secs = new TextCell(secs);
     this.ready = new ClassCell(this.el, 'is-ready');
     this.active = new ClassCell(this.el, 'is-active');
+    this.auto = new ClassCell(this.el, 'is-auto');
+    this.syncKey();
+  }
+  /** Shows the player's current key for this action (rebinding updates it). */
+  syncKey(): void {
+    if (this.keyVersion === controls.version) return;
+    this.keyVersion = controls.version;
+    this.keyEl.replaceChildren(keycap(controls.labels(this.action)[0] ?? '—'));
   }
   update(cooldown: number, max: number, active: number): void {
     const frac = max > 0 ? Math.max(0, Math.min(1, cooldown / max)) : 0;
@@ -66,6 +96,12 @@ export class ShipRing {
   private readonly boost: MiniSkill;
   private readonly brace: MiniSkill;
   private readonly statusChips = new Map<StatusKind, { el: HTMLElement; on: ClassCell }>();
+  private readonly momentumText: TextCell;
+  private lastMomentum = -1;
+  private readonly irons: ClassCell;
+  private readonly chargePips: HTMLElement[] = [];
+  private lastCharges = -1;
+  private lastChargeMax = -1;
   private readonly toneLow: ClassCell;
   private readonly toneMid: ClassCell;
   private readonly braced: ClassCell;
@@ -111,16 +147,23 @@ export class ShipRing {
       h('div', 'cr-gear', h('span', 'cr-gear__keys', keycap('W'), keycap('S')), gearBars, gearName),
       speed,
     );
-    this.boost = new MiniSkill('is-boost', 'speed', 'SHIFT', 'B', 'Boost');
-    this.brace = new MiniSkill('is-brace', 'shield', 'SPACE', 'A', 'Brace');
+    this.boost = new MiniSkill('is-boost', 'speed', 'boost', 'B', 'Boost');
+    this.brace = new MiniSkill('is-brace', 'shield', 'brace', 'A', 'Brace');
+    for (let i = 0; i < MAX_CHARGE_PIPS; i++) { const pip = h('i', ''); this.boost.pips.append(pip); this.chargePips.push(pip); }
     const statuses = h('div', 'cr-statuses');
     this.statusesEl = statuses;
+    let momentumLabel: HTMLElement | null = null;
     for (const s of STATUS) {
-      const el = h('span', `cr-status is-${s.tone}`, glyph(s.glyph), s.label);
+      const label = h('span', '', s.label);
+      if (s.kind === 'momentum') momentumLabel = label;
+      const el = h('span', `cr-status is-${s.tone}`, glyph(s.glyph), label);
       statuses.append(el);
       this.statusChips.set(s.kind, { el, on: new ClassCell(el, 'is-on') });
     }
-    this.el = h('div', 'cr-shipring', statuses, h('div', 'cr-ring', ring, center, h('span', 'cr-ring__label', 'Hull')), h('div', 'cr-ring__minis', this.boost.el, this.brace.el));
+    this.momentumText = new TextCell(momentumLabel!);
+    const ironsChip = h('span', 'cr-ring__irons', glyph('wind'), 'In irons');
+    this.el = h('div', 'cr-shipring', statuses, h('div', 'cr-ring', ring, center, h('span', 'cr-ring__label', 'Hull'), ironsChip), h('div', 'cr-ring__minis', this.boost.el, this.brace.el));
+    this.irons = new ClassCell(this.el, 'is-irons');
     this.hullNum = new TextCell(hullNum);
     this.hullMax = new TextCell(hullMax);
     this.gearName = new TextCell(gearName);
@@ -131,9 +174,13 @@ export class ShipRing {
     this.hasShield = new ClassCell(this.el, 'has-shield');
   }
 
-  reset(): void { this.lastHullQ = this.lastShieldQ = this.lastHp = this.lastMax = this.lastGear = this.lastSpeed = -1; this.shipId = ''; }
+  reset(): void {
+    this.lastHullQ = this.lastShieldQ = this.lastHp = this.lastMax = this.lastGear = this.lastSpeed = -1; this.shipId = '';
+    this.lastMomentum = this.lastCharges = this.lastChargeMax = -1;
+  }
 
-  update(p: Readonly<PlayerState>, ship: ShipDef): void {
+  update(run: Readonly<RunState>, ship: ShipDef): void {
+    const p = run.player;
     if (ship.id !== this.shipId) { this.shipId = ship.id; this.el.style.setProperty('--accent', hex(ship.accent)); }
     const frac = p.maxHp > 0 ? Math.max(0, Math.min(1, p.hp / p.maxHp)) : 0;
     const q = Math.round(frac * 400);
@@ -159,8 +206,21 @@ export class ShipRing {
       this.gearBars.forEach((b, i) => b.classList.toggle('is-on', i < p.gear || (p.gear === 0 && i === 0)));
       this.el.dataset.gear = String(p.gear);
     }
-    const kn = Math.round(Math.abs(p.speed) * 1.944);
+    const kn = knots(p.speed);
     if (kn !== this.lastSpeed) { this.lastSpeed = kn; this.speed.set(`${kn} kn`); }
+    // In irons: under sail with the bow into the wind (the polar crawls there).
+    this.irons.set(p.alive && p.gear > 0 && inIrons(p.heading, run.sea));
+    // Boost charges (PACE: Trade Winds / Storm Sails): pips while more than one can be stored.
+    const maxCharges = boostChargesOf(p.stats);
+    const stored = Math.max(0, Math.min(maxCharges, run.director.scratch[BOOST_STORED] ?? maxCharges));
+    if (stored !== this.lastCharges || maxCharges !== this.lastChargeMax) {
+      this.lastCharges = stored; this.lastChargeMax = maxCharges;
+      this.boost.pips.hidden = maxCharges < 2;
+      this.chargePips.forEach((pip, i) => { pip.hidden = i >= Math.min(MAX_CHARGE_PIPS, maxCharges); pip.classList.toggle('is-on', i < stored); });
+    }
+    this.boost.syncKey();
+    this.brace.syncKey();
+    this.brace.auto.set(controls.latched.brace);
     this.boost.update(p.skills.boost.cooldown, p.skills.boost.cooldownMax, p.skills.boost.active);
     this.brace.update(p.skills.brace.cooldown, p.skills.brace.cooldownMax, p.skills.brace.active);
     this.braced.set(p.skills.brace.active > 0);
@@ -171,6 +231,12 @@ export class ShipRing {
       if (kind === 'airborne' && p.airborne > 0.05) on = true;
       if (kind === 'submerged' && p.submerged > 0.05) on = true;
       chip.on.set(on);
+      if (kind === 'momentum' && on) {
+        let mag = 0;
+        for (const st of p.statuses) if (st.kind === 'momentum') { mag = st.magnitude; break; }
+        const pct = Math.round(Math.max(0, mag) * 100);
+        if (pct !== this.lastMomentum) { this.lastMomentum = pct; this.momentumText.set(`Momentum +${pct}%`); }
+      }
     }
   }
 

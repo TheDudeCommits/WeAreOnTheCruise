@@ -2,11 +2,13 @@
  * Minimap with a compass rim, rotated with the camera (screen-up = camera forward). Enemies are coloured by
  * faction; elites and bosses are bigger; chests are gold. Drawn on a small canvas at ~30 Hz.
  * Islands are drawn from the run's WorldQuery as sand-filled coastlines, clipped to the map disc.
+ * A wind arrow rides the rim, pointing where the wind blows (bigger in a stronger wind; red while you sail in irons).
  */
 import type { IslandDef, RunState, WorldQuery } from '../../game/types';
 import { h, svg } from '../core/dom';
 import { FACTION_COLOR, FACTION_EDGE } from '../core/names';
 import type { ScreenBasis } from './camera';
+import { inIrons } from './wind';
 
 const RANGE = 460;
 const LETTERS = ['N', 'E', 'S', 'W'] as const;
@@ -25,6 +27,10 @@ export class Minimap {
   private lastNorth = Number.NaN;
   private pulse = 0;
   private readonly islands: IslandDef[] = [];
+  private readonly wind: SVGGElement;
+  private lastWind = Number.NaN;
+  private lastWindScale = -1;
+  private windIrons = false;
 
   constructor() {
     this.canvas = h('canvas', 'cr-minimap__canvas');
@@ -42,12 +48,18 @@ export class Minimap {
       this.letters.push(t);
       this.rim.append(t);
     }
+    // Wind arrow, drawn pointing up at the top of the rim; rotated about the centre to where the wind blows.
+    this.wind = svg('g', { class: 'cr-minimap__wind' },
+      svg('path', { class: 'cr-minimap__windtail', d: 'M100 24 C 96 18, 104 14, 100 8 M92 22 C 89 17, 95 14, 92 9 M108 22 C 111 17, 105 14, 108 9' }),
+      svg('path', { class: 'cr-minimap__windhead', d: 'M100 -9 L111 7 L100 3 L89 7 Z' }),
+    );
     const rimSvg = svg('svg', { class: 'cr-minimap__rim', viewBox: '0 0 200 200', 'aria-hidden': 'true' },
       svg('circle', { class: 'cr-minimap__ring', cx: 100, cy: 100, r: 97 }),
       svg('circle', { class: 'cr-minimap__range', cx: 100, cy: 100, r: 36 }),
       svg('circle', { class: 'cr-minimap__range is-outer', cx: 100, cy: 100, r: 72 }),
       ticks,
       this.rim,
+      this.wind,
     );
     this.el = h('div', 'cr-minimap', h('div', 'cr-minimap__sea'), this.canvas, rimSvg, h('div', 'cr-minimap__glass'));
     this.observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver((entries) => {
@@ -71,7 +83,7 @@ export class Minimap {
     if (ctx) { ctx.beginPath(); ctx.arc(4, 4, 2, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = '#000'; ctx.stroke(); ctx.fillRect(0, 0, 2, 2); ctx.strokeRect(0, 0, 2, 2); ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); }
   }
 
-  reset(): void { this.lastNorth = Number.NaN; this.acc = 1; }
+  reset(): void { this.lastNorth = Number.NaN; this.lastWind = Number.NaN; this.lastWindScale = -1; this.acc = 1; }
 
   update(run: Readonly<RunState>, basis: ScreenBasis, dt: number, world: WorldQuery | null = null): void {
     this.acc += dt;
@@ -93,6 +105,16 @@ export class Minimap {
         this.letters[i]!.setAttribute('y', (100 - Math.cos(a) * 84).toFixed(1));
       }
     }
+    // Wind: blows toward world (sin w, cos w); compass bearing π − w, drawn clockwise from screen-up like the letters.
+    const sea = run.sea;
+    const wa = theta + Math.PI - sea.windDir;
+    const ws = Math.round((0.8 + 0.35 * Math.min(1.5, Math.max(0, sea.windStrength))) * 20) / 20;
+    if (Math.abs(Math.atan2(Math.sin(wa - this.lastWind), Math.cos(wa - this.lastWind))) > 0.01 || Number.isNaN(this.lastWind) || ws !== this.lastWindScale) {
+      this.lastWind = wa; this.lastWindScale = ws;
+      this.wind.setAttribute('transform', `rotate(${((wa * 180) / Math.PI).toFixed(1)} 100 100) translate(100 0) scale(${ws}) translate(-100 0)`);
+    }
+    const irons = run.player.alive && run.player.gear > 0 && inIrons(run.player.heading, sea);
+    if (irons !== this.windIrons) { this.windIrons = irons; this.wind.classList.toggle('is-irons', irons); }
     const cos = Math.cos(theta), sin = Math.sin(theta);
     const p = run.player;
     const half = S / 2;

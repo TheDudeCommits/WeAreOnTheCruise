@@ -24,4 +24,5 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #06283f; }
 .cr-ui.is-calm .cr-eta.is-urgent, .cr-ui.is-calm .cr-warn__icon .cr-glyph, .cr-ui.is-calm .cr-shipring.is-low .cr-ring__hull,
 .cr-ui.is-calm .cr-boss.is-enraged .cr-boss__fill, .cr-ui.is-calm .cr-title__press, .cr-ui.is-calm .cr-chest__prompt.is-on,
 .cr-ui.is-calm .cr-skill.is-r.is-ready .cr-skill__disc, .cr-ui.is-calm .cr-marker[data-kind='boss'] .cr-marker__icon,
-.cr-ui.is-calm .cr-warn__stripes, .cr-ui.is-calm .cr-cutin__lines { animation: none !important; }
+.cr-ui.is-calm .cr-warn__stripes, .cr-ui.is-calm .cr-cutin__lines, .cr-ui.is-calm .cr-markchip__body,
+.cr-ui.is-calm .cr-marker[data-kind='bounty'] .cr-marker__icon, .cr-ui.is-calm .cr-marker[data-kind='signal'] .cr-marker__icon { animation: none !important; }

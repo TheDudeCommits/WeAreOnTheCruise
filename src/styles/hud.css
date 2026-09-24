@@ -349,3 +349,27 @@
 .cr-coach.is-done { background: #dff7d2; }
 .cr-coach.is-done .cr-coach__icon { background: radial-gradient(circle at 40% 35%, #7fe08a, #23a843 72%); color: var(--white); }
 .cr-coach.is-done .cr-coach__timer { opacity: 0; }
+
+/* ── Wind arrow on the minimap rim (points where the wind blows) ── */
+.cr-minimap__windhead { fill: #bff4ff; stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; paint-order: stroke fill; }
+.cr-minimap__windtail { fill: none; stroke: rgba(191, 244, 255, .85); stroke-width: 2.4; stroke-linecap: round; }
+.cr-minimap__wind.is-irons .cr-minimap__windhead { fill: #ff8f84; }
+.cr-minimap__wind.is-irons .cr-minimap__windtail { stroke: rgba(255, 143, 132, .9); }
+
+/* ── Ship ring round 2: in-irons warning, boost charge pips, AUTO badges (toggle mode) ── */
+.cr-ring__irons { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: calc(-10 * var(--u)); display: none; align-items: center; gap: calc(5 * var(--u)); padding: calc(3 * var(--u)) calc(11 * var(--u)) calc(3 * var(--u)) calc(7 * var(--u)); border-radius: 999px; background: #7a1010; border: calc(2 * var(--u)) solid var(--ink); color: #ffd3cd; font: 900 var(--fs-12)/1 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; box-shadow: 0 0 calc(12 * var(--u)) rgba(255, 70, 50, .7); z-index: 2; }
+.cr-ring__irons .cr-glyph { width: calc(16 * var(--u)); height: calc(16 * var(--u)); color: #ff8f84; }
+.cr-shipring.is-irons .cr-ring__irons { display: inline-flex; animation: cr-irons 1.1s ease-in-out infinite; }
+.cr-shipring.is-irons .cr-ring__speed { color: #ff8f84; }
+@keyframes cr-irons { 50% { scale: 1.08; } }
+.cr-ui.is-calm .cr-shipring.is-irons .cr-ring__irons { animation: none; }
+.cr-mini { position: relative; }
+.cr-mini__kb { display: inline-flex; }
+.cr-mini__charges { position: absolute; left: calc(70 * var(--u)); top: calc(46 * var(--u)); display: flex; gap: calc(3 * var(--u)); }
+.cr-mini__charges i { width: calc(10 * var(--u)); height: calc(6 * var(--u)); border-radius: 2px; background: rgba(255, 255, 255, .2); border: 1px solid var(--ink); }
+.cr-mini__charges i.is-on { background: var(--cyan); box-shadow: 0 0 calc(5 * var(--u)) rgba(63, 224, 255, .8); }
+.cr-mini__auto, .cr-skill__auto { position: absolute; left: 50%; top: calc(-9 * var(--u)); transform: translateX(-50%); display: none; padding: calc(1 * var(--u)) calc(6 * var(--u)); border-radius: 999px; background: var(--gold); border: calc(2 * var(--u)) solid var(--ink); color: var(--ink); font: 400 var(--fs-12)/1 var(--f-comic); letter-spacing: .1em; text-transform: uppercase; z-index: 4; }
+.cr-mini.is-auto .cr-mini__auto, .cr-skill.is-auto .cr-skill__auto { display: block; }
+.cr-mini__auto { top: auto; bottom: calc(-7 * var(--u)); }
+.cr-mini__disc { overflow: visible; }
+.cr-mini__sweep { overflow: hidden; }

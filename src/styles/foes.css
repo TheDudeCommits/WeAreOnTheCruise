@@ -34,7 +34,7 @@
 .cr-marker__tagico.cr-ico { width: calc(20 * var(--u)); height: calc(20 * var(--u)); background: var(--ax, var(--gold)); color: var(--ink); border-width: calc(2 * var(--u)); box-shadow: 0 0 calc(6 * var(--u)) var(--ax, var(--gold)); }
 
 /* ── "Marked!" chip under the player's ship while a signal flare marks it ── */
-.cr-markchip { position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: calc(5 * var(--u)); translate: -50% 0; padding: calc(3 * var(--u)) calc(10 * var(--u)) calc(3 * var(--u)) calc(6 * var(--u)); border-radius: 999px; background: #6b1010; border: calc(2 * var(--u)) solid var(--ink); color: #ffd3cd; font: 900 var(--fs-12)/1 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; box-shadow: 0 0 calc(12 * var(--u)) rgba(255, 60, 40, .8); animation: cr-mk-pop .8s ease-in-out infinite; will-change: transform; }
-/* The chip is positioned by an inline transform, so its pulse animates `scale` (a transform keyframe would drag it to 0,0). */
+.cr-markchip { position: absolute; left: 0; top: 0; width: 0; height: 0; will-change: transform; }
+.cr-markchip__body { position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: calc(5 * var(--u)); translate: -50% 0; padding: calc(3 * var(--u)) calc(10 * var(--u)) calc(3 * var(--u)) calc(6 * var(--u)); border-radius: 999px; background: #6b1010; border: calc(2 * var(--u)) solid var(--ink); color: #ffd3cd; font: 900 var(--fs-12)/1 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; box-shadow: 0 0 calc(12 * var(--u)) rgba(255, 60, 40, .8); animation: cr-mk-pop .8s ease-in-out infinite; }
 @keyframes cr-mk-pop { 50% { scale: 1.14; } }
 .cr-markchip__icon .cr-glyph { width: calc(16 * var(--u)); height: calc(16 * var(--u)); color: #ff8a7a; }

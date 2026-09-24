@@ -2,7 +2,7 @@
 import { CONTENT } from '../../game/content';
 import { xpToNext } from '../../game/constants';
 import type { EnemyId, Faction, SeaId, ShipId } from '../../game/ids';
-import type { BossState, CardOffer, EnemyState, MetaProfile, PickupState, RunResult, RunState, Settings } from '../../game/types';
+import type { BossState, CaptainState, CardOffer, EnemyState, MetaProfile, PickupState, RunResult, RunState, Settings, WorldEventState } from '../../game/types';
 
 export function mockProfile(kind: 'fresh' | 'rich' | 'mid' = 'mid'): MetaProfile {
   const base: MetaProfile = {
@@ -42,6 +42,44 @@ export function mockBoss(defId: BossState['defId'] = 'iron-warden', frac = 0.62)
     radius: def.radius, length: def.length, beam: def.radius * 2, hp: def.hp * frac, maxHp: def.hp, armor: def.armor, phase: frac <= 0.5 ? 1 : 0,
     hitFlash: 0, statuses: [], attack: 'broadside-volley', attackTime: 0, submerged: 0, ai: {}, spawnTime: 300,
   };
+}
+
+/** Three AI captains around the player (one sunk and respawning), for the roster and captain plates. */
+export function mockCaptains(): CaptainState[] {
+  const k = (id: number, name: string, shipId: ShipId, x: number, z: number, level: number, bounty: number, hp = 1): CaptainState => ({
+    id, name, shipId, alive: hp > 0, x, z, y: 0, heading: 0.4, speed: 9, vx: 0, vz: 0, yawRate: 0, roll: 0, pitch: 0,
+    radius: 9, length: 34, beam: 10, hp: 520 * hp, maxHp: 520, level, kills: 40, bounty, respawn: hp > 0 ? 0 : 7, hitFlash: 0, statuses: [], ai: { fade: 1, mode: 0 },
+  });
+  return [
+    k(-1, 'Wren Calloway', 'grand-galley', 70, -40, 13, 9_800_000, 0.8),
+    k(-2, 'Kade Harrow', 'yellowfin', -120, 60, 12, 14_200_000, 0.35),
+    k(-3, 'Oriel Stroud', 'seawarden', 260, 180, 11, 4_100_000, 0),
+  ];
+}
+
+/** A running set piece with a far-off anchor (sunken treasure dig site), for the tracker and its offscreen arrow. */
+export function mockWorldEvent(): WorldEventState {
+  return { id: 'sunken-treasure', name: 'Sunken Treasure', text: 'Hold the dig site to raise the chest', time: 12, duration: 75, progress: 4, goal: 14, x: -520, z: -420, radius: 45 };
+}
+
+/** Elites with affixes, a named bounty captain and a signal cutter marking the player (FOES), around the player. */
+export function mockFoes(start: number): EnemyState[] {
+  const out: EnemyState[] = [];
+  const add = (defId: EnemyId, x: number, z: number, affixes: EnemyState['affixes'], title: string | null = null) => {
+    const e = enemy(start + out.length, defId, x, z, true);
+    e.affixes = affixes; e.title = title;
+    out.push(e);
+  };
+  add('frigate', 150, -120, ['shielded', 'commander']);
+  add('brig', -90, -150, ['swift']);
+  add('corsair-galleon', 480, 260, ['burning', 'armored'], 'Briony of the Burning Keel');
+  add('frigate', -470, 40, ['vampiric']);
+  add('brig', -500, 120, ['volatile']);
+  add('cutter', 90, 520, ['splitting']);
+  const sig = enemy(start + out.length, 'signal-cutter', 200, 320);
+  sig.ai.markT = 5; sig.ai.markRef = 0;
+  out.push(sig);
+  return out;
 }
 
 export function mockRun(shipId: ShipId = 'sunlion', seaId: SeaId = 'sunward-shallows'): RunState {

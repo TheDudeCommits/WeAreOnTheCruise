@@ -2,7 +2,9 @@
  * UI lab (lab/ui.html): mounts the real Ui over a screenshot plate with mock state, a control panel (sliders,
  * event buttons) and URL presets for deterministic screenshots, e.g.
  *   /lab/ui.html?screen=run&bg=day&panel=0&modal=branch&boss=1&freeze=1
- * Params: screen, bg, panel, tab, ship, profile, modal, boss, hp, pad, outcome, fire, freeze, sea.
+ * Params: screen, bg, panel, tab, ship, profile, modal, boss, hp, pad, outcome, fire, freeze, sea, hudscale.
+ * Round-2 fire presets: busy (captains + world event + affixed elites + bounty captain + signal cutter), irons,
+ * momentum, charges, auto (toggle latches), victory-lap (armed lap + an offer the guard must resolve).
  */
 import '../../styles/ui.css';
 import * as THREE from 'three';
@@ -13,7 +15,8 @@ import type { RunResult, Settings, SimEvent } from '../../game/types';
 import type { AppScreen } from '../../render/frame';
 import type { ScreenPoint, UiCallbacks, UiFrame } from '../contracts';
 import { Ui } from '../Ui';
-import { mockBoss, mockProfile, mockResult, mockRun, mockSettings, OFFER_SETS } from './mock';
+import { mockBoss, mockCaptains, mockFoes, mockProfile, mockResult, mockRun, mockSettings, mockWorldEvent, OFFER_SETS } from './mock';
+import { controls } from '../../input/Input';
 
 const params = new URLSearchParams(location.search);
 const root = document.getElementById('game-root')!;
@@ -218,6 +221,18 @@ function fire(name: string): void {
     case 'results-victory': showResults('victory'); break;
     case 'results-defeat': showResults('defeat'); break;
     case 'results-retired': showResults('retired'); break;
+    case 'busy': {
+      run.captains = mockCaptains();
+      run.worldEvent = mockWorldEvent();
+      run.enemies.push(...mockFoes(5000));
+      emit({ type: 'director-event', name: run.worldEvent.name, text: run.worldEvent.text });
+      break;
+    }
+    case 'irons': p.heading = run.sea.windDir; p.gear = 2; break;
+    case 'momentum': p.statuses = p.statuses.filter((x) => x.kind !== 'momentum'); p.statuses.push({ kind: 'momentum', time: 6, magnitude: 0.14 }); break;
+    case 'charges': p.stats.boostCharges = 2; run.director.scratch['pace:boostCharges'] = 2; break;
+    case 'auto': controls.latched.broadside = true; controls.latched.brace = true; break;
+    case 'victory-lap': run.director.scratch.victoryAt = run.time + 3.5; openOffers('basic'); break;
     default: break;
   }
 }
@@ -272,7 +287,7 @@ function buildPanel(): void {
   slider(s3, 'Level', () => p().level / 40, (v) => { p().level = Math.max(1, Math.round(v * 40)); });
   slider(s3, 'Boss HP', () => state.run.bosses[0] ? state.run.bosses[0].hp / state.run.bosses[0].maxHp : 0.6, (v) => { const b = state.run.bosses[0]; if (b) b.hp = v * b.maxHp; });
   const s4 = sec('Events');
-  for (const e of ['level-up', 'branch', 'overdrive', 'four', 'chest', 'boss-warning', 'boss', 'boss-hit', 'boss-phase', 'boss-defeated', 'director-event', 'q-ready', 'e-ready', 'special', 'ultimate', 'ult-full', 'hit', 'parry', 'tier-up', 'revive', 'new-weapon', 'repair', 'weather', 'victory', 'defeat']) btn(s4, e, () => fire(e));
+  for (const e of ['level-up', 'branch', 'overdrive', 'four', 'chest', 'boss-warning', 'boss', 'boss-hit', 'boss-phase', 'boss-defeated', 'director-event', 'q-ready', 'e-ready', 'special', 'ultimate', 'ult-full', 'hit', 'parry', 'tier-up', 'revive', 'new-weapon', 'repair', 'weather', 'victory', 'defeat', 'busy', 'irons', 'momentum', 'charges', 'auto', 'victory-lap']) btn(s4, e, () => fire(e));
   const s5 = sec('Modals / results');
   for (const m of ['pause', 'settings', 'controls', 'confirm']) btn(s5, m, () => openModal(m));
   for (const r of ['results-victory', 'results-defeat', 'results-retired']) btn(s5, r.replace('results-', ''), () => fire(r));
@@ -293,6 +308,8 @@ if (params.get('panel') === '0') panel.remove(); else buildPanel();
 setScreen(state.screen);
 if (state.screen === 'results') showResults((params.get('outcome') as RunResult['outcome']) ?? 'victory');
 if (params.get('boss') === '1') fire('boss');
+const hudScale = params.get('hudscale');
+if (hudScale) state.settings = { ...state.settings, hudScale: Number(hudScale) };
 const hp = params.get('hp');
 if (hp) state.run.player.hp = Number(hp) * state.run.player.maxHp;
 if (params.get('pad') === '1') document.querySelector('.cr-ui')?.classList.add('is-pad');

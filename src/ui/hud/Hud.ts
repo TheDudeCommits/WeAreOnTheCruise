@@ -128,7 +128,7 @@ export class Hud {
     this.banners.tick(f.time);
     this.top.update(run, f.time); mark?.('top');
     this.boss.update(run, f.dt); mark?.('boss');
-    this.ring.update(p, ship); mark?.('ring');
+    this.ring.update(run, ship); mark?.('ring');
     this.skills.update(p, ship); mark?.('skills');
     this.loadout.update(p); mark?.('loadout');
     this.minimap.update(run, this.basis, f.dt, f.world); mark?.('minimap');
