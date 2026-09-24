@@ -51,8 +51,8 @@ export interface InteractionSettings {
 }
 
 /** Decay tuning (seconds / per-second rates). */
-const FOAM_TAU = 5.5;
-const FOAM_LINEAR = 0.03;
+const FOAM_TAU = 4.0;
+const FOAM_LINEAR = 0.05;
 const AER_TAU = 2.6;
 const AER_LINEAR = 0.035;
 const FOAM_DIFFUSE = 1.2;

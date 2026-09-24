@@ -15,6 +15,7 @@ export const SHAPE_HULL = 2;
 export const SHAPE_CAPSULE = 3;
 export const SHAPE_WHIRL = 4;
 export const SHAPE_FRONT = 5;
+export const SHAPE_WAKE = 6;
 
 const FLOATS_PER_STAMP = 16;
 
@@ -146,7 +147,7 @@ void main() {
     float sx = (vLocal.x + halfL * 0.92) / (halfB * 0.55 + 2.5 * s + 1.0);
     float sy = vLocal.y / (halfB * 0.8);
     float sternBlob = exp(-sx * sx - sy * sy) * step(vLocal.x, -halfL * 0.4) * moving;
-    float sternFoam = sternBlob * (0.55 + 0.35 * s);
+    float sternFoam = sternBlob * (0.42 + 0.25 * s);
     float aer = max(max(bowRidge * moving, band * 0.55), sternBlob);
     prof = vec4(raise, trough + hole, max(max(contactFoam, bowFoam), sternFoam), aer) * contact;
   } else if (shape == 3) {
@@ -177,6 +178,19 @@ void main() {
     float crest = exp(-pow((along - w * 0.3) / (w * 0.42), 2.0)) * endFade * (0.8 + rag(0.5));
     float trough = exp(-pow((along + w * 1.9) / (w * 0.9), 2.0)) * endFade * 0.35;
     prof = vec4(ridge * vP.y, trough * vP.y, clamp(crest, 0.0, 1.0), ridge);
+  } else if (shape == 6) {
+    // WAKE segment along local U (service stampWake): two crisp edge streaks plus lacy turquoise churn between
+    // them, never a solid slab, whatever the caller's width. p0 = half segment length, p1 = half width,
+    // p2 = streak half-width (m).
+    vec2 q = vLocal;
+    q.x = max(abs(q.x) - vP.x, 0.0);
+    float hw = max(vP.y, 0.5);
+    float lateral = length(q);
+    float edgeD = abs(lateral - hw) / max(vP.z, 0.3);
+    float streak = exp(-edgeD * edgeD) * (0.85 + rag(0.5));
+    float inside = 1.0 - smoothstep(hw * 0.75, hw, lateral);
+    float churn = inside * (0.28 + rag(0.35));
+    prof = vec4(0.0, 0.0, clamp(max(streak, churn), 0.0, 1.0), max(inside, streak));
   }
   prof = max(prof, vec4(0.0)) * vChan;
 #ifdef PERSISTENT
