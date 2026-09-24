@@ -1,1 +1,148 @@
-/* World-event tracker and event UI (EVENTS-owned). */
+/* World-event tracker (EVENTS-owned): a compact plate under the boss bar — icon, name + clock, objective line,
+   progress bar, outcome stamp. Same language as the HUD: navy plates, ink borders, comic caps, gold accents. */
+
+.cr-evtrack {
+  --ev: var(--gold);
+  --ev-2: var(--gold-3);
+  position: absolute;
+  left: 50%;
+  top: calc(84 * var(--u));
+  transform: translateX(-50%);
+  width: calc(440 * var(--u));
+  display: none;
+  align-items: center;
+  gap: calc(10 * var(--u));
+  padding: calc(7 * var(--u)) calc(14 * var(--u)) calc(8 * var(--u)) calc(8 * var(--u));
+  border-radius: calc(12 * var(--u));
+  background: linear-gradient(180deg, rgba(16, 24, 56, .93), rgba(8, 12, 30, .9));
+  border: calc(3 * var(--u)) solid var(--ink);
+  box-shadow: 0 0 0 calc(2 * var(--u)) color-mix(in srgb, var(--ev) 55%, transparent), 0 calc(4 * var(--u)) 0 var(--ink);
+  z-index: 2;
+  transition: top .35s var(--ease-out), opacity .4s ease-out;
+}
+.cr-evtrack.is-on { display: flex; }
+.cr-evtrack.is-leaving { opacity: 0; }
+/* A boss bar takes the slot: the tracker tucks in beneath it. */
+.cr-boss.is-on + .cr-evtrack { top: calc(160 * var(--u)); }
+
+.cr-evtrack[data-event='kraken-rising'] { --ev: #c07bff; --ev-2: #5b2a99; }
+.cr-evtrack[data-event='rogue-wave'] { --ev: #5fd8ff; --ev-2: #1a6fb0; }
+.cr-evtrack[data-event='maelstrom'] { --ev: #3ff5d0; --ev-2: #0f7f86; }
+.cr-evtrack[data-event='admiralty-blockade'] { --ev: #ffcf33; --ev-2: #1d3f8f; }
+.cr-evtrack[data-event='ghost-fleet'] { --ev: #7ff5dc; --ev-2: #1d5f63; }
+.cr-evtrack[data-event='volcanic-eruption'] { --ev: #ff8a1c; --ev-2: #b31d1d; }
+.cr-evtrack[data-event='sunken-treasure'] { --ev: #ffd84a; --ev-2: #b86d00; }
+.cr-evtrack[data-event='bounty-contract'] { --ev: #ff6a5a; --ev-2: #8f1420; }
+
+.cr-evtrack__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: calc(50 * var(--u));
+  height: calc(50 * var(--u));
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, color-mix(in srgb, var(--ev) 70%, white), var(--ev) 45%, var(--ev-2));
+  border: calc(3 * var(--u)) solid var(--ink);
+  box-shadow: 0 calc(3 * var(--u)) 0 var(--ink);
+  color: var(--ink);
+}
+.cr-evtrack__icon .cr-glyph { width: calc(30 * var(--u)); height: calc(30 * var(--u)); }
+
+.cr-evtrack__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: calc(3 * var(--u)); }
+.cr-evtrack__head { display: flex; align-items: baseline; justify-content: space-between; gap: calc(10 * var(--u)); }
+.cr-evtrack__name {
+  font: 400 var(--fs-24)/1 var(--f-comic);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--ev);
+  -webkit-text-stroke: var(--stroke-s) var(--ink);
+  paint-order: stroke fill;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cr-evtrack__time {
+  flex: none;
+  font: 400 var(--fs-24)/1 var(--f-comic);
+  letter-spacing: .06em;
+  font-variant-numeric: tabular-nums;
+  color: var(--white);
+  -webkit-text-stroke: var(--stroke-s) var(--ink);
+  paint-order: stroke fill;
+}
+.cr-evtrack.is-urgent .cr-evtrack__time { color: var(--red); animation: cr-evtrack-blink .5s steps(2, jump-none) infinite; }
+@keyframes cr-evtrack-blink { 50% { color: var(--white); } }
+.cr-evtrack__goal {
+  font: 800 var(--fs-14)/1.2 var(--f-ui);
+  color: #e0e7fb;
+  text-shadow: 0 1px 0 var(--ink), 0 0 3px var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cr-evtrack__bar {
+  --seg: 1;
+  position: relative;
+  height: calc(16 * var(--u));
+  margin-top: calc(2 * var(--u));
+  border-radius: calc(5 * var(--u));
+  background: rgba(4, 8, 22, .88);
+  border: calc(2 * var(--u)) solid var(--ink);
+  overflow: hidden;
+}
+.cr-evtrack__fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  transform: scaleX(0);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ev) 55%, white), var(--ev) 55%, var(--ev-2));
+  transition: transform .18s ease-out;
+}
+.cr-evtrack.is-timer .cr-evtrack__fill { transform-origin: left; filter: saturate(.8); }
+.cr-evtrack__notch {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(100% / var(--seg) - 2px), rgba(11, 16, 38, .8) calc(100% / var(--seg) - 2px) calc(100% / var(--seg)));
+}
+.cr-evtrack__count {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 400 var(--fs-14)/1 var(--f-comic);
+  letter-spacing: .08em;
+  color: var(--white);
+  -webkit-text-stroke: calc(2.5 * var(--u)) var(--ink);
+  paint-order: stroke fill;
+}
+
+/* Outcome stamp. */
+.cr-evtrack__stamp {
+  position: absolute;
+  right: calc(-14 * var(--u));
+  top: calc(-18 * var(--u));
+  padding: calc(3 * var(--u)) calc(12 * var(--u));
+  border-radius: calc(6 * var(--u));
+  font: 400 var(--fs-24)/1 var(--f-brush);
+  text-transform: uppercase;
+  color: var(--white);
+  background: var(--ink);
+  border: calc(3 * var(--u)) solid currentColor;
+  transform: rotate(-8deg) scale(0);
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.cr-evtrack.is-win .cr-evtrack__stamp,
+.cr-evtrack.is-lose .cr-evtrack__stamp { animation: cr-evtrack-stamp .42s var(--ease-pop) forwards; }
+.cr-evtrack.is-win .cr-evtrack__stamp { color: var(--gold); text-shadow: 0 0 calc(10 * var(--u)) rgba(255, 207, 51, .8); }
+.cr-evtrack.is-lose .cr-evtrack__stamp { color: var(--red); }
+@keyframes cr-evtrack-stamp {
+  from { opacity: 0; transform: rotate(-16deg) scale(2.4); }
+  to { opacity: 1; transform: rotate(-8deg) scale(1); }
+}
+.cr-evtrack.is-win { box-shadow: 0 0 0 calc(2 * var(--u)) var(--gold), 0 0 calc(22 * var(--u)) rgba(255, 207, 51, .55), 0 calc(4 * var(--u)) 0 var(--ink); }
+.cr-evtrack.is-win .cr-evtrack__fill { background: linear-gradient(180deg, #fff4b8, var(--gold) 55%, var(--gold-3)); }
+.cr-evtrack.is-lose { box-shadow: 0 0 0 calc(2 * var(--u)) rgba(255, 74, 61, .8), 0 calc(4 * var(--u)) 0 var(--ink); }
+.cr-evtrack.is-lose .cr-evtrack__body { filter: saturate(.35) brightness(.8); }
