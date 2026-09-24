@@ -1,6 +1,6 @@
 /** UI contract (lead-owned). The UI is DOM-only, reads state, and reports player intent through callbacks. */
 import type { MetaUpgradeId, SeaId, ShipId } from '../game/ids';
-import type { MetaProfile, RunResult, RunState, Settings, SimEvent } from '../game/types';
+import type { MetaProfile, RunResult, RunState, Settings, SimEvent, WorldQuery } from '../game/types';
 import type { AppScreen } from '../render/frame';
 
 export interface UiCallbacks {
@@ -33,6 +33,8 @@ export interface UiFrame {
   result: Readonly<RunResult> | null;
   selectedShip: ShipId;
   fps: number;
+  /** The run's island field (minimap coastlines); null outside a run. */
+  world: WorldQuery | null;
   /** Projects a world point to CSS pixels in the game root (visible=false when behind the camera/off-screen). */
   project(x: number, y: number, z: number, out: ScreenPoint): ScreenPoint;
 }

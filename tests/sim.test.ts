@@ -25,7 +25,9 @@ describe('overhaul v2 sim skeleton', () => {
     const sim = run(120);
     expect(sim.state.stats.kills).toBeGreaterThan(0);
     expect(sim.state.player.level).toBeGreaterThan(1);
-    expect(sim.state.player.weapons.length + sim.state.player.passives.length).toBeGreaterThan(1);
+    const p = sim.state.player;
+    const progress = p.weapons.reduce((sum, w) => sum + w.level, 0) + p.passives.reduce((sum, x) => sum + x.rank, 0);
+    expect(progress).toBeGreaterThan(1);
   });
 
   it('pauses on level-up until a card is chosen', () => {

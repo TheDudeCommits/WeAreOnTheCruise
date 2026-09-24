@@ -1,0 +1,208 @@
+/**
+ * Minimap with a compass rim, rotated with the camera (screen-up = camera forward). Enemies are coloured by
+ * faction; elites and bosses are bigger; chests are gold. Drawn on a small canvas at ~30 Hz.
+ * Islands are drawn from the run's WorldQuery as sand-filled coastlines, clipped to the map disc.
+ */
+import type { IslandDef, RunState, WorldQuery } from '../../game/types';
+import { h, svg } from '../core/dom';
+import { FACTION_COLOR, FACTION_EDGE } from '../core/names';
+import type { ScreenBasis } from './camera';
+
+const RANGE = 460;
+const LETTERS = ['N', 'E', 'S', 'W'] as const;
+
+export class Minimap {
+  readonly el: HTMLElement;
+  private readonly canvas: HTMLCanvasElement;
+  private readonly ctx: CanvasRenderingContext2D | null;
+  private readonly rim: SVGGElement;
+  private readonly letters: SVGTextElement[] = [];
+  private size = 0;
+  private cssSize = 0;
+  private dpr = 1;
+  private readonly observer: ResizeObserver | null;
+  private acc = 0;
+  private lastNorth = Number.NaN;
+  private pulse = 0;
+  private readonly islands: IslandDef[] = [];
+
+  constructor() {
+    this.canvas = h('canvas', 'cr-minimap__canvas');
+    this.ctx = this.canvas.getContext('2d', { alpha: true });
+    this.rim = svg('g', { class: 'cr-minimap__letters' });
+    const ticks = svg('g', { class: 'cr-minimap__ticks' });
+    for (let i = 0; i < 36; i++) {
+      const a = (i * Math.PI) / 18;
+      const r1 = 99, r2 = i % 9 === 0 ? 91 : 95;
+      ticks.append(svg('line', { x1: 100 + Math.sin(a) * r1, y1: 100 - Math.cos(a) * r1, x2: 100 + Math.sin(a) * r2, y2: 100 - Math.cos(a) * r2 }));
+    }
+    for (const l of LETTERS) {
+      const t = svg('text', { class: `cr-minimap__letter${l === 'N' ? ' is-n' : ''}`, x: 100, y: 100, 'text-anchor': 'middle', 'dominant-baseline': 'central' });
+      t.textContent = l;
+      this.letters.push(t);
+      this.rim.append(t);
+    }
+    const rimSvg = svg('svg', { class: 'cr-minimap__rim', viewBox: '0 0 200 200', 'aria-hidden': 'true' },
+      svg('circle', { class: 'cr-minimap__ring', cx: 100, cy: 100, r: 97 }),
+      svg('circle', { class: 'cr-minimap__range', cx: 100, cy: 100, r: 36 }),
+      svg('circle', { class: 'cr-minimap__range is-outer', cx: 100, cy: 100, r: 72 }),
+      ticks,
+      this.rim,
+    );
+    this.el = h('div', 'cr-minimap', h('div', 'cr-minimap__sea'), this.canvas, rimSvg, h('div', 'cr-minimap__glass'));
+    this.observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver((entries) => {
+      for (const e of entries) this.cssSize = Math.round(e.contentRect.width);
+      this.allocate();
+    }) : null;
+    this.observer?.observe(this.el);
+  }
+
+  dispose(): void { this.observer?.disconnect(); }
+
+  /** Sizes the backing store (done when observed, not on the first sailing frame). */
+  private allocate(): void {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (this.cssSize === this.size && dpr === this.dpr) return;
+    this.size = this.cssSize; this.dpr = dpr;
+    this.canvas.width = Math.max(1, Math.round(this.size * dpr));
+    this.canvas.height = Math.max(1, Math.round(this.size * dpr));
+    // Warm the 2D context (first draw initialises the backing surface) outside the sailing frames.
+    const ctx = this.ctx;
+    if (ctx) { ctx.beginPath(); ctx.arc(4, 4, 2, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = '#000'; ctx.stroke(); ctx.fillRect(0, 0, 2, 2); ctx.strokeRect(0, 0, 2, 2); ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); }
+  }
+
+  reset(): void { this.lastNorth = Number.NaN; this.acc = 1; }
+
+  update(run: Readonly<RunState>, basis: ScreenBasis, dt: number, world: WorldQuery | null = null): void {
+    this.acc += dt;
+    this.pulse += dt;
+    if (this.acc < 1 / 30) return;
+    this.acc = 0;
+    const ctx = this.ctx;
+    if (!ctx) return;
+    this.allocate();
+    const dpr = this.dpr;
+    const S = this.size;
+    if (S <= 0) return;
+    const theta = basis.ok ? basis.north : 0;
+    if (Math.abs(theta - this.lastNorth) > 0.004 || Number.isNaN(this.lastNorth)) {
+      this.lastNorth = theta;
+      for (let i = 0; i < 4; i++) {
+        const a = theta + (i * Math.PI) / 2;
+        this.letters[i]!.setAttribute('x', (100 + Math.sin(a) * 84).toFixed(1));
+        this.letters[i]!.setAttribute('y', (100 - Math.cos(a) * 84).toFixed(1));
+      }
+    }
+    const cos = Math.cos(theta), sin = Math.sin(theta);
+    const p = run.player;
+    const half = S / 2;
+    const edge = half * 0.72;
+    const scale = edge / RANGE;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, S, S);
+    ctx.lineWidth = 1.5;
+
+    const plot = (x: number, z: number, out: { x: number; y: number; clamped: boolean }) => {
+      const e = x - p.x, n = -(z - p.z);
+      let mx = (e * cos + n * sin) * scale;
+      let my = (e * sin - n * cos) * scale;
+      const d = Math.hypot(mx, my);
+      out.clamped = d > edge;
+      if (out.clamped) { mx *= edge / d; my *= edge / d; }
+      out.x = half + mx; out.y = half + my;
+      return out;
+    };
+    const pt = { x: 0, y: 0, clamped: false };
+
+    // Islands (clipped to the map disc; outlines are unclamped so coasts cross the rim cleanly).
+    if (world) {
+      const near = world.islandsNear(p.x, p.z, RANGE * 1.45, this.islands);
+      if (near.length) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(half, half, edge + 6, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.fillStyle = '#e8c98a';
+        ctx.strokeStyle = '#7a5a2a';
+        ctx.lineWidth = 1.4;
+        for (const isl of near) {
+          ctx.beginPath();
+          for (let i = 0; i < isl.outline.length; i++) {
+            const v = isl.outline[i]!;
+            const e = v.x - p.x, n = -(v.z - p.z);
+            const mx = half + (e * cos + n * sin) * scale, my = half + (e * sin - n * cos) * scale;
+            if (i === 0) ctx.moveTo(mx, my); else ctx.lineTo(mx, my);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+
+    // Chests.
+    for (const k of run.pickups) {
+      if (!k.alive || k.kind !== 'chest') continue;
+      plot(k.x, k.z, pt);
+      ctx.fillStyle = '#ffcf33';
+      ctx.strokeStyle = '#5a3200';
+      ctx.fillRect(pt.x - 4, pt.y - 3.5, 8, 7);
+      ctx.strokeRect(pt.x - 4, pt.y - 3.5, 8, 7);
+    }
+    // Enemies (normal first, elites on top).
+    for (let pass = 0; pass < 2; pass++) {
+      for (const en of run.enemies) {
+        if (en.life !== 'alive' || en.elite !== (pass === 1)) continue;
+        plot(en.x, en.z, pt);
+        const r = en.elite ? 4.6 : 2.7;
+        ctx.globalAlpha = pt.clamped ? 0.55 : 1;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pt.clamped ? r * 0.8 : r, 0, Math.PI * 2);
+        ctx.fillStyle = FACTION_COLOR[en.faction];
+        ctx.fill();
+        ctx.strokeStyle = en.elite ? '#ffcf33' : FACTION_EDGE[en.faction];
+        ctx.lineWidth = en.elite ? 2 : 1.2;
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+    // Bosses.
+    for (const b of run.bosses) {
+      if (b.life !== 'alive') continue;
+      plot(b.x, b.z, pt);
+      const pr = 9 + Math.sin(this.pulse * 6) * 2;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pr + 4, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,74,61,.55)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 7, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff4a3d';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    // Player arrow.
+    const fe = -Math.sin(p.heading), fn = Math.cos(p.heading);
+    const ax = fe * cos + fn * sin, ay = fe * sin - fn * cos;
+    const ang = Math.atan2(ax, -ay);
+    ctx.save();
+    ctx.translate(half, half);
+    ctx.rotate(ang);
+    ctx.beginPath();
+    ctx.moveTo(0, -9);
+    ctx.lineTo(6.5, 7);
+    ctx.lineTo(0, 3.5);
+    ctx.lineTo(-6.5, 7);
+    ctx.closePath();
+    ctx.fillStyle = '#ffcf33';
+    ctx.fill();
+    ctx.strokeStyle = '#0b1026';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  }
+}

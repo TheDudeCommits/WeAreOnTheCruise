@@ -1,0 +1,3980 @@
+{
+ "version": 1,
+ "generated": "2026-09-24",
+ "cues": {
+  "ui-hover": {
+   "category": "ui",
+   "gain": 0.22,
+   "pitch": 0.4,
+   "minInterval": 0.04,
+   "desc": "button hover tick",
+   "files": [
+    "sfx/ui-hover-1.ogg",
+    "sfx/ui-hover-2.ogg"
+   ]
+  },
+  "ui-click": {
+   "category": "ui",
+   "gain": 0.4,
+   "pitch": 0.3,
+   "minInterval": 0.03,
+   "desc": "button click",
+   "files": [
+    "sfx/ui-click-1.ogg",
+    "sfx/ui-click-2.ogg",
+    "sfx/ui-click-3.ogg"
+   ]
+  },
+  "ui-back": {
+   "category": "ui",
+   "gain": 0.4,
+   "pitch": 0.2,
+   "minInterval": 0.05,
+   "desc": "back / close / cancel",
+   "files": [
+    "sfx/ui-back-1.ogg",
+    "sfx/ui-back-2.ogg"
+   ]
+  },
+  "ui-confirm": {
+   "category": "ui",
+   "gain": 0.45,
+   "pitch": 0.2,
+   "minInterval": 0.08,
+   "desc": "confirm / buy / start",
+   "files": [
+    "sfx/ui-confirm-1.ogg",
+    "sfx/ui-confirm-2.ogg"
+   ]
+  },
+  "ui-error": {
+   "category": "ui",
+   "gain": 0.4,
+   "minInterval": 0.15,
+   "desc": "refused action",
+   "files": [
+    "sfx/ui-error.ogg"
+   ]
+  },
+  "ui-open": {
+   "category": "ui",
+   "gain": 0.4,
+   "minInterval": 0.1,
+   "desc": "pause/menu opens",
+   "files": [
+    "sfx/ui-open.ogg"
+   ]
+  },
+  "ui-close": {
+   "category": "ui",
+   "gain": 0.4,
+   "minInterval": 0.1,
+   "desc": "pause/menu closes",
+   "files": [
+    "sfx/ui-close.ogg"
+   ]
+  },
+  "ui-tick": {
+   "category": "ui",
+   "gain": 0.25,
+   "pitch": 0.5,
+   "minInterval": 0.06,
+   "desc": "slider tick",
+   "files": [
+    "sfx/ui-tick.ogg"
+   ]
+  },
+  "ui-transition": {
+   "category": "ui",
+   "gain": 0.35,
+   "pitch": 0.8,
+   "minInterval": 0.3,
+   "desc": "screen change: canvas swish",
+   "files": [
+    "sfx/ui-transition-1.ogg",
+    "sfx/ui-transition-2.ogg"
+   ]
+  },
+  "card-hover": {
+   "category": "ui",
+   "gain": 0.32,
+   "pitch": 0.8,
+   "minInterval": 0.05,
+   "desc": "level-up card slide",
+   "files": [
+    "sfx/card-hover-1.ogg",
+    "sfx/card-hover-2.ogg",
+    "sfx/card-hover-3.ogg"
+   ]
+  },
+  "card-select": {
+   "category": "ui",
+   "gain": 0.55,
+   "pitch": 0.4,
+   "minInterval": 0.1,
+   "desc": "card chosen",
+   "files": [
+    "sfx/card-select-1.ogg",
+    "sfx/card-select-2.ogg",
+    "sfx/card-select-3.ogg"
+   ]
+  },
+  "reroll": {
+   "category": "ui",
+   "gain": 0.5,
+   "pitch": 0.3,
+   "minInterval": 0.25,
+   "desc": "reroll: cards shuffled",
+   "files": [
+    "sfx/reroll-1.ogg",
+    "sfx/reroll-2.ogg"
+   ]
+  },
+  "weapon-new": {
+   "category": "ui",
+   "gain": 0.55,
+   "pitch": 0.3,
+   "minInterval": 0.3,
+   "desc": "new weapon mounted: latch + blade",
+   "files": [
+    "sfx/weapon-new.ogg"
+   ]
+  },
+  "weapon-upgrade": {
+   "category": "ui",
+   "gain": 0.5,
+   "pitch": 0.3,
+   "minInterval": 0.2,
+   "desc": "weapon level up",
+   "files": [
+    "sfx/weapon-upgrade-1.ogg",
+    "sfx/weapon-upgrade-2.ogg"
+   ]
+  },
+  "overdrive": {
+   "category": "ui",
+   "gain": 0.7,
+   "minInterval": 0.6,
+   "priority": 85,
+   "desc": "OVERDRIVE: brass stab + whoosh + sparkle",
+   "files": [
+    "sfx/overdrive.ogg"
+   ]
+  },
+  "passive-upgrade": {
+   "category": "ui",
+   "gain": 0.45,
+   "pitch": 0.2,
+   "minInterval": 0.2,
+   "desc": "passive rank up",
+   "files": [
+    "sfx/passive-upgrade-1.ogg",
+    "sfx/passive-upgrade-2.ogg"
+   ]
+  },
+  "skill-ready": {
+   "category": "ui",
+   "gain": 0.35,
+   "minInterval": 0.5,
+   "desc": "special ready",
+   "files": [
+    "sfx/skill-ready.ogg"
+   ]
+  },
+  "ultimate-ready": {
+   "category": "ui",
+   "gain": 0.45,
+   "minInterval": 1,
+   "desc": "ultimate charged",
+   "files": [
+    "sfx/ultimate-ready.ogg"
+   ]
+  },
+  "level-up": {
+   "category": "ui",
+   "gain": 0.6,
+   "minInterval": 1.2,
+   "priority": 90,
+   "desc": "level-up jingle (steel drum / pizzicato)",
+   "files": [
+    "sfx/level-up-1.ogg",
+    "sfx/level-up-2.ogg"
+   ]
+  },
+  "set-sail": {
+   "category": "ui",
+   "gain": 0.55,
+   "minInterval": 2,
+   "desc": "run starts: two bells + sail snap",
+   "files": [
+    "sfx/set-sail.ogg"
+   ]
+  },
+  "stinger-victory": {
+   "category": "stinger",
+   "gain": 0.9,
+   "desc": "victory fanfare",
+   "files": [
+    "sfx/stinger-victory.ogg"
+   ]
+  },
+  "stinger-defeat": {
+   "category": "stinger",
+   "gain": 0.85,
+   "desc": "defeat lament",
+   "files": [
+    "sfx/stinger-defeat.ogg"
+   ]
+  },
+  "stinger-boss-defeated": {
+   "category": "stinger",
+   "gain": 0.8,
+   "desc": "boss defeated fanfare",
+   "files": [
+    "sfx/stinger-boss-defeated.ogg"
+   ]
+  },
+  "cannon-near": {
+   "category": "cannon",
+   "gain": 0.85,
+   "pitch": 1.2,
+   "gainJitter": 1.5,
+   "priority": 55,
+   "minInterval": 0.02,
+   "maxPerFrame": 6,
+   "desc": "black-powder cannon, near",
+   "files": [
+    "sfx/cannon-near-1.ogg",
+    "sfx/cannon-near-2.ogg",
+    "sfx/cannon-near-3.ogg",
+    "sfx/cannon-near-4.ogg"
+   ]
+  },
+  "cannon-far": {
+   "category": "cannon",
+   "gain": 0.8,
+   "pitch": 1.5,
+   "gainJitter": 2,
+   "priority": 35,
+   "minInterval": 0.04,
+   "maxPerFrame": 3,
+   "desc": "cannon boom rolling across the water",
+   "files": [
+    "sfx/cannon-far-1.ogg",
+    "sfx/cannon-far-2.ogg",
+    "sfx/cannon-far-3.ogg"
+   ]
+  },
+  "broadside-ripple": {
+   "category": "cannon",
+   "gain": 0.8,
+   "pitch": 0.8,
+   "priority": 60,
+   "minInterval": 0.15,
+   "maxPerFrame": 1,
+   "desc": "rolling broadside (5 guns)",
+   "files": [
+    "sfx/broadside-ripple-1.ogg",
+    "sfx/broadside-ripple-2.ogg"
+   ]
+  },
+  "heavy-shot": {
+   "category": "cannon",
+   "gain": 0.95,
+   "pitch": 1,
+   "priority": 65,
+   "minInterval": 0.03,
+   "maxPerFrame": 3,
+   "desc": "heavy gun / boss shell",
+   "files": [
+    "sfx/heavy-shot-1.ogg",
+    "sfx/heavy-shot-2.ogg"
+   ]
+  },
+  "bow-chaser": {
+   "category": "cannon",
+   "gain": 0.75,
+   "pitch": 1.2,
+   "priority": 50,
+   "minInterval": 0.05,
+   "maxPerFrame": 2,
+   "desc": "long gun crack",
+   "files": [
+    "sfx/bow-chaser-1.ogg",
+    "sfx/bow-chaser-2.ogg"
+   ]
+  },
+  "swivel-shot": {
+   "category": "cannon",
+   "gain": 0.55,
+   "pitch": 1.5,
+   "priority": 40,
+   "minInterval": 0.03,
+   "maxPerFrame": 4,
+   "desc": "swivel gun / musket crack",
+   "files": [
+    "sfx/swivel-shot-1.ogg",
+    "sfx/swivel-shot-2.ogg",
+    "sfx/swivel-shot-3.ogg",
+    "sfx/swivel-shot-4.ogg"
+   ]
+  },
+  "mortar-launch": {
+   "category": "cannon",
+   "gain": 0.75,
+   "pitch": 1,
+   "priority": 50,
+   "minInterval": 0.08,
+   "maxPerFrame": 2,
+   "desc": "mortar thump",
+   "files": [
+    "sfx/mortar-launch-1.ogg",
+    "sfx/mortar-launch-2.ogg",
+    "sfx/mortar-launch-3.ogg"
+   ]
+  },
+  "chain-rattle": {
+   "category": "weapon",
+   "gain": 0.45,
+   "pitch": 1.5,
+   "minInterval": 0.1,
+   "maxPerFrame": 1,
+   "desc": "chain shot whirr",
+   "files": [
+    "sfx/chain-rattle-1.ogg",
+    "sfx/chain-rattle-2.ogg"
+   ]
+  },
+  "mortar-whistle": {
+   "category": "weapon",
+   "gain": 0.6,
+   "pitch": 1,
+   "priority": 60,
+   "minInterval": 0.12,
+   "maxPerFrame": 2,
+   "desc": "incoming shell whistle (ends at impact)",
+   "files": [
+    "sfx/mortar-whistle-1.ogg",
+    "sfx/mortar-whistle-2.ogg",
+    "sfx/mortar-whistle-3.ogg"
+   ]
+  },
+  "rocket-launch": {
+   "category": "weapon",
+   "gain": 0.55,
+   "pitch": 1.5,
+   "minInterval": 0.04,
+   "maxPerFrame": 3,
+   "desc": "rocket whoosh + fizz",
+   "files": [
+    "sfx/rocket-launch-1.ogg",
+    "sfx/rocket-launch-2.ogg",
+    "sfx/rocket-launch-3.ogg",
+    "sfx/rocket-launch-4.ogg"
+   ]
+  },
+  "harpoon-throw": {
+   "category": "weapon",
+   "gain": 0.6,
+   "pitch": 1,
+   "minInterval": 0.08,
+   "maxPerFrame": 2,
+   "desc": "harpoon launch",
+   "files": [
+    "sfx/harpoon-throw-1.ogg",
+    "sfx/harpoon-throw-2.ogg"
+   ]
+  },
+  "harpoon-hit": {
+   "category": "weapon",
+   "gain": 0.6,
+   "pitch": 1.2,
+   "minInterval": 0.06,
+   "maxPerFrame": 2,
+   "desc": "harpoon strikes timber",
+   "files": [
+    "sfx/harpoon-hit-1.ogg",
+    "sfx/harpoon-hit-2.ogg"
+   ]
+  },
+  "lightning-zap": {
+   "category": "weapon",
+   "gain": 0.6,
+   "pitch": 1.5,
+   "minInterval": 0.05,
+   "maxPerFrame": 2,
+   "desc": "electric arc",
+   "files": [
+    "sfx/lightning-zap-1.ogg",
+    "sfx/lightning-zap-2.ogg",
+    "sfx/lightning-zap-3.ogg",
+    "sfx/lightning-zap-4.ogg"
+   ]
+  },
+  "lance": {
+   "category": "weapon",
+   "gain": 0.8,
+   "pitch": 1,
+   "priority": 60,
+   "minInterval": 0.08,
+   "maxPerFrame": 2,
+   "desc": "Lance of Dawn: arc + gun",
+   "files": [
+    "sfx/lance.ogg"
+   ]
+  },
+  "mine-drop": {
+   "category": "weapon",
+   "gain": 0.5,
+   "pitch": 1.5,
+   "minInterval": 0.1,
+   "maxPerFrame": 2,
+   "desc": "mine dropped overboard",
+   "files": [
+    "sfx/mine-drop.ogg"
+   ]
+  },
+  "barrel-drop": {
+   "category": "weapon",
+   "gain": 0.55,
+   "pitch": 1.5,
+   "minInterval": 0.1,
+   "maxPerFrame": 2,
+   "desc": "barrel dropped astern",
+   "files": [
+    "sfx/barrel-drop.ogg"
+   ]
+  },
+  "fuse": {
+   "category": "weapon",
+   "gain": 0.35,
+   "pitch": 1,
+   "minInterval": 0.3,
+   "desc": "burning fuse",
+   "files": [
+    "sfx/fuse.ogg"
+   ]
+  },
+  "flare": {
+   "category": "weapon",
+   "gain": 0.6,
+   "minInterval": 0.4,
+   "desc": "signal flare launch",
+   "files": [
+    "sfx/flare.ogg"
+   ]
+  },
+  "water-bolt": {
+   "category": "weapon",
+   "gain": 0.55,
+   "pitch": 2,
+   "minInterval": 0.05,
+   "maxPerFrame": 3,
+   "desc": "water projectile swish",
+   "files": [
+    "sfx/water-bolt-1.ogg",
+    "sfx/water-bolt-2.ogg"
+   ]
+  },
+  "whirlpool-cast": {
+   "category": "weapon",
+   "gain": 0.6,
+   "pitch": 1,
+   "minInterval": 0.3,
+   "desc": "whirlpool opens",
+   "files": [
+    "sfx/whirlpool-cast.ogg"
+   ]
+  },
+  "reload": {
+   "category": "weapon",
+   "gain": 0.35,
+   "pitch": 1,
+   "minInterval": 0.5,
+   "desc": "manual broadside reloaded",
+   "files": [
+    "sfx/reload.ogg"
+   ]
+  },
+  "hit-wood": {
+   "category": "impact",
+   "gain": 0.6,
+   "pitch": 1.5,
+   "gainJitter": 1.5,
+   "minInterval": 0.03,
+   "maxPerFrame": 4,
+   "desc": "shot hits a hull",
+   "files": [
+    "sfx/hit-wood-1.ogg",
+    "sfx/hit-wood-2.ogg",
+    "sfx/hit-wood-3.ogg",
+    "sfx/hit-wood-4.ogg"
+   ]
+  },
+  "hit-wood-light": {
+   "category": "impact",
+   "gain": 0.45,
+   "pitch": 2,
+   "minInterval": 0.03,
+   "maxPerFrame": 4,
+   "desc": "small shot hits wood",
+   "files": [
+    "sfx/hit-wood-light-1.ogg",
+    "sfx/hit-wood-light-2.ogg",
+    "sfx/hit-wood-light-3.ogg"
+   ]
+  },
+  "hit-wood-heavy": {
+   "category": "impact",
+   "gain": 0.7,
+   "pitch": 1.2,
+   "minInterval": 0.05,
+   "maxPerFrame": 3,
+   "desc": "heavy shot splinters timber",
+   "files": [
+    "sfx/hit-wood-heavy-1.ogg",
+    "sfx/hit-wood-heavy-2.ogg",
+    "sfx/hit-wood-heavy-3.ogg"
+   ]
+  },
+  "splinters": {
+   "category": "impact",
+   "gain": 0.45,
+   "pitch": 2,
+   "minInterval": 0.08,
+   "maxPerFrame": 2,
+   "desc": "wood debris",
+   "files": [
+    "sfx/splinters-1.ogg",
+    "sfx/splinters-2.ogg"
+   ]
+  },
+  "sail-rip": {
+   "category": "impact",
+   "gain": 0.4,
+   "pitch": 1.5,
+   "minInterval": 0.15,
+   "maxPerFrame": 1,
+   "desc": "chain shot shreds canvas",
+   "files": [
+    "sfx/sail-rip-1.ogg",
+    "sfx/sail-rip-2.ogg"
+   ]
+  },
+  "hit-metal": {
+   "category": "impact",
+   "gain": 0.55,
+   "pitch": 1.5,
+   "minInterval": 0.05,
+   "maxPerFrame": 2,
+   "desc": "shot rings off iron plate",
+   "files": [
+    "sfx/hit-metal-1.ogg",
+    "sfx/hit-metal-2.ogg",
+    "sfx/hit-metal-3.ogg"
+   ]
+  },
+  "hit-flesh": {
+   "category": "impact",
+   "gain": 0.6,
+   "pitch": 1.5,
+   "minInterval": 0.06,
+   "maxPerFrame": 2,
+   "desc": "shot thumps the serpent",
+   "files": [
+    "sfx/hit-flesh-1.ogg",
+    "sfx/hit-flesh-2.ogg"
+   ]
+  },
+  "hit-rock": {
+   "category": "impact",
+   "gain": 0.5,
+   "pitch": 1.5,
+   "minInterval": 0.08,
+   "maxPerFrame": 2,
+   "desc": "shot hits rock / hull scrapes an island",
+   "files": [
+    "sfx/hit-rock-1.ogg",
+    "sfx/hit-rock-2.ogg"
+   ]
+  },
+  "splash-small": {
+   "category": "impact",
+   "gain": 0.45,
+   "pitch": 2,
+   "gainJitter": 2,
+   "priority": 25,
+   "minInterval": 0.035,
+   "maxPerFrame": 3,
+   "desc": "shot plunges into the sea",
+   "files": [
+    "sfx/splash-small-1.ogg",
+    "sfx/splash-small-2.ogg",
+    "sfx/splash-small-3.ogg",
+    "sfx/splash-small-4.ogg"
+   ]
+  },
+  "splash-large": {
+   "category": "impact",
+   "gain": 0.65,
+   "pitch": 1.5,
+   "priority": 45,
+   "minInterval": 0.08,
+   "maxPerFrame": 2,
+   "desc": "big splash",
+   "files": [
+    "sfx/splash-large-1.ogg",
+    "sfx/splash-large-2.ogg",
+    "sfx/splash-large-3.ogg"
+   ]
+  },
+  "crit": {
+   "category": "impact",
+   "gain": 0.5,
+   "pitch": 1,
+   "priority": 50,
+   "minInterval": 0.07,
+   "maxPerFrame": 1,
+   "desc": "critical hit accent",
+   "files": [
+    "sfx/crit-1.ogg",
+    "sfx/crit-2.ogg"
+   ]
+  },
+  "ram-crash": {
+   "category": "impact",
+   "gain": 0.85,
+   "pitch": 1,
+   "priority": 75,
+   "minInterval": 0.15,
+   "maxPerFrame": 1,
+   "desc": "ramming crunch",
+   "files": [
+    "sfx/ram-crash-1.ogg",
+    "sfx/ram-crash-2.ogg"
+   ]
+  },
+  "collide-ship": {
+   "category": "impact",
+   "gain": 0.55,
+   "pitch": 1.5,
+   "minInterval": 0.2,
+   "maxPerFrame": 1,
+   "desc": "hulls bump",
+   "files": [
+    "sfx/collide-ship-1.ogg",
+    "sfx/collide-ship-2.ogg"
+   ]
+  },
+  "explosion-small": {
+   "category": "explosion",
+   "gain": 0.75,
+   "pitch": 1.2,
+   "priority": 55,
+   "minInterval": 0.05,
+   "maxPerFrame": 3,
+   "desc": "small blast",
+   "files": [
+    "sfx/explosion-small-1.ogg",
+    "sfx/explosion-small-2.ogg",
+    "sfx/explosion-small-3.ogg",
+    "sfx/explosion-small-4.ogg"
+   ]
+  },
+  "explosion-large": {
+   "category": "explosion",
+   "gain": 0.95,
+   "pitch": 1,
+   "priority": 75,
+   "minInterval": 0.12,
+   "maxPerFrame": 2,
+   "desc": "big blast with debris",
+   "files": [
+    "sfx/explosion-large-1.ogg",
+    "sfx/explosion-large-2.ogg",
+    "sfx/explosion-large-3.ogg"
+   ]
+  },
+  "explosion-powder": {
+   "category": "explosion",
+   "gain": 1,
+   "pitch": 0.8,
+   "priority": 85,
+   "minInterval": 0.2,
+   "maxPerFrame": 1,
+   "desc": "powder keg",
+   "files": [
+    "sfx/explosion-powder-1.ogg",
+    "sfx/explosion-powder-2.ogg"
+   ]
+  },
+  "explosion-water": {
+   "category": "explosion",
+   "gain": 0.8,
+   "pitch": 1,
+   "priority": 60,
+   "minInterval": 0.1,
+   "maxPerFrame": 2,
+   "desc": "underwater blast / geyser",
+   "files": [
+    "sfx/explosion-water-1.ogg",
+    "sfx/explosion-water-2.ogg",
+    "sfx/explosion-water-3.ogg"
+   ]
+  },
+  "shockwave": {
+   "category": "explosion",
+   "gain": 0.75,
+   "pitch": 1,
+   "priority": 70,
+   "minInterval": 0.2,
+   "maxPerFrame": 1,
+   "desc": "deep boom + air",
+   "files": [
+    "sfx/shockwave-1.ogg",
+    "sfx/shockwave-2.ogg"
+   ]
+  },
+  "fire-burst": {
+   "category": "explosion",
+   "gain": 0.65,
+   "pitch": 1.5,
+   "minInterval": 0.08,
+   "maxPerFrame": 2,
+   "desc": "fireball",
+   "files": [
+    "sfx/fire-burst-1.ogg",
+    "sfx/fire-burst-2.ogg",
+    "sfx/fire-burst-3.ogg"
+   ]
+  },
+  "wave-roar": {
+   "category": "explosion",
+   "gain": 0.8,
+   "pitch": 1,
+   "priority": 70,
+   "minInterval": 0.5,
+   "maxPerFrame": 1,
+   "desc": "great wave crashes",
+   "files": [
+    "sfx/wave-roar-1.ogg",
+    "sfx/wave-roar-2.ogg"
+   ]
+  },
+  "thunder-near": {
+   "category": "explosion",
+   "gain": 0.85,
+   "pitch": 1,
+   "priority": 70,
+   "minInterval": 0.3,
+   "maxPerFrame": 1,
+   "desc": "lightning crack + rumble",
+   "files": [
+    "sfx/thunder-near-1.ogg",
+    "sfx/thunder-near-2.ogg",
+    "sfx/thunder-near-3.ogg"
+   ]
+  },
+  "fire-ignite": {
+   "category": "world",
+   "gain": 0.5,
+   "pitch": 1.5,
+   "minInterval": 0.1,
+   "maxPerFrame": 2,
+   "desc": "fire catches",
+   "files": [
+    "sfx/fire-ignite-1.ogg",
+    "sfx/fire-ignite-2.ogg",
+    "sfx/fire-ignite-3.ogg"
+   ]
+  },
+  "thunder-far": {
+   "category": "world",
+   "gain": 0.6,
+   "pitch": 1,
+   "minInterval": 1,
+   "maxPerFrame": 1,
+   "ref": 400,
+   "maxDistance": 3000,
+   "desc": "distant thunder",
+   "files": [
+    "sfx/thunder-far-1.ogg",
+    "sfx/thunder-far-2.ogg"
+   ]
+  },
+  "ship-break": {
+   "category": "world",
+   "gain": 0.7,
+   "pitch": 1.2,
+   "priority": 50,
+   "minInterval": 0.1,
+   "maxPerFrame": 2,
+   "desc": "hull breaking up",
+   "files": [
+    "sfx/ship-break-1.ogg",
+    "sfx/ship-break-2.ogg",
+    "sfx/ship-break-3.ogg"
+   ]
+  },
+  "ship-sink": {
+   "category": "world",
+   "gain": 0.55,
+   "pitch": 1.2,
+   "minInterval": 0.3,
+   "maxPerFrame": 1,
+   "desc": "sinking: groan + bubbles",
+   "files": [
+    "sfx/ship-sink-1.ogg",
+    "sfx/ship-sink-2.ogg"
+   ]
+  },
+  "hull-creak": {
+   "category": "player",
+   "gain": 0.4,
+   "pitch": 1.5,
+   "minInterval": 1.2,
+   "maxPerFrame": 1,
+   "desc": "timbers creak",
+   "files": [
+    "sfx/hull-creak-1.ogg",
+    "sfx/hull-creak-2.ogg",
+    "sfx/hull-creak-3.ogg",
+    "sfx/hull-creak-4.ogg"
+   ]
+  },
+  "gull": {
+   "category": "world",
+   "gain": 0.35,
+   "pitch": 1,
+   "minInterval": 1.2,
+   "maxPerFrame": 1,
+   "desc": "seagull call",
+   "files": [
+    "sfx/gull-1.ogg",
+    "sfx/gull-2.ogg",
+    "sfx/gull-3.ogg",
+    "sfx/gull-4.ogg"
+   ]
+  },
+  "ship-bell": {
+   "category": "world",
+   "gain": 0.5,
+   "pitch": 0.3,
+   "minInterval": 0.5,
+   "maxPerFrame": 1,
+   "desc": "ship's bell",
+   "files": [
+    "sfx/ship-bell-1.ogg",
+    "sfx/ship-bell-2.ogg"
+   ]
+  },
+  "alarm-bell": {
+   "category": "world",
+   "gain": 0.55,
+   "minInterval": 2,
+   "maxPerFrame": 1,
+   "ref": 400,
+   "desc": "tall-ship alarm bell (director events)",
+   "files": [
+    "sfx/alarm-bell.ogg"
+   ]
+  },
+  "warning": {
+   "category": "world",
+   "gain": 0.5,
+   "pitch": 1,
+   "minInterval": 0.4,
+   "maxPerFrame": 1,
+   "desc": "telegraph warning drum",
+   "files": [
+    "sfx/warning.ogg"
+   ]
+  },
+  "player-hit": {
+   "category": "player",
+   "gain": 0.85,
+   "pitch": 1,
+   "priority": 90,
+   "minInterval": 0.08,
+   "maxPerFrame": 1,
+   "desc": "our hull is hit",
+   "files": [
+    "sfx/player-hit-1.ogg",
+    "sfx/player-hit-2.ogg",
+    "sfx/player-hit-3.ogg"
+   ]
+  },
+  "brace": {
+   "category": "player",
+   "gain": 0.6,
+   "minInterval": 0.2,
+   "desc": "brace: timbers tense",
+   "files": [
+    "sfx/brace-1.ogg",
+    "sfx/brace-2.ogg"
+   ]
+  },
+  "brace-hit": {
+   "category": "player",
+   "gain": 0.7,
+   "pitch": 1,
+   "priority": 85,
+   "minInterval": 0.1,
+   "maxPerFrame": 1,
+   "desc": "braced hit: dull thud",
+   "files": [
+    "sfx/brace-hit-1.ogg",
+    "sfx/brace-hit-2.ogg"
+   ]
+  },
+  "parry": {
+   "category": "player",
+   "gain": 0.75,
+   "pitch": 0.5,
+   "priority": 90,
+   "minInterval": 0.15,
+   "maxPerFrame": 1,
+   "desc": "parry clang",
+   "files": [
+    "sfx/parry-1.ogg",
+    "sfx/parry-2.ogg"
+   ]
+  },
+  "boost": {
+   "category": "player",
+   "gain": 0.55,
+   "pitch": 0.8,
+   "minInterval": 0.3,
+   "desc": "gust fills the sails",
+   "files": [
+    "sfx/boost-1.ogg",
+    "sfx/boost-2.ogg"
+   ]
+  },
+  "heal": {
+   "category": "player",
+   "gain": 0.5,
+   "minInterval": 0.5,
+   "desc": "repair / heal shimmer",
+   "files": [
+    "sfx/heal-1.ogg",
+    "sfx/heal-2.ogg"
+   ]
+  },
+  "shield-up": {
+   "category": "player",
+   "gain": 0.45,
+   "minInterval": 0.5,
+   "desc": "ward shimmer",
+   "files": [
+    "sfx/shield-up-1.ogg",
+    "sfx/shield-up-2.ogg"
+   ]
+  },
+  "dash-whoosh": {
+   "category": "player",
+   "gain": 0.6,
+   "minInterval": 0.3,
+   "desc": "Lionburst leap",
+   "files": [
+    "sfx/dash-whoosh.ogg"
+   ]
+  },
+  "dive": {
+   "category": "player",
+   "gain": 0.6,
+   "minInterval": 0.5,
+   "desc": "Deep Dive: submerge",
+   "files": [
+    "sfx/dive.ogg"
+   ]
+  },
+  "crew-cheer": {
+   "category": "player",
+   "gain": 0.45,
+   "pitch": 0.6,
+   "minInterval": 3,
+   "maxPerFrame": 1,
+   "desc": "crew cheers",
+   "files": [
+    "sfx/crew-cheer-1.ogg",
+    "sfx/crew-cheer-2.ogg",
+    "sfx/crew-cheer-3.ogg"
+   ]
+  },
+  "ultimate-sting": {
+   "category": "player",
+   "gain": 0.7,
+   "minInterval": 1,
+   "priority": 95,
+   "desc": "ultimate: orchestral hit",
+   "files": [
+    "sfx/ultimate-sting.ogg"
+   ]
+  },
+  "war-horn": {
+   "category": "boss",
+   "gain": 0.7,
+   "minInterval": 1.5,
+   "maxPerFrame": 1,
+   "desc": "battle horn",
+   "files": [
+    "sfx/war-horn.ogg"
+   ]
+  },
+  "boss-horn": {
+   "category": "boss",
+   "gain": 0.9,
+   "minInterval": 2,
+   "maxPerFrame": 1,
+   "priority": 95,
+   "desc": "deep foghorn (boss warning)",
+   "files": [
+    "sfx/boss-horn-1.ogg",
+    "sfx/boss-horn-2.ogg"
+   ]
+  },
+  "serpent-roar": {
+   "category": "boss",
+   "gain": 0.95,
+   "pitch": 1,
+   "minInterval": 1,
+   "maxPerFrame": 1,
+   "priority": 95,
+   "desc": "Tidewyrm roar",
+   "files": [
+    "sfx/serpent-roar-1.ogg",
+    "sfx/serpent-roar-2.ogg",
+    "sfx/serpent-roar-3.ogg"
+   ]
+  },
+  "elite-spawn": {
+   "category": "world",
+   "gain": 0.55,
+   "minInterval": 1.5,
+   "maxPerFrame": 1,
+   "desc": "elite sighted: gong",
+   "files": [
+    "sfx/elite-spawn.ogg"
+   ]
+  },
+  "metal-groan": {
+   "category": "boss",
+   "gain": 0.6,
+   "minInterval": 1,
+   "maxPerFrame": 1,
+   "desc": "armour plates tear",
+   "files": [
+    "sfx/metal-groan-1.ogg",
+    "sfx/metal-groan-2.ogg"
+   ]
+  },
+  "coin-copper": {
+   "category": "pickup",
+   "gain": 0.3,
+   "pitch": 0.5,
+   "gainJitter": 1,
+   "priority": 20,
+   "minInterval": 0.03,
+   "maxPerFrame": 2,
+   "desc": "copper coin tink",
+   "files": [
+    "sfx/coin-copper-1.ogg",
+    "sfx/coin-copper-2.ogg",
+    "sfx/coin-copper-3.ogg"
+   ]
+  },
+  "coin-silver": {
+   "category": "pickup",
+   "gain": 0.33,
+   "pitch": 0.5,
+   "priority": 25,
+   "minInterval": 0.04,
+   "maxPerFrame": 2,
+   "desc": "silver coins clink",
+   "files": [
+    "sfx/coin-silver-1.ogg",
+    "sfx/coin-silver-2.ogg"
+   ]
+  },
+  "coin-gold": {
+   "category": "pickup",
+   "gain": 0.4,
+   "pitch": 0.5,
+   "priority": 30,
+   "minInterval": 0.06,
+   "maxPerFrame": 2,
+   "desc": "gold bar / coin pile",
+   "files": [
+    "sfx/coin-gold-1.ogg",
+    "sfx/coin-gold-2.ogg"
+   ]
+  },
+  "doubloon": {
+   "category": "pickup",
+   "gain": 0.45,
+   "pitch": 0.5,
+   "priority": 40,
+   "minInterval": 0.06,
+   "maxPerFrame": 2,
+   "desc": "doubloon: coin + shimmer",
+   "files": [
+    "sfx/doubloon-1.ogg",
+    "sfx/doubloon-2.ogg"
+   ]
+  },
+  "chest-open": {
+   "category": "pickup",
+   "gain": 0.6,
+   "priority": 70,
+   "minInterval": 0.3,
+   "desc": "treasure chest opens",
+   "files": [
+    "sfx/chest-open-1.ogg",
+    "sfx/chest-open-2.ogg"
+   ]
+  },
+  "compass": {
+   "category": "pickup",
+   "gain": 0.5,
+   "minInterval": 0.5,
+   "desc": "compass: magnet all treasure",
+   "files": [
+    "sfx/compass.ogg"
+   ]
+  },
+  "treasure-sparkle": {
+   "category": "pickup",
+   "gain": 0.4,
+   "minInterval": 0.15,
+   "desc": "glint / reward sparkle",
+   "files": [
+    "sfx/treasure-sparkle-1.ogg",
+    "sfx/treasure-sparkle-2.ogg"
+   ]
+  },
+  "repair": {
+   "category": "pickup",
+   "gain": 0.5,
+   "minInterval": 0.3,
+   "desc": "repair crate: hammering",
+   "files": [
+    "sfx/repair-1.ogg",
+    "sfx/repair-2.ogg"
+   ]
+  },
+  "amb-ocean": {
+   "category": "ambience",
+   "gain": 1,
+   "desc": "open-sea wash",
+   "files": [
+    "sfx/amb-ocean.ogg"
+   ]
+  },
+  "amb-bow-wash": {
+   "category": "ambience",
+   "gain": 1,
+   "desc": "bow wave along the hull (rate follows speed)",
+   "files": [
+    "sfx/amb-bow-wash.ogg"
+   ]
+  },
+  "amb-wind": {
+   "category": "ambience",
+   "gain": 0.9,
+   "desc": "wind (level + brightness follow sea.windStrength)",
+   "files": [
+    "sfx/amb-wind.ogg"
+   ]
+  },
+  "amb-rain": {
+   "category": "ambience",
+   "gain": 0.9,
+   "desc": "heavy rain (decorrelated stereo)",
+   "files": [
+    "sfx/amb-rain.ogg"
+   ]
+  },
+  "amb-fire": {
+   "category": "ambience",
+   "gain": 1,
+   "desc": "burning ship crackle (positional)",
+   "files": [
+    "sfx/amb-fire.ogg"
+   ]
+  },
+  "amb-whirlpool": {
+   "category": "ambience",
+   "gain": 1,
+   "desc": "whirlpool churn (positional)",
+   "files": [
+    "sfx/amb-whirlpool.ogg"
+   ]
+  },
+  "amb-harbor": {
+   "category": "ambience",
+   "gain": 1,
+   "desc": "harbour: water lapping, boats, rigging",
+   "files": [
+    "sfx/amb-harbor.ogg"
+   ]
+  }
+ },
+ "music": {
+  "title": {
+   "gain": 0.9,
+   "bpm": 120,
+   "beatsPerBar": 4,
+   "loop": true,
+   "loopEnd": 124,
+   "loopCrossfade": 3,
+   "desc": "title: Pirate's Orchestra — orchestra + accordion",
+   "file": "music/title.ogg"
+  },
+  "harbor": {
+   "gain": 0.85,
+   "bpm": 140,
+   "beatsPerBar": 4,
+   "loop": true,
+   "seamless": true,
+   "desc": "harbor: A Sailor's Chant — shanty, loopable",
+   "file": "music/harbor.ogg",
+   "loopEnd": 68.04
+  },
+  "run-calm": {
+   "gain": 0.9,
+   "bpm": 117.5,
+   "beatsPerBar": 4,
+   "loop": true,
+   "loopEnd": 99.4,
+   "loopCrossfade": 2.5,
+   "desc": "calm sailing: Trials of the Sea",
+   "file": "music/run-calm.ogg"
+  },
+  "run-combat": {
+   "gain": 0.9,
+   "bpm": 120,
+   "beatsPerBar": 4,
+   "loop": true,
+   "loopStart": 3,
+   "loopEnd": 102.5,
+   "loopCrossfade": 3,
+   "desc": "combat: Chest of Adventure",
+   "file": "music/run-combat.ogg"
+  },
+  "run-horde": {
+   "gain": 0.9,
+   "bpm": 148,
+   "beatsPerBar": 4,
+   "loop": true,
+   "loopEnd": 93.6,
+   "loopCrossfade": 2,
+   "desc": "late-run horde: Battle Theme A",
+   "file": "music/run-horde.ogg"
+  },
+  "boss": {
+   "gain": 0.9,
+   "bpm": 117.5,
+   "beatsPerBar": 4,
+   "loop": true,
+   "seamless": true,
+   "desc": "boss: Epic Boss Battle (seamless loop)",
+   "file": "music/boss.ogg",
+   "loopEnd": 123.39
+  },
+  "boss-final": {
+   "gain": 0.9,
+   "bpm": 161.5,
+   "beatsPerBar": 4,
+   "loop": true,
+   "loopEnd": 144.5,
+   "loopCrossfade": 2.5,
+   "desc": "final boss (The Sovereign): The Final Battle",
+   "file": "music/boss-final.ogg"
+  }
+ },
+ "files": {
+  "music/boss-final.ogg": {
+   "bytes": 1946097,
+   "sha256": "de57cc0ccc90baea3bd1a09d5eddc2b28242199f21a4bc16753f06cea7a3c75f",
+   "duration": 145.828,
+   "channels": 2,
+   "lufs": -16,
+   "truePeak": -2.5,
+   "sources": [
+    "oga-the-final-battle"
+   ]
+  },
+  "music/boss.ogg": {
+   "bytes": 1444293,
+   "sha256": "d310d130d38caa8eb4d4f8442e9350deb4b94d3fc9e154234dd1d39fc389af57",
+   "duration": 123.435,
+   "channels": 2,
+   "lufs": -16,
+   "truePeak": -5.6,
+   "sources": [
+    "oga-boss-battle-music"
+   ]
+  },
+  "music/harbor.ogg": {
+   "bytes": 1048990,
+   "sha256": "cba091168ea4ac497ec77da12a90f1422dbcdacde04a8e677f06b0f795d7f72e",
+   "duration": 68.092,
+   "channels": 2,
+   "lufs": -16,
+   "truePeak": -1.3,
+   "sources": [
+    "oga-a-sailors-chant"
+   ]
+  },
+  "music/run-calm.ogg": {
+   "bytes": 1272652,
+   "sha256": "ed11d335f9a583bebd04a3b709bdb7870018e7b4cecca9ce482f7d13e1710480",
+   "duration": 101.655,
+   "channels": 2,
+   "lufs": -16,
+   "truePeak": -0.9,
+   "sources": [
+    "oga-trials-of-the-sea"
+   ]
+  },
+  "music/run-combat.ogg": {
+   "bytes": 1257792,
+   "sha256": "b10d408109e3aadfad3d481c9200304064ae99f0a371f3a354195c7d66030a50",
+   "duration": 106.818,
+   "channels": 2,
+   "lufs": -16,
+   "truePeak": -3.4,
+   "sources": [
+    "oga-chest-of-adventure"
+   ]
+  },
+  "music/run-horde.ogg": {
+   "bytes": 1161529,
+   "sha256": "a758b61db8faeb2439f3db31cf12ef1a892deb4e6bc545dfc53fe431f14965fc",
+   "duration": 95.858,
+   "channels": 2,
+   "lufs": -16,
+   "truePeak": -5.2,
+   "sources": [
+    "oga-battle-theme-a"
+   ]
+  },
+  "music/title.ogg": {
+   "bytes": 1583717,
+   "sha256": "0c418c645a808b0fd2d776bd55e1b642ab7dd5d8c4ea3de08bd6aee5605c95d9",
+   "duration": 128.052,
+   "channels": 2,
+   "lufs": -16,
+   "truePeak": -2.2,
+   "sources": [
+    "oga-pirates-orchestra-208"
+   ]
+  },
+  "sfx/alarm-bell.ogg": {
+   "bytes": 39698,
+   "sha256": "cfef112b7ec1ae98ea3f3c738213add264fe1a8527ab45e5ce6d9d5b8e261bf1",
+   "duration": 3.575,
+   "channels": 1,
+   "lufs": -11.6,
+   "truePeak": -4,
+   "rms100": -13,
+   "sources": [
+    "fs-418705"
+   ]
+  },
+  "sfx/amb-bow-wash.ogg": {
+   "bytes": 158610,
+   "sha256": "e9070bfd5220eef44c21204224487b788b2a63ad9fdaa2c8394062d60cd14256",
+   "duration": 18.006,
+   "channels": 2,
+   "lufs": -21,
+   "truePeak": -7.6,
+   "sources": [
+    "fs-360631"
+   ]
+  },
+  "sfx/amb-fire.ogg": {
+   "bytes": 116798,
+   "sha256": "9fac02b037cb41c71c98d5b86ee6ec16c32e963a09ba7cce3a2cbf92022accb4",
+   "duration": 14.007,
+   "channels": 1,
+   "lufs": -24.1,
+   "truePeak": -2.5,
+   "sources": [
+    "fs-364992"
+   ]
+  },
+  "sfx/amb-harbor.ogg": {
+   "bytes": 261848,
+   "sha256": "c3d2aebdbb07184d54dfd105acb9b705d21313364133283c17a452492dc8c8e5",
+   "duration": 40.007,
+   "channels": 2,
+   "lufs": -21,
+   "truePeak": -3,
+   "sources": [
+    "fs-254125"
+   ]
+  },
+  "sfx/amb-ocean.ogg": {
+   "bytes": 267313,
+   "sha256": "f7cc6ea5ef9ce6755ddb7a0ae64aeb8a4e88f8351cccb7cbcfb9a1fd513dbe50",
+   "duration": 29.998,
+   "channels": 2,
+   "lufs": -21,
+   "truePeak": -4.4,
+   "sources": [
+    "fs-176617"
+   ]
+  },
+  "sfx/amb-rain.ogg": {
+   "bytes": 139205,
+   "sha256": "ade332ecc95bbbd20f9e9b24594d8d0896be2252fc23443cafd493a869288c9f",
+   "duration": 14.007,
+   "channels": 2,
+   "lufs": -21,
+   "truePeak": -2.2,
+   "sources": [
+    "fs-200272"
+   ]
+  },
+  "sfx/amb-whirlpool.ogg": {
+   "bytes": 99159,
+   "sha256": "ed1ec5a4f9ef41b00429f118110920cdef57c197ccf55bf2f8102171fa667b74",
+   "duration": 14.007,
+   "channels": 1,
+   "lufs": -24.2,
+   "truePeak": -1.2,
+   "sources": [
+    "fs-193755"
+   ]
+  },
+  "sfx/amb-wind.ogg": {
+   "bytes": 99467,
+   "sha256": "c9bb2db98ef1ad6556e58d4a89dfd30385531d164a49a9524149114f373dd2ce",
+   "duration": 13.507,
+   "channels": 2,
+   "lufs": -21,
+   "truePeak": -9.2,
+   "sources": [
+    "fs-344887"
+   ]
+  },
+  "sfx/barrel-drop.ogg": {
+   "bytes": 12013,
+   "sha256": "685a0799262c90fb01e032fd5a64158e1c28830d8f2afaf5163ca6f306b5c4b5",
+   "duration": 1.398,
+   "channels": 1,
+   "lufs": -19,
+   "truePeak": -1.2,
+   "rms100": -13.8,
+   "sources": [
+    "kenney-impact-sounds-impactWood_heavy_001",
+    "fs-398032"
+   ]
+  },
+  "sfx/boost-1.ogg": {
+   "bytes": 8555,
+   "sha256": "0feb70876d7521115e49dd9b3f5dd4e74d56ba787c555d6a3f84633af85a2474",
+   "duration": 1.5,
+   "channels": 1,
+   "lufs": -28.7,
+   "truePeak": -5.7,
+   "rms100": -13.6,
+   "sources": [
+    "fs-683101",
+    "fs-428337"
+   ]
+  },
+  "sfx/boost-2.ogg": {
+   "bytes": 13209,
+   "sha256": "05fce6fd46cadc988aa11e3c396e8df42f8c1e90f865e92572e3aaef4eeb93c1",
+   "duration": 2.207,
+   "channels": 1,
+   "lufs": -16.8,
+   "truePeak": -3.9,
+   "rms100": -13,
+   "sources": [
+    "fs-237980",
+    "fs-244982"
+   ]
+  },
+  "sfx/boss-horn-1.ogg": {
+   "bytes": 46560,
+   "sha256": "80cba433271c8388d5a6a8011bea409e6d2f63f0e721491eeaf73a1df4976ee5",
+   "duration": 6.507,
+   "channels": 1,
+   "lufs": -14,
+   "truePeak": -6.9,
+   "rms100": -12.9,
+   "sources": [
+    "fs-99630"
+   ]
+  },
+  "sfx/boss-horn-2.ogg": {
+   "bytes": 50389,
+   "sha256": "04f3ed003800626fab66a8e396175536b673ab72b7abf1270e310fd9e5ed542a",
+   "duration": 6.557,
+   "channels": 1,
+   "lufs": -14.1,
+   "truePeak": -5.3,
+   "rms100": -12.9,
+   "sources": [
+    "fs-69663"
+   ]
+  },
+  "sfx/bow-chaser-1.ogg": {
+   "bytes": 6546,
+   "sha256": "5ff47022ef872997f7b02d26897dc6c6d9f5bcefc619b0edf3357acadb81c9c3",
+   "duration": 1.087,
+   "channels": 1,
+   "lufs": -20,
+   "truePeak": -3.2,
+   "rms100": -12.9,
+   "sources": [
+    "fs-702245"
+   ]
+  },
+  "sfx/bow-chaser-2.ogg": {
+   "bytes": 5198,
+   "sha256": "8de95a0d318de5940be1e6b5e0e49ef0bc29618c20e7470b75ae25d23e5e11b6",
+   "duration": 0.743,
+   "channels": 1,
+   "lufs": -15.5,
+   "truePeak": -3.8,
+   "rms100": -13,
+   "sources": [
+    "fs-175430"
+   ]
+  },
+  "sfx/brace-1.ogg": {
+   "bytes": 3754,
+   "sha256": "9c234c44f1021e0e438938c8b7b5610bd386511b1b643ca3230a9ebc8e945f20",
+   "duration": 0.445,
+   "channels": 1,
+   "lufs": -20.4,
+   "truePeak": -1.5,
+   "rms100": -13.2,
+   "sources": [
+    "kenney-impact-sounds-impactWood_heavy_000",
+    "kenney-rpg-audio-creak3"
+   ]
+  },
+  "sfx/brace-2.ogg": {
+   "bytes": 6021,
+   "sha256": "7a4ea46c80385d3b3f04aaaa4c9294103db56ab1031c643a61a8b1f5145b3898",
+   "duration": 0.823,
+   "channels": 1,
+   "lufs": -21.7,
+   "truePeak": -5.3,
+   "rms100": -13.1,
+   "sources": [
+    "kenney-impact-sounds-impactSoft_heavy_000",
+    "kenney-rpg-audio-creak1"
+   ]
+  },
+  "sfx/brace-hit-1.ogg": {
+   "bytes": 5679,
+   "sha256": "946cda9f698b14e430a5f51361ffc3895f8a1cf19106662ac52a18560805a96b",
+   "duration": 0.766,
+   "channels": 1,
+   "lufs": -22.9,
+   "truePeak": -3.4,
+   "rms100": -13,
+   "sources": [
+    "kenney-impact-sounds-impactSoft_heavy_001",
+    "kenney-impact-sounds-impactWood_heavy_001"
+   ]
+  },
+  "sfx/brace-hit-2.ogg": {
+   "bytes": 5816,
+   "sha256": "0ff834d19342aaf30a47b6300ae8244b7dc8012af4305e7f3f6c8b749c20d69d",
+   "duration": 0.752,
+   "channels": 1,
+   "lufs": -23,
+   "truePeak": -3.3,
+   "rms100": -13.1,
+   "sources": [
+    "kenney-impact-sounds-impactSoft_heavy_000",
+    "kenney-impact-sounds-impactWood_heavy_003"
+   ]
+  },
+  "sfx/broadside-ripple-1.ogg": {
+   "bytes": 23449,
+   "sha256": "c16102c4ae91bf20d9fc7baa18bda7feb8433f04560b54957451c62291efc529",
+   "duration": 3.788,
+   "channels": 1,
+   "lufs": -15.6,
+   "truePeak": -3.6,
+   "rms100": -13.1,
+   "sources": [
+    "fs-125348",
+    "fs-187767",
+    "fs-853281"
+   ]
+  },
+  "sfx/broadside-ripple-2.ogg": {
+   "bytes": 18494,
+   "sha256": "ad8e456f8efd983cef1ecfff884fe17e755c0d368450b7244ff1d9f3c0f86fc0",
+   "duration": 3.111,
+   "channels": 1,
+   "lufs": -16.1,
+   "truePeak": -4.8,
+   "rms100": -13.1,
+   "sources": [
+    "fs-187767",
+    "fs-853281",
+    "fs-125348"
+   ]
+  },
+  "sfx/cannon-far-1.ogg": {
+   "bytes": 16645,
+   "sha256": "ddb1a0a53b05e5664febf26d04fbf7b977eb08087d2618445220e3a15c31a8f9",
+   "duration": 3.202,
+   "channels": 1,
+   "lufs": -21.3,
+   "truePeak": -3.7,
+   "rms100": -13,
+   "sources": [
+    "fs-149966"
+   ]
+  },
+  "sfx/cannon-far-2.ogg": {
+   "bytes": 14765,
+   "sha256": "b99360a7ac0bf00c56202885a185f3384b2d11a89bf7e2e6eb82f1e93f39f845",
+   "duration": 2.807,
+   "channels": 1,
+   "lufs": -22.9,
+   "truePeak": -0.7,
+   "rms100": -15.2,
+   "sources": [
+    "fs-565794"
+   ]
+  },
+  "sfx/cannon-far-3.ogg": {
+   "bytes": 16069,
+   "sha256": "c9cef3e133249f149d5fbe03c2c63cfea2311af981cbb52c28418decd7b53a03",
+   "duration": 2.921,
+   "channels": 1,
+   "lufs": -16.9,
+   "truePeak": -3.5,
+   "rms100": -13,
+   "sources": [
+    "fs-187767"
+   ]
+  },
+  "sfx/cannon-near-1.ogg": {
+   "bytes": 12298,
+   "sha256": "1894552acecbfd3f2888731539ea4ed5465facbbdbcec875c371b90d51c86d2f",
+   "duration": 2.211,
+   "channels": 1,
+   "lufs": -24.7,
+   "truePeak": -3.6,
+   "rms100": -13.8,
+   "sources": [
+    "fs-125348"
+   ]
+  },
+  "sfx/cannon-near-2.ogg": {
+   "bytes": 17257,
+   "sha256": "dfa2a012e4f951c8a5aa9a263aac47611dbca4387c5727b4878427c5d020f0ed",
+   "duration": 2.937,
+   "channels": 1,
+   "lufs": -17.8,
+   "truePeak": -4,
+   "rms100": -13,
+   "sources": [
+    "fs-187767"
+   ]
+  },
+  "sfx/cannon-near-3.ogg": {
+   "bytes": 17313,
+   "sha256": "cc906078a37ad3598a0cf6cb0ba6af19441f0d915b8c75aee518980a5cf4ff2e",
+   "duration": 2.921,
+   "channels": 1,
+   "lufs": -17,
+   "truePeak": -3.1,
+   "rms100": -13,
+   "sources": [
+    "fs-187767"
+   ]
+  },
+  "sfx/cannon-near-4.ogg": {
+   "bytes": 10621,
+   "sha256": "db0c6cb229a3cf61ab09247f3c5a89009283a37c671c451e4dc7b4370f0bfb13",
+   "duration": 2.059,
+   "channels": 1,
+   "lufs": -17.7,
+   "truePeak": -2.1,
+   "rms100": -13,
+   "sources": [
+    "fs-853281"
+   ]
+  },
+  "sfx/card-hover-1.ogg": {
+   "bytes": 3446,
+   "sha256": "6ed82d09fc90f3c77cd0f4fb02132edabc503afe7337cd62a9243b1e6c32a81c",
+   "duration": 0.574,
+   "channels": 1,
+   "lufs": -24.4,
+   "truePeak": -0.7,
+   "rms100": -18.3,
+   "sources": [
+    "kenney-casino-audio-card-slide-1"
+   ]
+  },
+  "sfx/card-hover-2.ogg": {
+   "bytes": 3953,
+   "sha256": "a3bc50e36073861f715eea8edb335edad986ecd9c13236f82743221e92d4d3ef",
+   "duration": 0.605,
+   "channels": 1,
+   "lufs": -24,
+   "truePeak": -0.4,
+   "rms100": -18.1,
+   "sources": [
+    "kenney-casino-audio-card-slide-3"
+   ]
+  },
+  "sfx/card-hover-3.ogg": {
+   "bytes": 3855,
+   "sha256": "fa988adc04e9b53f228875a101a0f2af1d9b5a3119e2a6a9d0828f8d99797161",
+   "duration": 0.607,
+   "channels": 1,
+   "lufs": -26.6,
+   "truePeak": -0.7,
+   "rms100": -20.7,
+   "sources": [
+    "kenney-casino-audio-card-slide-5"
+   ]
+  },
+  "sfx/card-select-1.ogg": {
+   "bytes": 4170,
+   "sha256": "4498a2d0f7b078df0d49dec416a2a62fe17bb0f48dc0583e639c2c09f253356f",
+   "duration": 0.696,
+   "channels": 1,
+   "lufs": -24.3,
+   "truePeak": -1,
+   "rms100": -18.2,
+   "sources": [
+    "kenney-casino-audio-card-place-1"
+   ]
+  },
+  "sfx/card-select-2.ogg": {
+   "bytes": 3501,
+   "sha256": "eae55f3107e811191831349f98cc343ebb130f89e1eda631824ee8e1e8fdb209",
+   "duration": 0.463,
+   "channels": 1,
+   "lufs": -27.1,
+   "truePeak": -1.1,
+   "rms100": -23.2,
+   "sources": [
+    "kenney-casino-audio-card-place-2"
+   ]
+  },
+  "sfx/card-select-3.ogg": {
+   "bytes": 5532,
+   "sha256": "d4e2ea54193a6bc5150c10332d13f4a3d50e6bcc181d930236768b3245ef1c2b",
+   "duration": 0.89,
+   "channels": 1,
+   "lufs": -25.8,
+   "truePeak": -0.4,
+   "rms100": -21.9,
+   "sources": [
+    "kenney-casino-audio-card-place-3"
+   ]
+  },
+  "sfx/chain-rattle-1.ogg": {
+   "bytes": 9023,
+   "sha256": "50c477fb4a0e97817170d184f4cbc530ad6330f4dcbea92f7fc6cb9624e69936",
+   "duration": 1.249,
+   "channels": 1,
+   "lufs": -19.7,
+   "truePeak": -0.5,
+   "rms100": -16.9,
+   "sources": [
+    "fs-506146"
+   ]
+  },
+  "sfx/chain-rattle-2.ogg": {
+   "bytes": 10182,
+   "sha256": "b612985656e064f92389411a9d06211529bc2da709f2ae400fd21548086eca0b",
+   "duration": 1.407,
+   "channels": 1,
+   "lufs": -12.8,
+   "truePeak": -0.5,
+   "rms100": -13.9,
+   "sources": [
+    "fs-370877"
+   ]
+  },
+  "sfx/chest-open-1.ogg": {
+   "bytes": 21225,
+   "sha256": "93f22bf673f57821b492fceca55721577dbb9ea3394742314545871f5480beea",
+   "duration": 2.862,
+   "channels": 1,
+   "lufs": -20.1,
+   "truePeak": -1.1,
+   "rms100": -13,
+   "sources": [
+    "fs-202092"
+   ]
+  },
+  "sfx/chest-open-2.ogg": {
+   "bytes": 14845,
+   "sha256": "5a6446280e6d1e6c2598a8252531a0d1beb05e0b264c53a56b2f60c3a9edf3b7",
+   "duration": 2.297,
+   "channels": 1,
+   "lufs": -21.7,
+   "truePeak": -0.8,
+   "rms100": -17.7,
+   "sources": [
+    "fs-573654"
+   ]
+  },
+  "sfx/coin-copper-1.ogg": {
+   "bytes": 2178,
+   "sha256": "0d4187dcf45f5db8b045892051c56741d979fa868694096ac6e8fb359e667833",
+   "duration": 0.144,
+   "channels": 1,
+   "lufs": -16.2,
+   "truePeak": -2.9,
+   "rms100": -12.9,
+   "sources": [
+    "fs-146723"
+   ]
+  },
+  "sfx/coin-copper-2.ogg": {
+   "bytes": 2473,
+   "sha256": "8202d1f415450e8d581e43881494c10f13257e1b3a0fac8a20a5dfad4ef3f51c",
+   "duration": 0.281,
+   "channels": 1,
+   "lufs": -27.1,
+   "truePeak": -0.8,
+   "rms100": -23.6,
+   "sources": [
+    "fs-17502"
+   ]
+  },
+  "sfx/coin-copper-3.ogg": {
+   "bytes": 3806,
+   "sha256": "31613865e5687514d10e5acac8de8aa095e93665c71ff0cffd9b12de1941e3f0",
+   "duration": 0.324,
+   "channels": 1,
+   "lufs": -18.4,
+   "truePeak": -0.5,
+   "rms100": -18,
+   "sources": [
+    "fs-17502"
+   ]
+  },
+  "sfx/coin-gold-1.ogg": {
+   "bytes": 7295,
+   "sha256": "77fe341f270bafdff7c27396ad7a144a1736eab1779e2eccf9b26c7f21d33b8b",
+   "duration": 0.804,
+   "channels": 1,
+   "lufs": -21.5,
+   "truePeak": -0.6,
+   "rms100": -19.5,
+   "sources": [
+    "kenney-rpg-audio-handleCoins"
+   ]
+  },
+  "sfx/coin-gold-2.ogg": {
+   "bytes": 5894,
+   "sha256": "f6e3f042fb024d8546a18e09cb4d7b012beda2506c801426879e574aa6c20618",
+   "duration": 0.925,
+   "channels": 1,
+   "lufs": -16.3,
+   "truePeak": -1.2,
+   "rms100": -14.5,
+   "sources": [
+    "fs-338260"
+   ]
+  },
+  "sfx/coin-silver-1.ogg": {
+   "bytes": 3098,
+   "sha256": "113be5faf24bda8cd70d56c41bb527f04049f61b945c9458270fb7f3fdd20c44",
+   "duration": 0.436,
+   "channels": 1,
+   "lufs": -18.1,
+   "truePeak": 0.2,
+   "rms100": -16,
+   "sources": [
+    "fs-512216"
+   ]
+  },
+  "sfx/coin-silver-2.ogg": {
+   "bytes": 4744,
+   "sha256": "2794238dc251f9c33912385692f0433df0ebc049d2f536babc7a660ad9df3e85",
+   "duration": 0.531,
+   "channels": 1,
+   "lufs": -19.6,
+   "truePeak": -0.8,
+   "rms100": -17,
+   "sources": [
+    "fs-248143"
+   ]
+  },
+  "sfx/collide-ship-1.ogg": {
+   "bytes": 3818,
+   "sha256": "8a94378f0f75249f9dcc2249cc0b58ea2285799cc9e43dadc1fdee06bef0b07b",
+   "duration": 0.397,
+   "channels": 1,
+   "lufs": -23,
+   "truePeak": -1.6,
+   "rms100": -14.3,
+   "sources": [
+    "kenney-impact-sounds-impactWood_heavy_003"
+   ]
+  },
+  "sfx/collide-ship-2.ogg": {
+   "bytes": 4430,
+   "sha256": "0bbad4f1c592873321cf2b0e6aec3690f52825fe73f854fc140acfdb2119d3d5",
+   "duration": 0.558,
+   "channels": 1,
+   "lufs": -22,
+   "truePeak": -7.6,
+   "rms100": -13.2,
+   "sources": [
+    "fs-449955"
+   ]
+  },
+  "sfx/compass.ogg": {
+   "bytes": 10669,
+   "sha256": "055ddade055857bb7a595e165e299371d79e30fa39582a7b471cb66d60a82b53",
+   "duration": 1.627,
+   "channels": 1,
+   "lufs": -19.2,
+   "truePeak": -7.6,
+   "rms100": -13.1,
+   "sources": [
+    "fs-442774"
+   ]
+  },
+  "sfx/crew-cheer-1.ogg": {
+   "bytes": 10824,
+   "sha256": "37b402f5d101ffb0d6e144034a6f410692b9befec916ca575e8fd2d60254c018",
+   "duration": 1.225,
+   "channels": 1,
+   "lufs": -18.2,
+   "truePeak": -4.9,
+   "rms100": -13,
+   "sources": [
+    "fs-57204"
+   ]
+  },
+  "sfx/crew-cheer-2.ogg": {
+   "bytes": 21391,
+   "sha256": "690242c177ae06e0d7bc130dcc2c003d6f8f5aa4a148dd789737a5e53038c142",
+   "duration": 2.723,
+   "channels": 1,
+   "lufs": -15.1,
+   "truePeak": -2.2,
+   "rms100": -13,
+   "sources": [
+    "fs-182571"
+   ]
+  },
+  "sfx/crew-cheer-3.ogg": {
+   "bytes": 25269,
+   "sha256": "137e26a2cf0e2dc21a65cfc5dd54075600f58330ea8cbf1730b5ea906e2d451b",
+   "duration": 3.265,
+   "channels": 1,
+   "lufs": -12.9,
+   "truePeak": -1.4,
+   "rms100": -13,
+   "sources": [
+    "fs-139973"
+   ]
+  },
+  "sfx/crit-1.ogg": {
+   "bytes": 9982,
+   "sha256": "2232e170aee2943afd8c3040deeae5277bc4cdb56bdfe5c4954c08e8938c59dd",
+   "duration": 1.311,
+   "channels": 1,
+   "lufs": -20.6,
+   "truePeak": -3.8,
+   "rms100": -13,
+   "sources": [
+    "kenney-impact-sounds-impactBell_heavy_001",
+    "kenney-impact-sounds-impactPunch_heavy_002"
+   ]
+  },
+  "sfx/crit-2.ogg": {
+   "bytes": 4907,
+   "sha256": "c5381bf98a18de6e8afbb38fa8896129174e19e6326a19bc63c9211c9ef28bb2",
+   "duration": 0.778,
+   "channels": 1,
+   "lufs": -19.8,
+   "truePeak": -2.7,
+   "rms100": -13,
+   "sources": [
+    "kenney-impact-sounds-impactMetal_light_002",
+    "kenney-impact-sounds-impactPunch_heavy_000"
+   ]
+  },
+  "sfx/dash-whoosh.ogg": {
+   "bytes": 17175,
+   "sha256": "9121237cac684e8a39955fd172650ea4135e7473061e024b60f4a6fc4a9c0650",
+   "duration": 2.907,
+   "channels": 1,
+   "lufs": -16.7,
+   "truePeak": -4.7,
+   "rms100": -13,
+   "sources": [
+    "fs-237980"
+   ]
+  },
+  "sfx/dive.ogg": {
+   "bytes": 27789,
+   "sha256": "5430ff27527b7f7145a05fe29d10f648938f4d8932ab2fe5771bd50ca3081a33",
+   "duration": 2.608,
+   "channels": 1,
+   "lufs": -17.8,
+   "truePeak": -2.5,
+   "rms100": -13,
+   "sources": [
+    "fs-173438",
+    "fs-539823"
+   ]
+  },
+  "sfx/doubloon-1.ogg": {
+   "bytes": 5341,
+   "sha256": "9f971febf28e6882de299e941ef544781d74e7784a46634fa799552cd8f080c4",
+   "duration": 0.583,
+   "channels": 1,
+   "lufs": -14.7,
+   "truePeak": -4,
+   "rms100": -12.9,
+   "sources": [
+    "fs-248143",
+    "fs-545238"
+   ]
+  },
+  "sfx/doubloon-2.ogg": {
+   "bytes": 5755,
+   "sha256": "c6b9a13b300263276fc14fd18c7f9c2c3f09611dcd36d9de6b298d5a31d377f3",
+   "duration": 0.548,
+   "channels": 1,
+   "lufs": -14.8,
+   "truePeak": -1.5,
+   "rms100": -13,
+   "sources": [
+    "fs-512216",
+    "fs-545238"
+   ]
+  },
+  "sfx/elite-spawn.ogg": {
+   "bytes": 23930,
+   "sha256": "e3b3ea39719fdde69c40c14aa089606ff6745ecadc1c0c0fe7c6a41f5c7c4913",
+   "duration": 3.86,
+   "channels": 1,
+   "lufs": -15.6,
+   "truePeak": -5.5,
+   "rms100": -13,
+   "sources": [
+    "fs-121800"
+   ]
+  },
+  "sfx/explosion-large-1.ogg": {
+   "bytes": 37691,
+   "sha256": "d6c1fccb167b85697a2ab69ad84ca0db2508aa6d0a1fcf0f9646d1eef0aa336d",
+   "duration": 5.707,
+   "channels": 1,
+   "lufs": -14.3,
+   "truePeak": -7.9,
+   "rms100": -13.1,
+   "sources": [
+    "fs-235968"
+   ]
+  },
+  "sfx/explosion-large-2.ogg": {
+   "bytes": 30109,
+   "sha256": "6c9372debb8fe1f0ffa4145affd2fdd473927f7ba80014bc96f8463d6432a4f1",
+   "duration": 4.607,
+   "channels": 1,
+   "lufs": -17.3,
+   "truePeak": -7.6,
+   "rms100": -13.1,
+   "sources": [
+    "fs-132929"
+   ]
+  },
+  "sfx/explosion-large-3.ogg": {
+   "bytes": 24806,
+   "sha256": "6efa12ef93b0478ff6bc5226acc374771255fdf7d63878615bf52386edaeeb17",
+   "duration": 4.207,
+   "channels": 1,
+   "lufs": -17.1,
+   "truePeak": -6.2,
+   "rms100": -13,
+   "sources": [
+    "fs-259300"
+   ]
+  },
+  "sfx/explosion-powder-1.ogg": {
+   "bytes": 38309,
+   "sha256": "143b1fad6caa0d657e0454b1d8dd27fb1f4fa84a3f4fa651dfe07f077bffd65b",
+   "duration": 5.007,
+   "channels": 1,
+   "lufs": -17.1,
+   "truePeak": -6.2,
+   "rms100": -13,
+   "sources": [
+    "fs-259300",
+    "fs-132929"
+   ]
+  },
+  "sfx/explosion-powder-2.ogg": {
+   "bytes": 37076,
+   "sha256": "bf0eaad717f2f72cef9ced16231d3283232fbb289df39ce59f67bfa508c3c641",
+   "duration": 5.207,
+   "channels": 1,
+   "lufs": -14,
+   "truePeak": -5.3,
+   "rms100": -13,
+   "sources": [
+    "fs-235968",
+    "fs-241601"
+   ]
+  },
+  "sfx/explosion-small-1.ogg": {
+   "bytes": 8323,
+   "sha256": "4f9946641e4db65f0053819def35419218664f7dc2341caaaa9a91482c24f58f",
+   "duration": 1.427,
+   "channels": 1,
+   "lufs": -16.8,
+   "truePeak": -7.3,
+   "rms100": -13,
+   "sources": [
+    "fs-207322"
+   ]
+  },
+  "sfx/explosion-small-2.ogg": {
+   "bytes": 13587,
+   "sha256": "a08c678e43a2f5541df6e45397886cce455a38dac76e024f2c5c159a26985899",
+   "duration": 2.607,
+   "channels": 1,
+   "lufs": -17.2,
+   "truePeak": -0.9,
+   "rms100": -13.6,
+   "sources": [
+    "fs-609587"
+   ]
+  },
+  "sfx/explosion-small-3.ogg": {
+   "bytes": 11943,
+   "sha256": "6e5533f91da7fb9bc162280c4327a1630a7ab8534efae150717fdf7b0e8092cf",
+   "duration": 2.207,
+   "channels": 1,
+   "lufs": -16.8,
+   "truePeak": -6.1,
+   "rms100": -13,
+   "sources": [
+    "fs-182429"
+   ]
+  },
+  "sfx/explosion-small-4.ogg": {
+   "bytes": 11494,
+   "sha256": "4d5f7b77404bdb2612d411a6fe46d7ba284cef16814e19f0341c7f3f234d0fb2",
+   "duration": 1.907,
+   "channels": 1,
+   "lufs": -19.3,
+   "truePeak": -8.2,
+   "rms100": -13,
+   "sources": [
+    "fs-258195"
+   ]
+  },
+  "sfx/explosion-water-1.ogg": {
+   "bytes": 17841,
+   "sha256": "e76b70e4dd33a4f91b34710229f8f5b1abb3bf7741122fe7fc058fbbfd0590f1",
+   "duration": 2.507,
+   "channels": 1,
+   "lufs": -16.2,
+   "truePeak": -6.5,
+   "rms100": -13.1,
+   "sources": [
+    "fs-212689"
+   ]
+  },
+  "sfx/explosion-water-2.ogg": {
+   "bytes": 11884,
+   "sha256": "de1ada01c5ffd833ad4d1d4bcbb6c43a8d4d8f6c7b1109ca3809f4040e01a03d",
+   "duration": 1.997,
+   "channels": 1,
+   "lufs": -19.3,
+   "truePeak": -3.5,
+   "rms100": -12.8,
+   "sources": [
+    "fs-519008"
+   ]
+  },
+  "sfx/explosion-water-3.ogg": {
+   "bytes": 21264,
+   "sha256": "c8f1f0a29ed309721931ea440dedda58252ed568ef153ec196cf2d75b9128c05",
+   "duration": 3.507,
+   "channels": 1,
+   "lufs": -17.1,
+   "truePeak": -9.2,
+   "rms100": -13,
+   "sources": [
+    "fs-147876"
+   ]
+  },
+  "sfx/fire-burst-1.ogg": {
+   "bytes": 7359,
+   "sha256": "fa65c094d262756afdbbe4f1ab13e008caaad201bf93aacd74488d64034da39a",
+   "duration": 1.107,
+   "channels": 1,
+   "lufs": -17.1,
+   "truePeak": -4.1,
+   "rms100": -13,
+   "sources": [
+    "fs-267887"
+   ]
+  },
+  "sfx/fire-burst-2.ogg": {
+   "bytes": 5791,
+   "sha256": "ba5059519a6c574441e558ae48da8ec6aba9382426b6fb4c25bfbf07b73807bd",
+   "duration": 0.957,
+   "channels": 1,
+   "lufs": -20.7,
+   "truePeak": -2.5,
+   "rms100": -13,
+   "sources": [
+    "fs-431174"
+   ]
+  },
+  "sfx/fire-burst-3.ogg": {
+   "bytes": 13856,
+   "sha256": "114dc8a141ad491166ca657b71651d556a6254e1be3327ec16c17b219babcc5e",
+   "duration": 1.83,
+   "channels": 1,
+   "lufs": -21,
+   "truePeak": -7,
+   "rms100": -13.1,
+   "sources": [
+    "fs-244926"
+   ]
+  },
+  "sfx/fire-ignite-1.ogg": {
+   "bytes": 10011,
+   "sha256": "485f870ab6bd18e19288109c69ac40c284b577752050aa76a872b16c3e9bfd30",
+   "duration": 1.807,
+   "channels": 1,
+   "lufs": -17.8,
+   "truePeak": -6.9,
+   "rms100": -12.9,
+   "sources": [
+    "fs-260554"
+   ]
+  },
+  "sfx/fire-ignite-2.ogg": {
+   "bytes": 4908,
+   "sha256": "4c5b8c16045946d8940e92a80a9f3f8d9341ed9da7e012ac967e4600d0d5dd00",
+   "duration": 0.767,
+   "channels": 1,
+   "lufs": -24,
+   "truePeak": -5.8,
+   "rms100": -13.8,
+   "sources": [
+    "fs-539972"
+   ]
+  },
+  "sfx/fire-ignite-3.ogg": {
+   "bytes": 14247,
+   "sha256": "e03542db5be56cf864188344049deb87c530dc1176a156f67ef3f19644aeccec",
+   "duration": 2.007,
+   "channels": 1,
+   "lufs": -15.3,
+   "truePeak": -0.4,
+   "rms100": -16.7,
+   "sources": [
+    "fs-348767"
+   ]
+  },
+  "sfx/flare.ogg": {
+   "bytes": 13379,
+   "sha256": "f20755682542f5cf9943005720a41f04f47e74cdea211c82a09d21fddd25b793",
+   "duration": 1.802,
+   "channels": 1,
+   "lufs": -10.5,
+   "truePeak": -1.9,
+   "rms100": -13,
+   "sources": [
+    "fs-587173",
+    "fs-186933"
+   ]
+  },
+  "sfx/fuse.ogg": {
+   "bytes": 17187,
+   "sha256": "410fe8a4995263839824c263efbdf945b6dd13a623b4d165f16f098bd3931d46",
+   "duration": 2.507,
+   "channels": 1,
+   "lufs": -15.6,
+   "truePeak": -0.7,
+   "rms100": -13.2,
+   "sources": [
+    "fs-45650"
+   ]
+  },
+  "sfx/gull-1.ogg": {
+   "bytes": 6888,
+   "sha256": "2b1763e93b2ffdc7726fdbee8d6f4dc2f5221241d11b36cf8c7ab05802f4b614",
+   "duration": 1.037,
+   "channels": 1,
+   "lufs": -15.1,
+   "truePeak": -5.4,
+   "rms100": -13,
+   "sources": [
+    "fs-683400"
+   ]
+  },
+  "sfx/gull-2.ogg": {
+   "bytes": 4522,
+   "sha256": "12a6d024ce260b0b2ed9f0edece7fa9c2b4b841e15f07d22c8b0906b6b72316c",
+   "duration": 0.597,
+   "channels": 1,
+   "lufs": -15.4,
+   "truePeak": -7.1,
+   "rms100": -13,
+   "sources": [
+    "fs-683400"
+   ]
+  },
+  "sfx/gull-3.ogg": {
+   "bytes": 9417,
+   "sha256": "cc2957c9055570f444236412919e735cc56759000da1f09545839c3322a93bbb",
+   "duration": 1.007,
+   "channels": 1,
+   "lufs": -14.8,
+   "truePeak": -4,
+   "rms100": -13,
+   "sources": [
+    "fs-73497"
+   ]
+  },
+  "sfx/gull-4.ogg": {
+   "bytes": 7354,
+   "sha256": "67170863df2f0839a0250a020d5d869b91df911a055ab502efd0b402b05b1e91",
+   "duration": 0.77,
+   "channels": 1,
+   "lufs": -13,
+   "truePeak": -4.1,
+   "rms100": -13,
+   "sources": [
+    "fs-75195"
+   ]
+  },
+  "sfx/harpoon-hit-1.ogg": {
+   "bytes": 4135,
+   "sha256": "98aec045fea1098ae3bd50059cbe11e20afc065eb2a36651ced737748a44a047",
+   "duration": 0.577,
+   "channels": 1,
+   "lufs": -22.2,
+   "truePeak": -0.9,
+   "rms100": -14.8,
+   "sources": [
+    "fs-534956",
+    "kenney-impact-sounds-impactMetal_heavy_000"
+   ]
+  },
+  "sfx/harpoon-hit-2.ogg": {
+   "bytes": 4522,
+   "sha256": "004841e2d6d17183ae9726b8076178a29375a8e5dad1bb9362e911e8468b55a9",
+   "duration": 0.617,
+   "channels": 1,
+   "lufs": -17.7,
+   "truePeak": -0.6,
+   "rms100": -15,
+   "sources": [
+    "fs-205938",
+    "kenney-impact-sounds-impactMetal_heavy_001"
+   ]
+  },
+  "sfx/harpoon-throw-1.ogg": {
+   "bytes": 3993,
+   "sha256": "786ae3c3f04d1f8b7b0fc2514cb4e1d8354cb8e271ab7cefe9fa60e850d3b033",
+   "duration": 0.527,
+   "channels": 1,
+   "lufs": -21.8,
+   "truePeak": -1.2,
+   "rms100": -14.2,
+   "sources": [
+    "fs-163453",
+    "fs-523230"
+   ]
+  },
+  "sfx/harpoon-throw-2.ogg": {
+   "bytes": 4012,
+   "sha256": "b2b5e4c2be0cce69cee0918b8e977095c7e22efd2aa567682aec32b272df503b",
+   "duration": 0.578,
+   "channels": 1,
+   "lufs": -27.1,
+   "truePeak": -4.6,
+   "rms100": -13.7,
+   "sources": [
+    "fs-249810",
+    "fs-523230"
+   ]
+  },
+  "sfx/heal-1.ogg": {
+   "bytes": 21926,
+   "sha256": "3285bbbe422848fa9112236569edf420a976aac067c49289c736db42ada6d600",
+   "duration": 2.785,
+   "channels": 1,
+   "lufs": -10.6,
+   "truePeak": -1.5,
+   "rms100": -13,
+   "sources": [
+    "fs-351408"
+   ]
+  },
+  "sfx/heal-2.ogg": {
+   "bytes": 22111,
+   "sha256": "5b21da1600a43bf859d5de00252638e51812cc0d3f89301ecfe7c0d6aa760c0d",
+   "duration": 2.207,
+   "channels": 1,
+   "lufs": -14.1,
+   "truePeak": -1.4,
+   "rms100": -13,
+   "sources": [
+    "fs-511484"
+   ]
+  },
+  "sfx/heavy-shot-1.ogg": {
+   "bytes": 17241,
+   "sha256": "3d095f636d7e1ba314d1ff1735cf588a4d74daf3a3c3f78235225d317df387ec",
+   "duration": 3.163,
+   "channels": 1,
+   "lufs": -18.9,
+   "truePeak": -3.7,
+   "rms100": -13,
+   "sources": [
+    "fs-853280"
+   ]
+  },
+  "sfx/heavy-shot-2.ogg": {
+   "bytes": 18061,
+   "sha256": "575431e4beeb1be8a390c41ffe0bc6989d6ce67750cb2354f0140bf58c6232c8",
+   "duration": 3.374,
+   "channels": 1,
+   "lufs": -16.6,
+   "truePeak": -7.7,
+   "rms100": -13,
+   "sources": [
+    "fs-127845"
+   ]
+  },
+  "sfx/hit-flesh-1.ogg": {
+   "bytes": 5979,
+   "sha256": "8fd0d38944af2d647f23ad7158faec70070aaf37a48d76523ae8b942a51f61df",
+   "duration": 0.924,
+   "channels": 1,
+   "lufs": -21.9,
+   "truePeak": -5.1,
+   "rms100": -13,
+   "sources": [
+    "kenney-impact-sounds-impactPunch_heavy_000"
+   ]
+  },
+  "sfx/hit-flesh-2.ogg": {
+   "bytes": 5498,
+   "sha256": "7e6a4a17874bef436519dccdecb8bfa0274ad849c1f24c006377726a6453f365",
+   "duration": 0.81,
+   "channels": 1,
+   "lufs": -21.8,
+   "truePeak": -5.3,
+   "rms100": -13.1,
+   "sources": [
+    "kenney-impact-sounds-impactPunch_heavy_001"
+   ]
+  },
+  "sfx/hit-metal-1.ogg": {
+   "bytes": 2519,
+   "sha256": "5bacc5fa70d7ab4bde6f4007ee3c94efcff87898d9390b0df7a6e4507cd8970e",
+   "duration": 0.202,
+   "channels": 1,
+   "lufs": -25.9,
+   "truePeak": -1.3,
+   "rms100": -17,
+   "sources": [
+    "kenney-impact-sounds-impactMetal_heavy_000"
+   ]
+  },
+  "sfx/hit-metal-2.ogg": {
+   "bytes": 2121,
+   "sha256": "059c452a41e49615a3f779927cc39623e7b2fb8fa3b5f03174a9803c184cb246",
+   "duration": 0.151,
+   "channels": 1,
+   "lufs": -25.3,
+   "truePeak": -1.4,
+   "rms100": -16.4,
+   "sources": [
+    "kenney-impact-sounds-impactMetal_heavy_002"
+   ]
+  },
+  "sfx/hit-metal-3.ogg": {
+   "bytes": 3715,
+   "sha256": "cfe1ec8176faa40b17f8e32b1e7a21b52026e4f1248f9d6a52e0c3224e13c3f0",
+   "duration": 0.588,
+   "channels": 1,
+   "lufs": -22.8,
+   "truePeak": -1,
+   "rms100": -14.7,
+   "sources": [
+    "kenney-impact-sounds-impactPlate_heavy_000"
+   ]
+  },
+  "sfx/hit-rock-1.ogg": {
+   "bytes": 4637,
+   "sha256": "dfad24d327ea237d288fba727a61fe265f0586d0f07265f4b339e05a50fee5c5",
+   "duration": 0.527,
+   "channels": 1,
+   "lufs": -19.7,
+   "truePeak": -4.9,
+   "rms100": -13.1,
+   "sources": [
+    "fs-385938"
+   ]
+  },
+  "sfx/hit-rock-2.ogg": {
+   "bytes": 7345,
+   "sha256": "b540756923f77678f36cd09136cf5be95bbc732a635990fcf8d041e09e0bd6b5",
+   "duration": 0.906,
+   "channels": 1,
+   "lufs": -21.7,
+   "truePeak": -4.8,
+   "rms100": -13.2,
+   "sources": [
+    "fs-522099"
+   ]
+  },
+  "sfx/hit-wood-1.ogg": {
+   "bytes": 5709,
+   "sha256": "0831bad2f6c8cbb0f36c275e05b4aa93a17b3f5d1c10e6d440d6032d11389208",
+   "duration": 0.607,
+   "channels": 1,
+   "lufs": -19,
+   "truePeak": -1.6,
+   "rms100": -13.4,
+   "sources": [
+    "fs-853277"
+   ]
+  },
+  "sfx/hit-wood-2.ogg": {
+   "bytes": 13015,
+   "sha256": "04013f923cd6f574a8340c37a2bbc11ffa5d84dc709283bcd8a2b7ae4ffb89f5",
+   "duration": 1.407,
+   "channels": 1,
+   "lufs": -18,
+   "truePeak": -5,
+   "rms100": -13.2,
+   "sources": [
+    "fs-257752"
+   ]
+  },
+  "sfx/hit-wood-3.ogg": {
+   "bytes": 6793,
+   "sha256": "3284570a5cbaa591dd9253b6a0a0cafff0b979732629a7b138d8bafb747c8f58",
+   "duration": 0.881,
+   "channels": 1,
+   "lufs": -15.7,
+   "truePeak": -1.8,
+   "rms100": -13,
+   "sources": [
+    "fs-536777"
+   ]
+  },
+  "sfx/hit-wood-4.ogg": {
+   "bytes": 8215,
+   "sha256": "259fc079ea8177277dcab5caa2770def5878d4663cf337f9401af9f4899563a1",
+   "duration": 0.991,
+   "channels": 1,
+   "lufs": -18.4,
+   "truePeak": -1.1,
+   "rms100": -13,
+   "sources": [
+    "fs-66772"
+   ]
+  },
+  "sfx/hit-wood-heavy-1.ogg": {
+   "bytes": 7611,
+   "sha256": "dc39a6254dcb58979bb16e1a1304f82c00ec83fdeebfd34eab95c44aed1e207a",
+   "duration": 0.867,
+   "channels": 1,
+   "lufs": -16.3,
+   "truePeak": -2.6,
+   "rms100": -13,
+   "sources": [
+    "fs-443293"
+   ]
+  },
+  "sfx/hit-wood-heavy-2.ogg": {
+   "bytes": 8801,
+   "sha256": "9b73d11c761f0663c678e9e2de9b8df0474728d53aeb68a4f867d6f3200da941",
+   "duration": 1.013,
+   "channels": 1,
+   "lufs": -17.2,
+   "truePeak": -2.7,
+   "rms100": -13,
+   "sources": [
+    "fs-183450"
+   ]
+  },
+  "sfx/hit-wood-heavy-3.ogg": {
+   "bytes": 11216,
+   "sha256": "2e8eafec830c71747c8aadbd6c45787532e1fe9f8c96439443c88a520ce9e4bc",
+   "duration": 1.207,
+   "channels": 1,
+   "lufs": -17,
+   "truePeak": 0,
+   "rms100": -13.4,
+   "sources": [
+    "fs-501302"
+   ]
+  },
+  "sfx/hit-wood-light-1.ogg": {
+   "bytes": 2943,
+   "sha256": "775e0493b03f53c18a3d23c9159c93b70b91dd5c581076fbad5546a79191ba46",
+   "duration": 0.336,
+   "channels": 1,
+   "lufs": -23.7,
+   "truePeak": -1.2,
+   "rms100": -16.3,
+   "sources": [
+    "kenney-impact-sounds-impactWood_medium_000"
+   ]
+  },
+  "sfx/hit-wood-light-2.ogg": {
+   "bytes": 2844,
+   "sha256": "08fd8f32ffc1ad789038110e443790c12fd03e2e96daeffc28b2126017065ed1",
+   "duration": 0.336,
+   "channels": 1,
+   "lufs": -23.8,
+   "truePeak": -1.1,
+   "rms100": -16.3,
+   "sources": [
+    "kenney-impact-sounds-impactWood_medium_001"
+   ]
+  },
+  "sfx/hit-wood-light-3.ogg": {
+   "bytes": 4716,
+   "sha256": "fa71a08fba18f86be6d17a06ad9c81b456e5efc14e874eec0355e3777e7ebf59",
+   "duration": 0.786,
+   "channels": 1,
+   "lufs": -20.5,
+   "truePeak": -2.3,
+   "rms100": -12.9,
+   "sources": [
+    "kenney-impact-sounds-impactPlank_medium_001"
+   ]
+  },
+  "sfx/hull-creak-1.ogg": {
+   "bytes": 16346,
+   "sha256": "a29d7dc1b6f0b1d2500b903b81957bf7ef2d86fee079b0d11fa50814d37161e1",
+   "duration": 2.107,
+   "channels": 1,
+   "lufs": -19.6,
+   "truePeak": -3.7,
+   "rms100": -13.1,
+   "sources": [
+    "fs-31574"
+   ]
+  },
+  "sfx/hull-creak-2.ogg": {
+   "bytes": 3256,
+   "sha256": "5e435e494c18644f5fcae2f908b94ec0eed5700df72b5296bf4f0ec59201f297",
+   "duration": 0.409,
+   "channels": 1,
+   "lufs": -18.9,
+   "truePeak": -4.8,
+   "rms100": -13,
+   "sources": [
+    "kenney-rpg-audio-creak3"
+   ]
+  },
+  "sfx/hull-creak-3.ogg": {
+   "bytes": 5897,
+   "sha256": "730c3a0fd26a6bc7dfdd609caa898f64505ae347aeb6c4d1c776bb54ad180843",
+   "duration": 0.767,
+   "channels": 1,
+   "lufs": -16.2,
+   "truePeak": -3.3,
+   "rms100": -12.9,
+   "sources": [
+    "kenney-rpg-audio-creak1"
+   ]
+  },
+  "sfx/hull-creak-4.ogg": {
+   "bytes": 8167,
+   "sha256": "5fe3633883bb21771792226c587eba5013f697a9e1ce5aa0c89618a00247471a",
+   "duration": 1.115,
+   "channels": 1,
+   "lufs": -16.9,
+   "truePeak": -3.2,
+   "rms100": -13,
+   "sources": [
+    "kenney-rpg-audio-creak2"
+   ]
+  },
+  "sfx/lance.ogg": {
+   "bytes": 5926,
+   "sha256": "eb0e182484679fd1109e68fadd73025bb3b380ccf394f564de23b7c5d12d8aa0",
+   "duration": 0.882,
+   "channels": 1,
+   "lufs": -15.5,
+   "truePeak": -2.5,
+   "rms100": -13,
+   "sources": [
+    "fs-403252",
+    "fs-175430"
+   ]
+  },
+  "sfx/level-up-1.ogg": {
+   "bytes": 11481,
+   "sha256": "4292386fdfd08e6c37dd4821d7c0aeda9fa8d7472843722f0b941e542eb8ed6e",
+   "duration": 1.394,
+   "channels": 1,
+   "lufs": -18.1,
+   "truePeak": -5.9,
+   "rms100": -17,
+   "sources": [
+    "kenney-music-jingles-jingles_STEEL02"
+   ]
+  },
+  "sfx/level-up-2.ogg": {
+   "bytes": 8064,
+   "sha256": "35d9c3b1243e1e64bc3c13e56d5012859768cd1be87ca8f308f28706c330683a",
+   "duration": 0.956,
+   "channels": 1,
+   "lufs": -18.5,
+   "truePeak": -8.9,
+   "rms100": -17,
+   "sources": [
+    "kenney-music-jingles-jingles_PIZZI02"
+   ]
+  },
+  "sfx/lightning-zap-1.ogg": {
+   "bytes": 6347,
+   "sha256": "1f26d3ee9cd2724cf707a4e596ddb0d5cdb1f19ed209c7d322915f6d554ce8e2",
+   "duration": 0.757,
+   "channels": 1,
+   "lufs": -12,
+   "truePeak": -0.3,
+   "rms100": -14.6,
+   "sources": [
+    "fs-136542"
+   ]
+  },
+  "sfx/lightning-zap-2.ogg": {
+   "bytes": 4207,
+   "sha256": "23bb0bee0d8931d274187fba4d71778a9ac44c190587bb2639cc03393f05dd8a",
+   "duration": 0.517,
+   "channels": 1,
+   "lufs": -17.9,
+   "truePeak": -0.5,
+   "rms100": -15.8,
+   "sources": [
+    "fs-403252"
+   ]
+  },
+  "sfx/lightning-zap-3.ogg": {
+   "bytes": 3604,
+   "sha256": "bc0634eec8a4fd6dfcb3f747c8a415299b22c7e097f0057e4d74ce541218a5e3",
+   "duration": 0.448,
+   "channels": 1,
+   "lufs": -20.8,
+   "truePeak": -0.1,
+   "rms100": -17.4,
+   "sources": [
+    "fs-403252"
+   ]
+  },
+  "sfx/lightning-zap-4.ogg": {
+   "bytes": 3331,
+   "sha256": "37a1d410785ec806b7836c73bd297c42a9e3cdbafab5bb465f8e4c32c730f566",
+   "duration": 0.289,
+   "channels": 1,
+   "lufs": -23.9,
+   "truePeak": -1.1,
+   "rms100": -13.6,
+   "sources": [
+    "fs-264779"
+   ]
+  },
+  "sfx/metal-groan-1.ogg": {
+   "bytes": 26754,
+   "sha256": "b22c8f743430f3f83f38e387ada0418275661f228517774b32a419dfaa71f946",
+   "duration": 4.127,
+   "channels": 1,
+   "lufs": -16.7,
+   "truePeak": -1.5,
+   "rms100": -13,
+   "sources": [
+    "fs-496836"
+   ]
+  },
+  "sfx/metal-groan-2.ogg": {
+   "bytes": 20188,
+   "sha256": "fbb47dea97d4a302d998a1869c78c85c61fb7293362e1c55171a752a368faf56",
+   "duration": 3.223,
+   "channels": 1,
+   "lufs": -15.8,
+   "truePeak": -0.7,
+   "rms100": -13.1,
+   "sources": [
+    "fs-556714"
+   ]
+  },
+  "sfx/mine-drop.ogg": {
+   "bytes": 6707,
+   "sha256": "12d1db559252650b5ce9b6dafe4d969cbfa709cb6a897006c2a5abd4da5b99ca",
+   "duration": 0.807,
+   "channels": 1,
+   "lufs": -18,
+   "truePeak": 0.7,
+   "rms100": -15.7,
+   "sources": [
+    "fs-404829",
+    "kenney-impact-sounds-impactMetal_light_000"
+   ]
+  },
+  "sfx/mortar-launch-1.ogg": {
+   "bytes": 12408,
+   "sha256": "69183bd0cb28b65cb17b648b31d628693c4b4e4437c0583c1a0b45c475fb2214",
+   "duration": 2.207,
+   "channels": 1,
+   "lufs": -16.7,
+   "truePeak": -6.5,
+   "rms100": -13,
+   "sources": [
+    "fs-529239"
+   ]
+  },
+  "sfx/mortar-launch-2.ogg": {
+   "bytes": 10023,
+   "sha256": "0a3221aaf4325e458171e216b7797156da4fc0bd53f1e7578c37e6ad23dd5f5e",
+   "duration": 1.607,
+   "channels": 1,
+   "lufs": -17.2,
+   "truePeak": -5,
+   "rms100": -13.1,
+   "sources": [
+    "fs-187542"
+   ]
+  },
+  "sfx/mortar-launch-3.ogg": {
+   "bytes": 11420,
+   "sha256": "c839ef667c9d7f5b970cbefcee00ba1266c34c3a4f7d7cc068209e568be9204c",
+   "duration": 1.807,
+   "channels": 1,
+   "lufs": -14.5,
+   "truePeak": -4,
+   "rms100": -13,
+   "sources": [
+    "fs-854478"
+   ]
+  },
+  "sfx/mortar-whistle-1.ogg": {
+   "bytes": 10678,
+   "sha256": "14bb9b2238083c0bfc9b221e364dbd3f50f1cfbbdc49025e42370b6e5888d574",
+   "duration": 1.687,
+   "channels": 1,
+   "lufs": -16.4,
+   "truePeak": -7.3,
+   "rms100": -13.1,
+   "sources": [
+    "fs-241840"
+   ]
+  },
+  "sfx/mortar-whistle-2.ogg": {
+   "bytes": 22410,
+   "sha256": "3d39529a6d08e44f840640ff4d6c0f1efd49efedc80e2d8e7de05fe7c03858b7",
+   "duration": 2.907,
+   "channels": 1,
+   "lufs": -12,
+   "truePeak": -4,
+   "rms100": -13,
+   "sources": [
+    "fs-506313"
+   ]
+  },
+  "sfx/mortar-whistle-3.ogg": {
+   "bytes": 23627,
+   "sha256": "4bc707ceda7f5bea35a74dc8038f24006f83466c6534132c09cf869918060d0e",
+   "duration": 2.607,
+   "channels": 1,
+   "lufs": -12.6,
+   "truePeak": -3.1,
+   "rms100": -13,
+   "sources": [
+    "fs-398255"
+   ]
+  },
+  "sfx/overdrive.ogg": {
+   "bytes": 13922,
+   "sha256": "1b8f0267a9e0b9c8d7d2d4d7689ed0b6753a1822d82f08f840946d5b68c03bcb",
+   "duration": 1.707,
+   "channels": 1,
+   "lufs": -17.1,
+   "truePeak": -7.4,
+   "rms100": -16.9,
+   "sources": [
+    "fs-350433",
+    "fs-683101",
+    "fs-545238"
+   ]
+  },
+  "sfx/parry-1.ogg": {
+   "bytes": 4470,
+   "sha256": "eb6986c57913c7d8217e7be3768bd785a704a952a04db39c9283cb05f1302105",
+   "duration": 0.628,
+   "channels": 1,
+   "lufs": -24.5,
+   "truePeak": -1,
+   "rms100": -16.9,
+   "sources": [
+    "kenney-impact-sounds-impactMetal_heavy_002",
+    "kenney-impact-sounds-impactBell_heavy_002"
+   ]
+  },
+  "sfx/parry-2.ogg": {
+   "bytes": 4900,
+   "sha256": "814c8878e935a985b4ddca6a256f2810db13620f789abc36d481af257e44552f",
+   "duration": 0.623,
+   "channels": 1,
+   "lufs": -24.8,
+   "truePeak": -1.1,
+   "rms100": -17.2,
+   "sources": [
+    "kenney-impact-sounds-impactMetal_heavy_003",
+    "kenney-impact-sounds-impactBell_heavy_003"
+   ]
+  },
+  "sfx/passive-upgrade-1.ogg": {
+   "bytes": 3706,
+   "sha256": "70406a889cac4a8d86de2784c6f9a52347272d9d963a2fdfa34eb0c3161f8160",
+   "duration": 0.378,
+   "channels": 1,
+   "lufs": -19.9,
+   "truePeak": -4.4,
+   "rms100": -16.9,
+   "sources": [
+    "kenney-interface-sounds-select_003"
+   ]
+  },
+  "sfx/passive-upgrade-2.ogg": {
+   "bytes": 4059,
+   "sha256": "06bdb3dc4ebb5e439de80d7cae88ea27cb54ff83e64f7556830e306fb3c62649",
+   "duration": 0.377,
+   "channels": 1,
+   "lufs": -22.2,
+   "truePeak": -5.5,
+   "rms100": -17,
+   "sources": [
+    "kenney-interface-sounds-select_005"
+   ]
+  },
+  "sfx/player-hit-1.ogg": {
+   "bytes": 7412,
+   "sha256": "ec3b3f31e4613d0e174cca9ebb232a153d69f452dbc2450339b1e2746721fa7c",
+   "duration": 0.924,
+   "channels": 1,
+   "lufs": -21.2,
+   "truePeak": -3.2,
+   "rms100": -13,
+   "sources": [
+    "fs-853277",
+    "kenney-impact-sounds-impactPunch_heavy_000"
+   ]
+  },
+  "sfx/player-hit-2.ogg": {
+   "bytes": 7291,
+   "sha256": "da652033d13be4542b95046338af2d561b2590c016ae7a28bfbd3edfafaead2a",
+   "duration": 0.807,
+   "channels": 1,
+   "lufs": -16.7,
+   "truePeak": -2.2,
+   "rms100": -13,
+   "sources": [
+    "fs-443293",
+    "kenney-impact-sounds-impactWood_heavy_004"
+   ]
+  },
+  "sfx/player-hit-3.ogg": {
+   "bytes": 8190,
+   "sha256": "0c81fd13f465d26514c8c6b79ffec33f3bc069fd602a9694c3ee3f8d90896649",
+   "duration": 1.007,
+   "channels": 1,
+   "lufs": -20,
+   "truePeak": -3.5,
+   "rms100": -12.9,
+   "sources": [
+    "fs-66772",
+    "kenney-impact-sounds-impactPunch_heavy_001"
+   ]
+  },
+  "sfx/ram-crash-1.ogg": {
+   "bytes": 20096,
+   "sha256": "56e7f43d8a60b03a8ce4c35e8ae92932b04f5ad2c4d8febd518b9e92ca4fa6ce",
+   "duration": 2.207,
+   "channels": 1,
+   "lufs": -17.7,
+   "truePeak": -2.1,
+   "rms100": -13.2,
+   "sources": [
+    "fs-257752",
+    "kenney-impact-sounds-impactWood_heavy_002"
+   ]
+  },
+  "sfx/ram-crash-2.ogg": {
+   "bytes": 15591,
+   "sha256": "879dd02d8d4882f480a08829361dd60d034e5388be981c045a1fd6403bffbb42",
+   "duration": 2.507,
+   "channels": 1,
+   "lufs": -13.3,
+   "truePeak": -4.9,
+   "rms100": -13,
+   "sources": [
+    "fs-139952"
+   ]
+  },
+  "sfx/reload.ogg": {
+   "bytes": 6894,
+   "sha256": "b54b589e46714b4ed69ded0efb31939ebf22fe6a43b42afca07bf88e1a3219e8",
+   "duration": 1.108,
+   "channels": 1,
+   "lufs": -18,
+   "truePeak": -0.2,
+   "rms100": -12.9,
+   "sources": [
+    "kenney-rpg-audio-metalLatch",
+    "kenney-impact-sounds-impactPlank_medium_001"
+   ]
+  },
+  "sfx/repair-1.ogg": {
+   "bytes": 11671,
+   "sha256": "af4bd24a994122e5662d0da243c4387b5456cdd34b5eeb5e4a4603c93d31b641",
+   "duration": 1.507,
+   "channels": 1,
+   "lufs": -16,
+   "truePeak": -3.3,
+   "rms100": -13.1,
+   "sources": [
+    "fs-17012"
+   ]
+  },
+  "sfx/repair-2.ogg": {
+   "bytes": 11493,
+   "sha256": "52909cf7a9b9c03bdc62f78fccb9e773091565ebec3275393a404dc4abf93c3d",
+   "duration": 1.954,
+   "channels": 1,
+   "lufs": -22,
+   "truePeak": -0.5,
+   "rms100": -15.9,
+   "sources": [
+    "fs-207782"
+   ]
+  },
+  "sfx/reroll-1.ogg": {
+   "bytes": 7128,
+   "sha256": "7ec48f26b87a590b2ef4daeb0caf1fce12b60b90e953213d4b6fd294a29a3545",
+   "duration": 0.727,
+   "channels": 1,
+   "lufs": -21.3,
+   "truePeak": -2.3,
+   "rms100": -17.1,
+   "sources": [
+    "kenney-casino-audio-card-fan-1"
+   ]
+  },
+  "sfx/reroll-2.ogg": {
+   "bytes": 8688,
+   "sha256": "4479f8136aebb45d7991e326b96b2ef3716365caa14668fcd37410f6fa9f21c4",
+   "duration": 1.257,
+   "channels": 1,
+   "lufs": -21.5,
+   "truePeak": -0.5,
+   "rms100": -18.7,
+   "sources": [
+    "kenney-casino-audio-card-shuffle"
+   ]
+  },
+  "sfx/rocket-launch-1.ogg": {
+   "bytes": 10194,
+   "sha256": "b3e35e88899b3af14f6ffcde0bb6874f6492c50f861ab35103989b928239fcc0",
+   "duration": 1.407,
+   "channels": 1,
+   "lufs": -11.5,
+   "truePeak": -3.3,
+   "rms100": -13,
+   "sources": [
+    "fs-140726"
+   ]
+  },
+  "sfx/rocket-launch-2.ogg": {
+   "bytes": 10571,
+   "sha256": "6880ddadda3d74b7fdd8fae1e7e9c32e19d294eb913cf31046d66fe80c6a1d91",
+   "duration": 1.607,
+   "channels": 1,
+   "lufs": -13.2,
+   "truePeak": -0.5,
+   "rms100": -14.1,
+   "sources": [
+    "fs-455547"
+   ]
+  },
+  "sfx/rocket-launch-3.ogg": {
+   "bytes": 16473,
+   "sha256": "583b56000723668809a6c6259d12f52ec174ddd9ca2c9129da2e2b7efa24f52c",
+   "duration": 2.227,
+   "channels": 1,
+   "lufs": -10.5,
+   "truePeak": -1.7,
+   "rms100": -13.1,
+   "sources": [
+    "fs-587173"
+   ]
+  },
+  "sfx/rocket-launch-4.ogg": {
+   "bytes": 10422,
+   "sha256": "944c25a3262888b70aa8c2f8aee8738e7188a220bae28b7220d898c6978a0a52",
+   "duration": 1.447,
+   "channels": 1,
+   "lufs": -11.5,
+   "truePeak": -3.6,
+   "rms100": -13,
+   "sources": [
+    "fs-186933"
+   ]
+  },
+  "sfx/sail-rip-1.ogg": {
+   "bytes": 4643,
+   "sha256": "3b75972ee2f7988c7224bc0c3c2433a65e9c5325e37e5332869313ee18a729af",
+   "duration": 0.681,
+   "channels": 1,
+   "lufs": -17.5,
+   "truePeak": -0.5,
+   "rms100": -14.4,
+   "sources": [
+    "fs-591195"
+   ]
+  },
+  "sfx/sail-rip-2.ogg": {
+   "bytes": 5826,
+   "sha256": "ea1252c2a67c148fabc4a810f392a2ef7566309c90ce1ecde5fe0dfc65eeccd8",
+   "duration": 0.745,
+   "channels": 1,
+   "lufs": -14.9,
+   "truePeak": -0.1,
+   "rms100": -14,
+   "sources": [
+    "fs-565970"
+   ]
+  },
+  "sfx/serpent-roar-1.ogg": {
+   "bytes": 28093,
+   "sha256": "37d4eb57b16ad952df6f8acb9ffc44046115830450002934444277791d77384b",
+   "duration": 3.767,
+   "channels": 1,
+   "lufs": -17.6,
+   "truePeak": -4.7,
+   "rms100": -13.1,
+   "sources": [
+    "fs-398908"
+   ]
+  },
+  "sfx/serpent-roar-2.ogg": {
+   "bytes": 12762,
+   "sha256": "de20b3df97d7a6b889dffe5f9acef4be56b46bb601bdd9404d775c259871b361",
+   "duration": 1.969,
+   "channels": 1,
+   "lufs": -21.6,
+   "truePeak": -6,
+   "rms100": -13.1,
+   "sources": [
+    "fs-85568"
+   ]
+  },
+  "sfx/serpent-roar-3.ogg": {
+   "bytes": 20277,
+   "sha256": "6f6ef582be9bbb24d52cff58e8fa9e65175b1ced84898f28d35499e6e7938604",
+   "duration": 2.985,
+   "channels": 1,
+   "lufs": -15,
+   "truePeak": -7.1,
+   "rms100": -13,
+   "sources": [
+    "fs-145729"
+   ]
+  },
+  "sfx/set-sail.ogg": {
+   "bytes": 22449,
+   "sha256": "294225d6b2654b55ca12644d59f9995d0abef8cf1b106fd5bc98c157640d218a",
+   "duration": 2.232,
+   "channels": 1,
+   "lufs": -29.2,
+   "truePeak": -9.9,
+   "rms100": -17.5,
+   "sources": [
+    "fs-353232",
+    "fs-428337"
+   ]
+  },
+  "sfx/shield-up-1.ogg": {
+   "bytes": 9188,
+   "sha256": "599ae5936e5621fc784ef69070d85d162a73bcdb8cd4d89d8ae9f3e4575a511f",
+   "duration": 0.961,
+   "channels": 1,
+   "lufs": -17.4,
+   "truePeak": -9.3,
+   "rms100": -13,
+   "sources": [
+    "kenney-sci-fi-sounds-forceField_000"
+   ]
+  },
+  "sfx/shield-up-2.ogg": {
+   "bytes": 10153,
+   "sha256": "6c2369337e9a73f78dc8312794c657eb9e7ef64a4cc4c247f9863d8f55a0075c",
+   "duration": 0.96,
+   "channels": 1,
+   "lufs": -17.6,
+   "truePeak": -9.4,
+   "rms100": -13,
+   "sources": [
+    "kenney-sci-fi-sounds-forceField_001"
+   ]
+  },
+  "sfx/ship-bell-1.ogg": {
+   "bytes": 26508,
+   "sha256": "6e715f22a364dbe1fab53ddda980115b9699a48c1d122f6a13ce4b851b2e609a",
+   "duration": 2.779,
+   "channels": 1,
+   "lufs": -14.1,
+   "truePeak": -1,
+   "rms100": -13.3,
+   "sources": [
+    "fs-353233"
+   ]
+  },
+  "sfx/ship-bell-2.ogg": {
+   "bytes": 25253,
+   "sha256": "63ca3a5133997cc3a91840abbc4899391de0cdedc8f5428fbab487b33e8071c9",
+   "duration": 2.232,
+   "channels": 1,
+   "lufs": -12.3,
+   "truePeak": -1,
+   "rms100": -12.9,
+   "sources": [
+    "fs-353232"
+   ]
+  },
+  "sfx/ship-break-1.ogg": {
+   "bytes": 30440,
+   "sha256": "e8c11f30693e148b560484a3da2c3514cfcc05192688a7e007d14b33c0460b58",
+   "duration": 4.207,
+   "channels": 1,
+   "lufs": -18.4,
+   "truePeak": -1,
+   "rms100": -13.1,
+   "sources": [
+    "fs-494071"
+   ]
+  },
+  "sfx/ship-break-2.ogg": {
+   "bytes": 21260,
+   "sha256": "e2b8345f2a523bed82dae624ca14ae699b4fd5e6ce3eea17aa11994d99b18e8d",
+   "duration": 2.734,
+   "channels": 1,
+   "lufs": -16.5,
+   "truePeak": -0.7,
+   "rms100": -12.9,
+   "sources": [
+    "fs-183452"
+   ]
+  },
+  "sfx/ship-break-3.ogg": {
+   "bytes": 26424,
+   "sha256": "b99a563ffbe0ae9189b1f365b664a7c900e7f9eb8e5d4c3797e75a23732688e8",
+   "duration": 3.307,
+   "channels": 1,
+   "lufs": -17.7,
+   "truePeak": -4.8,
+   "rms100": -13.2,
+   "sources": [
+    "fs-257752"
+   ]
+  },
+  "sfx/ship-sink-1.ogg": {
+   "bytes": 36005,
+   "sha256": "b1a68e0436d1b8e90ea932beca6d9f4efedfcfd308a03b14cce22988d3652412",
+   "duration": 5.507,
+   "channels": 1,
+   "lufs": -17.9,
+   "truePeak": -2.5,
+   "rms100": -13,
+   "sources": [
+    "fs-173439",
+    "fs-338286",
+    "fs-423959"
+   ]
+  },
+  "sfx/ship-sink-2.ogg": {
+   "bytes": 44506,
+   "sha256": "d6a0e7723d68864d0a599b662e0605f37238dd1af8095f806bee704cb0eff815",
+   "duration": 4.892,
+   "channels": 1,
+   "lufs": -16.4,
+   "truePeak": -2.6,
+   "rms100": -13,
+   "sources": [
+    "fs-539823",
+    "fs-496836"
+   ]
+  },
+  "sfx/shockwave-1.ogg": {
+   "bytes": 25294,
+   "sha256": "f8bf25ceb112d68b9e963120c37f387b74a3781a044b53464a7bfdc2af0f35a2",
+   "duration": 3.007,
+   "channels": 1,
+   "lufs": -18.2,
+   "truePeak": -6.6,
+   "rms100": -13,
+   "sources": [
+    "fs-255111"
+   ]
+  },
+  "sfx/shockwave-2.ogg": {
+   "bytes": 25883,
+   "sha256": "f6a6f8f2954288620e88d622ed151d0ef92fa4748d0350120e08cdb43adf1306",
+   "duration": 3.198,
+   "channels": 1,
+   "lufs": -18.1,
+   "truePeak": -4.6,
+   "rms100": -13,
+   "sources": [
+    "fs-268084"
+   ]
+  },
+  "sfx/skill-ready.ogg": {
+   "bytes": 2188,
+   "sha256": "5db67bcc9eddd672c7c3ae04d64494f4eebad57df3137fc42a1b8f87859be660",
+   "duration": 0.168,
+   "channels": 1,
+   "lufs": -24.5,
+   "truePeak": -0.6,
+   "rms100": -20.8,
+   "sources": [
+    "kenney-interface-sounds-pluck_002"
+   ]
+  },
+  "sfx/splash-large-1.ogg": {
+   "bytes": 14268,
+   "sha256": "0f5befe1dd5b40758b7d4b17d212116c0082d98ab1cb08d531ce2679633565e6",
+   "duration": 2.177,
+   "channels": 1,
+   "lufs": -14.5,
+   "truePeak": -0.8,
+   "rms100": -13,
+   "sources": [
+    "fs-442773"
+   ]
+  },
+  "sfx/splash-large-2.ogg": {
+   "bytes": 10299,
+   "sha256": "8d1102bb54c4af2145cb2702e32beab00c08dfdcb291a0b500b40ee5d01a8bab",
+   "duration": 1.757,
+   "channels": 1,
+   "lufs": -15.8,
+   "truePeak": 0.7,
+   "rms100": -13.3,
+   "sources": [
+    "fs-469608"
+   ]
+  },
+  "sfx/splash-large-3.ogg": {
+   "bytes": 11987,
+   "sha256": "75559ca5b9fb3fce15b2dcac23843a515a322b14357d6bb525dfa5116fc80768",
+   "duration": 1.785,
+   "channels": 1,
+   "lufs": -16.6,
+   "truePeak": -0.8,
+   "rms100": -13.9,
+   "sources": [
+    "fs-436792"
+   ]
+  },
+  "sfx/splash-small-1.ogg": {
+   "bytes": 6733,
+   "sha256": "c05bfeef3aac8f94bb45ae6e4279423af781cb395e6d0196da0e7591c080c3b0",
+   "duration": 0.807,
+   "channels": 1,
+   "lufs": -19.7,
+   "truePeak": 0.3,
+   "rms100": -17.8,
+   "sources": [
+    "fs-404829"
+   ]
+  },
+  "sfx/splash-small-2.ogg": {
+   "bytes": 11069,
+   "sha256": "e22c93bb3baa6e8c63d1f6469946649a39d2628512a2d04add9db67001bcb861",
+   "duration": 1.307,
+   "channels": 1,
+   "lufs": -18.7,
+   "truePeak": -0.7,
+   "rms100": -15.8,
+   "sources": [
+    "fs-398032"
+   ]
+  },
+  "sfx/splash-small-3.ogg": {
+   "bytes": 9766,
+   "sha256": "a08101ab707b129fdc6009ae6a77c3e1364e18022278afbaa6c0ba54811c7b78",
+   "duration": 1.157,
+   "channels": 1,
+   "lufs": -25.5,
+   "truePeak": -0.5,
+   "rms100": -20.1,
+   "sources": [
+    "fs-189504"
+   ]
+  },
+  "sfx/splash-small-4.ogg": {
+   "bytes": 14265,
+   "sha256": "b515fe00c62538bdea1a57fcac0dde922ea2d2f6c06c5d9fc45ab1a591b1d3bf",
+   "duration": 2.007,
+   "channels": 1,
+   "lufs": -14.5,
+   "truePeak": -0.7,
+   "rms100": -13.6,
+   "sources": [
+    "fs-583348"
+   ]
+  },
+  "sfx/splinters-1.ogg": {
+   "bytes": 4496,
+   "sha256": "f54989a01d6d47967bc7230876749e830715471b56bb9a501283e24259534d24",
+   "duration": 0.572,
+   "channels": 1,
+   "lufs": -20.2,
+   "truePeak": -1.3,
+   "rms100": -13,
+   "sources": [
+    "fs-452554"
+   ]
+  },
+  "sfx/splinters-2.ogg": {
+   "bytes": 12241,
+   "sha256": "fb4e4a8435c0c22d87f787e6325ede96ae729466e245342a9a534a43a2417b96",
+   "duration": 1.357,
+   "channels": 1,
+   "lufs": -16.2,
+   "truePeak": 0.1,
+   "rms100": -14.4,
+   "sources": [
+    "fs-562187"
+   ]
+  },
+  "sfx/stinger-boss-defeated.ogg": {
+   "bytes": 93039,
+   "sha256": "aa263d353533271cc8bacbf39c7bfde684805343bcaa5c79269d47a60f5ffd5a",
+   "duration": 6.207,
+   "channels": 2,
+   "lufs": -13.2,
+   "truePeak": -6,
+   "rms100": -13.4,
+   "sources": [
+    "oga-medieval-victory-theme"
+   ]
+  },
+  "sfx/stinger-defeat.ogg": {
+   "bytes": 131904,
+   "sha256": "00b17dc23d698a42a45a39a4a897a9c2689d59d26f9758be391bde620892acda",
+   "duration": 9.476,
+   "channels": 2,
+   "lufs": -12.4,
+   "truePeak": -4.7,
+   "rms100": -9.3,
+   "sources": [
+    "oga-medieval-defeat-theme"
+   ]
+  },
+  "sfx/stinger-victory.ogg": {
+   "bytes": 186600,
+   "sha256": "b9f2b48545533091ec0fe1759ab8f62c05e9ffc6b872cb753ebb16229401573b",
+   "duration": 11.679,
+   "channels": 2,
+   "lufs": -13.2,
+   "truePeak": -4.1,
+   "rms100": -14.9,
+   "sources": [
+    "oga-victory-fanfare-short"
+   ]
+  },
+  "sfx/swivel-shot-1.ogg": {
+   "bytes": 6270,
+   "sha256": "7bdd0b9583f29f386d753fbfb728679f3b674ae4ce4400965dba3d9593605da7",
+   "duration": 1.027,
+   "channels": 1,
+   "lufs": -18.8,
+   "truePeak": -1.5,
+   "rms100": -13,
+   "sources": [
+    "fs-234869"
+   ]
+  },
+  "sfx/swivel-shot-2.ogg": {
+   "bytes": 6798,
+   "sha256": "2336504d4bc1881e01a0f82239393ab130d55d7b148a4e845c3a1b863dc84721",
+   "duration": 1.007,
+   "channels": 1,
+   "lufs": -17.8,
+   "truePeak": -5.1,
+   "rms100": -13.8,
+   "sources": [
+    "fs-347647"
+   ]
+  },
+  "sfx/swivel-shot-3.ogg": {
+   "bytes": 8944,
+   "sha256": "04837bc9fdcd9e64bc94851664e79e31d2ee5e8e97b284c10dc07c2154fc722f",
+   "duration": 1.53,
+   "channels": 1,
+   "lufs": -18.3,
+   "truePeak": 0.1,
+   "rms100": -13.4,
+   "sources": [
+    "fs-538795"
+   ]
+  },
+  "sfx/swivel-shot-4.ogg": {
+   "bytes": 6541,
+   "sha256": "69c8e59ed1d97c289358af939eb442fcc43d08dd1f5ed87d8496403d1b77003d",
+   "duration": 0.957,
+   "channels": 1,
+   "lufs": -16.7,
+   "truePeak": -5.6,
+   "rms100": -14.1,
+   "sources": [
+    "fs-593908"
+   ]
+  },
+  "sfx/thunder-far-1.ogg": {
+   "bytes": 39061,
+   "sha256": "8c7fc1f2587eba4de5e8c64ccf3996032d7be54922d0520663a5b8de13d3ad42",
+   "duration": 7.207,
+   "channels": 1,
+   "lufs": -18.6,
+   "truePeak": -1.6,
+   "rms100": -13,
+   "sources": [
+    "fs-581124"
+   ]
+  },
+  "sfx/thunder-far-2.ogg": {
+   "bytes": 56287,
+   "sha256": "65562edf45d3664fb09ad8c36f27ea25e56e859c04e3181a6af7390f70250282",
+   "duration": 10.307,
+   "channels": 1,
+   "lufs": -18.5,
+   "truePeak": -2,
+   "rms100": -13,
+   "sources": [
+    "fs-347562"
+   ]
+  },
+  "sfx/thunder-near-1.ogg": {
+   "bytes": 20175,
+   "sha256": "7e70f40e9b4b2d1ce46b243dd8a25d6617530493dd8949ce4de2693fb1134deb",
+   "duration": 3.407,
+   "channels": 1,
+   "lufs": -16.4,
+   "truePeak": -1.2,
+   "rms100": -13,
+   "sources": [
+    "fs-475094"
+   ]
+  },
+  "sfx/thunder-near-2.ogg": {
+   "bytes": 50284,
+   "sha256": "5ba22c07889f3f3e54fce7dfcc8fff325848fa3d4cf720ab7da450013e7b5113",
+   "duration": 8.307,
+   "channels": 1,
+   "lufs": -15.4,
+   "truePeak": -9,
+   "rms100": -13.1,
+   "sources": [
+    "fs-646912"
+   ]
+  },
+  "sfx/thunder-near-3.ogg": {
+   "bytes": 19305,
+   "sha256": "55f7546bf1775767b3287cf11419611b15438e77a4b8925899614792e60c4fb2",
+   "duration": 3.577,
+   "channels": 1,
+   "lufs": -17.8,
+   "truePeak": -3.4,
+   "rms100": -13.1,
+   "sources": [
+    "fs-188767"
+   ]
+  },
+  "sfx/treasure-sparkle-1.ogg": {
+   "bytes": 6877,
+   "sha256": "1e0815a7bac0eb8c564515a87bb26e9e08ea5cce598db044fcf99f09d6a57012",
+   "duration": 0.58,
+   "channels": 1,
+   "lufs": -14.6,
+   "truePeak": -4.3,
+   "rms100": -12.9,
+   "sources": [
+    "fs-545238"
+   ]
+  },
+  "sfx/treasure-sparkle-2.ogg": {
+   "bytes": 12224,
+   "sha256": "faecf5b96fdc0fb3f22fecce7e2087e2e149d13688ace52a98b6c91617b26e90",
+   "duration": 1.007,
+   "channels": 1,
+   "lufs": -15,
+   "truePeak": -2.4,
+   "rms100": -13,
+   "sources": [
+    "fs-511485"
+   ]
+  },
+  "sfx/ui-back-1.ogg": {
+   "bytes": 1231,
+   "sha256": "896f933e912cd10d3699f65208ebb65b5f871c95b53008b8d8dc5992ba83c583",
+   "duration": 0.068,
+   "channels": 1,
+   "lufs": -27.2,
+   "truePeak": -0.8,
+   "rms100": -19.9,
+   "sources": [
+    "kenney-interface-sounds-back_001"
+   ]
+  },
+  "sfx/ui-back-2.ogg": {
+   "bytes": 1519,
+   "sha256": "cb1fb4efdf91efbcd0028ae61aa06433cae167ffa010d6d29f4057b6e3638efb",
+   "duration": 0.098,
+   "channels": 1,
+   "lufs": -25.6,
+   "truePeak": -2,
+   "rms100": -17.1,
+   "sources": [
+    "kenney-interface-sounds-back_002"
+   ]
+  },
+  "sfx/ui-click-1.ogg": {
+   "bytes": 1738,
+   "sha256": "92596540fbf8b0ed6d270f7f0d6877be4d273361b926927a1f87e4f99724da8c",
+   "duration": 0.104,
+   "channels": 1,
+   "lufs": -31,
+   "truePeak": -0.6,
+   "rms100": -24.6,
+   "sources": [
+    "kenney-interface-sounds-click_001"
+   ]
+  },
+  "sfx/ui-click-2.ogg": {
+   "bytes": 1073,
+   "sha256": "d5c884ce393c9f11618a691310a3a1776faeabe33a8e1e55f034607e642b4344",
+   "duration": 0.097,
+   "channels": 1,
+   "lufs": -26.8,
+   "truePeak": -1.1,
+   "rms100": -20,
+   "sources": [
+    "kenney-ui-audio-click1"
+   ]
+  },
+  "sfx/ui-click-3.ogg": {
+   "bytes": 1217,
+   "sha256": "229f2c7a148a050b12cce79259e110dc6752bb1c368059dd6b0dcdc7385318d0",
+   "duration": 0.09,
+   "channels": 1,
+   "lufs": -31.6,
+   "truePeak": -1,
+   "rms100": -25.9,
+   "sources": [
+    "kenney-ui-audio-click3"
+   ]
+  },
+  "sfx/ui-close.ogg": {
+   "bytes": 1597,
+   "sha256": "f25bab464f034939107a39cdd6e0536f065b64a1b3c289c56895d0d7e9c55698",
+   "duration": 0.154,
+   "channels": 1,
+   "lufs": -19.7,
+   "truePeak": -3.9,
+   "rms100": -17.2,
+   "sources": [
+    "kenney-interface-sounds-close_001"
+   ]
+  },
+  "sfx/ui-confirm-1.ogg": {
+   "bytes": 2472,
+   "sha256": "7f1e1c621d803c1efbcc427a2fdc18aa63963282723c9fb0234e7d007da884ff",
+   "duration": 0.296,
+   "channels": 1,
+   "lufs": -22.5,
+   "truePeak": -10.1,
+   "rms100": -17,
+   "sources": [
+    "kenney-interface-sounds-confirmation_001"
+   ]
+  },
+  "sfx/ui-confirm-2.ogg": {
+   "bytes": 3158,
+   "sha256": "7d73aa82937be8b09974731505ad6c1a03356079dfd5d4069b21923a5a2ac396",
+   "duration": 0.329,
+   "channels": 1,
+   "lufs": -19.8,
+   "truePeak": -7.2,
+   "rms100": -17,
+   "sources": [
+    "kenney-interface-sounds-confirmation_003"
+   ]
+  },
+  "sfx/ui-error.ogg": {
+   "bytes": 1652,
+   "sha256": "d7192bf879884dd1d8df9a5e7372f0d96cef39a2aa464892d0852a16232a55a5",
+   "duration": 0.111,
+   "channels": 1,
+   "lufs": -23.7,
+   "truePeak": -2.8,
+   "rms100": -17,
+   "sources": [
+    "kenney-interface-sounds-error_004"
+   ]
+  },
+  "sfx/ui-hover-1.ogg": {
+   "bytes": 1066,
+   "sha256": "a441dc985fce52fece76f1e92095717dad56922ba2640b60c8b02d7c9b0bca0a",
+   "duration": 0.061,
+   "channels": 1,
+   "lufs": -30.2,
+   "truePeak": -0.8,
+   "rms100": -22.1,
+   "sources": [
+    "kenney-ui-audio-rollover2"
+   ]
+  },
+  "sfx/ui-hover-2.ogg": {
+   "bytes": 1041,
+   "sha256": "d8012fa09d70df596897c215c3db50375a710b478c6825fa8ac6316fc214abe7",
+   "duration": 0.073,
+   "channels": 1,
+   "lufs": -23.1,
+   "truePeak": -2.6,
+   "rms100": -17.1,
+   "sources": [
+    "kenney-ui-audio-rollover3"
+   ]
+  },
+  "sfx/ui-open.ogg": {
+   "bytes": 1603,
+   "sha256": "7837dbd4a5bce3dcb4866417c9f4801a2e6a0628eca6ced5be121deeaa99918d",
+   "duration": 0.154,
+   "channels": 1,
+   "lufs": -19.4,
+   "truePeak": -3.4,
+   "rms100": -17.3,
+   "sources": [
+    "kenney-interface-sounds-open_001"
+   ]
+  },
+  "sfx/ui-tick.ogg": {
+   "bytes": 686,
+   "sha256": "c65d8c1ead19e4b6ba5af45b000fb64b3a3d248b5da9e476b014eb8cc88cf938",
+   "duration": 0.027,
+   "channels": 1,
+   "lufs": -29.4,
+   "truePeak": -2.2,
+   "rms100": -19.2,
+   "sources": [
+    "kenney-interface-sounds-tick_002"
+   ]
+  },
+  "sfx/ui-transition-1.ogg": {
+   "bytes": 4756,
+   "sha256": "469deeb44e336464383c4f9871f306eab90d5ef0a498716fc6d2a121ce313d9f",
+   "duration": 0.641,
+   "channels": 1,
+   "lufs": -23.6,
+   "truePeak": -0.9,
+   "rms100": -17.2,
+   "sources": [
+    "kenney-rpg-audio-cloth1"
+   ]
+  },
+  "sfx/ui-transition-2.ogg": {
+   "bytes": 3320,
+   "sha256": "bcbf026c69a71124b6c34ad34921c09b9d8225139e41abd7d8f5cf8a08a90127",
+   "duration": 0.483,
+   "channels": 1,
+   "lufs": -22.2,
+   "truePeak": -2.3,
+   "rms100": -17.1,
+   "sources": [
+    "kenney-rpg-audio-cloth3"
+   ]
+  },
+  "sfx/ultimate-ready.ogg": {
+   "bytes": 2226,
+   "sha256": "eeb30605fc94885fd6de640a4cec11b46c947893200da6d54e8458106298e909",
+   "duration": 0.186,
+   "channels": 1,
+   "lufs": -22.2,
+   "truePeak": -2.9,
+   "rms100": -17,
+   "sources": [
+    "kenney-interface-sounds-glass_005",
+    "kenney-interface-sounds-bong_001"
+   ]
+  },
+  "sfx/ultimate-sting.ogg": {
+   "bytes": 22955,
+   "sha256": "4560ba178120dd45fa95351a432a54eb6b9f166d3281c9dba24430780cc03983",
+   "duration": 3.388,
+   "channels": 1,
+   "lufs": -18.1,
+   "truePeak": -6.6,
+   "rms100": -13,
+   "sources": [
+    "fs-427803"
+   ]
+  },
+  "sfx/war-horn.ogg": {
+   "bytes": 43020,
+   "sha256": "3e6ff36704cbe84e0f5a2977729bfeb1c2d92b202e8988c33964911e0d0defef",
+   "duration": 6.207,
+   "channels": 1,
+   "lufs": -15.4,
+   "truePeak": -5.5,
+   "rms100": -13.1,
+   "sources": [
+    "fs-188815"
+   ]
+  },
+  "sfx/warning.ogg": {
+   "bytes": 9972,
+   "sha256": "0484d9ec704b342eb3b421945ac04b31dba4dbca26316cf66c640092fe646b58",
+   "duration": 2.007,
+   "channels": 1,
+   "lufs": -18.6,
+   "truePeak": -2.6,
+   "rms100": -12.9,
+   "sources": [
+    "fs-369394"
+   ]
+  },
+  "sfx/water-bolt-1.ogg": {
+   "bytes": 6130,
+   "sha256": "8c6225b269a4b55c3d31b06b2e2c715b17d8091615522e0b234ac28b5541f34e",
+   "duration": 0.567,
+   "channels": 1,
+   "lufs": -24.3,
+   "truePeak": -1.1,
+   "rms100": -20.2,
+   "sources": [
+    "fs-321489"
+   ]
+  },
+  "sfx/water-bolt-2.ogg": {
+   "bytes": 5049,
+   "sha256": "381ec0d20fbacc197daec3da7d614dba977fc4d481dfec097401b64e989fcd79",
+   "duration": 0.608,
+   "channels": 1,
+   "lufs": -16.6,
+   "truePeak": -0.4,
+   "rms100": -16.4,
+   "sources": [
+    "fs-151289"
+   ]
+  },
+  "sfx/wave-roar-1.ogg": {
+   "bytes": 42577,
+   "sha256": "ac2e435769fe0944aae516f37b860b83a25893e5eee6fb272dd6ac89de5018e7",
+   "duration": 7.007,
+   "channels": 1,
+   "lufs": -14.2,
+   "truePeak": -2,
+   "rms100": -13,
+   "sources": [
+    "fs-412308",
+    "fs-268084",
+    "fs-237980"
+   ]
+  },
+  "sfx/wave-roar-2.ogg": {
+   "bytes": 42388,
+   "sha256": "c512e1aa4839777d30fdae32e63c6b23ed0995167d82b89ce7f8b55e11ff81cb",
+   "duration": 7.007,
+   "channels": 1,
+   "lufs": -16.2,
+   "truePeak": -2.8,
+   "rms100": -12.9,
+   "sources": [
+    "fs-412308",
+    "fs-249414"
+   ]
+  },
+  "sfx/weapon-new.ogg": {
+   "bytes": 5813,
+   "sha256": "884f5b9750dbcddf59168e0f85c3c8d3579b43ad4275182032643fa35c862992",
+   "duration": 0.953,
+   "channels": 1,
+   "lufs": -21.7,
+   "truePeak": -0.9,
+   "rms100": -17.2,
+   "sources": [
+    "kenney-rpg-audio-metalLatch",
+    "kenney-rpg-audio-drawKnife1",
+    "kenney-impact-sounds-impactPlank_medium_000"
+   ]
+  },
+  "sfx/weapon-upgrade-1.ogg": {
+   "bytes": 2041,
+   "sha256": "aeb61b3a2a6e598a5fb690d70a2e8bf57522c38f8801952d38e580d99110b28a",
+   "duration": 0.216,
+   "channels": 1,
+   "lufs": -19.6,
+   "truePeak": -5.8,
+   "rms100": -17.1,
+   "sources": [
+    "kenney-interface-sounds-maximize_003"
+   ]
+  },
+  "sfx/weapon-upgrade-2.ogg": {
+   "bytes": 3381,
+   "sha256": "041fe2a7e52679a87e5e9f91ca9824f79cd7bbc5144123c7e49326bd7bfa5c66",
+   "duration": 0.386,
+   "channels": 1,
+   "lufs": -22.4,
+   "truePeak": -8.1,
+   "rms100": -17,
+   "sources": [
+    "kenney-interface-sounds-maximize_006"
+   ]
+  },
+  "sfx/whirlpool-cast.ogg": {
+   "bytes": 7793,
+   "sha256": "ecf519d03a455a686530678a426c2b4f8f5cb54e29f31acd63ca43f1c1bf2426",
+   "duration": 1.007,
+   "channels": 1,
+   "lufs": -15.1,
+   "truePeak": -0.8,
+   "rms100": -13.3,
+   "sources": [
+    "fs-537920"
+   ]
+  }
+ }
+}

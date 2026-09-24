@@ -44,6 +44,8 @@ export class GameApp {
   readonly audio = new AudioEngine();
   readonly input: Input;
   world: IslandField;
+  /** Title/harbor field: includes the hand-placed harbour set as collision and shore geometry. */
+  private readonly menuWorld: IslandField;
   sim: Sim | null = null;
   profile: MetaProfile;
   settings: Settings;
@@ -70,6 +72,8 @@ export class GameApp {
   private paused = false;
   private fps = 60;
   private menuHeading = 0;
+  /** QA/bridge input override (steer/aim) that wins over live input until `until` (render time). */
+  inputOverride: { steer?: number; aimX?: number; aimZ?: number; until: number } | null = null;
 
   constructor(private readonly root: HTMLElement, readonly config: AppConfig) {
     this.host = new RendererHost(root, config.captureMode, config.quality === 'low');
@@ -77,7 +81,8 @@ export class GameApp {
     this.profile = loadProfile();
     this.settings = loadSettings();
     this.selectedShip = this.profile.lastShip;
-    this.world = new IslandField(config.seed);
+    this.menuWorld = new IslandField(config.seed, { menuHarbor: true });
+    this.world = this.menuWorld;
     this.input = new Input(this.host.renderer.domElement);
     this.systems = [this.sky, this.ocean, this.worldVisuals, this.ships, this.fx, this.camera];
     this.services = {
@@ -97,6 +102,8 @@ export class GameApp {
     this.input.attach();
     this.audio.setSettings(this.settings);
     await this.ships.preload(CONTENT.ships[this.selectedShip].modelKey).catch(() => undefined);
+    // Compile every program with the real post targets bound so the first frames don't hitch.
+    await this.post.precompile(this.host.scene, this.host.camera).catch(() => undefined);
     installDebugBridge(this);
     document.addEventListener('visibilitychange', this.onVisibility);
     this.setScreen('title');
@@ -105,6 +112,8 @@ export class GameApp {
     this.lastFrame = performance.now();
     this.raf = requestAnimationFrame(this.frame);
   }
+
+  renderClock(): number { return this.renderTime; }
 
   setScreen(screen: AppScreen): void {
     this.screen = screen;
@@ -117,7 +126,7 @@ export class GameApp {
     this.profile.lastShip = shipId;
     this.profile.lastSea = seaId;
     saveProfile(this.profile);
-    this.world = new IslandField(`${this.config.seed}:${this.profile.runs}`);
+    this.world = new IslandField(`${this.config.seed}:${this.profile.runs}`, { sea: seaId });
     this.sim = new Sim({ seed: this.world.seed, shipId, seaId, meta: this.profile, world: this.world });
     if (this.config.god) this.sim.debug.god(true);
     this.result = null;
@@ -147,7 +156,7 @@ export class GameApp {
       onBanish: (index) => { this.sim?.banish(index); },
       onPause: (paused) => { this.paused = paused; this.sim?.setPaused(paused); },
       onRetire: () => { this.sim?.retire(); },
-      onReturnToHarbor: () => { this.sim = null; this.setScreen('harbor'); },
+      onReturnToHarbor: () => { this.sim = null; this.world = this.menuWorld; this.setScreen('harbor'); },
       onPurchaseUpgrade: (id: MetaUpgradeId) => { if (purchaseUpgrade(this.profile, id)) saveProfile(this.profile); },
       onUnlockShip: (id) => { if (unlockShip(this.profile, id)) { this.selectedShip = id; saveProfile(this.profile); } },
       onSettingsChange: (settings) => { this.settings = settings; saveSettings(settings); this.audio.setSettings(settings); },
@@ -172,7 +181,9 @@ export class GameApp {
     if (this.sim && run && this.screen === 'run') {
       const snap = this.input.read();
       this.updateAim(snap.pointerX, snap.pointerY, snap.usingGamepad, snap.stickAimX, snap.stickAimY);
-      this.sim.setInput({ steer: snap.steer, throttleAxis: snap.throttleAxis, aimX: this.aimPoint.x, aimZ: this.aimPoint.z, broadsideHeld: snap.broadsideHeld });
+      const o = this.inputOverride && this.inputOverride.until > this.renderTime ? this.inputOverride : null;
+      if (o?.aimX !== undefined && o.aimZ !== undefined) this.aimPoint.set(o.aimX, 0, o.aimZ);
+      this.sim.setInput({ steer: o?.steer ?? snap.steer, throttleAxis: snap.throttleAxis, aimX: this.aimPoint.x, aimZ: this.aimPoint.z, broadsideHeld: snap.broadsideHeld });
       for (const action of this.input.drainActions()) this.sim.press(action);
       if (!this.paused) this.sim.step(dt);
     }
@@ -202,7 +213,7 @@ export class GameApp {
     this.ui.update({
       screen: this.screen, time: this.renderTime, dt, run: ctx.run, events: this.frameEvents, profile: this.profile,
       settings: this.settings, result: this.result, selectedShip: this.selectedShip, fps: this.fps,
-      project: (x, y, z, out) => this.project(x, y, z, out),
+      world: ctx.run ? this.world : null, project: (x, y, z, out) => this.project(x, y, z, out),
     });
     const cam = this.host.camera;
     const forward = cam.getWorldDirection(this.projectVec);

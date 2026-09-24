@@ -1,55 +1,86 @@
 /**
- * Deterministic endless island field (WORLD-owned). Skeleton: one optional island per 560 m cell with a noisy
- * polygon coastline. Collision, spawn checks and shore distance all use the same outline the renderer meshes.
+ * Deterministic endless island field (WORLD-owned). Implements the WorldQuery contract used by the simulation for
+ * collision, spawning and projectile blocking, and by the renderer for meshing and shore foam.
+ *
+ * Truth: every IslandDef.outline is the collision polygon AND the waterline ring of its render mesh (see
+ * src/render/world/terrainGeometry.ts), so ships stop exactly where rock meets water.
+ *
+ * Layout: 600 m cells, at most one feature per cell (see features.ts); features stay 45 m inside their cell, the
+ * start area (300 m around the origin) is open water. Optional `sea` biases biomes/landmarks (see seas.ts);
+ * optional `menuHarbor` adds the title-screen harbour set around the origin as real collision/shore geometry.
  */
-import { createSeededRandom, hashCoordinates, hashString } from '../core/rng';
-import type { CircleHit, IslandBiome, IslandDef, Vec2, WorldQuery } from '../game/types';
+import { hashString } from '../core/rng';
+import type { CircleHit, IslandDef, WorldQuery } from '../game/types';
+import { CELL, type WorldFeature, generateCellFeature } from './features';
+import { harborSetFeatures } from './harborSet';
+import { type BatterySite, batterySites } from './plan';
+import { signedDistance as polygonSignedDistance, signedDistanceValue, type SignedDistance } from './polygon';
+import { type PaletteId, type SeaBias, seaBias } from './seas';
 
-const CELL = 560;
-const CLEAR_RADIUS = 220; // open water around the start
+export { CELL, START_CLEAR } from './features';
+export type { WorldFeature } from './features';
+
+export interface IslandFieldOptions {
+  /** Sea id (e.g. 'stormwrack-reach') biasing biomes, landmarks and palettes. Default: Sunward mix. */
+  sea?: string | null;
+  /** Include the menu harbour set (title/harbour screens) as collision + shore geometry around the origin. */
+  menuHarbor?: boolean;
+}
+
+const MISS: CircleHit = Object.freeze({ hit: false, nx: 0, nz: 0, depth: 0 }) as CircleHit;
+const CACHE_LIMIT = 4096;
+
+const cellKey = (cx: number, cz: number): number => ((cx + 32768) & 0xffff) * 65536 + ((cz + 32768) & 0xffff);
 
 export class IslandField implements WorldQuery {
   readonly seed: string;
+  readonly sea: string | null;
+  readonly palette: PaletteId;
+  readonly includesHarborSet: boolean;
   private readonly seedNumber: number;
-  private readonly cache = new Map<string, IslandDef | null>();
+  private readonly bias: SeaBias;
+  private readonly cache = new Map<number, WorldFeature | null>();
+  private readonly extras: readonly WorldFeature[];
   private readonly scratch: IslandDef[] = [];
+  private readonly sd: SignedDistance = { distance: 0, nx: 0, nz: 0 };
 
-  constructor(seed: string) {
+  constructor(seed: string, options: IslandFieldOptions = {}) {
     this.seed = seed;
+    this.sea = options.sea ?? null;
+    this.bias = seaBias(this.sea);
+    this.palette = this.bias.palette;
     this.seedNumber = hashString(`islands:${seed}`);
+    this.includesHarborSet = options.menuHarbor === true;
+    this.extras = this.includesHarborSet ? harborSetFeatures() : [];
   }
 
-  private cellIsland(cx: number, cz: number): IslandDef | null {
-    const key = `${cx},${cz}`;
-    if (this.cache.has(key)) return this.cache.get(key)!;
-    const rng = createSeededRandom(hashCoordinates(this.seedNumber, cx, cz, 17));
-    let island: IslandDef | null = null;
-    if (rng.chance(0.42)) {
-      const radius = rng.range(38, 110);
-      const x = (cx + 0.5) * CELL + rng.range(-1, 1) * (CELL / 2 - radius - 30);
-      const z = (cz + 0.5) * CELL + rng.range(-1, 1) * (CELL / 2 - radius - 30);
-      if (Math.hypot(x, z) > CLEAR_RADIUS + radius) {
-        const points = 28;
-        const outline: Vec2[] = [];
-        const phase = rng.range(0, Math.PI * 2);
-        const wobble = [rng.range(0.08, 0.22), rng.range(0.04, 0.12), rng.range(0.02, 0.07)];
-        let maxR = 0;
-        for (let i = 0; i < points; i++) {
-          const a = (i / points) * Math.PI * 2;
-          const r = radius * (1 + wobble[0]! * Math.sin(a * 2 + phase) + wobble[1]! * Math.sin(a * 5 + phase * 1.7) + wobble[2]! * Math.sin(a * 9 + phase * 2.3));
-          maxR = Math.max(maxR, r);
-          outline.push({ x: x + Math.sin(a) * r, z: z + Math.cos(a) * r });
-        }
-        const biomes: IslandBiome[] = ['tropical', 'tropical', 'rocky', 'tropical', 'volcanic', 'fort'];
-        island = {
-          id: `isl:${cx}:${cz}`, x, z, radius: maxR, outline, height: rng.range(18, 62), biome: rng.pick(biomes),
-          seed: hashCoordinates(this.seedNumber, cx, cz, 91),
-        };
+  /** Feature of one cell (cached). */
+  cellFeature(cx: number, cz: number): WorldFeature | null {
+    const key = cellKey(cx, cz);
+    let f = this.cache.get(key);
+    if (f === undefined) {
+      if (this.cache.size >= CACHE_LIMIT) this.cache.clear();
+      f = generateCellFeature(this.seedNumber, cx, cz, this.bias);
+      if (f && this.extras.length) {
+        // The harbour set owns the origin; drop generated features that would overlap it.
+        for (const e of this.extras) if (Math.hypot(e.x - f.x, e.z - f.z) < e.radius + f.radius + 60) { f = null; break; }
       }
+      this.cache.set(key, f);
     }
-    this.cache.set(key, island);
-    if (this.cache.size > 4000) this.cache.clear();
-    return island;
+    return f;
+  }
+
+  /** Features (islands with satellites, clusters, landmarks) whose bounds intersect the circle. */
+  featuresNear(x: number, z: number, radius: number, out: WorldFeature[] = []): WorldFeature[] {
+    out.length = 0;
+    const minX = Math.floor((x - radius) / CELL), maxX = Math.floor((x + radius) / CELL);
+    const minZ = Math.floor((z - radius) / CELL), maxZ = Math.floor((z + radius) / CELL);
+    for (let cx = minX; cx <= maxX; cx++) for (let cz = minZ; cz <= maxZ; cz++) {
+      const f = this.cellFeature(cx, cz);
+      if (f && Math.hypot(f.x - x, f.z - z) <= f.radius + radius) out.push(f);
+    }
+    for (const f of this.extras) if (Math.hypot(f.x - x, f.z - z) <= f.radius + radius) out.push(f);
+    return out;
   }
 
   islandsNear(x: number, z: number, radius: number, out: IslandDef[] = []): IslandDef[] {
@@ -57,16 +88,17 @@ export class IslandField implements WorldQuery {
     const minX = Math.floor((x - radius) / CELL), maxX = Math.floor((x + radius) / CELL);
     const minZ = Math.floor((z - radius) / CELL), maxZ = Math.floor((z + radius) / CELL);
     for (let cx = minX; cx <= maxX; cx++) for (let cz = minZ; cz <= maxZ; cz++) {
-      const island = this.cellIsland(cx, cz);
-      if (island && Math.hypot(island.x - x, island.z - z) <= island.radius + radius) out.push(island);
+      const f = this.cellFeature(cx, cz);
+      if (f) pushIslands(f, x, z, radius, out);
     }
+    for (const f of this.extras) pushIslands(f, x, z, radius, out);
     return out;
   }
 
   collideCircle(x: number, z: number, radius: number): CircleHit {
-    let best: CircleHit = { hit: false, nx: 0, nz: 0, depth: 0 };
+    let best: CircleHit = MISS;
     for (const island of this.islandsNear(x, z, radius, this.scratch)) {
-      const d = signedDistance(island.outline, x, z);
+      const d = polygonSignedDistance(island.outline, x, z, this.sd);
       if (d.distance < radius) {
         const depth = radius - d.distance;
         if (depth > best.depth) best = { hit: true, nx: d.nx, nz: d.nz, depth, islandId: island.id };
@@ -77,31 +109,46 @@ export class IslandField implements WorldQuery {
 
   isWater(x: number, z: number, margin: number): boolean {
     for (const island of this.islandsNear(x, z, margin, this.scratch)) {
-      if (signedDistance(island.outline, x, z).distance < margin) return false;
+      if (signedDistanceValue(island.outline, x, z) < margin) return false;
     }
     return true;
   }
 
   shoreDistance(x: number, z: number, max: number): number {
     let best = max;
-    for (const island of this.islandsNear(x, z, max, this.scratch)) best = Math.min(best, signedDistance(island.outline, x, z).distance);
+    for (const island of this.islandsNear(x, z, max, this.scratch)) {
+      // Bounding-circle lower bound: skip islands that cannot beat the current best.
+      if (Math.hypot(island.x - x, island.z - z) - island.radius >= best) continue;
+      const d = signedDistanceValue(island.outline, x, z);
+      if (d < best) best = d;
+    }
     return best;
+  }
+
+  /**
+   * Cliff Battery sites near a point: tower tops of Admiralty forts (see plan.ts). META can spawn stationary
+   * 'fort' enemies here; `y` is the platform height and `facing` the seaward yaw (contract heading convention).
+   */
+  batterySitesNear(x: number, z: number, radius: number, out: BatterySite[] = []): BatterySite[] {
+    out.length = 0;
+    for (const island of this.islandsNear(x, z, radius, this.scratch)) {
+      if (island.landmark !== 'fort') continue;
+      for (const site of batterySites(island)) if (Math.hypot(site.x - x, site.z - z) <= radius) out.push(site);
+    }
+    return out;
+  }
+}
+
+function pushIslands(f: WorldFeature, x: number, z: number, radius: number, out: IslandDef[]): void {
+  const dx = f.x - x, dz = f.z - z, reach = f.radius + radius;
+  if (dx * dx + dz * dz > reach * reach) return;
+  for (const island of f.islands) {
+    const ix = island.x - x, iz = island.z - z, r = island.radius + radius;
+    if (ix * ix + iz * iz <= r * r) out.push(island);
   }
 }
 
 /** Signed distance from (x,z) to a closed polygon (negative inside) and the outward normal at the closest point. */
-export function signedDistance(outline: readonly Vec2[], x: number, z: number): { distance: number; nx: number; nz: number } {
-  let minSq = Infinity, nx = 0, nz = 0, inside = false;
-  for (let i = 0, j = outline.length - 1; i < outline.length; j = i++) {
-    const a = outline[j]!, b = outline[i]!;
-    if ((b.z > z) !== (a.z > z) && x < ((a.x - b.x) * (z - b.z)) / (a.z - b.z) + b.x) inside = !inside;
-    const ex = b.x - a.x, ez = b.z - a.z;
-    const t = Math.max(0, Math.min(1, ((x - a.x) * ex + (z - a.z) * ez) / (ex * ex + ez * ez || 1)));
-    const px = a.x + ex * t, pz = a.z + ez * t;
-    const dx = x - px, dz = z - pz, sq = dx * dx + dz * dz;
-    if (sq < minSq) { minSq = sq; nx = dx; nz = dz; }
-  }
-  const d = Math.sqrt(minSq) || 1e-6;
-  const sign = inside ? -1 : 1;
-  return { distance: sign * d, nx: (nx / d) * sign, nz: (nz / d) * sign };
+export function signedDistance(outline: IslandDef['outline'], x: number, z: number): { distance: number; nx: number; nz: number } {
+  return polygonSignedDistance(outline, x, z);
 }

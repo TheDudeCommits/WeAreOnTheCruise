@@ -1,0 +1,10 @@
+Self-hosted UI fonts (latin subsets, WOFF2). All are SIL Open Font License 1.1; each folder carries its OFL.txt.
+
+knewave/Knewave-Regular.latin.woff2   Knewave by Tyler Finck (Reserved Font Name "Knewave")
+  source: https://github.com/google/fonts/tree/main/ofl/knewave  (WOFF2 subset via Fontsource, v15)
+bangers/Bangers-Regular.latin.woff2   Bangers by Vernon Adams / The Bangers Project Authors
+  source: https://github.com/google/fonts/tree/main/ofl/bangers  (WOFF2 subset via Fontsource)
+nunito/Nunito-Variable.latin.woff2    Nunito (variable wght 200-1000) by The Nunito Project Authors
+  source: https://github.com/google/fonts/tree/main/ofl/nunito   (WOFF2 subset via Fontsource, v32)
+
+Changes: none (unmodified subsets). Used by src/styles/ui.css.
