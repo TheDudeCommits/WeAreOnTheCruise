@@ -15,7 +15,8 @@ import type { ShipId } from '../../game/ids';
 import type { IslandDef } from '../../game/types';
 import type { CameraServices, FrameContext, RenderHostHandles, RenderSystem } from '../frame';
 
-const TACTICAL_PITCH = THREE.MathUtils.degToRad(47);
+/** 44°: enough overview for a survivor fight, low enough that hull sides and sails still read. */
+const TACTICAL_PITCH = THREE.MathUtils.degToRad(44);
 const MIN_PITCH = THREE.MathUtils.degToRad(22);
 const MAX_PITCH = THREE.MathUtils.degToRad(72);
 const TACTICAL_FOV = 50;
