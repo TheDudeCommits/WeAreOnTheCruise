@@ -23,8 +23,11 @@ import { WorldVisuals } from '../render/world/WorldVisuals';
 import type { ScreenPoint, UiCallbacks } from '../ui/contracts';
 import { Ui } from '../ui/Ui';
 import { IslandField } from '../world/IslandField';
+import { FrameProfiler } from './FrameProfiler';
 import type { AppConfig } from './AppConfig';
 import { installDebugBridge } from './debugBridge';
+
+const SYSTEM_NAMES = ['sky', 'ocean', 'world', 'ships', 'fx', 'camera'] as const;
 
 const MENU_SEA: SeaState = {
   weather: 'clear', nextWeather: 'clear', blend: 1, waveScale: 0.75, windDir: 0.6, windStrength: 0.5,
@@ -44,6 +47,8 @@ export class GameApp {
   readonly audio = new AudioEngine();
   readonly input: Input;
   world: IslandField;
+  /** Opt-in CPU breakdown per frame (QA bridge). */
+  readonly profiler = new FrameProfiler();
   /** Title/harbor field: includes the hand-placed harbour set as collision and shore geometry. */
   private readonly menuWorld: IslandField;
   sim: Sim | null = null;
@@ -85,6 +90,7 @@ export class GameApp {
     this.world = this.menuWorld;
     this.input = new Input(this.host.renderer.domElement);
     this.systems = [this.sky, this.ocean, this.worldVisuals, this.ships, this.fx, this.camera];
+    // SYSTEM_NAMES labels the profiler laps in this order.
     this.services = {
       ocean: this.ocean,
       camera: this.camera,
@@ -172,6 +178,8 @@ export class GameApp {
 
   /** One frame of the whole app (also used by the debug bridge for deterministic stepping). */
   tick(dt: number): void {
+    const prof = this.profiler;
+    prof.begin();
     this.renderTime += dt;
     this.fps += ((dt > 0 ? 1 / dt : 60) - this.fps) * 0.05;
     const run = this.sim?.state ?? null;
@@ -187,6 +195,7 @@ export class GameApp {
       for (const action of this.input.drainActions()) this.sim.press(action);
       if (!this.paused) this.sim.step(dt);
     }
+    prof.lap('sim');
     this.frameEvents.length = 0;
     if (this.sim) for (const e of this.sim.drainEvents()) this.frameEvents.push(e);
     if (run && (run.status === 'dead' || run.status === 'victory') && this.screen === 'run' && this.frameEvents.some((e) => e.type === 'run-ended')) {
@@ -205,9 +214,12 @@ export class GameApp {
       viewport: { width: viewport.width, height: viewport.height, dpr: this.host.renderer.getPixelRatio() },
       atmosphere: this.atmosphere, services: this.services,
     };
-    for (const system of this.systems) system.update(ctx);
+    prof.lap('frame');
+    for (let i = 0; i < this.systems.length; i++) { this.systems[i]!.update(ctx); prof.lap(SYSTEM_NAMES[i] ?? `system${i}`); }
     this.post.update(ctx);
+    prof.lap('post');
     this.host.render(() => this.post.render(this.host.scene, this.host.camera));
+    prof.lap('render');
 
     // UI + audio.
     this.ui.update({
@@ -215,12 +227,15 @@ export class GameApp {
       settings: this.settings, result: this.result, selectedShip: this.selectedShip, fps: this.fps,
       world: ctx.run ? this.world : null, project: (x, y, z, out) => this.project(x, y, z, out),
     });
+    prof.lap('ui');
     const cam = this.host.camera;
     const forward = cam.getWorldDirection(this.projectVec);
     this.audio.update({
       screen: this.screen, time: this.renderTime, dt, run: ctx.run, events: this.frameEvents,
       listener: { x: cam.position.x, y: cam.position.y, z: cam.position.z, forwardX: forward.x, forwardZ: forward.z },
     });
+    prof.lap('audio');
+    prof.end();
   }
 
   private updateAim(ndcX: number, ndcY: number, gamepad: boolean, stickX: number, stickY: number): void {

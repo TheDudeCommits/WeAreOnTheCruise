@@ -61,7 +61,7 @@ export const DIRECTOR = {
    * Enemy HP multiplier: grows with time; sea difficulty counts at half strength (harder seas also bring more
    * ships, more fire and nastier weather, so HP does not need to carry all of it).
    */
-  hpScale: (minute: number, difficulty: number): number => (1 + 0.088 * minute + 0.0033 * minute * minute) * (1 + (difficulty - 1) * 0.5),
+  hpScale: (minute: number, difficulty: number): number => (1 + 0.11 * minute + 0.0041 * minute * minute) * (1 + (difficulty - 1) * 0.5),
   /** Enemy damage multiplier (time and difficulty), capped. */
   damageScale: (minute: number, difficulty: number): number =>
     Math.min(2.2, (1 + 0.0256 * minute + 0.00096 * minute * minute) * (1 + (difficulty - 1) * 0.35)),
@@ -76,7 +76,7 @@ export const DIRECTOR = {
    * Fire control: the whole enemy fleet shares a budget of volleys per second (tokens). The horde can be huge
    * for spectacle while incoming fire stays a designed curve. Bosses are exempt (their attacks are telegraphed).
    */
-  fireRate: (minute: number): number => 0.06 + 0.017 * minute,
+  fireRate: (minute: number): number => 0.072 + 0.0204 * minute,
   /** Fire-control rate multiplier from sea difficulty. */
   fireDifficultyExp: 0.5,
   fireBank: 3,

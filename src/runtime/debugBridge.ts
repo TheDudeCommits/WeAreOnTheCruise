@@ -2,6 +2,7 @@
  * QA/automation bridge (lead-owned): window.__CRUISE__. Used by scripts/qa-*.mjs and agents' checks.
  * Capture helpers never change gameplay rules; they only drive the same app loop with fixed steps.
  */
+import type * as THREE from 'three';
 import type { BossId, EnemyId, SeaId, ShipId, WeaponId } from '../game/ids';
 import type { SimAction } from '../game/types';
 import type { GameApp } from './GameApp';
@@ -23,6 +24,10 @@ export interface CruiseBridge {
   /** Advances the whole app by `seconds` using fixed 1/60 frames (rendering each frame). */
   advance(seconds: number): void;
   metrics(): unknown;
+  /** Visible meshes/triangles per top-level scene group (instancing counted; frustum culling not applied). */
+  sceneStats(): Record<string, { meshes: number; tris: number; shadowTris: number }>;
+  /** Per-frame CPU breakdown: enable, run frames, then read the report (mean/max per part and the slowest frames). */
+  profiler: { enable(on: boolean): void; reset(): void; report(worst?: number): unknown };
   debug: {
     xp(amount: number): void;
     level(level: number): void;
@@ -85,6 +90,28 @@ export function installDebugBridge(app: GameApp): void {
     pause: (paused) => sim()?.setPaused(paused),
     advance: (seconds) => { const frames = Math.round(seconds * 60); for (let i = 0; i < frames; i++) app.tick(1 / 60); },
     metrics: () => app.host.getMetrics(),
+    profiler: {
+      enable: (on) => { app.profiler.enabled = on; },
+      reset: () => app.profiler.reset(),
+      report: (worst) => app.profiler.report(worst),
+    },
+    sceneStats: () => {
+      const scene = app.host.scene;
+      const groups: Record<string, { meshes: number; tris: number; shadowTris: number }> = {};
+      scene.traverseVisible((o) => {
+        const mesh = o as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        let top: THREE.Object3D = o;
+        while (top.parent && top.parent !== scene) top = top.parent;
+        const g = mesh.geometry;
+        const count = Math.min(g.index ? g.index.count : (g.attributes.position?.count ?? 0), g.drawRange.count);
+        const inst = (mesh as THREE.InstancedMesh).isInstancedMesh ? (mesh as THREE.InstancedMesh).count : 1;
+        const tris = Math.round((count / 3) * inst);
+        const e = (groups[top.name || top.type] ??= { meshes: 0, tris: 0, shadowTris: 0 });
+        e.meshes++; e.tris += tris; if (mesh.castShadow) e.shadowTris += tris;
+      });
+      return groups;
+    },
     debug: {
       xp: (amount) => sim()?.debug.grantXp(amount),
       level: (level) => sim()?.debug.setLevel(level),

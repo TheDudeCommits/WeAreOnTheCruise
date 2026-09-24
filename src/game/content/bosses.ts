@@ -9,7 +9,7 @@ import type { BossDef } from '../types';
 export const BOSSES: Readonly<Record<BossId, BossDef>> = {
   'iron-warden': {
     id: 'iron-warden', name: 'The Iron Warden', title: "Commodore Vane's Dreadnought", modelKey: 'dreadnought',
-    length: 90, radius: 30, hp: 3000, armor: 3, speed: 8.5, turnRate: 0.35, mass: 6000, contactDamage: 18, xp: 150, doubloons: 60,
+    length: 90, radius: 30, hp: 3800, armor: 3, speed: 8.5, turnRate: 0.35, mass: 6000, contactDamage: 18, xp: 150, doubloons: 60,
     phases: [
       { hpFraction: 1, name: 'Line of Battle', attacks: ['broadside-volley', 'mortar-barrage', 'summon-cutters'] },
       { hpFraction: 0.5, name: 'Plates Off', attacks: ['broadside-volley', 'mortar-barrage', 'ram-charge'] },
@@ -17,7 +17,7 @@ export const BOSSES: Readonly<Record<BossId, BossDef>> = {
   },
   tidewyrm: {
     id: 'tidewyrm', name: 'The Tidewyrm', title: 'Serpent of the Deep', modelKey: 'tidewyrm',
-    length: 140, radius: 16, hp: 6000, armor: 2, speed: 21, turnRate: 1.1, mass: 5000, contactDamage: 18, xp: 240, doubloons: 100,
+    length: 140, radius: 16, hp: 7000, armor: 2, speed: 21, turnRate: 1.1, mass: 5000, contactDamage: 18, xp: 240, doubloons: 100,
     phases: [
       { hpFraction: 1, name: 'Hunting', attacks: ['submerge-lunge', 'tail-slam', 'water-bolts'] },
       { hpFraction: 0.5, name: 'Brood', attacks: ['submerge-lunge', 'tail-slam', 'water-bolts', 'summon-wyrmlings'] },
@@ -25,7 +25,7 @@ export const BOSSES: Readonly<Record<BossId, BossDef>> = {
   },
   sovereign: {
     id: 'sovereign', name: 'The Sovereign', title: "The Fleet Admiral's Flagship", modelKey: 'sovereign',
-    length: 120, radius: 38, hp: 22000, armor: 5, speed: 7.5, turnRate: 0.3, mass: 9000, contactDamage: 34, xp: 400, doubloons: 200,
+    length: 120, radius: 38, hp: 32000, armor: 5, speed: 7.5, turnRate: 0.3, mass: 9000, contactDamage: 34, xp: 400, doubloons: 200,
     phases: [
       { hpFraction: 1, name: 'Broadside Storm', attacks: ['broadside-storm', 'summon-man-o-war', 'broadside-storm'] },
       { hpFraction: 0.6, name: 'Judgment', attacks: ['broadside-storm', 'judgment-line', 'mortar-barrage'] },

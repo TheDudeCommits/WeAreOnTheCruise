@@ -1,10 +1,10 @@
 {
   "man-o-war": {
     "file": "/assets/fleet/man-o-war.glb",
-    "bytes": 1000460,
-    "sha256": "6f1c9638832cabb5b30159ccbe04044e60442b549f299b30e232cf3972fa0888",
+    "bytes": 944948,
+    "sha256": "81308dc537108f554b74398ec3b917879bb84017619b06af0762a8776b84f586",
     "sourceSha256": "598184016ed347593a9fb6fbd503ba0157b7a3c434d92aafc651c86e7d328839",
-    "tris": 23519,
+    "tris": 19637,
     "sourceTris": 24469,
     "materials": 1,
     "draws": 1,
@@ -30,10 +30,10 @@
   },
   "mortar-barge": {
     "file": "/assets/fleet/mortar-barge.glb",
-    "bytes": 686776,
-    "sha256": "45b392ce9fa7043a5d7a324b8ed5959cad481b0200fd0118318fb152b83b1614",
+    "bytes": 590400,
+    "sha256": "d854dabac65512c57c3b2fe3aea4bbeea10a588e91e9d70d97a224a18ca8bc17",
     "sourceSha256": "bc61a3fc1b11e162a365db72837677e0347219174a971c06797e4d325327b2e8",
-    "tris": 19578,
+    "tris": 11939,
     "sourceTris": 19578,
     "materials": 1,
     "draws": 1,
@@ -42,12 +42,12 @@
     "size": [
       11.87,
       13.47,
-      24
+      23.97
     ],
     "min": [
       -5.93,
       -1.6,
-      -12
+      -11.97
     ],
     "max": [
       5.93,
@@ -117,29 +117,29 @@
   },
   "fort": {
     "file": "/assets/fleet/fort.glb",
-    "bytes": 617836,
-    "sha256": "0d5ae473b89d1de51fada9089660e76f3490b0c50fcca1baae1ff8e4f5077fa2",
+    "bytes": 470820,
+    "sha256": "e7151d958bbbaeb4d23345b96449466d9398fb6c51427b1dd26eef03ae84b2d1",
     "sourceSha256": "e8b024c616b89d6e4efc839766b8aeb53f1b6f4a0b2f175f7add129cae7d2338",
-    "tris": 19599,
+    "tris": 8780,
     "sourceTris": 20183,
     "materials": 1,
     "draws": 1,
     "textures": 1,
     "maxTexture": 1024,
     "size": [
-      18.97,
-      20.37,
-      20
+      18.93,
+      20.34,
+      19.98
     ],
     "min": [
-      -9.48,
+      -9.46,
       -1.2,
       -10
     ],
     "max": [
-      9.48,
-      19.17,
-      10
+      9.46,
+      19.14,
+      9.98
     ],
     "clips": [],
     "built": "2026-09-24"
@@ -175,10 +175,10 @@
   },
   "corsair-brig": {
     "file": "/assets/fleet/corsair-brig.glb",
-    "bytes": 401872,
-    "sha256": "ccfc508d57fc0275b7281257feee0d81caba10cc46bf0e8b5e91fea8f8d15fdc",
+    "bytes": 232220,
+    "sha256": "17a52d21e0409004e8b65a875b905deb984274235e1c9db0d890fefd084cb820",
     "sourceSha256": "87b11caf397171abdc5dfe80c79358ee2a2c80736d07a0a87370ce9af3875ffa",
-    "tris": 21558,
+    "tris": 6244,
     "sourceTris": 30994,
     "materials": 3,
     "draws": 3,
@@ -186,7 +186,7 @@
     "maxTexture": 1024,
     "size": [
       7.42,
-      20.35,
+      20.2,
       28
     ],
     "min": [
@@ -196,7 +196,7 @@
     ],
     "max": [
       3.71,
-      17.95,
+      17.8,
       14
     ],
     "clips": [],
@@ -204,39 +204,39 @@
   },
   "corsair-galleon": {
     "file": "/assets/fleet/corsair-galleon.glb",
-    "bytes": 304436,
-    "sha256": "938059b630e7e1426e68a4b01c0865130de9917b114adbd59f8965bd8732ebc9",
+    "bytes": 187340,
+    "sha256": "33b7841bfcca341560061e8ca744aa6f050d79f7108338e4811d78ae363ac6f7",
     "sourceSha256": "c9048bce2695ed9c4d6fd65f3f824d6a1f9c034c8572e2111dc890cc34980f03",
-    "tris": 21618,
+    "tris": 10621,
     "sourceTris": 74146,
     "materials": 2,
     "draws": 2,
     "textures": 2,
     "maxTexture": 1024,
     "size": [
-      14.14,
-      26.1,
-      43.97
+      14.08,
+      25.9,
+      41.12
     ],
     "min": [
-      -7.07,
+      -7.01,
       -3.6,
-      -21.97
+      -19.15
     ],
     "max": [
       7.07,
-      22.5,
-      22
+      22.3,
+      21.97
     ],
     "clips": [],
     "built": "2026-09-24"
   },
   "sloop": {
     "file": "/assets/fleet/sloop.glb",
-    "bytes": 162632,
-    "sha256": "33c9f37e46c56b3bd4f976bf14f7cd76417531954a1329e50e73c2bc3a65975f",
+    "bytes": 96252,
+    "sha256": "d225c672aee977e5762be49f6329b07c779ad40de1959fb040d8fe3404ff852b",
     "sourceSha256": "47e1b1ed42ea2bc66695667dbcf12ca87eb682b694f2b0ae361c9382388612c5",
-    "tris": 10699,
+    "tris": 4043,
     "sourceTris": 10699,
     "materials": 2,
     "draws": 2,
@@ -244,28 +244,28 @@
     "maxTexture": 1024,
     "size": [
       4.85,
-      15.47,
-      20
+      14.08,
+      19.96
     ],
     "min": [
       -2.42,
-      -1.5,
-      -10
+      -1.47,
+      -9.98
     ],
     "max": [
       2.42,
-      13.97,
-      10
+      12.61,
+      9.98
     ],
     "clips": [],
     "built": "2026-09-24"
   },
   "brig": {
     "file": "/assets/fleet/brig.glb",
-    "bytes": 227568,
-    "sha256": "3013ffbc6119bd1c75ad8dbcf193ee75d9018b1c28fa7825a8bc646250740ad7",
+    "bytes": 98364,
+    "sha256": "1a54bb1a592dc6687139225ff7f6ac1a4fc8c3cc1b522f437bc7d46b3e574644",
     "sourceSha256": "6b12d15106dab8f727d9d99395a96c6b80a28d9f030db35d5202114a09063082",
-    "tris": 9731,
+    "tris": 4827,
     "sourceTris": 9731,
     "materials": 1,
     "draws": 1,
@@ -291,28 +291,28 @@
   },
   "frigate": {
     "file": "/assets/fleet/frigate.glb",
-    "bytes": 191584,
-    "sha256": "b965a2f59f663d79512a6a177995e264fa76112a39f5eb880409bb59a66a2f71",
+    "bytes": 84448,
+    "sha256": "1dd5921a65a7cb6a8d8b217a980633f0d641ef9eebde69942e6450006c77b385",
     "sourceSha256": "2e0ffe3f451ed6399e560ec4859ed3af8efca8666eedcd7fbf49e27607695eed",
-    "tris": 23132,
+    "tris": 6589,
     "sourceTris": 73141,
     "materials": 2,
     "draws": 2,
     "textures": 2,
     "maxTexture": 1024,
     "size": [
-      20.59,
-      35.91,
+      20.58,
+      35.84,
       38
     ],
     "min": [
-      -10.3,
+      -10.29,
       -3.2,
       -19
     ],
     "max": [
       10.29,
-      32.71,
+      32.64,
       19
     ],
     "clips": [],
@@ -320,10 +320,10 @@
   },
   "fireship": {
     "file": "/assets/fleet/fireship.glb",
-    "bytes": 216092,
-    "sha256": "9caef79c290d5e83398193d7cdf41a55a84fcf11b6721629b306b8265738c979",
+    "bytes": 139372,
+    "sha256": "058655f7119d1165279bdf4557f7febea9b1a02d93a1130fa3848e0a5546816e",
     "sourceSha256": "152d711258da9ea58bdd9d7961c08db8c8f6aaca628293298bd7dc33d6e6f18f",
-    "tris": 13272,
+    "tris": 4900,
     "sourceTris": 13272,
     "materials": 1,
     "draws": 1,
@@ -349,10 +349,10 @@
   },
   "skiff": {
     "file": "/assets/fleet/skiff.glb",
-    "bytes": 102304,
-    "sha256": "347bacb9071639bb3fec1f043087349e6edc4410ef89fb5773ff403fd01bd1e6",
+    "bytes": 61012,
+    "sha256": "c1e26aab4c7b481af9d92fcfffeea1550e9ec8505e4df6e5db6f2f8253d0ffd8",
     "sourceSha256": "977e03cf75b9a5c96061a92ffc76bed01b4c8fa50fe498290e57f3ed32dfc060",
-    "tris": 7364,
+    "tris": 3011,
     "sourceTris": 7292,
     "materials": 2,
     "draws": 2,
@@ -378,29 +378,29 @@
   },
   "wraith": {
     "file": "/assets/fleet/wraith.glb",
-    "bytes": 303496,
-    "sha256": "dafa149a4214319a5f3427f618ad665fb8e8fe3b9bea86d56acf4eb17473605a",
+    "bytes": 166400,
+    "sha256": "7cbe4452183ce5e5c2675ce680f9bd277dd901e2f0e438e5e24ada787fd6c988",
     "sourceSha256": "b58740bec63b2141d6539a955f46c3ca1e1cc2f92c783c8f905a0985453ef646",
-    "tris": 21559,
+    "tris": 6859,
     "sourceTris": 105535,
     "materials": 2,
     "draws": 2,
     "textures": 2,
     "maxTexture": 1024,
     "size": [
-      12.28,
-      26.54,
-      30
+      12.22,
+      26.46,
+      29.95
     ],
     "min": [
-      -6.14,
-      -2.2,
-      -15
+      -6.11,
+      -2.15,
+      -14.97
     ],
     "max": [
-      6.14,
-      24.34,
-      15
+      6.12,
+      24.31,
+      14.98
     ],
     "clips": [],
     "built": "2026-09-24"
@@ -1459,10 +1459,10 @@
   },
   "merchant": {
     "file": "/assets/fleet/merchant.glb",
-    "bytes": 207164,
-    "sha256": "de97bee74a36998b8c24af03d80f74820643a722840490eb5c49ed9b7daa5c23",
+    "bytes": 77120,
+    "sha256": "61d030277d21d186b9af409a8b4a9fe936cec71e776f2493a25141d28e1d55c3",
     "sourceSha256": "6b12d15106dab8f727d9d99395a96c6b80a28d9f030db35d5202114a09063082",
-    "tris": 9731,
+    "tris": 4957,
     "sourceTris": 9731,
     "materials": 1,
     "draws": 1,
