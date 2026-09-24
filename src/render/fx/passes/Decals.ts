@@ -109,7 +109,7 @@ void main() {
     vec3 col = c1 * (1.0 + blink * 0.8);
     paint = col * a;
     alpha = a;
-    add = c1 * (front * 1.3 + outline * blink * 0.6);
+    add = c1 * (front * 0.7 + outline * blink * 0.5);
     paint = mix(paint, c2 * alpha, ink);
     alpha = max(alpha, ink * 0.9);
   } else if (shape == 2) {
@@ -151,14 +151,19 @@ void main() {
     float n = fxNoise(vec2(atan(uv.y, uv.x) * 3.0 + seed, r * 7.0 + seed));
     float n2 = fxNoise(uv * 6.0 + seed * 1.7);
     float m;
+    float n3 = fxNoise(uv * 13.0 + seed * 2.3);
     if (shape == 4) {
-      float R = mix(0.3, 1.0, 1.0 - pow(1.0 - t, 3.0));
-      float th = mix(0.26, 0.05, t) * vP.x;
-      m = th - abs(r - R) + (n - 0.5) * 0.14;
-      float blot = (0.42 - r) + (n2 - 0.5) * 0.3 - t * 1.4;
+      // expanding lace ring + a thinner inner ring; only a small footprint blot at the impact point
+      float R = mix(0.22, 1.0, 1.0 - pow(1.0 - t, 3.0));
+      float th = mix(0.11, 0.03, t) * vP.x;
+      m = th - abs(r - R) + (n - 0.5) * 0.12;
+      float inner = th * 0.55 - abs(r - R * 0.6) + (n2 - 0.5) * 0.1;
+      m = max(m, inner - (1.0 - smoothstep(0.05, 0.2, t)) * 0.2);
+      float blot = (0.14 - r) + (n2 - 0.5) * 0.26 - t * 1.1;
       m = max(m, blot);
+      m -= (n3 - 0.35) * 0.08; // lace holes
     } else {
-      m = (1.0 - r) + (n - 0.5) * 0.45 - 0.25;
+      m = (0.62 - r) + (n - 0.5) * 0.55 - (n3 - 0.45) * 0.3;
     }
     m -= t * t * 1.2 * (0.25 + 0.75 * n2);
     float w = max(fwidth(m), 1e-4);
@@ -169,14 +174,15 @@ void main() {
     alpha = cover * vColor.a;
     paint = foam * alpha;
   } else if (shape == 5) {
-    float R = 1.0 - pow(1.0 - t, 2.4);
-    float th = mix(0.1, 0.02, t) * max(vP.x, 0.2);
+    // thin, fast shock line (anime timing: out fast, thin out, gone) with a brief inner wash
+    float R = 1.0 - pow(1.0 - t, 3.0);
+    float th = mix(0.03, 0.006, t) * max(vP.x, 0.2);
     float ring = band(r - R, th, aa);
-    float trail = smoothstep(R - 0.25, R, r) * step(r, R) * 0.35;
-    float fade = pow(1.0 - t, 1.3);
-    alpha = (ring * 0.55 + trail * 0.25) * fade * vColor.a;
+    float wash = step(r, R) * smoothstep(R - 0.3, R, r) * (1.0 - smoothstep(0.0, 0.3, t)) * 0.3;
+    float fade = pow(1.0 - t, 1.2);
+    alpha = (ring * 0.7 + wash * 0.4) * fade * vColor.a;
     paint = c1 * alpha;
-    add = c2 * vColor2.a * (ring * 1.6 + trail * 0.4) * fade;
+    add = c2 * vColor2.a * (ring * 1.2 + wash * 0.25) * fade;
   } else if (shape == 6) {
     if (r > 1.0) discard;
     float ang = atan(uv.y, uv.x);
@@ -195,7 +201,7 @@ void main() {
   } else if (shape == 7) {
     float g = max(0.0, 1.0 - r);
     float flick = 0.85 + 0.15 * sin(uRealTime * vP.x + seed);
-    add = c1 * g * g * vColor2.a * flick * (1.0 - smoothstep(0.7, 1.0, t)) * smoothstep(0.0, 0.08, t);
+    add = c1 * g * g * g * 0.55 * vColor2.a * flick * (1.0 - smoothstep(0.6, 1.0, t)) * smoothstep(0.0, 0.08, t);
     alpha = 0.0;
   } else if (shape == 8) {
     if (r > 1.0 + aa) discard;
@@ -218,10 +224,14 @@ void main() {
     float aa2 = max(fwidth(ang), 1e-4);
     float inside = (1.0 - smoothstep(halfA - aa2, halfA, ang)) * (1.0 - smoothstep(1.0 - aa, 1.0, rr)) * smoothstep(0.08, 0.12, rr);
     if (inside <= 0.0) discard;
-    float edgeA = band(ang - halfA + 0.012, 0.012, aa2) * step(0.5, fract(rr * 9.0 - uRealTime * 1.5));
-    float arc = band(rr - 0.985, 0.012, aa);
+    // compact fan at the hull (which side fires) + a faint dotted arc at the gun range
+    float near = 1.0 - smoothstep(0.2, 0.36, rr);
+    float edgeA = band(ang - halfA + 0.01, 0.01, aa2) * smoothstep(0.08, 0.14, rr) * near;
+    float arc = band(rr - 0.99, 0.005, aa) * step(0.55, fract(ang * 14.0));
     float ready = clamp(vP.x, 0.0, 1.0);
-    float a = inside * (0.05 + 0.07 * ready + (edgeA + arc) * (0.35 + 0.45 * ready));
+    float fill = (0.05 + 0.09 * ready) * near * smoothstep(0.08, 0.3, rr);
+    float chev = band(fract(rr * 10.0 - uRealTime * 1.2) - 0.5, 0.05, 0.02) * near * smoothstep(0.1, 0.16, rr) * ready;
+    float a = inside * (fill + chev * 0.35 + edgeA * (0.3 + 0.45 * ready) + arc * (0.12 + 0.18 * ready));
     alpha = a;
     paint = c1 * a;
     add = c1 * (edgeA + arc) * inside * 0.25 * ready;
@@ -261,8 +271,13 @@ void main() {
   paint = mix(paint, uFogColor * alpha, fog);
   add *= 1.0 - fog;
   if (alpha <= 0.001 && dot(add, vec3(1.0)) <= 0.001) discard;
-  gl_FragColor = vec4(paint + add, alpha);
+  // Colour-space conversion must see straight (un-premultiplied) colour, then we premultiply.
+  gl_FragColor = vec4(alpha > 1e-4 ? paint / alpha : vec3(0.0), 1.0);
   ${OUTPUT_GLSL}
+  vec3 paintOut = gl_FragColor.rgb;
+  gl_FragColor = vec4(add, 1.0);
+  ${OUTPUT_GLSL}
+  gl_FragColor = vec4(paintOut * alpha + gl_FragColor.rgb, alpha);
 }
 `;
 

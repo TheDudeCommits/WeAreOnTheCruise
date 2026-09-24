@@ -35,7 +35,7 @@ const V = (head: number, size: number, color: number, trail: number, width: numb
 });
 
 const KINDS: Record<ProjectileKind, KindVis> = {
-  cannonball: V(Head.Ball, 1.25, 0x2c2c38, 0.17, 0.62, GlowPal.Muzzle),
+  cannonball: V(Head.Ball, 1.3, 0x2c2c38, 0.24, 0.62, GlowPal.Muzzle),
   'chain-shot': V(Head.Chain, 2.6, 0x30303c, 0.15, 0.7, GlowPal.Muzzle, { spin: 16 }),
   'heavy-shot': V(Head.Ball, 1.8, 0x3a2622, 0.22, 0.95, GlowPal.Explosion, { glow: 4.5, glowPal: GlowPal.Explosion }),
   'chaser-shot': V(Head.Slug, 1.1, 0x6a5234, 0.2, 0.5, GlowPal.Spark, { stretch: 2, mode: Mode.Velocity }),
@@ -48,10 +48,10 @@ const KINDS: Record<ProjectileKind, KindVis> = {
   rocket: V(Head.Rocket, 1.1, 0xffffff, 0.12, 0.7, GlowPal.Explosion, { stretch: 2.6, mode: Mode.Velocity, smoke: 42, glow: 4, glowPal: GlowPal.Explosion }),
   torpedo: V(Head.Torpedo, 0, 0x1a2a3a, 0, 0, GlowPal.WaterBolt),
   'skiff-shot': V(Head.Ball, 0.8, 0x2c2c38, 0.11, 0.38, GlowPal.Muzzle),
-  'enemy-cannonball': V(Head.Ball, 1.25, 0x2e2428, 0.17, 0.62, GlowPal.Enemy),
+  'enemy-cannonball': V(Head.Ball, 1.3, 0x2e2428, 0.24, 0.62, GlowPal.Enemy),
   'enemy-chaser': V(Head.Slug, 1.1, 0x5a2a2a, 0.2, 0.55, GlowPal.Enemy, { stretch: 2, mode: Mode.Velocity }),
   'enemy-mortar': V(Head.Shell, 2.0, 0x2e2428, 0.4, 0.75, GlowPal.Enemy, { ballistic: true, smoke: 14 }),
-  'water-bolt': V(Head.Orb, 2.8, 0x2ab8ff, 0.28, 1.5, GlowPal.WaterBolt, { glow: 9, glowPal: GlowPal.WaterBolt, smoke: 0 }),
+  'water-bolt': V(Head.Orb, 2.8, 0x2ab8ff, 0.28, 1.5, GlowPal.WaterBolt, { glow: 5, glowPal: GlowPal.WaterBolt, smoke: 0 }),
   'boss-shell': V(Head.Shell, 2.6, 0x2e2428, 0.45, 0.95, GlowPal.Enemy, { ballistic: true, smoke: 16 }),
 };
 
@@ -158,7 +158,7 @@ export class StateFx {
       k.heads.imm(0);
       if (vis.glow > 0) {
         const gs = k.glow.spec.reset();
-        gs.at(p.x, y, p.z).look(p.kind === 'lance' ? Glow.Burst : Glow.Soft, vis.glowPal).sized(vis.glow, vis.glow).lived(10).bright(p.kind === 'lance' ? 0.9 : 0.75).rotate(p.age * 7);
+        gs.at(p.x, y, p.z).look(p.kind === 'lance' ? Glow.Burst : Glow.Soft, vis.glowPal).sized(vis.glow, vis.glow).lived(10).bright(p.kind === 'lance' ? 0.9 : 0.5).rotate(p.age * 7);
         k.glow.imm(0.02);
       }
       // emitters
@@ -377,8 +377,8 @@ export class StateFx {
         const sp = Math.hypot(h.vx, h.vz);
         const ang = sp > 0.01 ? Math.atan2(h.vx, h.vz) : hash01(id, 5) * TAU;
         const dx = Math.sin(ang), dz = Math.cos(ang);
-        const H = Math.min(22, 8 + h.radius * 0.08);
-        k.walls.add(h.x, h.z, ang, h.radius, H, fade, hash01(id, 9), 3.2);
+        const H = Math.min(26, 12 + h.radius * 0.1);
+        k.walls.add(h.x, h.z, ang, h.radius, H, fade, hash01(id, 9), 1.35);
         k.decals.imm(Decal.Blot, h.x + dx * H * 2.2, h.z + dz * H * 2.2, h.radius * 1.02, H * 1.4, ang, 0, 0, 0xffffff, 0.9 * fade, 0x8fc3d9, 0, hash01(id, 2));
         const o = k.ocean;
         if (o) for (let j = -2; j <= 2; j++) o.stampDisplace(h.x + dz * j * h.radius * 0.4, h.z - dx * j * h.radius * 0.4, H, 2.5 * fade);
@@ -471,7 +471,7 @@ export class StateFx {
         case 'chest': {
           y = wy + 0.35 + bob * 0.4;
           k.props.add(Prop.Chest, pk.x, y, pk.z, hash01(id, 3) * TAU, Math.sin(clock * 1.1 + id) * 0.06, Math.cos(clock * 1.3 + id) * 0.05, 2.0 * s, hex);
-          k.beams.imm(pk.x, wy, pk.z, pk.x, wy + 70, pk.z, 500, 1000, 4.5, GlowPal.Gold, 1, 0.7, hash01(id, 5));
+          k.beams.imm(pk.x, wy, pk.z, pk.x, wy + 48, pk.z, 500, 1000, 2.2, GlowPal.Gold, 1, 0.5, hash01(id, 5));
           k.decals.imm(Decal.Glow, pk.x, pk.z, 9, 9, 0, 5, 0, 0xffd84a, 0, 0xffd84a, 0.9, 0.5, 0.5);
           glint = 6;
           y += 3;

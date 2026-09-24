@@ -110,8 +110,9 @@ void main() {
   float y = fract(vUv.y);
   vec3 fillCol = vColor * mix(1.0, 1.45, smoothstep(0.35, 0.75, y) * (0.4 + vCrit));
   vec3 col = mix(INK, fillCol, fill);
-  gl_FragColor = vec4(col * a, a);
+  gl_FragColor = vec4(col, 1.0);
   ${OUTPUT_GLSL}
+  gl_FragColor = vec4(gl_FragColor.rgb * a, a);
 }
 `;
 
@@ -194,7 +195,7 @@ export class DamageNumbers {
       if (r.age >= r.life) continue;
       r.age += dt;
       if (r.age >= r.life) continue;
-      let v = Math.max(1, Math.round(r.value));
+      let v = Math.min(9999999, Math.max(1, Math.round(r.value)));
       let n = 0;
       while (v > 0 && n < MAX_DIGITS) { this.digits[n++] = v % 10; v = (v / 10) | 0; }
       const scale = (r.crit ? 1.45 : 1) * (1 + Math.min(0.5, Math.log10(Math.max(1, r.value)) * 0.12));

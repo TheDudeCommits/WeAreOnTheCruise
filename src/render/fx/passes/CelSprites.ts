@@ -67,9 +67,13 @@ void main() {
     float sc = shape == 6 ? 1.45 : 2.2;
     n1 = fxNoise(uv * sc + seed);
     n2 = fxNoise(uv * 4.6 + seed * 1.37 + 5.0);
-    m = (1.0 - d) + (n1 - 0.5) * (shape == 6 ? 0.6 : 0.34);
+    // cauliflower edge: round bumps meeting in inward cusps (|sin| scallops), plus low-frequency lumps
+    float ang = atan(uv.y, uv.x);
+    float bumps = 5.0 + floor(fract(seed * 0.37) * 4.0);
+    float scallop = abs(sin(ang * bumps * 0.5 + seed));
+    m = (0.9 + 0.13 * sqrt(scallop) - d) + (n1 - 0.5) * (shape == 6 ? 0.5 : 0.26);
     nrm = normalize(vec3(uv * 1.1 + (vec2(n1, n2) - 0.5) * 0.7, sqrt(max(0.04, 1.0 - d * d))));
-    if (shape == 7) { heatMode = 2; heat = m * 1.4 - t * 1.35 + 0.32; }
+    if (shape == 7) { heatMode = 2; heat = m * 1.45 - t * 1.12 + 0.36; }
   } else if (shape == 1) {
     float st = floor(vAge * 12.0) / 12.0; // boil on twos
     vec2 q = uv;
@@ -161,8 +165,9 @@ void main() {
     int sp = heatMode == 2 ? 1 : p; // fireballs cool into dark smoke
     int tn = tone;
     if (tn < 0) {
-      float ndl = dot(nrm, uSunView) + (n1 - 0.5) * 0.3;
-      tn = ndl > 0.3 ? 0 : ndl > -0.16 ? 1 : 2;
+      vec3 key = normalize(uSunView * 0.55 + vec3(0.25, 0.75, 0.55));
+      float ndl = dot(nrm, key) + (n1 - 0.5) * 0.3;
+      tn = ndl > 0.34 ? 0 : ndl > -0.08 ? 1 : 2;
     }
     col = mix(litTone(sp, tn), celPal(sp, 3), inkMask);
   }

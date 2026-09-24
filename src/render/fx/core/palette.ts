@@ -12,8 +12,8 @@ export const CelPal = {
 } as const;
 
 const CEL_HEX: readonly (readonly [number, number, number, number])[] = [
-  [0xfff7e6, 0xe7d8bb, 0x9993ab, 0x252a4a], // Gunsmoke (cream, cool violet shadow, navy ink)
-  [0x86818c, 0x55505e, 0x2e2b37, 0x10111e], // DarkSmoke
+  [0xfff8ec, 0xeadfc6, 0xa19fb2, 0x252a4a], // Gunsmoke (cream, beige, cool grey-violet shadow, navy ink)
+  [0x9c97a6, 0x645f6e, 0x35323f, 0x14131f], // DarkSmoke
   [0xfffbe0, 0xffd54a, 0xff7a1c, 0xc2301a], // Fire
   [0xffffff, 0xd4f3fc, 0x78c2e8, 0x2a6aa6], // Water
   [0xf5e3bc, 0xd9ba8a, 0x9d7e60, 0x4a392d], // Dust
@@ -23,7 +23,7 @@ const CEL_HEX: readonly (readonly [number, number, number, number])[] = [
   [0xf0fff4, 0xa4f7c4, 0x47c68d, 0x1b5a43], // Heal
   [0xffffff, 0xe8f8fc, 0xa2d2e3, 0x3a7ea8], // Foam / bubbles
   [0xffe1d8, 0xff9f8c, 0xc85c5e, 0x5a1d2c], // FlareSmoke
-  [0x5c5862, 0x38353f, 0x1d1b24, 0x09090f], // WreckSmoke
+  [0x77727e, 0x48444f, 0x25222c, 0x0b0a12], // WreckSmoke
   [0xfff0e0, 0xffa25a, 0xff3d2a, 0x8f1420], // EnemyFire (hotter red)
   [0xfffbe6, 0xffe27a, 0xffb52a, 0xb86a12], // GoldFire (sun / level-up)
   [0xd9d2c7, 0xa89d8f, 0x6f6660, 0x322c2c], // Rock chips / stone dust

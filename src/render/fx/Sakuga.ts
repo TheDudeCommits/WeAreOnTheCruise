@@ -275,9 +275,9 @@ export class Sakuga {
   /** Cannon muzzle blast: directional starburst (4–5 frames), core pop, bloom halo, sparks, inked smoke bank, water blast. */
   muzzle(x: number, y: number, z: number, dx: number, dz: number, scale: number, delay: number, smokePuffs: number, water: boolean, pal: number = GlowPal.Muzzle): void {
     const s = scale;
-    this.dirFlash(x, y, z, dx, 0.06, dz, 6.5 * s, pal, 0.085, delay);
-    this.burst(x + dx * 0.8 * s, y, z + dz * 0.8 * s, 3.4 * s, pal, 0.06, delay);
-    this.soft(x + dx * 2.5 * s, y, z + dz * 2.5 * s, 11 * s, pal, 0.16, 0.45, delay);
+    this.dirFlash(x, y, z, dx, 0.06, dz, 10.5 * s, pal, 0.09, delay);
+    this.burst(x + dx * 1.2 * s, y, z + dz * 1.2 * s, 4.6 * s, pal, 0.06, delay);
+    this.soft(x + dx * 2.5 * s, y, z + dz * 2.5 * s, 8 * s, pal, 0.12, 0.35, delay);
     this.sparks(x + dx * s, y, z + dz * s, 3, 45 * s, GlowPal.Spark, dx, 0.25, dz, 0.75, 0.3, delay, 0.35 * s);
     const c = this.k.cel;
     const n = this.n(smokePuffs, 1);
@@ -329,7 +329,7 @@ export class Sakuga {
   hullHit(x: number, y: number, z: number, dx: number, dz: number, scale: number, crit: boolean, enemyShot: boolean): void {
     const s = scale * (crit ? 1.45 : 1);
     this.burst(x, y, z, 6 * s, crit ? GlowPal.Gold : GlowPal.Explosion, 0.07);
-    this.soft(x, y, z, 14 * s, GlowPal.Explosion, 0.2, 0.55);
+    this.soft(x, y, z, 9 * s, GlowPal.Explosion, 0.16, 0.4);
     this.fireballs(x, y, z, 3, 3.6 * s, 0.8 * s, 5 * s, 0.5);
     this.sparks(x, y, z, crit ? 14 : 8, 32 * s, enemyShot ? GlowPal.Enemy : GlowPal.Spark, -dx, 0.5, -dz, 0.45, 0.45);
     this.planks(x, y, z, crit ? 6 : 4, 7 * s, 12 * s, 0.7 * s, 1.9 * s, 0.25, -dx * 5, -dz * 5);
@@ -378,7 +378,7 @@ export class Sakuga {
       this.bolt(x + spread(6), wy + 120, z + spread(6), x, wy + 0.5, z, 1.6, GlowPal.Lightning, 0.26, 0, 2, 5);
       this.bolt(x + spread(8), wy + 110, z + spread(8), x, wy + 0.5, z, 1.2, GlowPal.Lightning, 0.14, 0.09, 1, 5);
       this.burst(x, wy + 1.5, z, 10 * s, GlowPal.Lightning, 0.08);
-      this.soft(x, wy + 2, z, 30 * s, GlowPal.Lightning, 0.3, 0.8);
+      this.soft(x, wy + 2, z, 18 * s, GlowPal.Lightning, 0.22, 0.55);
       this.sparks(x, wy + 1, z, 14, 30, GlowPal.Lightning, 0, 1, 0, 0.35, 0.4);
       this.smoke(x, wy + 1, z, 4, 3 * s, 8 * s, CelPal.Steam, 1.1, 0, 3, 0, 4, 2, 2 * s, 0.05, 0.3);
       this.shock(x, z, 16 * s, 0.4, 0xbfeaff, 1.2, 1);
@@ -393,8 +393,8 @@ export class Sakuga {
     const flashPal = kind === 'powder' ? GlowPal.Gold : team === 'enemy' && kind === 'mortar' ? GlowPal.Enemy : GlowPal.Explosion;
     this.burst(x, y + s, z, (kind === 'powder' ? 22 : 15) * s, flashPal, 0.09);
     this.burst(x, y + s, z, 10 * s, GlowPal.Explosion, 0.07, 0.04);
-    this.soft(x, y + s, z, 42 * s, GlowPal.Explosion, 0.32, kind === 'powder' ? 1.1 : 0.8);
-    this.fireballs(x, y, z, 6 + 4 * s, 7 * s, 2.2 * s, 11 * s, kind === 'fire' ? 1.0 : 0.75, 0, CelPal.Fire);
+    this.soft(x, y + s, z, 24 * s, GlowPal.Explosion, 0.22, kind === 'powder' ? 0.7 : 0.45);
+    this.fireballs(x, y, z, 7 + 4 * s, 9.5 * s, 2.4 * s, 12 * s, kind === 'fire' ? 1.2 : kind === 'large' || kind === 'powder' ? 1.15 : 0.95, 0, CelPal.Fire);
     this.sparks(x, y, z, 10 + 5 * s, 34 * Math.sqrt(s), GlowPal.Spark, 0, 1, 0, 0.3, 0.55);
     const smokePal = kind === 'powder' || kind === 'large' ? CelPal.WreckSmoke : CelPal.DarkSmoke;
     const smokeN = kind === 'small' ? 2 : kind === 'large' || kind === 'powder' ? 7 : 4;
@@ -439,11 +439,11 @@ export class Sakuga {
     const dist = this.distToFocus(x, z);
     this.burst(x, y + 2, z, 20 * s, elite ? GlowPal.Gold : GlowPal.Explosion, 0.11);
     this.burst(x + spread(3), y + 3, z + spread(3), 14 * s, GlowPal.Explosion, 0.08, 0.06);
-    this.soft(x, y + 2, z, 62 * s, GlowPal.Explosion, 0.4, 0.9);
+    this.soft(x, y + 2, z, 32 * s, GlowPal.Explosion, 0.26, 0.5);
     const n = this.n(8 + 3 * s);
     for (let i = 0; i < n; i++) {
       const along = spread(length * 0.38);
-      this.fireballs(x + fx * along, y + rand() * 3 * s, z + fz * along, 1, 8 * s, 1.5 * s, 10 * s, 1.0, rand() * 0.14);
+      this.fireballs(x + fx * along, y + rand() * 3 * s, z + fz * along, 1, 10 * s, 1.5 * s, 11 * s, 1.25, rand() * 0.14);
     }
     this.smoke(x, y + 4 * s, z, 6, 5 * s, 13 * s, CelPal.WreckSmoke, 3.4, 0, 14 * s, 0, 3 * s, 4.5, 3 * s, 0.12, 0.45);
     this.planks(x, y, z, 12 + 6 * s, 11 * Math.sqrt(s), 20 * Math.sqrt(s), 1.0, 3.0 * Math.sqrt(s), 0.3);

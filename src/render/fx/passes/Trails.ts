@@ -65,14 +65,25 @@ void main() {
   vec3 outer = uGlowPal[p * 3 + 2];
   float a = abs(vSeg.y);
   float along = vSeg.x;
-  float body = 1.0 - a;
-  float coreBand = smoothstep(0.62, 0.2, a);
-  float fade = pow(1.0 - along, 1.25);
-  vec3 col = mix(outer * 0.9, mid * 1.5, smoothstep(0.1, 0.7, body)) * body;
-  col += core * 2.6 * coreBand * (1.0 - along * 0.6);
-  col *= fade * vTint * vIntensity * (1.0 - fxFog(vFogDepth));
-  gl_FragColor = vec4(col, 1.0);
+  // Painted tracer: an opaque saturated stroke (mid → outer toward the tail) with a thin hot core.
+  float fade = pow(1.0 - along, 0.9);
+  float edge = 1.0 - smoothstep(0.55, 1.0, a);
+  float alpha = edge * fade * min(1.0, vIntensity);
+  vec3 body = mix(mid, outer, smoothstep(0.15, 0.85, along));
+  body = mix(body, outer * 0.85, smoothstep(0.35, 0.9, a));
+  float coreBand = (1.0 - smoothstep(0.1, 0.32, a)) * (1.0 - smoothstep(0.2, 0.9, along));
+  vec3 add = core * 1.6 * coreBand * fade * vIntensity;
+  float fog = fxFog(vFogDepth);
+  vec3 tint = vTint;
+  vec3 paint = mix(body * tint, uFogColor, fog);
+  add *= tint * (1.0 - fog);
+  if (alpha < 0.003) discard;
+  gl_FragColor = vec4(paint, 1.0);
   ${OUTPUT_GLSL}
+  vec3 paintOut = gl_FragColor.rgb;
+  gl_FragColor = vec4(add, 1.0);
+  ${OUTPUT_GLSL}
+  gl_FragColor = vec4(paintOut * alpha + gl_FragColor.rgb, alpha);
 }
 `;
 
@@ -109,7 +120,11 @@ export class TrailPass {
       uniforms: { ...shared, uGlowPal: { value: GLOW_PALETTE_LINEAR } },
       transparent: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
+      blending: THREE.CustomBlending,
+      blendSrc: THREE.OneFactor,
+      blendDst: THREE.OneMinusSrcAlphaFactor,
+      blendSrcAlpha: THREE.OneFactor,
+      blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
       side: THREE.DoubleSide,
     });
     this.mesh = new THREE.Mesh(g, material);
