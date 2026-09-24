@@ -143,6 +143,9 @@ export class RendererHost {
   private probe: { from: number; at: number } | null = null;
   private probeCooldownUntil = 0;
   private probeBackoff = 8000;
+  private readonly pinnedDpr: number | null;
+  /** Consecutive reviews with missed presentations (a single hitch burst never costs resolution). */
+  private strikes = 0;
   private contextLost = false;
 
   /** LOOK owns this class: post stack, quality tiers, precompile and adaptive resolution live here. */
@@ -169,8 +172,11 @@ export class RendererHost {
     this.camera = new THREE.PerspectiveCamera(50, 1, 1, 6000);
     this.camera.position.set(0, 90, 120);
     this.profile = qualityProfile(performanceMode ? 'low' : 'high');
-    this.pixelRatio = captureMode ? 2 : this.maxDpr();
-    this.adaptive = !captureMode;
+    // QA pin: `?dpr=1.5` fixes the pixel ratio and turns adaptive resolution off (performance evidence).
+    const pinned = Number(new URLSearchParams(window.location.search).get('dpr'));
+    this.pinnedDpr = Number.isFinite(pinned) && pinned >= 0.5 && pinned <= 3 ? pinned : null;
+    this.pixelRatio = captureMode ? 2 : this.pinnedDpr ?? this.maxDpr();
+    this.adaptive = !captureMode && this.pinnedDpr === null;
     this.renderer.setPixelRatio(this.pixelRatio);
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -189,7 +195,7 @@ export class RendererHost {
   setQualityTier(tier: QualityTier): void {
     if (tier === this.profile.tier) return;
     this.profile = qualityProfile(tier);
-    if (this.captureMode) return;
+    if (this.captureMode || this.pinnedDpr !== null) return;
     this.setPixelRatio(this.maxDpr());
     this.probe = null;
     this.probeBackoff = 8000;
@@ -327,9 +333,11 @@ export class RendererHost {
       return;
     }
 
-    if (missRate > 0.08 && this.pixelRatio > min) {
+    this.strikes = missRate > 0.08 ? this.strikes + 1 : 0;
+    if ((this.strikes >= 2 || missRate > 0.3) && this.pixelRatio > min) {
+      this.strikes = 0;
       this.setPixelRatio(Math.max(min, this.pixelRatio - 0.1));
-    } else if (missRate < 0.01 && this.pixelRatio < max && sinceChange > 6000 && now > this.probeCooldownUntil) {
+    } else if (missRate < 0.01 && this.pixelRatio < max && sinceChange > 5000 && now > this.probeCooldownUntil) {
       const from = this.pixelRatio;
       this.setPixelRatio(Math.min(max, this.pixelRatio + 0.1));
       this.probe = { from, at: now };
