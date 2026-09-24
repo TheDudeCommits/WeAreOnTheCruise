@@ -77,6 +77,7 @@ function heroesMode(): void {
   api.overview = () => { lab.chase = null; lab.camera.position.set(0, 160, 260); lab.controls.target.set(0, 5, 0); };
   api.info = () => heroes.map((h) => ({ id: h.id, ready: h.ship.ready, probeMs: h.ship.profile?.probeMs, rails: h.ship.profile?.rails.map((r) => r.length), deckY: h.ship.profile?.deckY, masts: h.ship.profile?.masts.map((m) => m.toArray().map((v) => +v.toFixed(1))) }));
   api.hit = (id: ShipId) => { const h = heroes.find((e) => e.id === id); if (h) h.pose.sinceHit = 0; };
+  api.pose = (id: ShipId, patch: Partial<HeroPose>) => { const h = heroes.find((e) => e.id === id); if (h) Object.assign(h.pose, patch); };
 
   // Panel.
   panel.innerHTML = `<h1>Ships lab — heroes</h1>

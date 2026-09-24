@@ -78,7 +78,7 @@ export class FlashDriver {
     const a = Math.round(THREE.MathUtils.clamp(amount, 0, 1) * 64) / 64;
     if (a === this.last) return;
     this.last = a;
-    flashScratch.set(color).multiplyScalar(a * 0.85);
+    flashScratch.set(color).multiplyScalar(a * 0.62);
     for (const e of this.entries) e.material.emissive!.copy(e.base).add(flashScratch);
   }
 }

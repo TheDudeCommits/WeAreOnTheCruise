@@ -467,8 +467,16 @@ export class HeroGrowth {
 
   // ───────────────────────── Per-frame ─────────────────────────
 
-  /** `windYaw`: fly direction of flags in ship space (0 = aft, +π/2 = starboard). */
-  update(dt: number, time: number, night: number, speed: number, windYaw = 0.7): void {
+  /**
+   * `windYaw`: fly direction of flags in ship space (0 = aft, +π/2 = starboard).
+   * `waterFade`: 0..1 fades the on-water aura (hidden while airborne or diving).
+   */
+  update(dt: number, time: number, night: number, speed: number, windYaw = 0.7, waterFade = 1): void {
+    const aura = this.features.get('tier4-aura');
+    if (aura) for (const item of aura.items) {
+      const target = Math.round(THREE.MathUtils.clamp(waterFade, 0, 1) * 20) / 20;
+      if (Math.abs(item.levelScale - target) > 1e-3) { item.levelScale = target; if (item.target) item.animating = true; }
+    }
     for (const item of this.allItems) {
       if (!item.animating) continue;
       item.t += dt / (item.target ? APPEAR : HIDE);

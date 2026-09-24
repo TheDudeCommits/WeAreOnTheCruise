@@ -43,6 +43,9 @@ export class ShipSystem implements RenderSystem, ShipServices {
   private readonly growthInput: GrowthInput = { tier: 0, weapons: NO_WEAPONS };
   private readonly wind = { dir: 0.6, strength: 0.5 };
   private readonly skiffPlayer = { x: 0, z: 0, heading: 0, weapons: NO_WEAPONS };
+  /** QA: last update cost (ms) and the last frame context (for isolated allocation checks). */
+  lastUpdateMs = 0;
+  lastContext: FrameContext | null = null;
 
   init(host: RenderHostHandles): void {
     this.scene = host.scene;
@@ -50,6 +53,7 @@ export class ShipSystem implements RenderSystem, ShipServices {
     this.fleet.prebuild();
     this.bosses.preload();
     for (const key of CREW_KEYS) void this.fleetAssets.request(key);
+    if (typeof window !== 'undefined') (window as unknown as { __SHIPS__?: ShipSystem }).__SHIPS__ = this;
   }
 
   /** Awaited by GameApp before the first frame: the selected hero model (+ crew models when the manifest has them). */
@@ -58,6 +62,8 @@ export class ShipSystem implements RenderSystem, ShipServices {
   }
 
   update(ctx: FrameContext): void {
+    const started = performance.now();
+    this.lastContext = ctx;
     this.growthEvents.length = 0;
     const run = ctx.run;
     const ocean = ctx.services.ocean;
@@ -107,6 +113,7 @@ export class ShipSystem implements RenderSystem, ShipServices {
     if (this.growthEvents.length && typeof window !== 'undefined') {
       for (const e of this.growthEvents) window.dispatchEvent(new CustomEvent('cruise:ship-growth', { detail: e }));
     }
+    this.lastUpdateMs = performance.now() - started;
   }
 
   /** Growth / boss-phase events produced this frame (world space). */

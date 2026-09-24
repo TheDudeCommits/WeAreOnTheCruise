@@ -191,7 +191,7 @@ export class HeroShip {
       let yaw = Math.atan2(lx, lz);
       if (Math.abs(yaw) < 0.55) yaw = (yaw >= 0 ? 1 : -1) * 0.55;
       this.windYaw += (yaw - this.windYaw) * (1 - Math.exp(-dt * 1.5));
-      this.growth.update(dt, time, night, pose.speed, this.windYaw);
+      this.growth.update(dt, time, night, pose.speed, this.windYaw, 1 - Math.max(pose.airborne, pose.submerged) * 1.5);
       const before = this.events.length;
       this.growth.drainEvents(this.events);
       if (this.events.length > before && this.crew) this.crew.cheer();
