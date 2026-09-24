@@ -57,7 +57,7 @@ export interface QuestDef {
   reward: QuestReward;
   /** Value this voyage reaches (voyage quests) or adds (ledger quests). */
   measure(run: Readonly<RunRecord>): number;
-  /** Ledger quests backed by a profile total (kills, wins, voyages): progress is read from the profile. */
+  /** Backed by a profile total (kills, wins, voyages, longest voyage): progress is read from the profile. */
   total?(profile: Readonly<MetaProfile>): number;
 }
 
@@ -73,8 +73,8 @@ const sea = (id: SeaId) => (r: Readonly<RunRecord>) => (won(r) && r.result.seaId
 export const QUESTS: readonly QuestDef[] = [
   // ── First steps ──
   // Backed by profile totals, so saves from before quests existed are credited at their next voyage.
-  { id: 'weathered', name: 'Weathered Hull', text: 'Survive 10:00 in one voyage.', kind: 'ledger', goal: 600, reward: { doubloons: 100 }, measure: (r) => r.result.time, total: longestVoyage },
-  { id: 'first-victory', name: 'Master of the Brightwater', text: 'Sink the Sovereign and win a voyage.', kind: 'ledger', goal: 1, reward: { doubloons: 150, heat: true, title: 'Captain' }, measure: (r) => (won(r) ? 1 : 0), total: (p) => p.wins },
+  { id: 'weathered', name: 'Weathered Hull', text: 'Survive 10:00 in one voyage.', kind: 'voyage', goal: 600, reward: { doubloons: 100 }, measure: (r) => r.result.time, total: longestVoyage },
+  { id: 'first-victory', name: 'Master of the Brightwater', text: 'Sink the Sovereign and win a voyage.', kind: 'voyage', goal: 1, reward: { doubloons: 150, heat: true, title: 'Captain' }, measure: (r) => (won(r) ? 1 : 0), total: (p) => p.wins },
   { id: 'voyages-10', name: 'Old Salt', text: 'Sail 10 voyages.', kind: 'ledger', goal: 10, reward: { doubloons: 150, boon: 'quartermaster' }, measure: () => 1, total: (p) => p.runs },
   // ── One-voyage feats ──
   { id: 'bounty-3', name: 'Bounty Hunter', text: 'Sink 3 bounty captains in one voyage.', kind: 'voyage', goal: 3, reward: { doubloons: 250, title: 'Bounty Hunter' }, measure: (r) => r.bountyCaptains },

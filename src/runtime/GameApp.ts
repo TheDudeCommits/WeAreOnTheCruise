@@ -31,6 +31,7 @@ import { storedCaptainSetting } from './presence';
 import { warmup } from '../render/app/warmup';
 import { startVoyage, takeVoyage, type Voyage } from '../game/meta/voyage';
 import { dailyVoyage } from '../game/meta/daily';
+import '../ui/replay'; // REPLAY: registers the Voyage, Quests and Logbook harbor panes
 
 const SYSTEM_NAMES = ['sky', 'ocean', 'world', 'ships', 'fx', 'camera'] as const;
 
