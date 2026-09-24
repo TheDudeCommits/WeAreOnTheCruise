@@ -51,7 +51,7 @@ export interface AudioStatsSnapshot {
   ducks: { music: number; sfx: number; ambience: number };
 }
 
-export interface AudioLogEntry { t: number; cue: CueId; src: string; played: boolean; reason?: DropReason; gain?: number; d?: number }
+export interface AudioLogEntry { t: number; cue: CueId; src: string; played: boolean; reason?: DropReason; gain?: number; d?: number; pan?: number }
 
 const MENU_TIER_CUES = new Set<string>(['amb-ocean', 'amb-harbor', 'amb-wind', 'gull']);
 const RECENT_LOG = 400;
@@ -123,7 +123,7 @@ export class AudioEngine implements AudioSystem {
   unlock(): Promise<void> {
     if (this.disposed) return Promise.resolve();
     if (this.ctx && this.ctx.state === 'suspended' && !this.hidden) void this.ctx.resume().catch(() => undefined);
-    if (this.unlocking) return this.unlocking;
+    if (this.unlocking) { this.director?.retryBlocked(); return this.unlocking; }
     // Create + resume synchronously inside the gesture (Chrome autoplay policy).
     const ctx = new AudioContext({ latencyHint: 'interactive' });
     this.ctx = ctx;
@@ -394,7 +394,7 @@ export class AudioEngine implements AudioSystem {
     this.lastPlayed.set(cue, when);
     this.frameCounts.set(cue, (this.frameCounts.get(cue) ?? 0) + 1);
     this.played[cue] = (this.played[cue] ?? 0) + 1;
-    this.log({ t: +when.toFixed(3), cue, src: this.noteSource, played: true, gain: +gain.toFixed(3), d: distance });
+    this.log({ t: +when.toFixed(3), cue, src: this.noteSource, played: true, gain: +gain.toFixed(3), d: distance, pan: distance !== undefined ? +pan.toFixed(2) : undefined });
     if (def.duck) this.duck(def.duck, delay);
     return true;
   }

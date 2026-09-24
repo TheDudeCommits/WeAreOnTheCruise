@@ -57,6 +57,8 @@ class MusicTrack {
   private lead = 0;
   private seamUntil = 0;
   running = false;
+  /** play() was refused (autoplay policy); retried on the next user gesture. */
+  blocked = false;
   /** Seconds since this track was last audible (fader > 0). */
   silentSince = 0;
   level = 0;
@@ -103,7 +105,12 @@ class MusicTrack {
     const el = this.element;
     if (fromStart) { try { el.currentTime = this.def.loopStart ?? 0; } catch { /* not seekable yet */ } }
     this.running = true;
-    el.play().catch(() => { this.running = false; });
+    this.blocked = false;
+    el.play().catch((err: unknown) => {
+      if (err instanceof DOMException && err.name === 'AbortError') return; // superseded by pause()
+      this.running = false;
+      this.blocked = true;
+    });
   }
 
   pause(): void {
@@ -239,6 +246,11 @@ export class MusicDirector {
     for (const t of this.tracks.values()) t.pause();
     this.current = null;
     this.state = 'silent';
+  }
+
+  /** Called inside a user gesture: restarts tracks whose play() the autoplay policy refused. */
+  retryBlocked(): void {
+    for (const t of this.tracks.values()) if (t.blocked && (t === this.current || t.fader.gain.value > 0.001)) t.play(false);
   }
 
   /** Hidden tab: pause streaming elements; resume on show. */
