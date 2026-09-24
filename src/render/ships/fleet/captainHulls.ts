@@ -13,6 +13,7 @@ import * as THREE from 'three';
 import type { HeroModelKey } from '../../../game/ids';
 import { HERO_SOURCE_LENGTH, SketchfabShipAssets } from '../../loaders/SketchfabShipAssets';
 import { HERO_RIGS } from '../hero/heroRigs';
+import { runSliced } from '../../loaders/idle';
 
 /** Triangle budget per captain hull. */
 export const TRI_CAP = 24000;
@@ -76,12 +77,17 @@ const tmpV = new THREE.Vector3();
 const tmpN = new THREE.Vector3();
 const tmpC = new THREE.Color();
 const tmpT = new THREE.Color();
-const nMat = new THREE.Matrix3();
 
 interface Baked { pos: Float32Array; nrm: Float32Array; col: Float32Array; idx: Uint32Array }
 
-/** Merges every mesh of a (toonified) template into one vertex-coloured geometry in gameplay space. */
-function merge(scene: THREE.Object3D, scale: number): Baked & { mapped: boolean } {
+/** Vertices processed between yields of the sliced bake (≈0.5–1 ms of work on an M-class laptop). */
+const STEP_VERTICES = 6000;
+
+/**
+ * Merges every mesh of a (toonified) template into one vertex-coloured geometry in gameplay space. A generator: it
+ * yields between chunks so the bake runs in idle slices (loaders/idle.ts runSliced) instead of one long task.
+ */
+function* mergeSteps(scene: THREE.Object3D, scale: number): Generator<void, Baked & { mapped: boolean }> {
   scene.updateMatrixWorld(true);
   const meshes: THREE.Mesh[] = [];
   let vCount = 0, iCount = 0;
@@ -95,16 +101,20 @@ function merge(scene: THREE.Object3D, scale: number): Baked & { mapped: boolean 
   const pos = new Float32Array(vCount * 3), nrm = new Float32Array(vCount * 3), col = new Float32Array(vCount * 3).fill(1);
   const idx = new Uint32Array(iCount);
   const cache = new Map<THREE.Texture, Sampler | null>();
-  let vBase = 0, iOut = 0, mapped = false;
+  let vBase = 0, iOut = 0, mapped = false, work = 0;
+  yield;
   for (const mesh of meshes) {
     const g = mesh.geometry as THREE.BufferGeometry;
     const P = g.attributes.position!, N = g.attributes.normal, UV = g.attributes.uv, C = g.attributes.color;
     const n = P.count;
-    nMat.getNormalMatrix(mesh.matrixWorld);
+    const world = mesh.matrixWorld;
+    // Per mesh (not the shared scratch): two bakes may interleave between yields.
+    const normalMatrix = new THREE.Matrix3().getNormalMatrix(world);
     for (let v = 0; v < n; v++) {
-      tmpV.fromBufferAttribute(P, v).applyMatrix4(mesh.matrixWorld).multiplyScalar(scale);
+      tmpV.fromBufferAttribute(P, v).applyMatrix4(world).multiplyScalar(scale);
       pos[(vBase + v) * 3] = tmpV.x; pos[(vBase + v) * 3 + 1] = tmpV.y; pos[(vBase + v) * 3 + 2] = tmpV.z;
-      if (N) { tmpN.fromBufferAttribute(N, v).applyMatrix3(nMat).normalize(); nrm[(vBase + v) * 3] = tmpN.x; nrm[(vBase + v) * 3 + 1] = tmpN.y; nrm[(vBase + v) * 3 + 2] = tmpN.z; }
+      if (N) { tmpN.fromBufferAttribute(N, v).applyMatrix3(normalMatrix).normalize(); nrm[(vBase + v) * 3] = tmpN.x; nrm[(vBase + v) * 3 + 1] = tmpN.y; nrm[(vBase + v) * 3 + 2] = tmpN.z; }
+      if (++work % STEP_VERTICES === 0) yield;
     }
     // Colour per vertex from the material that draws it (groups map index ranges to materials).
     const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -113,9 +123,12 @@ function merge(scene: THREE.Object3D, scale: number): Baked & { mapped: boolean 
     for (const grp of groups) {
       const mat = mats[grp.materialIndex ?? 0] as THREE.Material & { color?: THREE.Color; map?: THREE.Texture | null; vertexColors?: boolean };
       if (!mat) continue;
+      const fresh = !!mat.map && !cache.has(mat.map);
       const sampler = UV ? textureSampler(mat.map, cache) : null;
+      if (fresh) yield; // reading a texture back (drawImage + getImageData) is the priciest single step
       if (sampler) mapped = true;
-      const base = mat.color ?? tmpT.setRGB(1, 1, 1);
+      const base = new THREE.Color(1, 1, 1);
+      if (mat.color) base.copy(mat.color);
       const end = Math.min(grp.start + grp.count, index ? index.count : n);
       for (let k = grp.start; k < end; k++) {
         const v = index ? index.getX(k) : k;
@@ -125,6 +138,7 @@ function merge(scene: THREE.Object3D, scale: number): Baked & { mapped: boolean 
         const o = (vBase + v) * 3;
         col[o] = tmpC.r; col[o + 1] = tmpC.g; col[o + 2] = tmpC.b;
         idx[iOut++] = vBase + v;
+        if (++work % STEP_VERTICES === 0) yield;
       }
     }
     vBase += n;
@@ -132,8 +146,11 @@ function merge(scene: THREE.Object3D, scale: number): Baked & { mapped: boolean 
   return { pos, nrm, col, idx: idx.subarray(0, iOut), mapped };
 }
 
-/** Vertex clustering to a cell size: positions shared per cell (crack-free), normals/colours per cell and facing. */
-function cluster(src: Baked, cell: number): Baked {
+/**
+ * Vertex clustering to a cell size: positions shared per cell (crack-free), normals/colours per cell and facing.
+ * A generator (see mergeSteps).
+ */
+function* clusterSteps(src: Baked, cell: number): Generator<void, Baked> {
   const { pos, nrm, col, idx } = src;
   const cellOf = new Map<number, number>();
   const vertOf = new Map<number, number>();
@@ -156,12 +173,14 @@ function cluster(src: Baked, cell: number): Baked {
     vC[vi * 3] += col[v * 3]!; vC[vi * 3 + 1] += col[v * 3 + 1]!; vC[vi * 3 + 2] += col[v * 3 + 2]!;
     vCount[vi]!++;
     remap[v] = vi;
+    if (v % (STEP_VERTICES * 2) === 0) yield;
   }
   const out: number[] = [];
   for (let t = 0; t < idx.length; t += 3) {
     const a = remap[idx[t]!]!, b = remap[idx[t + 1]!]!, c = remap[idx[t + 2]!]!;
     if (vCell[a] === vCell[b] || vCell[b] === vCell[c] || vCell[a] === vCell[c]) continue;
     out.push(a, b, c);
+    if (t % (STEP_VERTICES * 6) === 0) yield;
   }
   const n = vCount.length;
   const P = new Float32Array(n * 3), N = new Float32Array(n * 3), C = new Float32Array(n * 3);
@@ -175,24 +194,39 @@ function cluster(src: Baked, cell: number): Baked {
   return { pos: P, nrm: N, col: C, idx: Uint32Array.from(out) };
 }
 
-/** Bakes one hero model into a captain hull. */
+/** Wraps a generator so the CPU time spent inside its steps is summed into `clock.ms`. */
+function* timed<T>(steps: Generator<void, T>, clock: { ms: number }): Generator<void, T> {
+  for (;;) {
+    const t0 = performance.now();
+    const r = steps.next();
+    clock.ms += performance.now() - t0;
+    if (r.done) return r.value;
+    yield;
+  }
+}
+
+/**
+ * Bakes one hero model into a captain hull. The merge and the clustering run in idle slices (PERF: a bake used to be
+ * one 100–150 ms task in the first seconds of a run); `bakeMs` is the CPU time of those slices.
+ */
 export async function bakeCaptainHull(kind: HeroModelKey, length: number): Promise<CaptainHull> {
-  const assets = new SketchfabShipAssets();
+  const assets = new SketchfabShipAssets({ notify: false });
   try {
     const template = await assets.load(kind, 'low');
-    const started = performance.now();
+    const clock = { ms: 0 };
     const scale = length / HERO_SOURCE_LENGTH[kind];
-    const merged = merge(template.scene, scale);
+    const merged = await runSliced(timed(mergeSteps(template.scene, scale), clock));
     const sourceTriangles = merged.idx.length / 3;
     let baked: Baked = merged;
     if (sourceTriangles > TRI_CAP) {
       let cell = length / 200;
       for (let i = 0; i < 10; i++) {
-        baked = cluster(merged, cell);
+        baked = await runSliced(timed(clusterSteps(merged, cell), clock));
         if (baked.idx.length / 3 <= TRI_CAP) break;
         cell *= 1.3;
       }
     }
+    const t0 = performance.now();
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(baked.pos, 3));
     geometry.setAttribute('normal', new THREE.BufferAttribute(baked.nrm, 3));
@@ -206,7 +240,9 @@ export async function bakeCaptainHull(kind: HeroModelKey, length: number): Promi
         if (value instanceof THREE.Texture) (value.image as { close?: () => void } | undefined)?.close?.();
       }
     }
-    return { kind, length, geometry, delight: merged.mapped ? 0.3 : 0, triangles: baked.idx.length / 3, sourceTriangles, bakeMs: performance.now() - started, ...profile(kind, baked.pos, geometry.boundingBox!, scale) };
+    const shape = profile(kind, baked.pos, geometry.boundingBox!, scale);
+    clock.ms += performance.now() - t0;
+    return { kind, length, geometry, delight: merged.mapped ? 0.3 : 0, triangles: baked.idx.length / 3, sourceTriangles, bakeMs: clock.ms, ...shape };
   } finally {
     assets.dispose();
   }

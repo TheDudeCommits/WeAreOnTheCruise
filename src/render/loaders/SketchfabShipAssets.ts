@@ -14,6 +14,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import type { HeroModelKey } from '../../game/ids';
 import { toonifyObject } from '../materials/toon';
 import { cloneMaterial } from '../ships/materials';
+import { enableMeshoptWorkers } from './FleetAssets';
 
 /** Provenance of the six downloaded hero models (kept for now; renamed in game). See ASSET-LICENSES.md. */
 export const HERO_MODEL_SOURCES: Readonly<Record<HeroModelKey, { uid: string; author: string; license: string }>> = {
@@ -58,14 +59,23 @@ const skipTextures = (parser: GLTFParser): GLTFLoaderPlugin => ({
   },
 } as GLTFLoaderPlugin);
 
+/**
+ * PERF hook: called once for every high-detail template that finishes loading (any SketchfabShipAssets instance), so
+ * the warm-up can compile its programs before the hero that uses it is first drawn.
+ */
+export const heroTemplateListeners = new Set<(template: HeroTemplate) => void>();
+
 export class SketchfabShipAssets {
-  private readonly loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  private readonly loader = (enableMeshoptWorkers(), new GLTFLoader().setMeshoptDecoder(MeshoptDecoder));
   private readonly lowLoader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).register(skipTextures);
   private readonly pending = new Map<string, Promise<HeroTemplate>>();
   private readonly templates = new Set<HeroTemplate>();
   private readonly textures = new Set<THREE.Texture>();
   private disposed = false;
   readonly status = new Map<HeroModelKey, 'loading' | 'ready' | 'error'>();
+
+  /** `notify: false` keeps this loader's templates away from heroTemplateListeners (bake-only loaders). */
+  constructor(private readonly options: { notify?: boolean } = {}) {}
 
   /** Loads (once) and returns the toonified template for a hero model. */
   load(kind: HeroModelKey, detail: HeroDetail = 'high'): Promise<HeroTemplate> {
@@ -76,7 +86,10 @@ export class SketchfabShipAssets {
     const promise = (detail === 'high' ? this.loadHigh(kind) : this.loadLow(kind)).then((template) => {
       if (this.disposed) { this.release(template); return template; }
       this.templates.add(template);
-      if (detail === 'high') this.status.set(kind, 'ready');
+      if (detail === 'high') {
+        this.status.set(kind, 'ready');
+        if (this.options.notify !== false) for (const listener of heroTemplateListeners) { try { listener(template); } catch (error) { console.warn('[perf] template listener', error); } }
+      }
       return template;
     }).catch((error: unknown) => {
       this.pending.delete(key);

@@ -43,6 +43,23 @@ const hosts = new WeakMap<THREE.WebGLRenderer, RendererHost>();
 export function hostFor(renderer: THREE.WebGLRenderer): RendererHost | undefined { return hosts.get(renderer); }
 
 /**
+ * PERF: shadow-only proxies. An object on this layer (and only this layer) is skipped by every camera pass — the ink
+ * prepass and the colour pass — but drawn into the shadow map, because the host enables the layer on the view camera
+ * only while three renders the shadow map (after the colour pass has built its render list). Cheap caster stand-ins
+ * (a clustered hero hull, low-poly tree crowns) use it while the detailed meshes stop casting.
+ */
+export const SHADOW_PROXY_LAYER = 1;
+
+/** Turns `object` into a shadow-only caster (no colour, no ink, no occlusion). Children are not changed. */
+export function makeShadowProxy(object: THREE.Object3D): void {
+  object.layers.set(SHADOW_PROXY_LAYER);
+  object.castShadow = true;
+  object.receiveShadow = false;
+  object.userData.inkSkip = true;
+  object.userData.shadowProxy = true;
+}
+
+/**
  * GPU frame timing with sequential (never nested) TIME_ELAPSED queries: one per labelled pass, summed per frame.
  * `samples` holds per-frame totals (ms); `passes` holds a smoothed time per label.
  */
@@ -148,6 +165,10 @@ export class RendererHost {
   /** Consecutive reviews with missed presentations (a single hitch burst never costs resolution). */
   private strikes = 0;
   private contextLost = false;
+  /** Triangles/draw calls of the last shadow-map render (diagnostics). */
+  readonly shadowStats = { triangles: 0, calls: 0 };
+  /** Objects drawn into the next shadow-map render only (warm-up of depth program variants), then released. */
+  private shadowWarm: { group: THREE.Object3D; resolve: () => void }[] = [];
 
   /** LOOK owns this class: post stack, quality tiers, precompile and adaptive resolution live here. */
   constructor(private readonly container: HTMLElement, private readonly captureMode: boolean, performanceMode = false) {
@@ -169,6 +190,7 @@ export class RendererHost {
     this.renderer.domElement.tabIndex = 0;
     container.prepend(this.renderer.domElement);
     this.gpu = new GpuTimer(this.renderer.getContext() as WebGL2RenderingContext);
+    this.installShadowHook();
 
     this.camera = new THREE.PerspectiveCamera(50, 1, 1, 6000);
     this.camera.position.set(0, 90, 120);
@@ -191,6 +213,67 @@ export class RendererHost {
   get tier(): QualityTier { return this.profile.tier; }
   get quality(): QualityProfile { return this.profile; }
   get gpuTimerAvailable(): boolean { return this.gpu.available; }
+  /**
+   * Per-pass GPU timer sections (prepass, shadow, colour, bloom, composite). Off by default (each section is one
+   * TIME_ELAPSED query); `?gpupasses` or the PERF bridge turns it on for scripts/perf/gpu-timing.mjs.
+   */
+  gpuPassTiming = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('gpupasses');
+  /** Smoothed GPU time per labelled pass (ms), when EXT_disjoint_timer_query_webgl2 is available (diagnostics). */
+  gpuPasses(): Record<string, number> { return Object.fromEntries([...this.gpu.passes].map(([k, v]) => [k, +v.toFixed(3)])); }
+  /** Recent per-frame GPU totals (ms) from the timer queries (diagnostics). */
+  gpuSamples(): number[] { return [...this.gpu.samples]; }
+  /** Starts a labelled GPU timer section (ends the previous one); no-op unless per-pass timing is on. */
+  markGpu(label: string): void { if (this.gpuPassTiming) this.gpu.mark(label); }
+
+  /**
+   * PERF: wraps three's shadow-map render, which runs inside the colour pass after its render list is built:
+   *  - enables SHADOW_PROXY_LAYER on the view camera for that render only, so shadow-only proxies cast;
+   *  - adds queued warm-up casters for that one render (compiles depth-program variants before a run needs them);
+   *  - records the pass's triangles and draw calls.
+   * Renders that do not update shadows (the ink prepass, utility renders) pass straight through.
+   */
+  private installShadowHook(): void {
+    const shadowMap = this.renderer.shadowMap;
+    const base = shadowMap.render.bind(shadowMap);
+    const info = this.renderer.info.render;
+    shadowMap.render = (lights: THREE.Light[], scene: THREE.Scene, camera: THREE.Camera) => {
+      if (!shadowMap.enabled || (!shadowMap.autoUpdate && !shadowMap.needsUpdate)) {
+        base(lights, scene, camera);
+        return;
+      }
+      if (lights.length === 0) {
+        // No shadow-casting light (low tier): nothing to warm, nothing to proxy.
+        for (const w of this.shadowWarm.splice(0)) w.resolve();
+        this.shadowStats.triangles = 0; this.shadowStats.calls = 0;
+        base(lights, scene, camera);
+        return;
+      }
+      const t0 = info.triangles, c0 = info.calls;
+      const hadLayer = camera.layers.isEnabled(SHADOW_PROXY_LAYER);
+      camera.layers.enable(SHADOW_PROXY_LAYER);
+      const warm = this.shadowWarm;
+      this.shadowWarm = [];
+      for (const w of warm) { scene.add(w.group); w.group.updateMatrixWorld(true); }
+      this.markGpu('shadow');
+      try {
+        base(lights, scene, camera);
+      } finally {
+        for (const w of warm) { scene.remove(w.group); w.resolve(); }
+        if (!hadLayer) camera.layers.disable(SHADOW_PROXY_LAYER);
+        this.markGpu('colour');
+      }
+      this.shadowStats.triangles = info.triangles - t0;
+      this.shadowStats.calls = info.calls - c0;
+    };
+  }
+
+  /**
+   * Draws `group` into the next shadow-map update only (never into the colour or ink passes) so three builds the
+   * depth programs its casters need. Meshes should be tiny, `frustumCulled = false` and far below the sea.
+   */
+  warmShadows(group: THREE.Object3D): Promise<void> {
+    return new Promise((resolve) => { this.shadowWarm.push({ group, resolve }); });
+  }
 
   /** Applies a quality tier's DPR range (called by PostStack when ctx.quality changes). */
   setQualityTier(tier: QualityTier): void {

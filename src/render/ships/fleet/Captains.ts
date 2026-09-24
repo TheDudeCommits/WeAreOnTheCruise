@@ -42,6 +42,24 @@ function requestHull(kind: HeroModelKey, length: number): CaptainHull | null | u
   return undefined;
 }
 
+/**
+ * PERF warm-up: starts (or joins) the session bake of a captain hull and resolves when it is ready, so the harbor can
+ * bake the hulls a run's captains will sail before the run starts (the bake itself runs in idle slices).
+ */
+export function prebakeCaptainHull(kind: HeroModelKey, length: number): Promise<CaptainHull | null> {
+  const key = `${kind}:${length}`;
+  if (READY.has(key)) return Promise.resolve(READY.get(key) ?? null);
+  requestHull(kind, length);
+  return BAKES.get(key) ?? Promise.resolve(null);
+}
+
+/** Session bake cache (QA): hull key → triangles and CPU bake time. */
+export function captainBakeCache(): Record<string, { triangles: number; source: number; bakeMs: number } | null> {
+  const out: Record<string, { triangles: number; source: number; bakeMs: number } | null> = {};
+  for (const [key, hull] of READY) out[key] = hull ? { triangles: hull.triangles, source: hull.sourceTriangles, bakeMs: Math.round(hull.bakeMs) } : null;
+  return out;
+}
+
 function hullMaterial(delight: number): THREE.Material {
   const m = createToonMaterial({ vertexColors: true, tintable: true, side: THREE.DoubleSide, rim: 0.35, name: 'captain-hull' });
   if (isCelMaterial(m)) m.setLevels(delight, 1.04, 1);
@@ -100,6 +118,8 @@ export class CaptainFleet {
       const mesh = new THREE.Mesh(g, hullMaterial(delight));
       mesh.position.y = -5000;
       mesh.name = 'captain-warmup';
+      // Casters too (culled by the shadow camera): PERF's shadow warm-up compiles their depth program from these.
+      mesh.castShadow = true;
       this.warm.push(mesh);
       this.group.add(mesh);
     }

@@ -119,6 +119,8 @@ export class EnemyFleet {
   private readonly ghost = new Map<THREE.Material, THREE.Material>();
   /** Keys whose manifest GLB is loading/ready (so we only request once). */
   private readonly requested = new Set<string>();
+  /** Manifest loads and dressed-look builds in flight (PERF warm-up waits for them before compiling). */
+  private readonly pendingLoads: Promise<unknown>[] = [];
 
   constructor(private readonly assets: FleetAssets | null) {
     this.group.name = 'enemy-fleet';
@@ -139,6 +141,7 @@ export class EnemyFleet {
     const ringGeo = ring.build();
     this.ownedGeometries.push(ringGeo);
     this.eliteRing = new THREE.InstancedMesh(ringGeo, this.glowMaterial, 48);
+    withInstanceColor(this.eliteRing);
     this.eliteRing.frustumCulled = false;
     this.eliteRing.count = 0;
     this.eliteRing.visible = false;
@@ -156,6 +159,7 @@ export class EnemyFleet {
     const affGeo = aff.build();
     this.ownedGeometries.push(affGeo);
     this.affixRing = new THREE.InstancedMesh(affGeo, this.glowMaterial, RINGS);
+    withInstanceColor(this.affixRing);
     this.affixRing.frustumCulled = false;
     this.affixRing.count = 0;
     this.affixRing.visible = false;
@@ -197,6 +201,7 @@ export class EnemyFleet {
     const bubbleGeo = new THREE.SphereGeometry(1, 24, 12, 0, Math.PI * 2, 0, Math.PI * 0.55);
     this.ownedGeometries.push(bubbleGeo);
     this.bubble = new THREE.InstancedMesh(bubbleGeo, this.bubbleMaterial, BUBBLES);
+    withInstanceColor(this.bubble);
     this.bubble.frustumCulled = false;
     this.bubble.count = 0;
     this.bubble.visible = false;
@@ -219,7 +224,13 @@ export class EnemyFleet {
   private requestManifest(key: string, length: number): void {
     if (!this.assets || this.requested.has(key)) return;
     this.requested.add(key);
-    void this.assets.request(key).then((model) => { if (model) this.manifestVisual(model, length); });
+    this.pendingLoads.push(this.assets.request(key).then((model) => { if (model) this.manifestVisual(model, length); }));
+  }
+
+  /** Resolves when every manifest model and dressed look requested so far is built (PERF warm-up). */
+  async ready(): Promise<void> {
+    let n = -1;
+    while (n !== this.pendingLoads.length) { n = this.pendingLoads.length; await Promise.allSettled(this.pendingLoads); }
   }
 
   /** Loads every base hull and prop the round-1 looks need, then builds their dressed manifest visuals. */
@@ -227,7 +238,7 @@ export class EnemyFleet {
     const assets = this.assets;
     if (!assets) return;
     const keys = foeLookKeys();
-    void Promise.all(keys.map((k) => assets.request(k))).then((models) => {
+    this.pendingLoads.push(Promise.all(keys.map((k) => assets.request(k))).then((models) => {
       const byKey = new Map<string, FleetModel>();
       models.forEach((m, i) => { if (m) byKey.set(keys[i]!, m); });
       for (const [id, look] of Object.entries(FOE_LOOKS) as [EnemyId, FoeLook][]) {
@@ -235,7 +246,7 @@ export class EnemyFleet {
         const base = byKey.get(look.base);
         if (base && !base.skinned && base.parts.length) this.lookManifest(id, look, base, byKey);
       }
-    });
+    }));
   }
 
   private addPart(parts: InstPart[], key: string, geometry: THREE.BufferGeometry, material: THREE.Material, half: InstPart['half'], owned: boolean): void {
@@ -247,6 +258,10 @@ export class EnemyFleet {
     mesh.castShadow = false;
     mesh.receiveShadow = true;
     mesh.name = `enemy:${key}:${half}`;
+    // PERF: the per-instance colour exists from the start, so the boot precompile builds the program variant the
+    // fleet actually draws with (three keys programs on instanceColor; setColorAt used to add it mid-run).
+    mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(CAPACITY * 3).fill(1), 3);
+    mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
     if (half !== 'glow') markInk(mesh);
     this.group.add(mesh);
     parts.push({ mesh, half });
@@ -676,6 +691,12 @@ export class EnemyFleet {
     this.bubbleMaterial.dispose();
     this.group.clear();
   }
+}
+
+/** Creates the per-instance colour buffer up front (PERF: fixes the program variant before the boot precompile). */
+function withInstanceColor(mesh: THREE.InstancedMesh): void {
+  mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(mesh.instanceMatrix.count * 3).fill(1), 3);
+  mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
 }
 
 function flushVisual(v: ClassVisual): void {
