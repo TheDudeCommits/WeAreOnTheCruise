@@ -172,7 +172,7 @@ function sweep(c: SimContext, rt: EventRuntime, w: WaveState, h: HazardState, i:
           p.vx += dirX * 9; p.vz += dirZ * 9;
         }
       }
-      if (p.skills.boost.active <= 0 && p.airborne < 0.2 && p.submerged < 0.5) { p.x += h.vx * dt * 0.55; p.z += h.vz * dt * 0.55; }
+      if (p.skills.boost.active <= 0 && p.airborne < 0.2 && p.submerged < 0.5) { p.x += h.vx * dt * 0.35; p.z += h.vz * dt * 0.35; }
     }
   }
   // Ships.

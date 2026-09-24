@@ -156,7 +156,7 @@ export const DIRECTOR_EVENTS: Readonly<Record<DirectorEventId, DirectorEventDef>
     from: 3, weight: 3, maxPerRun: 2, duration: 70, lull: 25,
   },
   'volcanic-eruption': {
-    id: 'volcanic-eruption', name: 'Volcanic Eruption', text: 'The mountain wakes! Dodge the red circles; the gold ones rain treasure.',
+    id: 'volcanic-eruption', name: 'Volcanic Eruption', text: 'Fire from the deep! Dodge the red circles; the gold ones rain treasure.',
     from: 3, weight: 3, maxPerRun: 2, duration: 30, lull: 18,
   },
   'sunken-treasure': {
@@ -262,7 +262,7 @@ export const EVENT_TUNING = {
   rogueWaveHalfWidth: 240,
   rogueWaveSpeed: 24,
   rogueWaveStart: 330,
-  rogueWaveHeight: 30,
+  rogueWaveHeight: 21,
   rogueWaveDamage: 16,
   rogueWaveEnemy: 55,
   /** Forward speed gained when boosting through a wave (m/s). */

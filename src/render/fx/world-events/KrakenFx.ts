@@ -16,8 +16,8 @@ import { SPINE, type TentacleLook, type Tentacles } from './Tentacles';
 
 const TAU = Math.PI * 2;
 /** Visual arm length (m) and radii. */
-const L = 34;
-const BASE_R = 3.3;
+const L = 36;
+const BASE_R = 3.8;
 const TIP_R = 0.35;
 const SLOTS = 8;
 const DEATH = 1.3;
@@ -290,8 +290,8 @@ export class KrakenFx {
     this.whirl += ((on ? 1 : 0) - this.whirl) * Math.min(1, dt * (on ? 1.2 : 0.8));
     if (this.whirl < 0.02) return;
     const k = this.k, fx = this.fx, a = this.whirl;
-    k.decals.imm(Decal.Whirl, this.cx, this.cz, 58, 58, 0, -0.55, 4, 0xdff6ff, 0.7 * a, 0x04182a, 0, 0.37);
-    k.decals.imm(Decal.Shadow, this.cx, this.cz, 34, 34, 0, 0, 0, 0x08061a, 0.55 * a, 0x08061a, 0, 0.5);
+    k.decals.imm(Decal.Whirl, this.cx, this.cz, 50, 50, 0, -0.5, 3, 0xb9d9ea, 0.38 * a, 0x04182a, 0, 0.37);
+    k.decals.imm(Decal.Shadow, this.cx, this.cz, 38, 38, 0, 0, 0, 0x0a0620, 0.5 * a, 0x0a0620, 0, 0.5);
     this.whirlT -= dt;
     if (this.whirlT <= 0) {
       this.whirlT = 0.1;

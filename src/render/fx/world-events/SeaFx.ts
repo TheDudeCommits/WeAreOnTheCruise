@@ -64,12 +64,12 @@ export class SeaFx {
     if (env <= 0.01) return;
     const H = EVENT_TUNING.rogueWaveHeight * Math.min(1.2, h.radius / EVENT_TUNING.rogueWaveHalfWidth);
     // The curl's lip lands on the sim's warning strip; the face (crest) meets ships at the hazard line.
-    const back = 12;
+    const back = 8;
     const cx = h.x - dx * back, cz = h.z - dz * back;
-    k.walls.add(cx, cz, ang, h.radius, H, env, hash01(h.id, 9), 1.25);
-    k.walls.add(cx - dx * H * 1.9, cz - dz * H * 1.9, ang, h.radius * 0.97, H * 0.42, env, hash01(h.id, 10), 1.1);
-    // Foam skirt on the water in front of the face.
-    k.decals.imm(Decal.Blot, h.x + dx * H * 0.5, h.z + dz * H * 0.5, h.radius * 1.02, H * 0.9, ang, 0, 0, 0xffffff, 0.85 * env, 0x8fc3d9, 0, hash01(h.id, 2));
+    k.walls.add(cx, cz, ang, h.radius, H, env, hash01(h.id, 9), 1.0);
+    k.walls.add(cx - dx * H * 1.7, cz - dz * H * 1.7, ang, h.radius * 0.97, H * 0.4, env, hash01(h.id, 10), 0.9);
+    // Foam skirt on the water just ahead of the lip.
+    k.decals.imm(Decal.Blot, h.x + dx * H * 0.9, h.z + dz * H * 0.9, h.radius * 1.02, H * 0.45, ang, 0, 0, 0xffffff, 0.7 * env, 0x8fc3d9, 0, hash01(h.id, 2));
     // Work near the camera only: the front is ~500 m wide.
     const rel = (k.focusX - h.x) * px + (k.focusZ - h.z) * pz;
     const span = 160;
@@ -119,7 +119,7 @@ export class SeaFx {
     const eye = EVENT_TUNING.maelstromEye;
     // Whirl decals: mirrored with the spin so the arms trail and turn the way the current carries ships.
     const hz = -spin * R;
-    k.decals.imm(Decal.Whirl, h.x, h.z, R, hz, 0, -0.9, 5, 0xf2fbff, 0.92 * env, 0x05283a, 0, hash01(h.id, 3));
+    k.decals.imm(Decal.Whirl, h.x, h.z, R, hz, 0, -0.9, 5, 0xe4f5fc, 0.78 * env, 0x05283a, 0, hash01(h.id, 3));
     k.decals.imm(Decal.Whirl, h.x, h.z, R * 0.42, -spin * R * 0.42, 0, -2.2, 3, 0xffffff, 0.95 * env, 0x031a28, 0, hash01(h.id, 4));
     k.decals.imm(Decal.Shadow, h.x, h.z, eye * 1.5, eye * 1.5, 0, 0, 0, 0x010a12, 0.8 * env, 0x010a12, 0, 0.5);
     const wy = fx.wy(h.x, h.z);
@@ -157,7 +157,7 @@ export class SeaFx {
         for (let j = 0; j < 5; j++) {
           const r = eye * 1.2 + (R * 0.95 - eye * 1.2) * ((j + rand() * 0.5) / 5);
           const a = arm * (TAU / 3) - spin * t * 0.5 + spin * Math.log(r / eye) * 1.4;
-          o.stampFoam(h.x + Math.cos(a) * r, h.z + Math.sin(a) * r, 5 + r * 0.05, 0.5 * env);
+          o.stampFoam(h.x + Math.cos(a) * r, h.z + Math.sin(a) * r, 4 + r * 0.04, 0.35 * env);
         }
       }
     }

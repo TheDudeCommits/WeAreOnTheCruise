@@ -63,9 +63,9 @@ export const ERUPTION: WorldEventHandler = {
       v.vx = isl.x; v.vz = isl.z; v.island = true; radius = Math.max(30, isl.radius * 0.6);
     } else {
       const side = c.random() < 0.5 ? 1 : -1;
-      const spot = openSpot(c, p.x, p.z, travelBearing(c) + side * 1.1, 150, 25, 1.6, 10);
-      v.vx = spot ? spot.x : p.x + fwdX(travelBearing(c)) * 150;
-      v.vz = spot ? spot.z : p.z + fwdZ(travelBearing(c)) * 150;
+      const spot = openSpot(c, p.x, p.z, travelBearing(c) + side * 0.75, 115, 25, 1.6, 10);
+      v.vx = spot ? spot.x : p.x + fwdX(travelBearing(c)) * 115;
+      v.vz = spot ? spot.z : p.z + fwdZ(travelBearing(c)) * 115;
       v.island = false;
     }
     v.next = 1.2; v.launched = 0; v.finale = false; v.finaleId = 0;

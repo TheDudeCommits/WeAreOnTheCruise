@@ -2,7 +2,7 @@
  * Ghost Fleet (EVENTS; the Gloam, or any sea after dark). Drowned galleons and lantern wisps rise from the sea in a
  * ring around the ship (plus a pair of wraiths in the Gloam). They surface over ~2.5 s (`ai.sub` 1 → 0, which ai.ts
  * turns into `hidden`, so SHIPS sinks/fades the hulls in place). Objective: sink the drowned galleons → the fleet
- * returns to the deep and leaves its cargo. Fail: at dawn of the timer the ghosts sink back, untouched.
+ * returns to the deep and leaves its cargo. Fail: when the timer runs out the ghosts sink back, untouched.
  * FOES builds the drowned-galleon and lantern-wisp classes; while those are still placeholders (or missing) the
  * fleet uses whatever is in the content table, falling back to Gloam wraiths.
  *
@@ -70,7 +70,7 @@ export const GHOST_FLEET: WorldEventHandler = {
     };
     for (let k = 0; k < galleons; k++) {
       const a = offset + (k / galleons) * TAU;
-      const r = 190 + c.random() * 40;
+      const r = 150 + c.random() * 35;
       const e = eventSpawn(c, galleonId, p.x + Math.sin(a) * r, p.z + Math.cos(a) * r, { margin: 8, force: true });
       if (!e) continue;
       g.galleons[g.ng++] = e.id;
@@ -80,17 +80,17 @@ export const GHOST_FLEET: WorldEventHandler = {
     if (g.ng === 0) return null;
     for (let k = 0; k < wisps; k++) {
       const a = offset + ((k + 0.5) / wisps) * TAU + (c.random() - 0.5) * 0.4;
-      const r = 150 + c.random() * 70;
+      const r = 120 + c.random() * 55;
       rise(eventSpawn(c, wispId, p.x + Math.sin(a) * r, p.z + Math.cos(a) * r, { margin: 4 }), 0.6 + c.random() * 1.4);
     }
     if (s.seaId === 'the-gloam') {
       for (let k = 0; k < 2; k++) {
         const a = offset + Math.PI * (k + 0.5);
-        rise(eventSpawn(c, 'wraith', p.x + Math.sin(a) * 230, p.z + Math.cos(a) * 230, { margin: 6 }), 1.2 + k * 0.5);
+        rise(eventSpawn(c, 'wraith', p.x + Math.sin(a) * 190, p.z + Math.cos(a) * 190, { margin: 6 }), 1.2 + k * 0.5);
       }
     }
     const ev = openEvent('ghost-fleet', g.ng > 1 ? 'Sink the drowned galleons' : 'Sink the drowned galleon', DIRECTOR_EVENTS['ghost-fleet'].duration, g.ng);
-    anchor(ev, p.x, p.z, 215);
+    anchor(ev, p.x, p.z, 185);
     return ev;
   },
 

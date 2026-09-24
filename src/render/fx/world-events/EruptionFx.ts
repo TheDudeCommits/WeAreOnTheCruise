@@ -112,9 +112,9 @@ export class EruptionFx {
     g.at(x, y, z).look(Glow.Soft, gold ? GlowPal.Gold : GlowPal.Explosion).sized(9, 9).lived(10).bright(gold ? 0.9 : 0.75);
     k.glow.imm(0.02);
     // Trail.
-    if (rand() < dt * 26 * k.q) {
+    if (rand() < dt * 18 * k.q) {
       if (gold) fx.sparkles(x, y, z, 1, 3, GlowPal.Gold, 0.8);
-      else fx.smoke(x, y, z, 1, 1.6, 5, CelPal.DarkSmoke, 1.4, 0, 1, 0, 1, 1.5, 0.5, 0, 0.45);
+      else fx.smoke(x, y, z, 1, 1.2, 3.4, CelPal.WreckSmoke, 1.1, 0, 1, 0, 1, 1.5, 0.4, 0, 0.5);
     }
   }
 
