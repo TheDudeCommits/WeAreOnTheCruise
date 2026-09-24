@@ -145,7 +145,8 @@ void main() {
   }
 
   // Erosion: holes open where n2 is high, then the whole silhouette is eaten — never an opacity fade.
-  float e = max(clamp((t - vErode) / max(1e-3, 1.0 - vErode), 0.0, 1.0), vOccl * 0.85);
+  // vOccl adds the smoke rules (coverage governor, per-puff screen cap, hero/boss guards; see SPRITE_VERTEX_GLSL).
+  float e = max(clamp((t - vErode) / max(1e-3, 1.0 - vErode), 0.0, 1.0), vOccl);
   float eaten = e * e * 3.6 * erodeAmp * (0.28 + 0.72 * n2);
   m -= eaten;
   if (heatMode == 2) heat -= eaten * 0.5;

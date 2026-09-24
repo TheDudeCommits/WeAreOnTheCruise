@@ -6,7 +6,7 @@
 import { CONTENT } from '../../game/content';
 import type { ProjectileKind } from '../../game/ids';
 import { rangeMul } from '../../game/sim/stats';
-import type { BossState, EnemyState, HazardState, PickupState, RunState } from '../../game/types';
+import type { BossState, CaptainState, EnemyState, HazardState, PickupState, RunState } from '../../game/types';
 import type { FrameContext } from '../frame';
 import { CelPal, DANGER_DEEP_HEX, DANGER_HEX, GlowPal, INK_HEX, Lin, PLAYER_MARK_HEX } from './core/palette';
 import { hash01, rand, range, spread } from './core/rand';
@@ -70,6 +70,10 @@ const KIND_BY_INDEX = Object.keys(KINDS) as ProjectileKind[];
 const SLOT_CAP = 2048;
 const GHOST_CAP = 384;
 const HAZ_CAP = 512;
+/** Battle-damage smoke starts below this hull fraction (deck fire below 30%). */
+const DAMAGE_SMOKE_HP = 0.5;
+/** Damaged ships that may smoke at the full rate at once; beyond that they share the rate. */
+const DAMAGE_SMOKE_SHIPS = 5;
 
 const PICKUP_HEX: Record<PickupState['kind'], number> = {
   'xp-copper': 0xe0874a, 'xp-silver': 0xe6eef6, 'xp-gold': 0xffc93a, doubloon: 0xffd24a, repair: 0xffffff,
@@ -108,6 +112,8 @@ export class StateFx {
   private prevAir = 0;
   private prevSub = 0;
   private emitPlayer = 0;
+  /** Smoke rules: this frame's damage-smoke rate multiplier for ordinary ships (shared between smokers). */
+  private smokeShare = 1;
 
   private readonly waterY = (x: number, z: number): number => this.fx.wy(x, z);
 
@@ -125,8 +131,16 @@ export class StateFx {
     this.hazards(ctx, run, dt);
     this.pickups(run);
     this.telegraphs(run);
+    // Smoke rules: damage smoke shares a budget, so a horde of damaged ships never blankets the sea.
+    let smokers = 0;
+    const fx0 = this.k.focusX, fz0 = this.k.focusZ;
+    for (const e of run.enemies) {
+      if (e.life === 'alive' && e.hidden < 1 && e.hp < e.maxHp * DAMAGE_SMOKE_HP && (e.x - fx0) ** 2 + (e.z - fz0) ** 2 < 480 * 480) smokers++;
+    }
+    this.smokeShare = Math.min(1, DAMAGE_SMOKE_SHIPS / Math.max(1, smokers));
     for (const e of run.enemies) if (e.hidden < 1 && e.defId !== 'kraken-arm') this.ship(e, dt, false);
     for (const b of run.bosses) this.ship(b, dt, true);
+    for (const c of run.captains) if (c.alive) this.captain(c, dt);
     this.player(run, dt);
     this.tethers(run);
     this.aim(ctx, run);
@@ -632,8 +646,8 @@ export class StateFx {
           this.loopFlame(s.x + fxv * along, deck, s.z + fzv * along, L * 0.06, L * 0.17 * (1 - t * 1.4), s.id, j, CelPal.Fire);
         }
       }
-      if (t < 0.85 && rand() < dt * (boss ? 10 : 5) * k.q) {
-        fx.smoke(s.x + spread(L * 0.2), wy + L * 0.12, s.z + spread(L * 0.2), 1, L * 0.14, L * 0.42, CelPal.WreckSmoke, 3.2, 0, 6, 0, 1, 5, 1, 0, 0.45);
+      if (t < 0.85 && rand() < dt * (boss ? 6 : 3) * k.q) {
+        fx.smoke(s.x + spread(L * 0.2), wy + L * 0.12, s.z + spread(L * 0.2), 1, L * 0.1, L * 0.26, CelPal.WreckSmoke, 3.2, 0, 6, 0, 1, 5, 1, 0, 0.45);
       }
       if (rand() < dt * 1.5 * k.q) fx.planks(s.x + spread(L * 0.3), wy + 0.5, s.z + spread(L * 0.3), 1, 2, 2, 1, 2.6, 0.3);
       k.ocean?.stampFoam(s.x, s.z, L * 0.5, 0.3);
@@ -641,27 +655,7 @@ export class StateFx {
       return;
     }
     if (s.life !== 'alive') return;
-    // battle damage: smoke plumes below 55% hull, deck fire below 30% (T3 / T11)
-    const frac = s.hp / Math.max(1, s.maxHp);
-    if (frac < 0.55) {
-      const dx = s.x - k.focusX, dz = s.z - k.focusZ;
-      if (dx * dx + dz * dz < 480 * 480) {
-        const deck = wy + Math.max(2.5, L * 0.1);
-        const rate = (boss ? 7 : 2.4) * (1.4 - frac * 1.6) * k.q;
-        if (rand() < dt * rate) {
-          const along = (hash01(s.id, 800 + ((k.clock * 3) | 0) % 5) - 0.5) * L * 0.5;
-          fx.smoke(s.x + fxv * along, deck + 1, s.z + fzv * along, 1, L * 0.07, L * (boss ? 0.28 : 0.34), frac < 0.3 ? CelPal.DarkSmoke : CelPal.Gunsmoke,
-            3.4, 0, 4, 0, 1, 5.5, 1, 0, 0.45);
-        }
-        if (frac < 0.3) {
-          const fires = boss ? 4 : 2;
-          for (let j = 0; j < fires; j++) {
-            const along = (hash01(s.id, j + 900) - 0.5) * L * 0.55;
-            this.loopFlame(s.x + fxv * along, deck, s.z + fzv * along, L * 0.03, L * (boss ? 0.09 : 0.13), s.id, j + 30, CelPal.Fire);
-          }
-        }
-      }
-    }
+    this.damage(s.id, s.x, s.z, s.heading, L, s.hp / Math.max(1, s.maxHp), wy, dt, boss, boss ? 1 : this.smokeShare);
     if (boss) this.bossWater(s as Readonly<BossState>, wy, dt);
     const statuses = s.statuses;
     for (let i = 0; i < statuses.length; i++) {
@@ -701,6 +695,49 @@ export class StateFx {
         case 'hooked': break; // ropes come from the 'harpoon' tether table (tethers())
         default: break;
       }
+    }
+  }
+
+  /**
+   * Battle damage (T3 / T11) under the smoke rules: thin rising plumes below 50% hull (dark below 30%) and deck fire
+   * below 30%. `share` < 1 when many ships smoke at once. Also drives AI captains (negative ids).
+   */
+  private damage(id: number, x: number, z: number, heading: number, L: number, frac: number, wy: number, dt: number, big: boolean, share: number): void {
+    if (frac >= DAMAGE_SMOKE_HP) return;
+    const k = this.k;
+    const dx = x - k.focusX, dz = z - k.focusZ;
+    if (dx * dx + dz * dz > 480 * 480) return;
+    const fxv = -Math.sin(heading), fzv = -Math.cos(heading);
+    const deck = wy + Math.max(2.5, L * 0.1);
+    const severity = 1.3 - frac * 1.6;
+    if (rand() < dt * (big ? 3.5 : 1.6) * severity * share * k.q) {
+      const along = (hash01(id, 800 + ((k.clock * 3) | 0) % 5) - 0.5) * L * 0.5;
+      this.fx.smoke(x + fxv * along, deck + 1, z + fzv * along, 1, L * 0.05, L * (big ? 0.16 : 0.22), frac < 0.3 ? CelPal.DarkSmoke : CelPal.Gunsmoke,
+        3.4, 0, 4, 0, 1, 6, 1, 0, 0.45);
+    }
+    if (frac < 0.3) {
+      const fires = big ? 4 : 2;
+      for (let j = 0; j < fires; j++) {
+        const along = (hash01(id, j + 900) - 0.5) * L * 0.55;
+        this.loopFlame(x + fxv * along, deck, z + fzv * along, L * 0.03, L * (big ? 0.09 : 0.13), id, j + 30, CelPal.Fire);
+      }
+    }
+  }
+
+  /** AI captains (negative ids, ShipFrames.findCaptain): the same damage smoke and deck fire as the fleet, and burning. */
+  private captain(c: Readonly<CaptainState>, dt: number): void {
+    const wy = this.fx.wy(c.x, c.z);
+    this.damage(c.id, c.x, c.z, c.heading, c.length, c.hp / Math.max(1, c.maxHp), wy, dt, false, 1);
+    for (let i = 0; i < c.statuses.length; i++) {
+      const st = c.statuses[i]!;
+      if (st.kind !== 'burning' || st.time <= 0) continue;
+      const deck = wy + Math.max(2.5, c.length * 0.1);
+      const fxv = -Math.sin(c.heading), fzv = -Math.cos(c.heading);
+      for (let j = 0; j < 3; j++) {
+        const along = (hash01(c.id, j + 600) - 0.5) * c.length * 0.5;
+        this.loopFlame(c.x + fxv * along, deck, c.z + fzv * along, c.length * 0.05, c.length * 0.14, c.id, j + 10, CelPal.Fire);
+      }
+      if (rand() < dt * 3 * this.k.q) this.fx.smoke(c.x, deck + 2, c.z, 1, 2, 6, CelPal.DarkSmoke, 2, 0, 3, 0, 1, 3, 1, 0, 0.4);
     }
   }
 
