@@ -1,8 +1,81 @@
 # We Are On The Cruise — handover
 
-Updated 2026-09-23. Actual checkout: `/Users/amir/Projects/WeAreOnTheCruise`; `/Users/amir/Codex-ThreeJS` is unrelated. Remote: https://github.com/TheDudeCommits/WeAreOnTheCruise. Branch: `codex/cinematic-anime-overhaul`, based on `codex/vertical-slice` at `ba33a1760fddebb084764a612e4ee52589337c3d`.
+Updated 2026-09-24. Checkout: `/Users/amir/Projects/WeAreOnTheCruise`. Remote: https://github.com/TheDudeCommits/WeAreOnTheCruise. Active branch: `claude/naval-survivor-overhaul`, branched from `codex/cinematic-anime-overhaul` at `9fce64e`. Vercel builds a preview for every pushed branch (project `we-are-on-the-cruise`).
 
-## September 23 AAA audit and overhaul plan (read first)
+## September 24 — v2 naval survivor overhaul, integrated (read first)
+
+The game is rebuilt as a naval survivor-like on an original world, following the user's five decisions:
+1. an original world, keeping the six hero ships;
+2. Meshy for ships Sketchfab lacks;
+3. no boarding, only ship battles with upgrades, weapons and Mecha-Survivor-style progression;
+4. desktop Chrome;
+5. free Creative Commons audio.
+
+The design bible is [docs/overhaul-v2/DESIGN.md](docs/overhaul-v2/DESIGN.md). It has world names, numbers, weapons and passives, enemies, bosses, director, meta, visual direction and budgets.
+
+**How it was built.** A lead-owned contract commit came first: `src/game/{ids,types,constants}.ts`, `src/game/sim/context.ts`, `src/render/frame.ts`, `src/ui/contracts.ts`, `src/audio/contracts.ts` and `src/runtime/*`. Ten parallel workstreams then built against it, each on an `ovh/<name>` branch that has since been merged:
+
+| Stream | Scope | Key paths |
+|---|---|---|
+| CORE | fixed-step 60 Hz deterministic sim, handling, 12 weapons, specials and ultimates, collisions | `src/game/sim/*` |
+| META | enemy AI, director, bosses, cards, progression, save, balance | `src/game/sim/{ai,director,bosses,progression,weather}.ts`, `src/game/content/*`, `scripts/balance-sim.ts` |
+| LOOK | renderer host, quality, post stack (ink, grade, bloom), cel materials, sky, camera | `src/render/{app,materials,npr,sky,camera}` |
+| OCEAN | projected-grid sea, wakes, foam, shore surf, interaction field | `src/render/ocean`, `src/core/waves.ts` |
+| SHIPS | hero ships with visible growth tiers, instanced fleets, bosses, crew | `src/render/ships`, `src/render/loaders` |
+| FX | sakuga projectiles, explosions, telegraphs, pickups, damage numbers, screen juice | `src/render/fx` |
+| WORLD | deterministic island field, biomes and landmarks, harbour set | `src/world`, `src/render/world` |
+| UI | title, harbor, HUD, cards, chest, pause, settings, results | `src/ui`, `src/styles` |
+| AUDIO | CC0/CC BY music and SFX pipeline, spatial mixer, music director | `src/audio`, `scripts/audio`, `public/audio` |
+| ASSETS | fleet, props, crew and nature GLBs, icons, licence ledger | `public/assets/fleet`, `public/assets/icons`, `scripts/assets` |
+
+Every module has a lab page at `/lab/<name>.html`.
+
+**Integration fixes on the lead branch.**
+- `EnemyState.hidden` replaced META's off-map "limbo". Wraiths now phase in place and wyrmlings dive in place.
+- Contact damage now scales through META's helpers.
+- Forts stay on WORLD battery sites.
+- The minimap draws islands.
+- Night foam no longer carpets a melee.
+- Horde enemy GLBs are decimated: the fleet went from 913k to 331k triangles per pass.
+- Long card text fits.
+- Endless mode ("Keep Sailing" after a victory) is live.
+- XP per ship scales down on harder seas.
+- The ledger now includes audio and fonts.
+
+**QA tools.**
+- `node scripts/qa-play.mjs --url … --ship … --sea … --seconds 90 [--god] [--level N] [--boss id]` plays a real run and saves screenshots plus metrics.
+- `window.__CRUISE__` provides `summary()` (which includes hazards), `nearest()` and `advance()`. It also has `profiler.enable/report` for a per-system CPU breakdown and `sceneStats()` for triangles per scene group. Under `debug.*` it has `spawn`, `boss`, `level`, `weapon`, `killAll`, `sinkBosses` and `chargeUltimate`.
+- `npx tsx scripts/balance-sim.ts --seeds 3 --minutes 18 --proxy off` runs headless balance. Use `--minutes 18` or the Sovereign fight gets cut off.
+- Keep QA browsers closed after use.
+- **Frame-rate numbers are only meaningful on an idle machine.** Other sessions' captures share the GPU. Use `profiler.report()` for the CPU split. Frames stepped back-to-back through `advance()` stall on GPU back-pressure; that is not a real hitch.
+
+**Measured on 2026-09-24, in a crowded scene with 75 enemies and a boss.**
+- Real-time CPU: 3.6 ms mean, 13.9 ms max.
+- About 280 draw calls.
+- 2.64M triangles in total. The outline prepass redraws every outlined mesh.
+- GPU time on an idle M4 has not been measured.
+
+**Balance** (3 seeds × 2 starter ships, 18 min):
+- Levels: 7.8–8.5 at 5 min, 15.7–16.7 at 10, and 24–25 at 15.
+- Deaths: Sunward 1/6, Stormwrack 1/6, Gloam 3/6.
+- Bosses sink in 45–160 s.
+- The live horde at minute 12 is 33–45 ships, below the 60–90 target.
+
+**Open items**
+- Decide whether to rename the title: "We Are On The Cruise" is a One Piece opening lyric.
+- The hero ships are still community fan-art downloads. Sunlion's provenance is medium-confidence, and White Leviathan's has not been checked yet. Replace them before any commercial use.
+- Sunlion has 36 materials and needs an offline re-bake.
+- The horde needs to be denser; see `DIRECTOR.minAlive` and `budgetRate`.
+- Projectiles don't record which ship fired them, so hits can't be attributed to their shooter.
+- Special and ultimate names live in the UI; they should move into content.
+- There is no back-to-title callback.
+- Crew figures are small at gameplay distance.
+- A few Iron Warden armour plates stand off the hull.
+- Take a clean GPU timing on an idle machine.
+
+Everything below is the September 23 plan and the v1 history.
+
+## September 23 AAA audit and overhaul plan
 
 A second September 23 session audited the running game and wrote [docs/aaa-overhaul/AAA-OVERHAUL-PLAN.md](docs/aaa-overhaul/AAA-OVERHAUL-PLAN.md). No gameplay or runtime code changed. The plan contains:
 

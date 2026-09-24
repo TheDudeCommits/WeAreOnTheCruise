@@ -24,7 +24,12 @@ npm run build
 
 QA URL flags: `?run=<ship>[:<sea>]` jumps into a run, `?god=1`, `?hud=0` (clean plates), `?capture=1`,
 `?quality=low|medium|high|ultra`, `?seed=...`. `window.__CRUISE__` exposes a debug bridge (summary, advance,
-spawn, boss, level, weapon...). Module labs live at `/lab/<name>.html`.
+profiler, sceneStats, spawn, boss, level, weapon, sinkBosses, chargeUltimate...). Module labs live at `/lab/<name>.html`.
+
+```bash
+node scripts/qa-play.mjs --url http://127.0.0.1:4173 --ship sunlion --sea sunward-shallows --seconds 90
+npx tsx scripts/balance-sim.ts --seeds 3 --minutes 18 --proxy off
+```
 
 ## Controls
 
