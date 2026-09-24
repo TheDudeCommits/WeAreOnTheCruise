@@ -42,6 +42,8 @@ attribute vec4 iG; // tint.rgb, intensity
 uniform float uTime;
 uniform float uPixelWorld; // world metres per pixel at 1 m depth
 uniform float uMinPixels;
+uniform vec3 uFocus;       // hero position (+ a few metres): sprites on the camera → hero sightline dissolve
+uniform float uSightline;  // 1 = apply sightline dissolve (cel pass), 0 = off
 varying vec2 vUv;
 varying float vT;
 varying float vSeed;
@@ -54,6 +56,7 @@ varying float vAge;
 varying float vErode;
 varying float vSpeed;
 varying float vStretch;
+varying float vOccl;
 
 void fxSprite() {
   float age = uTime - iA.w;
@@ -79,6 +82,14 @@ void fxSprite() {
   int mode = int(modeF - pivot * 4.0 + 0.5);
   vec4 mv = viewMatrix * vec4(pos, 1.0);
   float speed = length(vel);
+  vOccl = 0.0;
+  if (uSightline > 0.5) {
+    vec3 ab = uFocus - cameraPosition;
+    float st = clamp(dot(pos - cameraPosition, ab) / max(dot(ab, ab), 1e-3), 0.0, 1.0);
+    float sd = length(cameraPosition + ab * st - pos);
+    float sr = max(iD.x, iD.y) * 0.35;
+    vOccl = (1.0 - smoothstep(sr + 3.0, sr + 16.0, sd)) * (1.0 - smoothstep(0.82, 0.95, st));
+  }
   float stretch = max(1.0, iF.x * (1.0 + speed * iF.y));
   // Keep tiny far sprites readable: never below uMinPixels.
   float minSize = uMinPixels * uPixelWorld * max(1.0, -mv.z);
@@ -139,6 +150,8 @@ export interface FxSharedUniforms {
   uShadeTint: THREE.IUniform<THREE.Color>;
   uViewport: THREE.IUniform<THREE.Vector2>;
   uFlash: THREE.IUniform<number>;
+  uFocus: THREE.IUniform<THREE.Vector3>;
+  uSightline: THREE.IUniform<number>;
 }
 
 export function createSharedUniforms(): FxSharedUniforms {
@@ -154,6 +167,8 @@ export function createSharedUniforms(): FxSharedUniforms {
     uShadeTint: { value: new THREE.Color(1, 1, 1) },
     uViewport: { value: new THREE.Vector2(1600, 900) },
     uFlash: { value: 0 },
+    uFocus: { value: new THREE.Vector3() },
+    uSightline: { value: 0 },
   };
 }
 

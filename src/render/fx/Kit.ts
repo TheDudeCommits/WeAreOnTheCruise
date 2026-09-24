@@ -34,6 +34,10 @@ export interface FxKit {
   /** Per-frame services (null outside a frame). */
   ocean: OceanServices | null;
   ships: ShipServices | null;
+  /** Camera position (world) for sightline checks. */
+  camX: number;
+  camY: number;
+  camZ: number;
   /** Camera focus (player) for distance attenuation. */
   focusX: number;
   focusZ: number;

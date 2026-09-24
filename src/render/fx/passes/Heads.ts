@@ -31,6 +31,7 @@ varying float vAge;
 varying float vErode;
 varying float vSpeed;
 varying float vStretch;
+varying float vOccl;
 
 const vec3 INK = vec3(0.0116, 0.0168, 0.0513);
 

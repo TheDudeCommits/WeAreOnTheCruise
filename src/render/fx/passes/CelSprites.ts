@@ -38,6 +38,7 @@ varying float vAge;
 varying float vErode;
 varying float vSpeed;
 varying float vStretch;
+varying float vOccl;
 
 vec3 celPal(int p, int i) { return uCelPal[p * 4 + i]; }
 
@@ -144,7 +145,7 @@ void main() {
   }
 
   // Erosion: holes open where n2 is high, then the whole silhouette is eaten — never an opacity fade.
-  float e = clamp((t - vErode) / max(1e-3, 1.0 - vErode), 0.0, 1.0);
+  float e = max(clamp((t - vErode) / max(1e-3, 1.0 - vErode), 0.0, 1.0), vOccl * 0.85);
   float eaten = e * e * 3.6 * erodeAmp * (0.28 + 0.72 * n2);
   m -= eaten;
   if (heatMode == 2) heat -= eaten * 0.5;
@@ -186,6 +187,7 @@ export function createCelSprites(shared: FxSharedUniforms, ringCap: number, immC
     uniforms: {
       ...shared,
       uMinPixels: { value: 0 },
+      uSightline: { value: 1 },
       uCelPal: { value: CEL_PALETTE_LINEAR },
     },
     transparent: false,

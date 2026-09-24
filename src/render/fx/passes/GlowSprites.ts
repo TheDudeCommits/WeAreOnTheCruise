@@ -33,6 +33,7 @@ varying float vAge;
 varying float vErode;
 varying float vSpeed;
 varying float vStretch;
+varying float vOccl;
 
 void main() {
   vec2 uv = vUv;

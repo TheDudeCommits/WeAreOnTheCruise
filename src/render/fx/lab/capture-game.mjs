@@ -38,7 +38,10 @@ try {
   for (const [name, ship, weapons, spawns, [warm, after], action] of SCENES) {
     if (only.length && !only.some((o) => name.startsWith(o))) continue;
     await page.goto(`${base}/?run=${ship}:sunward-shallows&god=1&seed=fx-${name}&hud=0`, { waitUntil: 'load' });
-    await page.waitForFunction(() => window.__CRUISE__?.ready === true && window.__CRUISE__.screen() === 'run', null, { timeout: 90000 });
+    await page.waitForFunction(() => window.__CRUISE__?.ready === true, null, { timeout: 90000 });
+    // ?run= refuses locked ships; the bridge's startRun unlocks them first
+    await page.evaluate((ship) => { const C = window.__CRUISE__; if (C.screen() !== 'run') C.startRun(ship, 'sunward-shallows'); }, ship);
+    await page.waitForFunction(() => window.__CRUISE__.screen() === 'run', null, { timeout: 30000 });
     await page.evaluate(({ weapons, spawns, action }) => {
       const C = window.__CRUISE__;
       for (const [id, lv] of weapons) C.debug.weapon(id, lv);

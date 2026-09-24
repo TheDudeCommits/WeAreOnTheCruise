@@ -400,7 +400,7 @@ export class Sakuga {
     this.fireballs(x, y, z, 7 + 4 * s, 9.5 * s, 2.4 * s, 12 * s, kind === 'fire' ? 1.2 : kind === 'large' || kind === 'powder' ? 1.15 : 0.95, 0, CelPal.Fire);
     this.sparks(x, y, z, 10 + 5 * s, 34 * Math.sqrt(s), GlowPal.Spark, 0, 1, 0, 0.3, 0.55);
     const smokePal = kind === 'powder' || kind === 'large' ? CelPal.WreckSmoke : CelPal.DarkSmoke;
-    const smokeN = kind === 'small' ? 2 : kind === 'large' || kind === 'powder' ? 7 : 4;
+    const smokeN = kind === 'small' || kind === 'fire' ? 2 : kind === 'large' || kind === 'powder' ? 7 : 4;
     this.smoke(x, y + 2 * s, z, smokeN, 4 * s, 11 * s, smokePal, 2.6, 0, 9 * s, 0, 4 * s, 4, 2.2 * s, 0.14, 0.4);
     if (kind === 'large' || kind === 'powder') {
       // mushroom cap: a ring of puffs riding the column

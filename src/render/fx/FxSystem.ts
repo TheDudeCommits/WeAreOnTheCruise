@@ -89,7 +89,7 @@ export class FxSystem implements RenderSystem {
     this.passes = [cel, glow, heads];
     this.kit = {
       cel, glow, heads, trails, beams, ropes, decals, debris, props, numbers, walls, juice: this.juice, flotsam: new Flotsam(),
-      water: new WaterSampler(), ocean: null, ships: null, focusX: 0, focusZ: 0, windX: 0, windZ: 0, clock: 0, q: 1, spawned: 0,
+      water: new WaterSampler(), ocean: null, ships: null, camX: 0, camY: 100, camZ: 0, focusX: 0, focusZ: 0, windX: 0, windZ: 0, clock: 0, q: 1, spawned: 0,
     };
     this.sakuga = new Sakuga(this.kit);
     this.events = new EventFx(this.kit, this.sakuga);
@@ -130,6 +130,7 @@ export class FxSystem implements RenderSystem {
     k.ships = ctx.services.ships;
     k.focusX = ctx.focus.x;
     k.focusZ = ctx.focus.z;
+    if (this.camera) { k.camX = this.camera.position.x; k.camY = this.camera.position.y; k.camZ = this.camera.position.z; }
     k.water.sync(ctx.time, ctx.sea.waveScale, ctx.services.ocean, ctx.focus.x, ctx.focus.z);
     const wind = 2 + ctx.sea.windStrength * 5;
     k.windX = Math.sin(ctx.sea.windDir) * wind;
@@ -208,6 +209,7 @@ export class FxSystem implements RenderSystem {
     u.uFogRange.value.set(a.fogNear, a.fogFar);
     u.uViewport.value.set(ctx.viewport.width, ctx.viewport.height);
     u.uFlash.value = a.flash;
+    u.uFocus.value.set(ctx.focus.x, this.kit.water.height(ctx.focus.x, ctx.focus.z) + 5, ctx.focus.z);
     const cam = this.camera;
     if (cam) {
       u.uPixelWorld.value = (2 * Math.tan(THREE.MathUtils.degToRad(cam.fov) * 0.5)) / Math.max(1, ctx.viewport.height);

@@ -339,7 +339,7 @@ export class StateFx {
         const count = Math.max(3, Math.min(12, Math.round(r / 2)));
         for (let j = 0; j < count; j++) this.loopFlame(h.x, wy, h.z, r * 0.75, r * 0.62 * fade, id, j, CelPal.Fire);
         k.decals.imm(Decal.Glow, h.x, h.z, r * 1.4, r * 1.4, 0, 14, 0, 0xff8a2a, 0, 0xff8a2a, 1.1 * fade, 0.5, 0.5);
-        if (rand() < dt * 3 * k.q) fx.smoke(h.x + spread(r * 0.5), wy + r * 0.5, h.z + spread(r * 0.5), 1, r * 0.3, r * 0.8, CelPal.DarkSmoke, 2.2, 0, 3, 0, 1, 2.6, 0.5, 0, 0.4);
+        if (rand() < dt * 1.1 * k.q) fx.smoke(h.x + spread(r * 0.5), wy + r * 0.4, h.z + spread(r * 0.5), 1, r * 0.2, Math.min(9, r * 0.5), CelPal.DarkSmoke, 1.8, 0, 3, 0, 1, 2.6, 0.5, 0, 0.4);
         if (rand() < dt * 4 * k.q) fx.embers(h.x, wy + 1, h.z, 1, r * 0.6);
         break;
       }
@@ -379,32 +379,36 @@ export class StateFx {
         break;
       }
       case 'storm-cloud': {
+        // `radius` is the strike range (Thunderhead: 110 m); the visible cloud is capped so it never swallows the view
         const r = h.radius;
-        const cy = wy + 44;
+        const vr = Math.min(r, 34);
+        const cy = wy + 58;
         const count = 12;
         for (let j = 0; j < count; j++) {
           const a = hash01(id, j) * TAU + clock * 0.08;
-          const rr = r * 0.75 * Math.sqrt(hash01(id, j + 40));
+          const rr = vr * 0.8 * Math.sqrt(hash01(id, j + 40));
+          const px = h.x + Math.cos(a) * rr, py = cy + hash01(id, j + 80) * 7 - (j % 3) * 2, pz = h.z + Math.sin(a) * rr;
+          const size = Math.min(22, vr * 0.62) * (0.7 + 0.5 * hash01(id, j + 120)) * fade;
+          // erode puffs sitting on the camera → ship sightline
+          const occl = this.sightline(px, py, pz, size * 0.5);
           const c = k.cel.spec.reset();
-          c.at(h.x + Math.cos(a) * rr, cy + hash01(id, j + 80) * 7 - (j % 3) * 2, h.z + Math.sin(a) * rr)
-            .look(Cel.Cloud, CelPal.StormCloud).sized(r * 0.55 * (0.7 + 0.5 * hash01(id, j + 120)) * fade, 1).rotate(hash01(id, j + 160) * TAU)
-            .lived(1000, 0.999);
+          c.at(px, py, pz).look(Cel.Cloud, CelPal.StormCloud).sized(size, 1).rotate(hash01(id, j + 160) * TAU).lived(10, 0.5);
           c.seed = hash01(id, j + 200);
-          k.cel.imm(0);
+          k.cel.imm(10 * (0.3 + 0.66 * occl));
         }
-        k.decals.imm(Decal.Shadow, h.x, h.z, r * 1.25, r * 1.25, 0, 0, 0, 0x061426, 0.45 * fade, 0x061426, 0, 0.5);
+        k.decals.imm(Decal.Shadow, h.x, h.z, vr * 1.4, vr * 1.4, 0, 0, 0, 0x061426, 0.4 * fade, 0x061426, 0, 0.5);
         // ambient intra-cloud flicker only: damaging strikes arrive as 'lightning' events from the sim
         if (rand() < dt * 0.5) {
           const a = rand() * TAU;
-          fx.bolt(h.x + Math.cos(a) * r * 0.5, cy + spread(3), h.z + Math.sin(a) * r * 0.5, h.x - Math.cos(a) * r * 0.3, cy - 3, h.z - Math.sin(a) * r * 0.3,
+          fx.bolt(h.x + Math.cos(a) * vr * 0.5, cy + spread(3), h.z + Math.sin(a) * vr * 0.5, h.x - Math.cos(a) * vr * 0.3, cy - 3, h.z - Math.sin(a) * vr * 0.3,
             0.7, GlowPal.Lightning, 0.14, 0, 1, 3);
         }
-        if (ticked) fx.soft(h.x, cy, h.z, r * 1.6, GlowPal.Lightning, 0.2, 0.5);
+        if (ticked) fx.soft(h.x, cy, h.z, vr * 1.6, GlowPal.Lightning, 0.2, 0.5);
         // rain streaks
         const rain = Math.round(dt * 70 * k.q);
         for (let j = 0; j < rain; j++) {
           const gs = k.glow.spec.reset();
-          gs.at(h.x + spread(r * 0.8), cy - 6, h.z + spread(r * 0.8)).vel(k.windX * 2, -48, k.windZ * 2).look(Glow.Streak, GlowPal.Shield, Mode.Velocity)
+          gs.at(h.x + spread(vr * 0.8), cy - 6, h.z + spread(vr * 0.8)).vel(k.windX * 2, -48, k.windZ * 2).look(Glow.Streak, GlowPal.Shield, Mode.Velocity)
             .sized(0.25, 0.25).stretched(18).lived(0.8).bright(0.35);
           k.glow.emit();
         }
@@ -477,6 +481,21 @@ export class StateFx {
         break;
       }
     }
+  }
+
+  /** 0..1: how much a sphere at (x,y,z) of `radius` blocks the camera → focus sightline (1 = right on it). */
+  private sightline(x: number, y: number, z: number, radius: number): number {
+    const k = this.k;
+    const ax = k.camX, ay = k.camY, az = k.camZ;
+    const bx = k.focusX, by = this.fx.wy(k.focusX, k.focusZ) + 4, bz = k.focusZ;
+    const dx = bx - ax, dy = by - ay, dz = bz - az;
+    const len2 = dx * dx + dy * dy + dz * dz || 1;
+    let t = ((x - ax) * dx + (y - ay) * dy + (z - az) * dz) / len2;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const cx = ax + dx * t - x, cy = ay + dy * t - y, cz = az + dz * t - z;
+    const d = Math.sqrt(cx * cx + cy * cy + cz * cz);
+    const inner = radius + 4, outer = radius + 26;
+    return d <= inner ? 1 : d >= outer ? 0 : 1 - (d - inner) / (outer - inner);
   }
 
   /** A looping cel flame (hash-stable per object/index) — boils forever without particles to track. */
