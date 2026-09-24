@@ -334,7 +334,8 @@ void main() {
   float covS = max(coast, surf * 0.9) * shoreValid;
   float covE = max(covI, covS);
   // Offset keeps zero coverage strictly foam-free (blob maxima never pop up as dots).
-  float xI = covE * 1.12 - (1.0 - fE.r) - 0.07;
+  // Large-scale patch noise varies lace density so the 26 m shape tile never reads as a repeating pattern.
+  float xI = covE * 1.12 - (1.0 - fE.r) - 0.07 + (vCloud - 0.5) * 0.22 * smoothstep(0.1, 0.4, covE);
   float xC = covC - 0.45 + (fL.r - 0.5) * 0.3;
   // Sharp, fwidth-antialiased shapes up close; at distance (sub-pixel shapes) converge to the expected foam
   // fraction for the coverage instead of widening the threshold (which would invent foam from nothing).

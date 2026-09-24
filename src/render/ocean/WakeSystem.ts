@@ -415,7 +415,7 @@ export class WakeSystem {
         // Foam left behind the breaking crest.
         const bx = h.x - ax * w * 0.8;
         const bz = h.z - az * w * 0.8;
-        f.persistentBatch.push(f.relX(bx), f.relZ(bz), -az, ax, Math.max(h.radius, 10), w * 0.5, SHAPE_CAPSULE, Math.max(h.radius, 10) * 0.85, 0.6, 0.3, 0, 0, 0, 0, 0.8 * env, env);
+        f.persistentBatch.push(f.relX(bx), f.relZ(bz), -az, ax, Math.max(h.radius, 10), w * 0.5, SHAPE_CAPSULE, Math.max(h.radius, 10) * 0.85, 0.7, 0.2, 0, 0, 0, 0, 0.36 * env, 0.8 * env);
         break;
       }
       case 'mine':
