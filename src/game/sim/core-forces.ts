@@ -85,7 +85,7 @@ function updateTethers(c: CoreSim): void {
     const t = core.tTarget[k];
     if (!t) continue;
     core.tTime[k] = core.tTime[k]! - dt;
-    if (t.life !== 'alive' || core.tTime[k]! <= 0 || !p.alive) { core.tTarget[k] = null; core.tAnchor[k] = null; continue; }
+    if (!targetable(t) || core.tTime[k]! <= 0 || !p.alive) { core.tTarget[k] = null; core.tAnchor[k] = null; continue; }
     let a = core.tAnchor[k] ?? null;
     if (a && a.life !== 'alive') { a = null; core.tAnchor[k] = null; }
     if (isBoss(t)) continue; // bosses shrug off the line (still slowed)

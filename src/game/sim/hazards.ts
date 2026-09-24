@@ -290,7 +290,7 @@ function updateWaveFront(c: CoreSim, h: HazardState, i: number): void {
         const stun = (flags & HF_STUN) !== 0 ? core.hD[i]! : 0;
         c.hitTarget(t, h.damage, h.weapon, false, core.hKnock[i]!, h.x - dirX * 20, h.z - dirZ * 20, stun > 0 ? 'stunned' : null, stun, 1, false);
       }
-      if (!isBoss(t) && t.life === 'alive') { t.x += h.vx * dt * 0.75; t.z += h.vz * dt * 0.75; }
+      if (!isBoss(t) && targetable(t)) { t.x += h.vx * dt * 0.75; t.z += h.vz * dt * 0.75; }
     }
     if (flags & HF_WASH) {
       const shots = c.state.projectiles;
