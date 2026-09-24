@@ -78,7 +78,7 @@ Ports: critic 4195; streams 4181–4194; the lead's QA server 4173. Stop your se
 ### `scripts/gauntlet/evidence.mjs`: screens and numbers
 
 ```sh
-node scripts/gauntlet/evidence.mjs http://127.0.0.1:4195 output/gauntlet/round-N            # full, about 8 minutes
+node scripts/gauntlet/evidence.mjs http://127.0.0.1:4195 output/gauntlet/round-N            # full, about 6–7 minutes
 node scripts/gauntlet/evidence.mjs http://127.0.0.1:4195 output/gauntlet/round-N-quick --quick   # about 2 minutes
 node scripts/gauntlet/evidence.mjs <base> <out> --stages bosses,victory --seas the-gloam
 ```
