@@ -70,6 +70,16 @@
   -webkit-text-stroke: var(--stroke-s) var(--ink);
   paint-order: stroke fill;
 }
+.cr-evtrack__dist {
+  flex: none;
+  margin-left: auto;
+  font: 400 var(--fs-16)/1 var(--f-comic);
+  letter-spacing: .06em;
+  color: var(--ev);
+  -webkit-text-stroke: var(--stroke-s) var(--ink);
+  paint-order: stroke fill;
+}
+.cr-evtrack__dist:empty { display: none; }
 .cr-evtrack.is-urgent .cr-evtrack__time { color: var(--red); animation: cr-evtrack-blink .5s steps(2, jump-none) infinite; }
 @keyframes cr-evtrack-blink { 50% { color: var(--white); } }
 .cr-evtrack__goal {
@@ -120,8 +130,8 @@
 /* Outcome stamp. */
 .cr-evtrack__stamp {
   position: absolute;
-  right: calc(-14 * var(--u));
-  top: calc(-18 * var(--u));
+  right: calc(-18 * var(--u));
+  top: calc(-30 * var(--u));
   padding: calc(3 * var(--u)) calc(12 * var(--u));
   border-radius: calc(6 * var(--u));
   font: 400 var(--fs-24)/1 var(--f-brush);

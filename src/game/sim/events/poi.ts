@@ -1,7 +1,7 @@
 /**
  * Points of interest (EVENTS): small, optional things out on the water between set pieces.
  *  - Trade-wind lanes ('trade-wind' patches in a row): a current that carries every ship along it; sailing WITH it
- *    also builds real hull speed (up to TRADE_CAP × top speed) that the ship keeps after leaving.
+ *    also builds real hull speed (up to EVENT_TUNING.tradeWindCap × top speed) that the ship keeps after leaving.
  *  - Lighthouse beacons ('beacon'): a signal ring off the shore of a lighthouse island in reach (once per island per
  *    run); sailing through it grants the keeper's blessing: faster guns (frenzy) and a light shield for a while.
  *  - Floating salvage ('salvage'): wreckage adrift; sail over it to haul up treasure (sometimes doubloons or a crate).
@@ -49,12 +49,28 @@ export function updatePois(c: SimContext, rt: EventRuntime): void {
   }
 }
 
+/** QA: puts a point of interest in front of the ship now ('trade-wind' | 'salvage' | 'beacon'). */
+export function forcePoi(c: SimContext, kind: string): boolean {
+  const p = c.state.player;
+  if (kind === 'trade-wind') { spawnLane(c); return true; }
+  if (kind === 'salvage' || kind === 'beacon') {
+    const spot = openSpot(c, p.x, p.z, travelBearing(c), 90, 24, 1.2, 8);
+    if (!spot) return false;
+    const salvage = kind === 'salvage';
+    return !!c.spawnHazard({
+      kind, team: 'player', x: spot.x, z: spot.z, radius: salvage ? EVENT_TUNING.salvageRadius : EVENT_TUNING.beaconRadius,
+      ttl: salvage ? EVENT_TUNING.salvageTtl : EVENT_TUNING.beaconTtl, damage: 0,
+    });
+  }
+  return false;
+}
+
 // ───────────────────────── Trade winds ─────────────────────────
 
 function spawnLane(c: SimContext): void {
   const p = c.state.player;
   const b = travelBearing(c);
-  const spot = openSpot(c, p.x, p.z, b + rand(c, -0.7, 0.7), 170, 40, 1.4, 8);
+  const spot = openSpot(c, p.x, p.z, b + rand(c, -0.6, 0.6), 135, 40, 1.4, 8);
   if (!spot) return;
   const cx = spot.x, cz = spot.z;
   // The current runs across or along the ship's course, never straight at it.

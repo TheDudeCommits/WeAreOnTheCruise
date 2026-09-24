@@ -32,13 +32,15 @@ export class PoiFx {
     if (env <= 0.02) return;
     const sp = Math.hypot(h.vx, h.vz) || 1;
     const dx = h.vx / sp, dz = h.vz / sp;
-    const n = Math.round(dt * 16 * k.q * env + rand());
+    // A pale band of fast water along the current.
+    k.decals.imm(Decal.Blot, h.x, h.z, h.radius * 0.62, h.radius * 1.15, Math.atan2(dx, dz), 0, 0, 0xd8f7ff, 0.32 * env, 0x8fd3ea, 0, hash01(h.id, 7));
+    const n = Math.round(dt * 26 * k.q * env + rand());
     for (let i = 0; i < n; i++) {
       const a = rand() * TAU, r = h.radius * Math.sqrt(rand());
       const x = h.x + Math.cos(a) * r - dx * h.radius * 0.5, z = h.z + Math.sin(a) * r - dz * h.radius * 0.5;
       const gs = k.glow.spec.reset();
       gs.at(x, this.fx.wy(x, z) + range(0.6, 2.5), z).vel(dx * sp * 2.6, 0, dz * sp * 2.6).look(Glow.Streak, GlowPal.Glint, Mode.Velocity)
-        .sized(0.45, 0.45).stretched(16).lived(range(0.9, 1.4)).bright(0.45 * env);
+        .sized(0.55, 0.55).stretched(18).lived(range(0.9, 1.4)).bright(0.85 * env);
       k.glow.emit();
     }
     if (this.wakeT <= 0) {
@@ -66,6 +68,7 @@ export class PoiFx {
     const clock = k.clock, id = h.id;
     const fade = Math.max(0, Math.min(1, (h.ttl - h.age) / 3));
     if (fade <= 0.02) return;
+    k.decals.imm(Decal.Ring, h.x, h.z, h.radius * 1.25, h.radius * 1.25, -clock * 0.5, 0, 0.8, 0xffd76a, 0.7 * fade, 0x5a4210, 0.35, 0.5);
     for (let j = 0; j < 5; j++) {
       const a = hash01(id, j) * TAU, r = h.radius * 0.6 * hash01(id, j + 10);
       const px = h.x + Math.cos(a) * r, pz = h.z + Math.sin(a) * r;
@@ -75,12 +78,12 @@ export class PoiFx {
     for (let j = 0; j < 2; j++) {
       const a = hash01(id, j + 30) * TAU, r = h.radius * 0.45;
       const px = h.x + Math.cos(a) * r, pz = h.z + Math.sin(a) * r;
-      k.props.add(Prop.Barrel, px, fx.wy(px, pz) + 0.4 + Math.sin(clock * 2 + j) * 0.2, pz, a, Math.PI / 2, Math.sin(clock * 1.6 + j) * 0.2, 1.1, 0xb07a44);
+      k.props.add(Prop.Barrel, px, fx.wy(px, pz) + 0.5 + Math.sin(clock * 2 + j) * 0.2, pz, a, Math.PI / 2, Math.sin(clock * 1.6 + j) * 0.2, 1.6, 0xb07a44);
     }
     const wy = fx.wy(h.x, h.z);
-    k.props.add(Prop.Crate, h.x, wy + 0.8 + Math.sin(clock * 1.4) * 0.2, h.z, hash01(id, 40) * TAU, Math.sin(clock) * 0.12, 0, 1.3, 0xd9b27a);
+    k.props.add(Prop.Crate, h.x, wy + 1 + Math.sin(clock * 1.4) * 0.2, h.z, hash01(id, 40) * TAU, Math.sin(clock) * 0.12, 0, 2, 0xd9b27a);
     const gl = k.glow.spec.reset();
-    gl.at(h.x, wy + 5, h.z).look(Glow.Glint, GlowPal.Gold).sized(6, 6).lived(1000).rotate(clock * 0.6).bright(fade);
+    gl.at(h.x, wy + 6, h.z).look(Glow.Glint, GlowPal.Gold).sized(10, 10).lived(1000).rotate(clock * 0.6).bright(fade);
     k.glow.imm(clock % 100);
     if (rand() < 0.04) fx.bubbles(h.x + spread(h.radius * 0.5), h.z + spread(h.radius * 0.5), 1, 3, 1.2);
   }

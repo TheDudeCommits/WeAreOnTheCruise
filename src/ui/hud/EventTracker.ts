@@ -22,6 +22,8 @@ const GLYPH: Readonly<Record<string, GlyphId>> = {
 
 /** Objectives measured in seconds (progress = seconds done). */
 const SECONDS = new Set(['sunken-treasure']);
+/** Objectives the ship must sail to: the tracker shows how far off they are. */
+const DISTANCE = new Set(['sunken-treasure', 'admiralty-blockade']);
 
 /** Outcome stamp words. */
 const WIN: Readonly<Record<string, string>> = {
@@ -43,6 +45,7 @@ export class EventTracker {
   private readonly time: TextCell;
   private readonly count: TextCell;
   private readonly stamp: TextCell;
+  private readonly dist: TextCell;
   private readonly fill: StyleCell;
   private readonly on: ClassCell;
   private readonly win: ClassCell;
@@ -56,6 +59,7 @@ export class EventTracker {
   private lastProgress = -1;
   private lastSecond = -1;
   private lastFill = -1;
+  private lastDist = -1;
   private hideAt = 0;
 
   constructor() {
@@ -64,12 +68,13 @@ export class EventTracker {
     const time = h('span', 'cr-evtrack__time');
     const count = h('span', 'cr-evtrack__count');
     const stamp = h('span', 'cr-evtrack__stamp');
+    const dist = h('span', 'cr-evtrack__dist');
     const fill = h('span', 'cr-evtrack__fill');
     this.icon = h('span', 'cr-evtrack__icon');
     this.bar = h('span', 'cr-evtrack__bar', fill, h('span', 'cr-evtrack__notch'), count);
     this.el = h('div', 'cr-evtrack',
       this.icon,
-      h('div', 'cr-evtrack__body', h('div', 'cr-evtrack__head', name, time), goal, this.bar),
+      h('div', 'cr-evtrack__body', h('div', 'cr-evtrack__head', name, dist, time), goal, this.bar),
       stamp,
     );
     this.name = new TextCell(name);
@@ -77,6 +82,7 @@ export class EventTracker {
     this.time = new TextCell(time);
     this.count = new TextCell(count);
     this.stamp = new TextCell(stamp);
+    this.dist = new TextCell(dist);
     this.fill = new StyleCell(fill, 'transform');
     this.on = new ClassCell(this.el, 'is-on');
     this.win = new ClassCell(this.el, 'is-win');
@@ -107,7 +113,7 @@ export class EventTracker {
       if (this.hideAt > 0 && f.time >= this.hideAt) { this.hideAt = 0; this.on.set(false); this.leaving.set(false); }
       return;
     }
-    this.render(ev);
+    this.render(ev, run);
   }
 
   private begin(ev: WorldEventState): void {
@@ -117,6 +123,8 @@ export class EventTracker {
     this.lastProgress = -1;
     this.lastSecond = -1;
     this.lastFill = -1;
+    this.lastDist = -1;
+    this.dist.set('');
     this.el.dataset.event = ev.id;
     this.icon.replaceChildren(glyph(GLYPH[ev.id] ?? 'flare'));
     this.name.set(ev.name);
@@ -133,7 +141,7 @@ export class EventTracker {
     ], { duration: 380, easing: 'cubic-bezier(.2,1.3,.3,1)' });
   }
 
-  private render(ev: WorldEventState): void {
+  private render(ev: WorldEventState, run: Readonly<RunState>): void {
     const left = Math.max(0, ev.duration - ev.time);
     const sec = Math.ceil(left);
     if (sec !== this.lastSecond) {
@@ -158,6 +166,13 @@ export class EventTracker {
     }
     const q = Math.round(frac * 400);
     if (q !== this.lastFill) { this.lastFill = q; this.fill.set(`scaleX(${(q / 400).toFixed(4)})`); }
+    // How far off a sail-to objective is (hidden once the ship is there or the verdict is in).
+    let dm = 0;
+    if (DISTANCE.has(ev.id) && ev.x !== undefined && ev.z !== undefined && this.verdict === 0) {
+      const d = Math.hypot(ev.x - run.player.x, ev.z - run.player.z) - (ev.radius ?? 0);
+      dm = d > 15 ? Math.round(d / 10) * 10 : 0;
+    }
+    if (dm !== this.lastDist) { this.lastDist = dm; this.dist.set(dm > 0 ? `${dm} m` : ''); }
   }
 
   private outcome(success: boolean): void {

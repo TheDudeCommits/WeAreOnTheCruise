@@ -2,7 +2,9 @@
 // captures screenshots of each at a few moments, plus the tracker state, hazards, the CPU profiler and scene stats.
 // Usage:
 //   node scripts/qa-events.mjs --url http://127.0.0.1:4193 --out output/r1-events/qa [--events kraken-rising,maelstrom]
-//     [--ship sunlion] [--hud 0] [--shots 1.5,4,8]
+//     [--ship sunlion] [--hud 0] [--shots 1.5,4,8] [--win]
+// Points of interest are forced with the same hook: --events poi:trade-wind,poi:salvage,poi:beacon.
+// --win sinks everything after the last shot and captures the tracker's outcome flourish.
 // The browser always closes in `finally`.
 import { chromium } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -20,6 +22,7 @@ const only = args.events ? new Set(args.events.split(',')) : null;
 const PLAN = [
   { sea: 'sunward-shallows', minute: 6, events: ['kraken-rising', 'rogue-wave', 'maelstrom', 'admiralty-blockade', 'volcanic-eruption', 'sunken-treasure', 'bounty-contract'] },
   { sea: 'the-gloam', minute: 3.5, events: ['ghost-fleet'] },
+  { sea: 'sunward-shallows', minute: 4, events: ['poi:trade-wind', 'poi:salvage', 'poi:beacon'] },
 ];
 await mkdir(out, { recursive: true });
 const log = { url, ship, events: [], errors: [] };
@@ -60,7 +63,7 @@ try {
     await page.keyboard.press('KeyW');
     await page.evaluate(() => { window.__CRUISE__.profiler.enable(true); window.__CRUISE__.profiler.reset(); });
     await page.waitForTimeout(2500);
-    const SLOW = new Set(['rogue-wave', 'volcanic-eruption', 'maelstrom']);
+    const SLOW = new Set(['rogue-wave', 'volcanic-eruption', 'maelstrom', 'poi:trade-wind', 'poi:salvage', 'poi:beacon']);
     for (const id of events) {
       // Hold the ship near the set pieces that are best seen from a standstill (half sail), full sail otherwise.
       if (SLOW.has(id)) { await page.keyboard.press('KeyS'); } else { await page.keyboard.press('KeyW'); await page.keyboard.press('KeyW'); }
@@ -69,16 +72,23 @@ try {
       let t = 0;
       for (const at of shots) {
         while (t < at) {
-          await page.evaluate((s) => window.__CRUISE__.steer(s), id === 'sunken-treasure' ? 0 : 0.18);
+          await page.evaluate((s) => window.__CRUISE__.steer(s), id === 'sunken-treasure' || id.startsWith('poi:') ? 0 : 0.18);
           await page.waitForTimeout(250);
           t += 0.25;
           // Clear the level-up / chest screens so the run keeps going.
           const status = await page.evaluate(() => window.__CRUISE__.summary().status);
           if (status === 'levelup' || status === 'chest') await page.evaluate(() => window.__CRUISE__.chooseCard(0));
         }
-        const file = `${id}-${String(at).replace('.', '_')}s.png`;
+        const file = `${id.replace(':', '-')}-${String(at).replace('.', '_')}s.png`;
         await page.screenshot({ path: `${out}/${file}` });
         entry.samples.push({ at, file, ...(await page.evaluate(state)) });
+      }
+      if (args.win && !id.startsWith('poi:')) {
+        await page.evaluate(() => window.__CRUISE__.debug.killAll());
+        await page.waitForTimeout(700);
+        const file = `${id}-outcome.png`;
+        await page.screenshot({ path: `${out}/${file}` });
+        entry.samples.push({ at: 'outcome', file, ...(await page.evaluate(state)) });
       }
       log.events.push(entry);
       console.log(JSON.stringify({ id, started, last: entry.samples.at(-1)?.worldEvent, hazards: entry.samples.at(-1)?.summary?.hazards, fps: entry.samples.map((s) => Math.round(s.metrics?.fps ?? 0)) }));
