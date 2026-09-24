@@ -60,6 +60,9 @@ export interface OceanScreenStats {
   glowPeak: number;
   /** Any of foam, crest or glow: the "pattern" share of the water. */
   pattern: number;
+  /** Sun/moon highlights (glints + sheen ≥ 25% of the rim reference) and glints alone, over all water. */
+  highlight: number;
+  glints: number;
   radius: number;
 }
 
@@ -208,7 +211,7 @@ export class OceanSystem implements RenderSystem, OceanServices {
    * Synchronous readback; tools only.
    */
   screenStats(radius = 150, rimReference = 1): OceanScreenStats {
-    const out: OceanScreenStats = { waterPixels: 0, foam: 0, foamInDisc: 0, foamMeanInDisc: 0, crest: 0, glow: 0, glowPeak: 0, pattern: 0, radius };
+    const out: OceanScreenStats = { waterPixels: 0, foam: 0, foamInDisc: 0, foamMeanInDisc: 0, crest: 0, glow: 0, glowPeak: 0, pattern: 0, highlight: 0, glints: 0, radius };
     const renderer = this.renderer;
     const surface = this.surface;
     const camera = surface?.mainCamera;
@@ -251,6 +254,18 @@ export class OceanSystem implements RenderSystem, OceanServices {
       if (water) { out.foam = foam / water; out.crest = crest / water; out.glow = glow / water; out.pattern = pattern / water; }
       if (disc) { out.foamInDisc = foamDisc / disc; out.foamMeanInDisc = foamMean / disc; }
       out.glowPeak = peak;
+      // Second view: highlights.
+      u.uDebug!.value = 9;
+      renderer.clear(true, true, false);
+      renderer.render(surface.mesh, camera);
+      renderer.readRenderTargetPixels(target, 0, 0, w, h, pixels);
+      let hl = 0, gl = 0;
+      for (let i = 0; i < w * h; i++) {
+        if (pixels[i * 4 + 3]! < 64) continue;
+        if (pixels[i * 4]! > 64) hl++;
+        if (pixels[i * 4 + 1]! > 64) gl++;
+      }
+      if (water) { out.highlight = hl / water; out.glints = gl / water; }
     } finally {
       u.uDebug!.value = previousDebug;
       renderer.setRenderTarget(previousTarget);

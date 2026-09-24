@@ -375,7 +375,8 @@ void main() {
   // Two-tone cel foam: faces turned away from the sun (wave backs, the shadow side of the bow wave) take the
   // blue-grey shadow tone, which gives raised foam its volume.
   float foamLitK = smoothstep(-0.2, -0.08, dot(Nm, L) - L.y);
-  vec3 foamLit = mix(uFoamShadow * 1.18, uFoamColor * mix(vec3(1.0), uSunColor, 0.22), foamLitK) * mix(0.55, 1.0, uLookC.w);
+  // Moonlit foam stays dim: at night a wake is a soft grey-blue trace, not a milky band (the glow marks fresh water).
+  vec3 foamLit = mix(uFoamShadow * 1.18, uFoamColor * mix(vec3(1.0), uSunColor, 0.22), foamLitK) * mix(0.55, 1.0, uLookC.w) * mix(1.0, 0.6, uLookC.y);
   // Aerated churn under a pile-up's lace: turquoise, lighter than the body, darker than foam.
   vec3 churn = mix(uSSS, uShallow, 0.45) * (0.5 + 0.5 * uLookC.w);
   col = mix(col, churn, sat * smoothstep(0.15, 0.45, covI) * 0.62);
@@ -433,11 +434,16 @@ void main() {
     else if (uDebug < 6.5) col = vec3(covI, covS, covC);
     else if (uDebug < 7.5) col = vec3(crowd, sat, glow);
     else {
-      // QA stats view (OceanSystem.screenStats): R = visible white foam, G = crest foam, B = glow relative to the
-      // rim reference; A = 1 inside the stats disc, 0.5 outside (0 = not water).
+      // QA stats views (OceanSystem.screenStats), A = 1 inside the stats disc, 0.5 outside (0 = not water).
+      //   8: R = visible white foam, G = crest foam, B = glow relative to the rim reference;
+      //   9: R = sun/moon highlights (glints + sheen) relative to the rim reference, G = glints alone.
       float foamVis = clamp(max(foamSolid, lace) + foamEdge * 0.35, 0.0, 1.0);
       float glowL = dot(uBiolum * glow, vec3(0.2126, 0.7152, 0.0722));
-      col = vec3(foamVis, solidC, clamp(glowL / max(uStats.w, 1e-3), 0.0, 1.0));
+      vec3 hl = (uSunColor * glint * uLookA.x + sheenCol * sheen) * sunUp * (1.0 - foamSolid * 0.85);
+      float hlL = dot(hl, vec3(0.2126, 0.7152, 0.0722));
+      float glL = dot(uSunColor * glint * uLookA.x * sunUp, vec3(0.2126, 0.7152, 0.0722));
+      if (uDebug < 8.5) col = vec3(foamVis, solidC, clamp(glowL / max(uStats.w, 1e-3), 0.0, 1.0));
+      else col = vec3(clamp(hlL / max(uStats.w, 1e-3), 0.0, 1.0), clamp(glL / max(uStats.w, 1e-3), 0.0, 1.0), 0.0);
       alpha = distance(vWorld.xz, uStats.xy) < uStats.z ? 1.0 : 0.5;
       gl_FragColor = vec4(col, alpha);
       return;
