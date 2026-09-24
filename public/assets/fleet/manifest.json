@@ -501,6 +501,546 @@
       "sha256": "fa44b57c141886d17d4928f6eb08ab9272d1a69fe29216a8d9b5a4e877290392",
       "sourceSha256": "c4f060ac42cd3e761a0726dbd339b6e9ae10e153ff10540dffefc44c6270092b",
       "notes": "Extra: skeleton deckhand with dagger for Gloam Wraith ships (tint teal/emissive at runtime)."
+    },
+    "cannon": {
+      "file": "/assets/fleet/cannon.glb",
+      "length": 2.2,
+      "height": 1.68,
+      "tris": 2362,
+      "materials": 1,
+      "role": "prop",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Prop_Cannon.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Prop_Cannon.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "bytes": 25440,
+      "sha256": "37acdf03a916f0f9777d82d56e354abba77be01f34cf237fe54d3055f6eed2e2",
+      "sourceSha256": "3461566b94dd978a52d27461d687d086db10abb932c812d332d38620f9141695",
+      "notes": "Deck cannon on a wooden carriage; muzzle toward −Z. Broadside/bow-chaser mounts."
+    },
+    "mortar": {
+      "file": "/assets/fleet/mortar.glb",
+      "length": 2.2,
+      "height": 1.78,
+      "tris": 2775,
+      "materials": 1,
+      "role": "prop",
+      "source": {
+        "kind": "meshy",
+        "uid": "01a0d1dd-482e-72e9-b018-3f1d41709641",
+        "author": "Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)",
+        "title": "Deck mortar",
+        "license": "Meshy (owner-generated)",
+        "url": ""
+      },
+      "bytes": 102136,
+      "sha256": "a196ca3591a09073764edac39ebf9b1643d786adc7908e9beeb8f62f6b6479f7",
+      "sourceSha256": "1572d575476737c314cf302cd8ebcfe9b798632f3aa6279a2c1f964456958b46",
+      "notes": "Squat iron mortar on a round wooden mount (stern-mortar weapon); muzzle leans toward −Z."
+    },
+    "rocket-rack": {
+      "file": "/assets/fleet/rocket-rack.glb",
+      "length": 2,
+      "height": 2,
+      "tris": 2851,
+      "materials": 1,
+      "role": "prop",
+      "source": {
+        "kind": "meshy",
+        "uid": "01a0d1dd-5c6c-762d-8e54-611dd3f5a1b3",
+        "author": "Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)",
+        "title": "Rocket rack",
+        "license": "Meshy (owner-generated)",
+        "url": ""
+      },
+      "bytes": 120392,
+      "sha256": "a74e9b1ea35892a590608614cb168977f5e0feb9070e4fb03b7670a04a5828c1",
+      "sourceSha256": "a6aed54e010a86e680ea36dc7d8b72428821f20c0819c2c8381a0e9bd0e553ce",
+      "notes": "Wooden rack of six red rockets angled up and toward −Z (rocket-rack weapon, deck mount)."
+    },
+    "swivel-gun": {
+      "file": "/assets/fleet/swivel-gun.glb",
+      "length": 1.6,
+      "height": 1.6,
+      "tris": 2966,
+      "materials": 1,
+      "role": "prop",
+      "source": {
+        "kind": "meshy",
+        "uid": "01a0d1dd-7198-7286-997a-559c19c534c9",
+        "author": "Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)",
+        "title": "Swivel gun",
+        "license": "Meshy (owner-generated)",
+        "url": ""
+      },
+      "bytes": 111340,
+      "sha256": "6bc6f370e688ccf477c305d720e4bfd68b9ae169ea8e6404fa722ceebd08edb4",
+      "sourceSha256": "e91aa61338d6d53c0ec49fabcfc331a722804b6321007040df19a386869ef40d",
+      "notes": "Brass swivel gun on a Y-pivot and wooden post (swivel-guns weapon, rail mount); rotate the whole prop about Y."
+    },
+    "harpoon-gun": {
+      "file": "/assets/fleet/harpoon-gun.glb",
+      "length": 2.6,
+      "height": 1.92,
+      "tris": 2816,
+      "materials": 1,
+      "role": "prop",
+      "source": {
+        "kind": "meshy",
+        "uid": "01a0d1dd-8c2f-72d7-829b-0c67bdb39bd0",
+        "author": "Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)",
+        "title": "Harpoon gun",
+        "license": "Meshy (owner-generated)",
+        "url": ""
+      },
+      "bytes": 96816,
+      "sha256": "425b519d37339d6de1015e81ea829bac9ede3ca7b25863293b8b57f525fe36fb",
+      "sourceSha256": "09cecab82a615825f1dc9e9437925905278a4d082b7173b599e361287bc19adf",
+      "notes": "Mounted harpoon cannon on a pivot base, harpoon tip toward −Z (harpoon weapon, bow mount)."
+    },
+    "storm-rod": {
+      "file": "/assets/fleet/storm-rod.glb",
+      "length": 0.88,
+      "height": 4,
+      "tris": 2939,
+      "materials": 1,
+      "role": "prop",
+      "source": {
+        "kind": "meshy",
+        "uid": "01a0d1dd-9f90-76c9-ac91-2899f928bb1b",
+        "author": "Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)",
+        "title": "Storm rod",
+        "license": "Meshy (owner-generated)",
+        "url": ""
+      },
+      "bytes": 122900,
+      "sha256": "b5f1ceb8d39e65fd8ac2f126e45b9c8dcb368db065a8d24da1ef3ffbd95f681c",
+      "sourceSha256": "ab0437f724d6b6a840f360c874c1ceaf89e1c90093f4081531070460cb4afd0e",
+      "notes": "Copper three-pronged lightning rod with blue insulator rings (storm-rod weapon, mast-top mount); prongs at y ≈ 3.2–4 m."
+    },
+    "mine": {
+      "file": "/assets/fleet/mine.glb",
+      "length": 1.31,
+      "height": 1.6,
+      "tris": 2940,
+      "materials": 1,
+      "role": "prop",
+      "source": {
+        "kind": "meshy",
+        "uid": "01a0d1dd-b0f4-76f6-97f8-b591345b4979",
+        "author": "Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)",
+        "title": "Sea mine",
+        "license": "Meshy (owner-generated)",
+        "url": ""
+      },
+      "bytes": 68040,
+      "sha256": "2be5fa28cdcdb76eca2cca7c92939654d0d015a60bf526556ee4ac2e68b959d9",
+      "sourceSha256": "c0a0a8cc433f0ece81d4dcee896720dfea41ade70ed91b0123f166a714469034",
+      "notes": "Spiked sea mine with a chain loop (tide-mines hazard). Origin at the chain bottom; float it so the sphere centre (y ≈ 0.95 m) sits at the waterline."
+    },
+    "lantern": {
+      "file": "/assets/fleet/lantern.glb",
+      "length": 0.32,
+      "height": 0.7,
+      "tris": 2940,
+      "materials": 1,
+      "role": "prop",
+      "source": {
+        "kind": "meshy",
+        "uid": "01a0d1dd-c38f-759b-bb35-4592eb61b960",
+        "author": "Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)",
+        "title": "Ship lantern",
+        "license": "Meshy (owner-generated)",
+        "url": ""
+      },
+      "bytes": 61896,
+      "sha256": "06993519069f968b7ce768eed7232568c3230839d7b039d7b7207512224f9618",
+      "sourceSha256": "9c8f6cb857021322e7eecf037951828a70d15a59214adfb8cf8266f737bb715b",
+      "notes": "Iron ship lantern with amber panes (tier growth decoration); add a point light / bloom at y ≈ 0.3 m."
+    },
+    "powder-keg": {
+      "file": "/assets/fleet/powder-keg.glb",
+      "length": 0.74,
+      "height": 1,
+      "tris": 2353,
+      "materials": 1,
+      "role": "prop",
+      "source": {
+        "kind": "meshy",
+        "uid": "01a0d1dd-d637-7127-8e3b-16b60d9b7ff9",
+        "author": "Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)",
+        "title": "Powder keg",
+        "license": "Meshy (owner-generated)",
+        "url": ""
+      },
+      "bytes": 95164,
+      "sha256": "3f320f04c9a5476d09370ec733860388f09b2bf2e8ab1c63618e9b9c8d9c3d00",
+      "sourceSha256": "6f0819e851b617a1bb487709ff4ad899bbf5bd45b6796a939498df520804c675",
+      "notes": "Black powder keg with red bands and fuse (powder-keg pickup and fire-barrels/powder-keg hazards)."
+    },
+    "iron-ram": {
+      "file": "/assets/fleet/iron-ram.glb",
+      "length": 3.2,
+      "height": 2.17,
+      "tris": 2940,
+      "materials": 1,
+      "role": "prop",
+      "source": {
+        "kind": "meshy",
+        "uid": "01a0d1dd-e992-7045-8877-559bb56a2502",
+        "author": "Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)",
+        "title": "Iron ram prow cap",
+        "license": "Meshy (owner-generated)",
+        "url": ""
+      },
+      "bytes": 86996,
+      "sha256": "fe692a3032faad5a47bae798a791a870e1828dc260c595efb90538642fb82bca",
+      "sourceSha256": "b85fb43efda0a133bfec680a47ee04ec89eaff06667127133e7588e09b3a1677",
+      "notes": "Extra: riveted iron prow cap with spike toward −Z (iron-ram weapon, prow mount). Scale to the hull."
+    },
+    "barrel": {
+      "file": "/assets/fleet/barrel.glb",
+      "length": 1.19,
+      "height": 1.1,
+      "tris": 640,
+      "materials": 1,
+      "role": "prop",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Prop_Barrel.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Prop_Barrel.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "bytes": 10424,
+      "sha256": "5700a2ffe41f2f69e7436844daf4b413abf226cef3f802cedf64890e5c3520e4",
+      "sourceSha256": "5180ba3e2dd3a3485bf24a2e309dc5e24ec22deb2a2da15a516a02085fef66c4",
+      "notes": "Wooden barrel (fire-barrels drops, deck clutter, floating debris)."
+    },
+    "chest": {
+      "file": "/assets/fleet/chest.glb",
+      "length": 1.3,
+      "height": 0.82,
+      "tris": 1636,
+      "materials": 1,
+      "role": "prop",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Prop_Chest_Closed.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Prop_Chest_Closed.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "bytes": 28088,
+      "sha256": "36e9a59b58f2ab05acaebb47b25a43fce08935d08a59eb26551c5d429ce8badd",
+      "sourceSha256": "18e2bcb8be38d7f1922079c7138ec9559dd423cb6688dee3ccccaba76f3f204c",
+      "notes": "Closed treasure chest (elite/boss chest pickup), front toward −Z."
+    },
+    "chest-open": {
+      "file": "/assets/fleet/chest-open.glb",
+      "length": 1.5,
+      "height": 1.06,
+      "tris": 2866,
+      "materials": 1,
+      "role": "pickup",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Prop_Chest_Gold.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Prop_Chest_Gold.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "bytes": 43028,
+      "sha256": "fb7aff957bc82f544bf76b85fcf954e57b60ff309105d8d78a9bf6bd870f3979",
+      "sourceSha256": "6810efd30cd1a072c2f272ee76a046b278984f3f050e4d9b256d50242d958811",
+      "notes": "Extra: open chest spilling gold (chest reveal)."
+    },
+    "crate": {
+      "file": "/assets/fleet/crate.glb",
+      "length": 1.53,
+      "height": 0.9,
+      "tris": 76,
+      "materials": 1,
+      "role": "prop",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "kenney-pirate-kit/crate.glb",
+        "author": "Kenney (kenney.nl)",
+        "title": "Pirate Kit 2.1 — crate.glb",
+        "license": "CC0-1.0",
+        "url": "https://kenney.nl/assets/pirate-kit"
+      },
+      "bytes": 5576,
+      "sha256": "a997f687d7b14ac6a3ebe8bd66af7eb4bf1e200afd466ca574adc0aba6ca3bbd",
+      "sourceSha256": "b525674e07c8b83667512a8dd93be0d7684358347d0e64d2bb16b156ac382ed1",
+      "notes": "Open wooden crate (repair crate pickup / deck cargo)."
+    },
+    "anchor": {
+      "file": "/assets/fleet/anchor.glb",
+      "length": 1.64,
+      "height": 2,
+      "tris": 544,
+      "materials": 1,
+      "role": "prop",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Prop_Anchor.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Prop_Anchor.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "bytes": 9612,
+      "sha256": "444e97d92db648ce1c3f2bb243aa1919aef6040dd7edb1ff9bee241933bd2207",
+      "sourceSha256": "98504894d03160b86f8b4a34d6e1b9b31bac173ce424378100f13143fd0223fc",
+      "notes": "Upright iron anchor (stood up from the flat source)."
+    },
+    "coins": {
+      "file": "/assets/fleet/coins.glb",
+      "length": 0.83,
+      "height": 0.45,
+      "tris": 2024,
+      "materials": 1,
+      "role": "pickup",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Prop_Coins.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Prop_Coins.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "bytes": 23540,
+      "sha256": "78c66e8edec7dd649b056e1204b08aa26cad46578e2f9b3be83012ec06465684",
+      "sourceSha256": "13ab5a39537fc661731b2053fb00c7f2799f3ab0d542a36c1c413eae60ebdf4d",
+      "notes": "Extra: stacks of gold coins (treasure / doubloon pickups)."
+    },
+    "gold-bag": {
+      "file": "/assets/fleet/gold-bag.glb",
+      "length": 0.76,
+      "height": 0.7,
+      "tris": 2250,
+      "materials": 1,
+      "role": "pickup",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Prop_GoldBag.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Prop_GoldBag.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "bytes": 30792,
+      "sha256": "18ced838faf5000c8bc69cadf54f4b518e96debbdbceca456230ed181d651d6b",
+      "sourceSha256": "cb9bfa79277c5da163ce94c5c2ab9b2567aa4b59ff02776b277b53570c2dfc00",
+      "notes": "Extra: sack of gold coins (big treasure pickup)."
+    },
+    "flag": {
+      "file": "/assets/fleet/flag.glb",
+      "length": 2.58,
+      "height": 4.44,
+      "tris": 96,
+      "materials": 3,
+      "role": "prop",
+      "source": {
+        "kind": "procedural",
+        "uid": "flag",
+        "author": "We Are On The Cruise (ASSETS)",
+        "title": "Admiralty flag on a pole",
+        "license": "Project-original",
+        "url": ""
+      },
+      "bytes": 8992,
+      "sha256": "56bafef04a96d3d679944cfcbed169ecc1c3f57f60c884aa6e6c0852e06203f1",
+      "sourceSha256": null,
+      "notes": "Procedural pole + waving cloth with the original Admiralty wave-crest (navy/gold); cloth flies toward +Z. Swap the texture for other factions (see flag-redtide)."
+    },
+    "flag-redtide": {
+      "file": "/assets/fleet/flag-redtide.glb",
+      "length": 2.58,
+      "height": 4.44,
+      "tris": 96,
+      "materials": 3,
+      "role": "prop",
+      "source": {
+        "kind": "procedural",
+        "uid": "flag-redtide",
+        "author": "We Are On The Cruise (ASSETS)",
+        "title": "Redtide flag on a pole",
+        "license": "Project-original",
+        "url": ""
+      },
+      "bytes": 9044,
+      "sha256": "35c1ae262a32f8c54011c85a264d6f4235ad7ac274b0820b58ce6efbc305c368",
+      "sourceSha256": null,
+      "notes": "Extra: procedural pole + cloth with the Redtide cutlass-and-sun (black/red)."
+    },
+    "palm-a": {
+      "file": "/assets/fleet/palm-a.glb",
+      "length": 7.28,
+      "height": 10,
+      "tris": 3208,
+      "materials": 1,
+      "role": "nature",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Environment_PalmTree_1.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Environment_PalmTree_1.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "bytes": 34772,
+      "sha256": "540872d403b139db1ab6ad6703ee127f87f8530c3da52f68f6ad69c86567d633",
+      "sourceSha256": "c38f9ee0f5385422a69863a0948d088b1119611b017e872417fceefdaf20ed94",
+      "notes": "Straight palm, 10 m. Scale 0.7–1.3× for variety."
+    },
+    "palm-b": {
+      "file": "/assets/fleet/palm-b.glb",
+      "length": 8.52,
+      "height": 8,
+      "tris": 3134,
+      "materials": 1,
+      "role": "nature",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Environment_PalmTree_3.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Environment_PalmTree_3.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "bytes": 36200,
+      "sha256": "88c54b78d3902e4cb2e25dcc869bb691e61d16a5622d702d655e3b99dae0670f",
+      "sourceSha256": "5bc795e2010d4ee0a6ed8e1a96446478151f804c2ac2ddeb5a01b1dadea632ca",
+      "notes": "Leaning palm, 8 m."
+    },
+    "rock-a": {
+      "file": "/assets/fleet/rock-a.glb",
+      "length": 13.89,
+      "height": 12,
+      "tris": 4898,
+      "materials": 1,
+      "role": "nature",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Environment_Cliff2.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Environment_Cliff2.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "bytes": 41340,
+      "sha256": "24e448160a67403a96580219c11fdc2a3db091c23c8b0cc24c0aed930c28bd01",
+      "sourceSha256": "c5c022324a365158e1f2df9b53efde31cd0c2bb27fa4ec198665714c928d2826",
+      "notes": "Sea stack / rock cluster, 12 m tall, origin at its lowest point — sink ~1 m into water or ground."
+    },
+    "rock-b": {
+      "file": "/assets/fleet/rock-b.glb",
+      "length": 3.73,
+      "height": 5,
+      "tris": 2940,
+      "materials": 1,
+      "role": "nature",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Environment_Rock_2.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Environment_Rock_2.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "bytes": 22228,
+      "sha256": "48b70e7a85ca330b369140bb062ec8dae916e1174c7d04a29373d28946714f75",
+      "sourceSha256": "06c5012110d3a513ebb05c2f9080a3232c457e19cfd4246b63311a1ee2c1518b",
+      "notes": "Tall boulder, 5 m."
+    },
+    "bush": {
+      "file": "/assets/fleet/bush.glb",
+      "length": 2.86,
+      "height": 1.2,
+      "tris": 144,
+      "materials": 1,
+      "role": "nature",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "kenney-pirate-kit/grass-plant.glb",
+        "author": "Kenney (kenney.nl)",
+        "title": "Pirate Kit 2.1 — grass-plant.glb",
+        "license": "CC0-1.0",
+        "url": "https://kenney.nl/assets/pirate-kit"
+      },
+      "bytes": 6604,
+      "sha256": "e841a1d30b96be635d83e704b231c397e2932de1bffd789643e5836d91a5aa73",
+      "sourceSha256": "f422f991fdf75df2b7bd7cd642d67f9ec884279590130e7a213e2ddaea5d0a54",
+      "notes": "Chunky tropical shrub, 1.2 m."
+    },
+    "hut": {
+      "file": "/assets/fleet/hut.glb",
+      "length": 8.74,
+      "height": 11,
+      "tris": 5799,
+      "materials": 2,
+      "role": "nature",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Environment_House3.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Environment_House3.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "bytes": 90756,
+      "sha256": "21629937be60c45ba8537f3b16f6c6c4134ba8a166b18a467e6b7c1001680a03",
+      "sourceSha256": "d4da178f124de86a7c21a66e009689dff7ad1b9a19c7a70777782343ca2511a2",
+      "notes": "Stilt house built from an upturned hull with a mast and striped sail (harbor/shore dressing), 11 m tall."
+    },
+    "dock": {
+      "file": "/assets/fleet/dock.glb",
+      "length": 3.53,
+      "height": 4,
+      "tris": 1912,
+      "materials": 1,
+      "role": "nature",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "quaternius-pirate-kit/Environment_Dock.gltf",
+        "author": "Quaternius (quaternius.com)",
+        "title": "Pirate Kit — Environment_Dock.gltf",
+        "license": "CC0-1.0",
+        "url": "https://quaternius.com/packs/piratekit.html"
+      },
+      "bytes": 23216,
+      "sha256": "5243da28ac743063e2083c90ac2cd3411c601fd5b6d43e6e5504c88a16db5c59",
+      "sourceSha256": "cdbcd1dc78b7adb0a83f9ef475e61c5df5302c2cac9a340266b986165636d940",
+      "notes": "Modular dock segment on stilts (deck ≈ 2.9 × 3.5 m, 4 m tall incl. mooring post); origin at the stilt feet, deck top ≈ 2.6 m — sink the stilts into the water."
+    },
+    "tower": {
+      "file": "/assets/fleet/tower.glb",
+      "length": 4.97,
+      "height": 14,
+      "tris": 604,
+      "materials": 1,
+      "role": "nature",
+      "source": {
+        "kind": "cc0-kit",
+        "uid": "kenney-pirate-kit/tower-complete-large.glb",
+        "author": "Kenney (kenney.nl)",
+        "title": "Pirate Kit 2.1 — tower-complete-large.glb",
+        "license": "CC0-1.0",
+        "url": "https://kenney.nl/assets/pirate-kit"
+      },
+      "bytes": 11392,
+      "sha256": "cb2c69ee40d37b593e2ebe8168d7a5ecba12fd2e1f854dfe2c8efddc65523ea5",
+      "sourceSha256": "3e65bcb990840a59c0b7c0c1237ba41da5a2b5434cab65d6f904a732d4899eb0",
+      "notes": "Stone watchtower with a blue conical roof, 14 m (Admiralty outposts / lighthouse stand-in)."
     }
   }
 }

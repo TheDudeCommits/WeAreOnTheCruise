@@ -50,8 +50,9 @@ for (const job of JOBS.filter((j) => !want.length || want.includes(j.key))) {
 }
 
 async function build(job) {
-  const src = path.resolve(SRC, job.src);
-  const doc = await io.read(src);
+  const src = job.src ? path.resolve(SRC, job.src) : null;
+  const doc = src ? await io.read(src) : new core.Document();
+  if (!src) { doc.createBuffer(); doc.createScene('scene'); await job.procedural({ doc, L, core, fn, sharp, job }); }
   const root = doc.getRoot();
   const skinned = root.listSkins().length > 0;
 
@@ -134,7 +135,7 @@ async function build(job) {
     file: `/assets/fleet/${job.key}.glb`,
     bytes: buf.length,
     sha256: crypto.createHash('sha256').update(buf).digest('hex'),
-    sourceSha256: crypto.createHash('sha256').update(fs.readFileSync(src)).digest('hex'),
+    sourceSha256: src ? crypto.createHash('sha256').update(fs.readFileSync(src)).digest('hex') : null,
     tris: countTris(check),
     materials: check.getRoot().listMaterials().length,
     draws: check.getRoot().listMeshes().reduce((n, m) => n + m.listPrimitives().length, 0),

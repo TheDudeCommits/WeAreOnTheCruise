@@ -87,6 +87,30 @@ export async function swapColors(doc, pairs, tol = 6) {
   for (const t of doc.getRoot().listTextures()) await remapPalette(t, pairs, tol);
 }
 
+/** Procedural flag: a wooden pole with a gold finial and a waving cloth using an emblem texture (flag faces ±X, flies toward +Z). */
+export async function buildFlag({ doc }, emblem) {
+  const wood = doc.createMaterial('flag-pole').setBaseColorFactor([...L.hex('#6b4a2e').map((v) => Math.pow(v / 255, 2.2)), 1]).setMetallicFactor(0).setRoughnessFactor(1);
+  const gold = doc.createMaterial('flag-finial').setBaseColorFactor([...L.hex('#e2b23a').map((v) => Math.pow(v / 255, 2.2)), 1]).setMetallicFactor(0).setRoughnessFactor(1);
+  const pole = { positions: [], indices: [] }; L.pushBox(pole, [-0.06, 0, -0.06], [0.06, 4.2, 0.06]);
+  L.addGeometry(doc, { ...pole, material: wood, name: 'flag' });
+  const fin = { positions: [], indices: [] }; L.pushBox(fin, [-0.12, 4.2, -0.12], [0.12, 4.44, 0.12]);
+  L.addGeometry(doc, { ...fin, material: gold });
+  const mat = await makeTexturedMaterial(doc, emblem, [256, 256]);
+  const S = { positions: [], indices: [], uvs: [] }; const cols = 6, rows = 3, w = 2.4, h = 1.6, top = 4.1;
+  for (let r = 0; r <= rows; r++) for (let c = 0; c <= cols; c++) {
+    const u = c / cols, v = r / rows;
+    S.positions.push(0.12 * Math.sin(u * Math.PI * 2.2) * u, top - h * v, 0.06 + w * u); S.uvs.push(u, v);
+  }
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const a = r * (cols + 1) + c, b = a + 1, d = a + cols + 1, e = d + 1; S.indices.push(a, d, b, b, d, e, a, b, d, b, e, d); }
+  L.addGeometry(doc, { ...S, material: mat });
+}
+async function makeTexturedMaterial(doc, name, size) {
+  const { sharp } = await import('./tools.mjs');
+  const png = await sharp(Buffer.from(SVG(name))).resize(size[0], size[1], { fit: 'fill' }).png().toBuffer();
+  const tex = doc.createTexture(`${name}-albedo`).setImage(new Uint8Array(png)).setMimeType('image/png').setURI(`${name}-albedo.png`);
+  return doc.createMaterial(name).setBaseColorTexture(tex).setDoubleSided(true).setMetallicFactor(0).setRoughnessFactor(1);
+}
+
 export const RECOLOR = {
   /** Quaternius Henry → Admiralty deckhand: navy bandana and trousers, white vest and sleeves, gold buckle kept. */
   async admiraltySailor({ doc }) {

@@ -4,7 +4,7 @@
  * Meshy outputs in meshy/<key>.glb, CC0 kits in kenney/ and quaternius/.
  * `yaw` (degrees about +Y) turns the source so its bow/forward faces −Z. Ships: `length` (m) = Z extent, `draft` = keel depth.
  */
-import { RECOLOR } from './recolor.mjs';
+import { RECOLOR, buildFlag } from './recolor.mjs';
 
 export const SRC = process.env.CRUISE_ASSET_SRC || '/tmp/cruise-asset-work';
 
@@ -135,6 +135,43 @@ export const JOBS = [
     source: QUATERNIUS('Characters_Skeleton.gltf'),
     notes: 'Extra: skeleton deckhand with dagger for Gloam Wraith ships (tint teal/emissive at runtime).',
   },
+  // ───────────── Props: weapon mounts, pickups, hazards (Meshy owner-generated + CC0 kits + procedural) ─────────────
+  { key: 'cannon', role: 'prop', src: 'quaternius/pirate/Prop_Cannon.gltf', yaw: -90, longest: 2.2, tris: 3000, tex: 256, source: QUATERNIUS('Prop_Cannon.gltf'), notes: 'Deck cannon on a wooden carriage; muzzle toward −Z. Broadside/bow-chaser mounts.' },
+  { key: 'mortar', role: 'prop', src: 'meshy/mortar.glb', yaw: -90, longest: 2.2, tris: 3000, tex: 512, source: MESHY('01a0d1dd-482e-72e9-b018-3f1d41709641', 'Deck mortar'), notes: 'Squat iron mortar on a round wooden mount (stern-mortar weapon); muzzle leans toward −Z.' },
+  { key: 'rocket-rack', role: 'prop', src: 'meshy/rocket-rack.glb', yaw: 180, height: 2, tris: 3000, tex: 512, source: MESHY('01a0d1dd-5c6c-762d-8e54-611dd3f5a1b3', 'Rocket rack'), notes: 'Wooden rack of six red rockets angled up and toward −Z (rocket-rack weapon, deck mount).' },
+  { key: 'swivel-gun', role: 'prop', src: 'meshy/swivel-gun.glb', yaw: -90, height: 1.6, tris: 3000, tex: 512, source: MESHY('01a0d1dd-7198-7286-997a-559c19c534c9', 'Swivel gun'), notes: 'Brass swivel gun on a Y-pivot and wooden post (swivel-guns weapon, rail mount); rotate the whole prop about Y.' },
+  { key: 'harpoon-gun', role: 'prop', src: 'meshy/harpoon-gun.glb', yaw: -90, longest: 2.6, tris: 3000, tex: 512, source: MESHY('01a0d1dd-8c2f-72d7-829b-0c67bdb39bd0', 'Harpoon gun'), notes: 'Mounted harpoon cannon on a pivot base, harpoon tip toward −Z (harpoon weapon, bow mount).' },
+  { key: 'storm-rod', role: 'prop', src: 'meshy/storm-rod.glb', yaw: 0, height: 4, tris: 3000, tex: 512, source: MESHY('01a0d1dd-9f90-76c9-ac91-2899f928bb1b', 'Storm rod'), notes: 'Copper three-pronged lightning rod with blue insulator rings (storm-rod weapon, mast-top mount); prongs at y ≈ 3.2–4 m.' },
+  { key: 'mine', role: 'prop', src: 'meshy/mine.glb', yaw: 0, height: 1.6, tris: 3000, tex: 512, source: MESHY('01a0d1dd-b0f4-76f6-97f8-b591345b4979', 'Sea mine'), notes: 'Spiked sea mine with a chain loop (tide-mines hazard). Origin at the chain bottom; float it so the sphere centre (y ≈ 0.95 m) sits at the waterline.' },
+  { key: 'lantern', role: 'prop', src: 'meshy/lantern.glb', yaw: 0, height: 0.7, tris: 3000, tex: 512, source: MESHY('01a0d1dd-c38f-759b-bb35-4592eb61b960', 'Ship lantern'), notes: 'Iron ship lantern with amber panes (tier growth decoration); add a point light / bloom at y ≈ 0.3 m.' },
+  { key: 'powder-keg', role: 'prop', src: 'meshy/powder-keg.glb', yaw: 0, height: 1, tris: 3000, tex: 512, source: MESHY('01a0d1dd-d637-7127-8e3b-16b60d9b7ff9', 'Powder keg'), notes: 'Black powder keg with red bands and fuse (powder-keg pickup and fire-barrels/powder-keg hazards).' },
+  { key: 'iron-ram', role: 'prop', src: 'meshy/iron-ram.glb', yaw: 180, longest: 3.2, tris: 3000, tex: 512, source: MESHY('01a0d1dd-e992-7045-8877-559bb56a2502', 'Iron ram prow cap'), notes: 'Extra: riveted iron prow cap with spike toward −Z (iron-ram weapon, prow mount). Scale to the hull.' },
+  { key: 'barrel', role: 'prop', src: 'quaternius/pirate/Prop_Barrel.gltf', yaw: 0, height: 1.1, tris: 3000, tex: 256, source: QUATERNIUS('Prop_Barrel.gltf'), notes: 'Wooden barrel (fire-barrels drops, deck clutter, floating debris).' },
+  { key: 'chest', role: 'prop', src: 'quaternius/pirate/Prop_Chest_Closed.gltf', yaw: 90, longest: 1.3, tris: 3000, tex: 256, source: QUATERNIUS('Prop_Chest_Closed.gltf'), notes: 'Closed treasure chest (elite/boss chest pickup), front toward −Z.' },
+  { key: 'chest-open', role: 'pickup', src: 'quaternius/pirate/Prop_Chest_Gold.gltf', yaw: 90, longest: 1.5, tris: 3000, tex: 256, source: QUATERNIUS('Prop_Chest_Gold.gltf'), notes: 'Extra: open chest spilling gold (chest reveal).' },
+  { key: 'crate', role: 'prop', src: 'kenney/pirate-kit/Models/GLB format/crate.glb', yaw: 0, height: 0.9, tris: 3000, tex: 256, source: KENNEY('crate.glb'), notes: 'Open wooden crate (repair crate pickup / deck cargo).' },
+  { key: 'anchor', role: 'prop', src: 'quaternius/pirate/Prop_Anchor.gltf', yaw: 0, rotate: [['x', -90]], height: 2, tris: 3000, tex: 256, source: QUATERNIUS('Prop_Anchor.gltf'), notes: 'Upright iron anchor (stood up from the flat source).' },
+  { key: 'coins', role: 'pickup', src: 'quaternius/pirate/Prop_Coins.gltf', yaw: 0, height: 0.45, tris: 2100, tex: 256, source: QUATERNIUS('Prop_Coins.gltf'), notes: 'Extra: stacks of gold coins (treasure / doubloon pickups).' },
+  { key: 'gold-bag', role: 'pickup', src: 'quaternius/pirate/Prop_GoldBag.gltf', yaw: 0, height: 0.7, tris: 2500, tex: 256, source: QUATERNIUS('Prop_GoldBag.gltf'), notes: 'Extra: sack of gold coins (big treasure pickup).' },
+  {
+    key: 'flag', role: 'prop', src: null, height: 4.44, tris: 3000, tex: 256, procedural: (ctx) => buildFlag(ctx, 'admiralty-flag'),
+    source: { kind: 'procedural', uid: 'flag', author: 'We Are On The Cruise (ASSETS)', title: 'Admiralty flag on a pole', license: 'Project-original', url: '' },
+    notes: 'Procedural pole + waving cloth with the original Admiralty wave-crest (navy/gold); cloth flies toward +Z. Swap the texture for other factions (see flag-redtide).',
+  },
+  {
+    key: 'flag-redtide', role: 'prop', src: null, height: 4.44, tris: 3000, tex: 256, procedural: (ctx) => buildFlag(ctx, 'redtide-flag'),
+    source: { kind: 'procedural', uid: 'flag-redtide', author: 'We Are On The Cruise (ASSETS)', title: 'Redtide flag on a pole', license: 'Project-original', url: '' },
+    notes: 'Extra: procedural pole + cloth with the Redtide cutlass-and-sun (black/red).',
+  },
+  // ───────────── Nature / world set dressing (CC0 kits) ─────────────
+  { key: 'palm-a', role: 'nature', src: 'quaternius/pirate/Environment_PalmTree_1.gltf', yaw: 0, height: 10, tris: 3500, tex: 256, source: QUATERNIUS('Environment_PalmTree_1.gltf'), notes: 'Straight palm, 10 m. Scale 0.7–1.3× for variety.' },
+  { key: 'palm-b', role: 'nature', src: 'quaternius/pirate/Environment_PalmTree_3.gltf', yaw: 0, height: 8, tris: 3500, tex: 256, source: QUATERNIUS('Environment_PalmTree_3.gltf'), notes: 'Leaning palm, 8 m.' },
+  { key: 'rock-a', role: 'nature', src: 'quaternius/pirate/Environment_Cliff2.gltf', yaw: 0, height: 12, tris: 5000, tex: 256, source: QUATERNIUS('Environment_Cliff2.gltf'), notes: 'Sea stack / rock cluster, 12 m tall, origin at its lowest point — sink ~1 m into water or ground.' },
+  { key: 'rock-b', role: 'nature', src: 'quaternius/pirate/Environment_Rock_2.gltf', yaw: 0, height: 5, tris: 3000, tex: 256, source: QUATERNIUS('Environment_Rock_2.gltf'), notes: 'Tall boulder, 5 m.' },
+  { key: 'bush', role: 'nature', src: 'kenney/pirate-kit/Models/GLB format/grass-plant.glb', yaw: 0, height: 1.2, tris: 3000, tex: 256, source: KENNEY('grass-plant.glb'), notes: 'Chunky tropical shrub, 1.2 m.' },
+  { key: 'hut', role: 'nature', src: 'quaternius/pirate/Environment_House3.gltf', yaw: 0, height: 11, tris: 6000, tex: 256, source: QUATERNIUS('Environment_House3.gltf'), notes: 'Stilt house built from an upturned hull with a mast and striped sail (harbor/shore dressing), 11 m tall.' },
+  { key: 'dock', role: 'nature', src: 'quaternius/pirate/Environment_Dock.gltf', yaw: 0, longest: 4, tris: 3000, tex: 256, source: QUATERNIUS('Environment_Dock.gltf'), notes: 'Modular dock segment on stilts (deck ≈ 2.9 × 3.5 m, 4 m tall incl. mooring post); origin at the stilt feet, deck top ≈ 2.6 m — sink the stilts into the water.' },
+  { key: 'tower', role: 'nature', src: 'kenney/pirate-kit/Models/GLB format/tower-complete-large.glb', yaw: 0, height: 14, tris: 3000, tex: 256, source: KENNEY('tower-complete-large.glb'), notes: 'Stone watchtower with a blue conical roof, 14 m (Admiralty outposts / lighthouse stand-in).' },
 ];
 
 export { RECOLOR };
