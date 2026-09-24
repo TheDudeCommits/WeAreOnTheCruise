@@ -32,6 +32,7 @@ const STORM = palette(0x0d2a31, 0x2a5559, 0x5ab5a6, 0x3e8a82, 0xe4efec, 0x7d9c9f
 const FOG = palette(0x2c6680, 0x5a8ea2, 0x93d1cc, 0x7cc4bc, 0xf4fbfa, 0xa2bec4);
 const NIGHT = palette(0x030a22, 0x09214b, 0x1a8cb8, 0x0c4f63, 0x9ebde4, 0x30507a);
 const BIOLUM = new THREE.Color(0x27f0ff);
+const PALETTE_KEYS = ['deep', 'mid', 'sss', 'shallow', 'foam', 'foamShadow'] as const;
 
 const smooth = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -102,7 +103,7 @@ export class OceanLook {
 
     const clear = 1 - Math.max(storm, fog);
     this.glint = lerp(lerp(6.5, 5.0, dusk), 3.2, night) * lerp(1, 0.12, storm) * lerp(1, 0.2, fog);
-    this.sheen = lerp(lerp(0.32, 0.45, dusk), 1.1, night) * lerp(1, 0.25, storm) * lerp(1, 0.3, fog);
+    this.sheen = lerp(lerp(0.22, 0.4, dusk), 1.1, night) * lerp(1, 0.25, storm) * lerp(1, 0.3, fog);
     this.specPower = lerp(lerp(1100, 700, dusk), 650, night);
     this.capLo = lerp(lerp(0.56, 0.44, breezy), 0.2, storm) + fog * 0.1;
     this.capHi = this.capLo + lerp(0.22, 0.3, storm);
@@ -114,8 +115,8 @@ export class OceanLook {
   }
 
   private blendPalette(dusk: number, storm: number, fog: number, night: number): void {
-    const keys = ['deep', 'mid', 'sss', 'shallow', 'foam', 'foamShadow'] as const;
-    for (const key of keys) {
+    for (let i = 0; i < PALETTE_KEYS.length; i++) {
+      const key = PALETTE_KEYS[i]!;
       const c = this[key];
       c.copy(DAY[key]).lerp(DUSK[key], dusk).lerp(FOG[key], fog).lerp(STORM[key], storm);
       // Night keeps a little of the storm/fog character.

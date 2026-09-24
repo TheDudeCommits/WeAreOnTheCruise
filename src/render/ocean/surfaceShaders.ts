@@ -290,10 +290,13 @@ void main() {
   vec3 Nr = normalize(mix(Nm, Nd, 0.4));
   vec3 Rr = reflect(-V, Nr);
   vec3 R = reflect(-V, Nd);
-  float fx = 1.0 - clamp(dot(Nr, V), 0.0, 1.0);
+  // Fresnel from the softened macro normal (detail ripples at grazing angles would stripe it), capped so the
+  // far sea stays saturated blue up to a readable horizon line; the fog curve does the distance blend.
+  float fx = 1.0 - clamp(dot(normalize(mix(vec3(0.0, 1.0, 0.0), Nm, 0.6)), V), 0.0, 1.0);
   float fx2 = fx * fx;
-  float F = 0.02 + 0.98 * fx2 * fx2 * fx;
+  float F = min(0.02 + 0.98 * fx2 * fx2 * fx, 0.58);
   vec3 refl = mix(uHorizon, uSky, smoothstep(0.0, 0.45, Rr.y));
+  refl = mix(refl, uSky, 0.3);
   refl *= 1.0 + (vCloud - 0.5) * uLookC.x * 1.4;
   refl += vec3(0.85, 0.9, 1.0) * uLookC.z * 0.9;
   col = mix(col, refl, clamp(F * uLookB.z * (1.0 - shallowAmt * 0.35), 0.0, 1.0));
@@ -326,7 +329,7 @@ void main() {
     fL = textureGrad(uFoamTex, pw * LS + uFoamOff.zw, pwDx * LS, pwDy * LS);
     float seg = smoothstep(0.42, 0.66, fL.b + uWind.w * 0.14);
     float stormCap = 0.0;
-    const vec2 SS = vec2(1.0 / 72.0, 1.0 / 15.0);
+    const vec2 SS = vec2(1.0 / 96.0, 1.0 / 44.0); // ~32 m long, ~1.7 m wide streaks (finer read as hatching)
     if (stormPot > 1e-3) stormCap = stormPot * smoothstep(0.25, 0.7, textureGrad(uFoamTex, pw * SS + uFoamOff.wz, pwDx * SS, pwDy * SS).a);
     covC = max(lineCap * seg, stormCap);
   }
@@ -352,8 +355,10 @@ void main() {
   float lace = bub * (1.0 - solidI) * (1.0 - farBlur);
   float foamSolid = max(solidI, solidC);
   float foamEdge = clamp(max(edgeI, edgeC), 0.0, 1.0) * (1.0 - foamSolid);
-  float foamLight = 0.74 + 0.26 * smoothstep(-0.35, 0.45, dot(Nm, L) - L.y + 0.2);
-  vec3 foamLit = uFoamColor * mix(vec3(1.0), uSunColor, 0.22) * foamLight * mix(0.55, 1.0, uLookC.w);
+  // Two-tone cel foam: faces turned away from the sun (wave backs, the shadow side of the bow wave) take the
+  // blue-grey shadow tone, which gives raised foam its volume.
+  float foamLitK = smoothstep(-0.2, -0.08, dot(Nm, L) - L.y);
+  vec3 foamLit = mix(uFoamShadow * 1.18, uFoamColor * mix(vec3(1.0), uSunColor, 0.22), foamLitK) * mix(0.55, 1.0, uLookC.w);
   col = mix(col, uFoamShadow * mix(0.6, 1.0, uLookC.w), foamEdge * 0.8);
   col = mix(col, foamLit, max(foamSolid, lace));
 
@@ -365,7 +370,7 @@ void main() {
   float toksvig = (1.0 + Peff) / (1.0 + P);
   float glint = smoothstep(0.55 - aaS, 0.55 + aaS, spec) * toksvig * (1.0 - smoothstep(0.6, 2.2, pix));
   // Broad sun path by day; at night a narrower moon path broken up by the ripples.
-  float sheen = pow(max(dot(Rr, L), 0.0), 18.0);
+  float sheen = pow(max(dot(Rr, L), 0.0), 36.0);
   if (uLookC.y > 0.01) {
     float sheenNight = pow(max(dot(R, L), 0.0), 140.0) * 1.6 + pow(max(dot(Rr, L), 0.0), 60.0) * 0.25;
     sheen = mix(sheen, sheenNight, uLookC.y);

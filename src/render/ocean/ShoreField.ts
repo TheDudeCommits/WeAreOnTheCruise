@@ -55,6 +55,7 @@ export class ShoreField {
     const n = this.n;
     const wx0 = Math.floor(focusX / this.texel) - (n >> 1);
     const wz0 = Math.floor(focusZ / this.texel) - (n >> 1);
+    const moved = world !== this.world || !this.hasWindow || wx0 !== this.wx0 || wz0 !== this.wz0;
     if (world !== this.world || !this.hasWindow || Math.abs(wx0 - this.wx0) >= n || Math.abs(wz0 - this.wz0) >= n) {
       this.world = world;
       this.hasWindow = true;
@@ -85,7 +86,8 @@ export class ShoreField {
     }
     this.refine(world, budgetMs);
     const half = (n >> 1) * this.texel;
-    this.active = world.islandsNear((wx0 + (n >> 1)) * this.texel, (wz0 + (n >> 1)) * this.texel, half * 1.42 + this.maxDistance, this.islands).length > 0;
+    // islandsNear builds string cell keys (WORLD code), so only re-query when the window actually moves.
+    if (moved) this.active = world.islandsNear((wx0 + (n >> 1)) * this.texel, (wz0 + (n >> 1)) * this.texel, half * 1.42 + this.maxDistance, this.islands).length > 0;
     this.rect.set((wx0 + (n >> 1)) * this.texel, (wz0 + (n >> 1)) * this.texel, half - this.texel * 2, 1 / (n * this.texel));
     if (this.dirty) {
       this.texture.needsUpdate = true;

@@ -174,10 +174,13 @@ export class InteractionField {
     this.rect.set(this.originX, this.originZ, this.size, 1 / this.size);
     const noiseX = this.originX - Math.floor(this.originX / 4096) * 4096;
     const noiseZ = this.originZ - Math.floor(this.originZ / 4096) * 4096;
-    for (const batch of [this.transientBatch, this.persistentBatch]) {
-      batch.material.uniforms.uInvSize!.value = 1 / this.size;
-      (batch.material.uniforms.uNoiseOrigin!.value as THREE.Vector2).set(noiseX, noiseZ);
-    }
+    this.syncBatch(this.transientBatch, noiseX, noiseZ);
+    this.syncBatch(this.persistentBatch, noiseX, noiseZ);
+  }
+
+  private syncBatch(batch: StampBatch, noiseX: number, noiseZ: number): void {
+    batch.material.uniforms.uInvSize!.value = 1 / this.size;
+    (batch.material.uniforms.uNoiseOrigin!.value as THREE.Vector2).set(noiseX, noiseZ);
   }
 
   setHullHole(depth: number): void {

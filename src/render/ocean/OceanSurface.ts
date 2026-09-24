@@ -178,7 +178,9 @@ export class OceanSurface {
 
   private syncCamera(camera: THREE.Camera): void {
     this.invViewProj.multiplyMatrices(camera.matrixWorld, camera.projectionMatrixInverse);
-    const [cols, rows] = GRID[this.tier];
+    const grid = GRID[this.tier];
+    const cols = grid[0];
+    const rows = grid[1];
     let angle = 0.004;
     let far = 4500;
     if ((camera as THREE.PerspectiveCamera).isPerspectiveCamera) {

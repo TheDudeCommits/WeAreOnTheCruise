@@ -133,9 +133,10 @@ void main() {
     // Pile-up is highest at the stem and runs back along the shoulders.
     float bowRidge = exp(-rd * rd) * pow(bowness, 1.25);
     float raise = bowH * bowRidge;
-    // White crest on the upper, outer part of the ridge; the inner face stays turquoise (aeration).
-    float crestSide = smoothstep(-0.2, 0.6, rd);
-    float bowFoam = smoothstep(0.22, 0.7, bowRidge) * mix(0.55, 1.0, crestSide) * smoothstep(0.1, 0.5, s);
+    // White water on the crest and the side piled against the hull; the outer face of the wave stays a smooth
+    // turquoise (aeration) face, so the bow wave reads as a raised wave instead of a flat white slab.
+    float outerFace = smoothstep(0.05, 0.7, rd);
+    float bowFoam = smoothstep(0.3, 0.75, bowRidge) * (1.0 - outerFace * 0.85) * smoothstep(0.1, 0.5, s);
     // Trough along the sides and the hollow under the counter; the inside of the hull is pushed down so
     // wave crests never poke through the deck.
     float tr = (sd - (1.0 + 1.6 * s)) / (1.4 + 2.2 * s);
@@ -194,6 +195,8 @@ export class StampBatch {
   private readonly geometry: THREE.InstancedBufferGeometry;
   private readonly data: Float32Array;
   private readonly buffer: THREE.InstancedInterleavedBuffer;
+  /** Reused every frame (addUpdateRange would allocate a new range object per call). */
+  private readonly range = { start: 0, count: 0 };
 
   constructor(capacity: number, persistent: boolean) {
     this.capacity = capacity;
@@ -261,8 +264,9 @@ export class StampBatch {
   commit(): void {
     this.geometry.instanceCount = this.count;
     if (this.count === 0) return;
-    this.buffer.clearUpdateRanges();
-    this.buffer.addUpdateRange(0, this.count * FLOATS_PER_STAMP);
+    this.range.count = this.count * FLOATS_PER_STAMP;
+    this.buffer.updateRanges.length = 0;
+    this.buffer.updateRanges.push(this.range);
     this.buffer.needsUpdate = true;
   }
 
