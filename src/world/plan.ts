@@ -192,7 +192,9 @@ function planVegetation(p: Planner): void {
       const mask = fbm(seed + 21, x / 46, z / 46, 3) + (t.s > 0.9 ? 0.15 : 0);
       if (forestAllowed && mask > canopyThreshold && p.free(x, z, spacing * 0.5)) {
         const r = spacing * (0.62 + rng.next() * 0.42) * (t.s > 0.94 ? 0.85 : 1);
-        p.plan.canopy.push({ x, y: t.y + r * 0.18, z, r, squash: 0.62 + rng.next() * 0.2, tint: rng.next() });
+        const squash = 0.62 + rng.next() * 0.2;
+        // Sit the blob on the ground, never dipping below sea level on low banks.
+        p.plan.canopy.push({ x, y: Math.max(t.y + r * 0.18, r * squash + 0.3), z, r, squash, tint: rng.next() });
         // Emergent trees poke out of the canopy for a broken silhouette.
         if (!conifers && rng.chance(0.12 * lush)) addProp(p, treeKind, x, t.y - 0.5, z, 1.25 + rng.next() * 0.5, false);
       } else if (mask > canopyThreshold - 0.25 && rng.chance(0.55 * lush + 0.1) && p.free(x, z, 2.5)) {
@@ -287,7 +289,7 @@ function planRocks(p: Planner): void {
       x = def.x + Math.sin(tt) * r; z = def.z + Math.cos(tt) * r;
       excess = signedDistanceValue(def.outline, x, z) + size * ROCK_EXTENT - 1;
     }
-    if (excess > 0) continue;
+    if (excess > 0 || signedDistanceValue(def.outline, x, z) < -(size * ROCK_EXTENT + 2.5)) continue;
     const y = b > 0.5 ? s.sample(x, z).y * 0.5 : rng.range(-0.4, 0.8);
     p.plan.rocks.push({ x, y, z, r: size, yaw: rng.range(0, TAU), squash: rng.range(0.55, 0.85), tint: rng.next() });
   }

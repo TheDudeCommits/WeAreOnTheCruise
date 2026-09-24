@@ -45,7 +45,19 @@ function mesh(geo: THREE.BufferGeometry, material: THREE.Material, name: string,
   return m;
 }
 
+/** Builds a feature LOD in one go (tests, tools). */
 export function buildFeatureLod(feature: WorldFeature, lod: 0 | 1 | 2, mats: WorldMaterials, palette: PaletteId): FeatureLod {
+  const steps = buildFeatureLodSteps(feature, lod, mats, palette);
+  let r = steps.next();
+  while (!r.done) r = steps.next();
+  return r.value;
+}
+
+/**
+ * Incremental build: yields between islands and between stages (terrain, plan, dressing) so the streamer can
+ * spread one big island over several frames instead of hitching.
+ */
+export function* buildFeatureLodSteps(feature: WorldFeature, lod: 0 | 1 | 2, mats: WorldMaterials, palette: PaletteId): Generator<void, FeatureLod> {
   const group = new THREE.Group();
   group.name = `feature:${feature.id}:lod${lod}`;
   group.position.set(feature.x, 0, feature.z);
@@ -66,7 +78,9 @@ export function buildFeatureLod(feature: WorldFeature, lod: 0 | 1 | 2, mats: Wor
     const surface = surfaceOf(island);
     const pal = terrainPalette(palette, island.biome);
     appendTerrain(solid, buildRingModel(surface, lod), pal, ox, oz);
+    yield;
     const plan = planIsland(island, palette);
+    yield;
     appendCanopy(solid, plan.canopy, pal, ox, oz, lod);
     appendRocks(solid, plan.rocks, pal, ox, oz, lod);
     appendVines(solid, plan.vines, pal, ox, oz, lod);
@@ -77,6 +91,7 @@ export function buildFeatureLod(feature: WorldFeature, lod: 0 | 1 | 2, mats: Wor
       falls.push({ x: base.x + fall.nx * 2, z: base.z + fall.nz * 2, r: fall.width });
     }
     for (const k of plan.kit) if (k.kind === 'lighthouse') beacons.push({ x: k.x, y: k.y + k.h + 2.3, z: k.z });
+    yield;
     if (lod < 2) {
       for (const p of plan.props) {
         // Mid distance: keep the silhouette makers, drop the small stuff.
@@ -93,6 +108,7 @@ export function buildFeatureLod(feature: WorldFeature, lod: 0 | 1 | 2, mats: Wor
     }
   }
 
+  yield;
   const geometries: THREE.BufferGeometry[] = [];
   let triangles = 0;
   const shadows = lod < 2;

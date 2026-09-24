@@ -9,7 +9,7 @@ import type { WorldFeature } from '../../world/features';
 import { harborSetFeatures, HARBOR_SET_RADIUS } from '../../world/harborSet';
 import { paletteForSea, type PaletteId } from '../../world/seas';
 import type { FrameContext, RenderHostHandles, RenderSystem } from '../frame';
-import { buildFeatureLod, type FeatureLod } from './featureMesh';
+import { buildFeatureLodSteps, type FeatureLod } from './featureMesh';
 import { FlagInstancer, PropInstancer } from './instancing';
 import { createWorldMaterials, ink, setEmissive, type WorldMaterials } from './materials';
 
@@ -36,7 +36,9 @@ interface Entry {
 
 interface Job { entry: Entry; lod: 0 | 1 | 2; priority: number }
 
-export interface WorldStats { features: number; built: number; pending: number; triangles: number; buildMs: number; props: number }
+interface ActiveJob { entry: Entry; lod: 0 | 1 | 2; steps: Generator<void, FeatureLod>; started: number }
+
+export interface WorldStats { features: number; built: number; pending: number; triangles: number; buildMs: number; maxStepMs: number; props: number }
 
 /** Adapter for WorldQuery implementations without features (one feature per island). */
 function adaptWorld(world: WorldQuery): FeatureSource {
@@ -76,6 +78,8 @@ export class WorldVisuals implements RenderSystem {
   private lastX = Infinity;
   private lastZ = Infinity;
   private buildMs = 0;
+  private maxStepMs = 0;
+  private active: ActiveJob | null = null;
   private props!: PropInstancer;
   private flags!: FlagInstancer;
   private instancesDirty = false;
@@ -145,6 +149,7 @@ export class WorldVisuals implements RenderSystem {
     for (const entry of this.entries.values()) this.disposeEntry(entry);
     this.entries.clear();
     this.queue.length = 0;
+    this.active = null;
     this.world = world;
     this.source = adaptWorld(world);
     this.refreshTimer = 0;
@@ -197,23 +202,32 @@ export class WorldVisuals implements RenderSystem {
   }
 
   private processJobs(): void {
-    if (this.queue.length === 0) return;
+    if (this.queue.length === 0 && !this.active) return;
     let nothingShown = true;
     for (const e of this.entries.values()) if (e.shown >= 0) { nothingShown = false; break; }
     const budget = nothingShown ? Math.max(this.budgetMs, 14) : this.budgetMs;
     const t0 = performance.now();
-    while (this.queue.length && performance.now() - t0 < budget) {
-      const job = this.queue.shift()!;
-      const entry = job.entry;
-      if (entry.lods[job.lod] || !this.entries.has(entry.feature.id)) continue;
-      const tb = performance.now();
-      const built = buildFeatureLod(entry.feature, job.lod, this.materials, entry.palette);
-      this.buildMs = performance.now() - tb;
+    while (performance.now() - t0 < budget) {
+      if (!this.active) {
+        const job = this.queue.shift();
+        if (!job) break;
+        if (job.entry.lods[job.lod] || !this.entries.has(job.entry.feature.id)) continue;
+        this.active = { entry: job.entry, lod: job.lod, steps: buildFeatureLodSteps(job.entry.feature, job.lod, this.materials, job.entry.palette), started: performance.now() };
+      }
+      const job = this.active;
+      if (!this.entries.has(job.entry.feature.id) || job.entry.lods[job.lod]) { this.active = null; continue; }
+      const ts = performance.now();
+      const r = job.steps.next();
+      this.maxStepMs = Math.max(this.maxStepMs, performance.now() - ts);
+      if (!r.done) continue;
+      this.active = null;
+      this.buildMs = performance.now() - job.started;
+      const built = r.value;
       built.group.visible = false;
       ink(built.group);
-      entry.lods[job.lod] = built;
-      entry.root.add(built.group);
-      this.showBest(entry);
+      job.entry.lods[job.lod] = built;
+      job.entry.root.add(built.group);
+      this.showBest(job.entry);
     }
   }
 
@@ -237,13 +251,20 @@ export class WorldVisuals implements RenderSystem {
     this.group.remove(entry.root);
   }
 
+  /** Currently shown merged meshes per feature (labs/QA: collision overlays, slices). */
+  debugShown(): { feature: WorldFeature; lod: number; group: THREE.Group }[] {
+    const out: { feature: WorldFeature; lod: number; group: THREE.Group }[] = [];
+    for (const e of this.entries.values()) if (e.shown >= 0) out.push({ feature: e.feature, lod: e.shown, group: e.lods[e.shown]!.group });
+    return out;
+  }
+
   /** Streaming state for labs/QA. */
   stats(): WorldStats {
     let built = 0, triangles = 0;
     for (const e of this.entries.values()) {
       if (e.shown >= 0) { built++; triangles += e.lods[e.shown]!.triangles; }
     }
-    return { features: this.entries.size, built, pending: this.queue.length, triangles, buildMs: this.buildMs, props: this.propCount };
+    return { features: this.entries.size, built, pending: this.queue.length + (this.active ? 1 : 0), triangles, buildMs: this.buildMs, maxStepMs: this.maxStepMs, props: this.propCount };
   }
 
   dispose(): void {

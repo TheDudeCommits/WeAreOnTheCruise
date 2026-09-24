@@ -149,10 +149,11 @@ export function appendWaterfall(water: MeshBuilder, solid: MeshBuilder, fall: Wa
   if (lod > 1) return;
   const base = pts[pts.length - 1]!;
   const white = new THREE.Color(0xf4fbff), shade = new THREE.Color(0xc8e6f2);
+  // Splash puffs hug the cliff foot (≤ ~3 m out); the ocean foam stamp spreads the rest.
   for (let i = 0; i < (lod === 0 ? 5 : 2); i++) {
     const a = (i / 5) * Math.PI * 2;
-    const r = fall.width * (0.35 + 0.15 * (i % 2));
-    const x = base.x + fall.nx * 1.5 + Math.cos(a) * fall.width * 0.35 - ox, z = base.z + fall.nz * 1.5 + Math.sin(a) * fall.width * 0.35 - oz;
+    const r = Math.min(2.2, fall.width * (0.22 + 0.08 * (i % 2)));
+    const x = base.x + fall.nx * 0.4 + Math.cos(a) * fall.width * 0.3 - ox, z = base.z + fall.nz * 0.4 + Math.sin(a) * fall.width * 0.3 - oz;
     solid.append(canopySphere(0), trs(m4, x, 0.3, z, a, r, r * 0.55, r), (_x, _py, _z, _nx, ny, _nz, out) => { out.copy(shade).lerp(white, Math.max(0, ny)); });
   }
 }

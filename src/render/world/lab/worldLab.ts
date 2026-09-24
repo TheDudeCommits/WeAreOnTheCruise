@@ -16,6 +16,7 @@ import type { AppScreen, AtmosphereState, FrameContext, RenderServices, RenderSy
 import { OceanSystem } from '../../ocean/OceanSystem';
 import { SkySystem } from '../../sky/SkySystem';
 import { WorldVisuals } from '../WorldVisuals';
+import { signedDistanceValue } from '../../../world/polygon';
 import { buildShowcaseWorld, SHOWCASES } from './showcase';
 
 type Tod = 'day' | 'golden' | 'night' | 'storm' | 'fog';
@@ -90,6 +91,54 @@ for (const f of features.values()) {
 }
 overlay.visible = false;
 scene.add(overlay);
+
+// Waterline proof: where the RENDERED terrain crosses y = 0 (green = on the polygon, yellow = rocks/kit crossing it).
+const slices = new THREE.Group();
+slices.name = 'waterline-slices';
+scene.add(slices);
+const sliceMat = new THREE.LineBasicMaterial({ vertexColors: true, depthTest: false, transparent: true });
+let sliceDeviation = 0, sliceSegments = 0, sliceOnCoast = 0;
+const sliceKey = new Set<string>();
+function updateSlices(): void {
+  for (const shown of world.debugShown()) {
+    const key = `${shown.feature.id}:${shown.lod}`;
+    if (sliceKey.has(key) || shown.lod !== 0) continue;
+    sliceKey.add(key);
+    const terrain = shown.group.getObjectByName('terrain') as THREE.Mesh | undefined;
+    if (!terrain) continue;
+    const pos = terrain.geometry.getAttribute('position') as THREE.BufferAttribute;
+    const index = terrain.geometry.getIndex()!;
+    const ox = shown.group.position.x, oz = shown.group.position.z;
+    const pts: number[] = [], cols: number[] = [];
+    const islands = shown.feature.islands;
+    const cross: { x: number; z: number }[] = [];
+    for (let t = 0; t < index.count; t += 3) {
+      cross.length = 0;
+      for (let e = 0; e < 3; e++) {
+        const a = index.getX(t + e), b = index.getX(t + ((e + 1) % 3));
+        const ya = pos.getY(a), yb = pos.getY(b);
+        if ((ya < 0) !== (yb < 0) && ya !== yb) {
+          const k = ya / (ya - yb);
+          cross.push({ x: pos.getX(a) + (pos.getX(b) - pos.getX(a)) * k + ox, z: pos.getZ(a) + (pos.getZ(b) - pos.getZ(a)) * k + oz });
+        }
+      }
+      if (cross.length < 2) continue;
+      let dev = Infinity;
+      for (const c of cross) for (const island of islands) dev = Math.min(dev, Math.abs(signedDistanceValue(island.outline, c.x, c.z)));
+      sliceDeviation = Math.max(sliceDeviation, dev);
+      sliceSegments++;
+      const onCoast = dev < 0.1;
+      if (onCoast) sliceOnCoast++;
+      for (const c of cross.slice(0, 2)) { pts.push(c.x, 0.5, c.z); if (onCoast) cols.push(0.1, 1, 0.35); else cols.push(1, 0.85, 0.1); }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+    const lines = new THREE.LineSegments(g, sliceMat);
+    lines.renderOrder = 1000;
+    slices.add(lines);
+  }
+}
 const slicePlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0.6);
 
 let screen: AppScreen = 'run';
@@ -117,7 +166,7 @@ function setView(name: string, mode: CamMode = camMode): void {
   const pos = new THREE.Vector3();
   if (mode === 'top') {
     target.y = 0;
-    pos.set(f.x + 0.01, f.radius * 2.6 + 60, f.z + 0.01);
+    pos.set(f.x + 0.01, f.radius * 1.9 + 40, f.z + 0.01);
   } else if (mode === 'tactical') {
     // The game's tactical 3/4 camera: ship in the water beside the island, camera ~190 m behind and above it.
     const shipX = f.x + Math.sin(s.view) * (f.radius + 70), shipZ = f.z + Math.cos(s.view) * (f.radius + 70);
@@ -135,7 +184,7 @@ function setView(name: string, mode: CamMode = camMode): void {
   refreshButtons();
 }
 
-function setOverlay(on: boolean): void { overlay.visible = on; refreshButtons(); }
+function setOverlay(on: boolean): void { overlay.visible = on; slices.visible = on; refreshButtons(); }
 function setSlice(on: boolean): void {
   host.renderer.clippingPlanes = on ? [slicePlane] : [];
   for (const o of oceanObjects) o.visible = !on;
@@ -194,12 +243,14 @@ function step(dt: number): void {
   for (const s of systems) s.update(ctx);
   post.update(ctx);
   host.render(() => post.render(scene, camera));
+  if (overlay.visible && frames % 15 === 0) updateSlices();
   if (++frames % 10 === 0) {
     const info = host.renderer.info.render;
     const st = world.stats();
     statsEl.textContent = `draw calls ${info.calls}  tris ${(info.triangles / 1000).toFixed(0)}k\n` +
       `features ${st.built}/${st.features}  pending ${st.pending}  world tris ${(st.triangles / 1000).toFixed(0)}k\n` +
-      `last build ${st.buildMs.toFixed(1)} ms  night ${atmosphere.night.toFixed(2)}`;
+      `last build ${st.buildMs.toFixed(1)} ms  night ${atmosphere.night.toFixed(2)}` +
+      (overlay.visible ? `\nwaterline: ${sliceSegments} rendered segments, ${(100 * sliceOnCoast / Math.max(1, sliceSegments)).toFixed(1)}% within 0.1 m of collision\nmax offset ${sliceDeviation.toFixed(2)} m (shoreline boulders may cross ≤ 1 m)\ngreen = rendered terrain at y=0 · red = collision polygon · yellow = boulder` : '');
   }
 }
 
@@ -218,7 +269,7 @@ window.__WORLD_LAB__ = {
   setView, setTod, setOverlay, setSlice, setScreen,
   setLod: (l) => { world.forceLod = l; },
   idle: () => world.stats().pending === 0,
-  stats: () => ({ ...world.stats(), calls: host.renderer.info.render.calls, triangles: host.renderer.info.render.triangles }),
+  stats: () => ({ ...world.stats(), calls: host.renderer.info.render.calls, triangles: host.renderer.info.render.triangles, sliceSegments, sliceOnCoast, sliceDeviation: +sliceDeviation.toFixed(3) }),
   step: (seconds) => { const n = Math.round(seconds * 60); for (let i = 0; i < n; i++) step(1 / 60); },
   views: SHOWCASES.map((s) => s.name),
 };
