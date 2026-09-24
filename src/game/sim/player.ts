@@ -174,7 +174,7 @@ function sail(c: CoreSim, ship: ShipDef): void {
   p.rudder += clamp(steer - p.rudder, -rate * dt, rate * dt);
 
   // Yaw: rudder authority needs water flow; half sail turns tightest; heavy hulls answer late.
-  const flow = Math.min(1, 0.3 + 1.4 * Math.abs(forward) / Math.max(1, ship.maxSpeed));
+  const flow = Math.min(1, 0.25 + (1.25 * Math.abs(forward)) / Math.max(1, ship.maxSpeed));
   let yawTarget = p.rudder * ship.turnRate * turnMul(stats) * flow * turnByTrim(p.throttle);
   if (boosting) yawTarget *= 0.85;
   if (submerged) yawTarget *= 1.15;
