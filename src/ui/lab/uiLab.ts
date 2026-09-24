@@ -2,7 +2,7 @@
  * UI lab (lab/ui.html): mounts the real Ui over a screenshot plate with mock state, a control panel (sliders,
  * event buttons) and URL presets for deterministic screenshots, e.g.
  *   /lab/ui.html?screen=run&bg=day&panel=0&modal=branch&boss=1&freeze=1
- * Params: screen, bg, panel, tab, ship, profile, modal, boss, hp, pad, outcome, fire, freeze, sea, hudscale, cb.
+ * Params: screen, bg, panel, tab, ship, profile, modal, boss, hp, pad, outcome, fire, freeze, sea, hudscale, cb, goals.
  * Round-2 fire presets: busy (captains + world event + affixed elites + bounty captain + signal cutter), irons,
  * momentum, charges, auto (toggle latches), victory-lap (armed lap + an offer the guard must resolve).
  */
@@ -17,6 +17,7 @@ import type { ScreenPoint, UiCallbacks, UiFrame } from '../contracts';
 import { Ui } from '../Ui';
 import { mockBoss, mockCaptains, mockFoes, mockProfile, mockResult, mockRun, mockSettings, mockWorldEvent, OFFER_SETS } from './mock';
 import { controls } from '../../input/Input';
+import { setGoalsProvider } from '../components/GoalsCard';
 
 const params = new URLSearchParams(location.search);
 const root = document.getElementById('game-root')!;
@@ -310,6 +311,12 @@ if (state.screen === 'results') showResults((params.get('outcome') as RunResult[
 if (params.get('boss') === '1') fire('boss');
 const hudScale = params.get('hudscale');
 if (hudScale) state.settings = { ...state.settings, hudScale: Number(hudScale) };
+// Made-up goals until REPLAY's nextGoals lands (?goals=1).
+if (params.get('goals') === '1') setGoalsProvider(() => [
+  { id: 'q-sink-300', title: 'Scourge of Sunward', detail: 'Sink 300 ships in Sunward Shallows', progress: 0.62, reward: 'Heat 2' },
+  { id: 'u-yellowfin', title: 'Commission Yellowfin', detail: '1,340 of 1,800 doubloons', progress: 0.74, reward: 'New ship' },
+  { id: 'q-warden', title: 'Break the Warden', detail: 'Sink the Iron Warden without bracing', progress: 0, reward: 'Charm' },
+]);
 const cb = params.get('cb') as Settings['colorBlind'] | null;
 if (cb) state.settings = { ...state.settings, colorBlind: cb };
 const hp = params.get('hp');

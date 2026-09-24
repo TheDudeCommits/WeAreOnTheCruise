@@ -59,7 +59,10 @@ function parts(o: CardOffer): CardParts {
   }
   if (o.kind === 'chip' && o.stat) {
     const amt = o.amount ?? 0;
-    const pct = Math.abs(amt) < 1 && o.stat !== 'armor' && o.stat !== 'luck' && o.stat !== 'amount' && o.stat !== 'revives' ? `${Math.round(amt * 100)}%` : `${amt}`;
+    const flat = o.stat === 'armor' || o.stat === 'luck' || o.stat === 'amount' || o.stat === 'revives' || o.stat === 'boostCharges';
+    const p100 = amt * 100;
+    // One decimal under 1% (a +0.1%/s repair chip must not read "+0%"); regen is per second.
+    const pct = !flat && Math.abs(amt) < 1 ? `${Math.abs(p100) < 1 ? p100.toFixed(1) : Math.round(p100)}%${o.stat === 'regen' ? '/s' : ''}` : `${amt}`;
     return { main: o.title || STAT_LABEL[o.stat], sub: `${amt >= 0 ? '+' : ''}${pct} ${STAT_LABEL[o.stat]}`, pips: 0, level: 0, branchPip: false, tags: [] };
   }
   return { main: o.title, sub: '', pips: 0, level: 0, branchPip: false, tags: [] };

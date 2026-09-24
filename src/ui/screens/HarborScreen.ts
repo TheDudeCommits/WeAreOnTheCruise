@@ -13,6 +13,7 @@ import { upgradeCost } from '../../game/meta/save';
 import type { MetaProfile, ShipDef } from '../../game/types';
 import type { UiCallbacks, UiFrame } from '../contracts';
 import { WantedPoster } from '../components/WantedPoster';
+import { GoalsCard, goalsFor } from '../components/GoalsCard';
 import { h, hex, navButton, play, TextCell } from '../core/dom';
 import { fmtClock, fmtInt } from '../core/format';
 import { glyph, icon, setIcon } from '../core/icons';
@@ -20,6 +21,7 @@ import { BOSS_GLYPH, iconPath, META_GLYPH, SPECIALS, ULTIMATES, WEATHER_LABEL } 
 import { focusDefault, focusEl, keyDir, moveFocus, type PadIntent } from '../core/nav';
 import { prompt } from '../core/prompts';
 import { harborPanes, type HarborPane } from './harborPanes';
+import { ScrollFade } from '../core/scroll';
 import { SHIP_STATS, statFill, thumbFor } from './shipStats';
 
 /** Built-in tabs, then any registered harbor panes (by pane id). */
@@ -27,20 +29,6 @@ type Tab = string;
 const TABS: readonly { id: Tab; label: string }[] = [
   { id: 'fleet', label: 'Fleet' }, { id: 'seas', label: 'Seas' }, { id: 'shipwright', label: 'Shipwright' },
 ];
-
-/** A panel that scrolls: fade masks top/bottom while there is more to see (classes can-up / can-down). */
-class ScrollFade {
-  constructor(readonly el: HTMLElement) {
-    el.addEventListener('scroll', () => this.refresh(), { passive: true });
-  }
-  refresh(): void {
-    const el = this.el;
-    const up = el.scrollTop > 2;
-    const down = el.scrollTop + el.clientHeight < el.scrollHeight - 2;
-    if (el.classList.contains('can-up') !== up) el.classList.toggle('can-up', up);
-    if (el.classList.contains('can-down') !== down) el.classList.toggle('can-down', down);
-  }
-}
 
 interface ShipCard { el: HTMLButtonElement; status: TextCell; cost: HTMLElement }
 interface SeaCard { el: HTMLButtonElement; lock: TextCell }
@@ -80,6 +68,9 @@ export class HarborScreen {
   private readonly balance: TextCell;
   private readonly balanceEl: HTMLElement;
   private readonly poster = new WantedPoster('is-harbor');
+  /** REPLAY's nextGoals(profile), between the poster and the voyage block (hidden while there are none). */
+  private readonly goals = new GoalsCard(3, 'is-harbor');
+  private side!: HTMLElement;
   private readonly setSail: HTMLButtonElement;
   private readonly setSailLabel: TextCell;
   private readonly voyageShip: TextCell;
@@ -278,6 +269,7 @@ export class HarborScreen {
     this.setSailLabel = new TextCell(sailLabel);
     const side = h('aside', 'cr-harbor__side',
       this.poster.el,
+      this.goals.el,
       h('div', 'cr-voyage',
         h('div', 'cr-voyage__row', h('span', 'cr-voyage__label', 'Voyage'), this.voyageDiff),
         h('div', 'cr-voyage__names', vShip, h('span', 'cr-voyage__sep', glyph('wind')), vSea),
@@ -286,6 +278,7 @@ export class HarborScreen {
     );
     this.voyageShip = new TextCell(vShip);
     this.voyageSea = new TextCell(vSea);
+    this.side = side;
 
     const bar = h('footer', 'cr-harbor__bar',
       prompt(['←', '→'], 'DPAD', 'Browse'),
@@ -377,7 +370,7 @@ export class HarborScreen {
 
   private sync(f: UiFrame): void {
     const p = f.profile;
-    let sig = `${p.doubloons}|${f.selectedShip}|${this.selectedSea}|${p.unlockedShips.join()}|${p.unlockedSeas.join()}|${p.bestBounty[f.selectedShip] ?? 0}|${p.bestTime[f.selectedShip] ?? 0}`;
+    let sig = `${p.doubloons}|${f.selectedShip}|${this.selectedSea}|${p.unlockedShips.join()}|${p.unlockedSeas.join()}|${p.bestBounty[f.selectedShip] ?? 0}|${p.bestTime[f.selectedShip] ?? 0}|${p.runs}|${p.history?.length ?? 0}`;
     for (const id of META_UPGRADE_IDS) sig += `|${p.upgrades[id] ?? 0}`;
     if (sig === this.sig) return;
     const first = this.sig === '';
@@ -434,6 +427,10 @@ export class HarborScreen {
       }
       tile.lastRank = rank;
     }
+
+    // Next goals (REPLAY): the poster shrinks to make room while there are any.
+    const hasGoals = this.goals.set(goalsFor(p));
+    this.side.classList.toggle('has-goals', hasGoals);
 
     // Poster + voyage summary.
     const ship = CONTENT.ships[f.selectedShip];
