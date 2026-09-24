@@ -15,7 +15,7 @@
  */
 import type { HazardState } from '../types';
 import {
-  HF_BURN, HF_DEPTH, HF_FOLLOW, HF_MAGNET, HF_RING, HF_SLOW, HF_STUN, HF_WASH, isBoss, keelDistance, massFactor, targetable,
+  HF_BURN, HF_DEPTH, HF_FOLLOW, HF_MAGNET, HF_RING, HF_SLOW, HF_STUN, HF_WASH, hullEdge, isBoss, massFactor, targetable,
   type CoreSim,
 } from './core-runtime';
 import { applyBurn } from './core-forces';
@@ -73,7 +73,7 @@ function tickArea(c: CoreSim, h: HazardState, i: number): void {
     }
   } else if (playerHittable(c)) {
     const p = c.state.player;
-    if (keelDistance(p, h.x, h.z) <= h.radius + p.beam * 0.25) c.hurtPlayer(h.damage, h.x, h.z, undefined, 'hazard');
+    if (hullEdge(p, h.x, h.z) <= h.radius) c.hurtPlayer(h.damage, h.x, h.z, undefined, 'hazard');
   }
 }
 
@@ -98,7 +98,7 @@ function touched(c: CoreSim, h: HazardState): boolean {
   }
   if (!playerHittable(c)) return false;
   const p = c.state.player;
-  return keelDistance(p, h.x, h.z) <= h.radius + p.beam * 0.5;
+  return hullEdge(p, h.x, h.z) <= h.radius;
 }
 
 function trigger(c: CoreSim, h: HazardState, i: number): void {
@@ -262,7 +262,7 @@ function updateShockwave(c: CoreSim, h: HazardState, i: number): void {
     }
   } else if (!hits.includes(0) && playerHittable(c)) {
     const p = c.state.player;
-    if (keelDistance(p, h.x, h.z) <= cur + p.beam * 0.5) { hits.push(0); c.hurtPlayer(h.damage, h.x, h.z, undefined, 'hazard'); }
+    if (hullEdge(p, h.x, h.z) <= cur) { hits.push(0); c.hurtPlayer(h.damage, h.x, h.z, undefined, 'hazard'); }
   }
 }
 

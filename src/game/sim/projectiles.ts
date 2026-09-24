@@ -12,7 +12,7 @@ import type { ProjectileKind, StatusKind, Team, WeaponId } from '../ids';
 import type { ProjectileState } from '../types';
 import type { Target } from './context';
 import {
-  GRAVITY, HF_BURN, isBoss, K_BALLISTIC, K_EXPIRE_BLAST, K_ISLAND, keelDistance, KIND_TRAITS, PF_BIG, PF_BURN,
+  GRAVITY, HF_BURN, hullEdge, isBoss, K_BALLISTIC, K_EXPIRE_BLAST, K_ISLAND, KIND_TRAITS, PF_BIG, PF_BURN,
   PF_CLUSTER, PF_FIREPOT, PF_HOOK, PF_SLOW, PF_SPARKS, PF_STUN, PF_WATER, targetable, wrapAngle, type CoreSim, type ExplosionKind,
 } from './core-runtime';
 import { applyBurn } from './core-forces';
@@ -50,7 +50,7 @@ export function updateProjectiles(c: CoreSim): void {
     if (pr.team === 'player') {
       if (hitShips(c, pr, i, px, pz)) continue;
     } else if (playerHittable) {
-      if (keelDistance(p, pr.x, pr.z) <= p.beam * 0.5 + pr.radius) {
+      if (hullEdge(p, pr.x, pr.z) <= pr.radius) {
         const dealt = c.hurtPlayer(pr.damage, pr.x, pr.z, undefined, 'projectile');
         c.emit({ type: 'projectile-hit', projectile: pr.kind, team: pr.team, x: pr.x, y: pr.y, z: pr.z, target: 'ship', targetId: 0, damage: dealt, crit: false });
         if (pr.area > 0) c.emit({ type: 'explosion', x: pr.x, z: pr.z, radius: pr.area, kind: 'medium', team: pr.team });
@@ -175,7 +175,7 @@ function land(c: CoreSim, pr: ProjectileState, i: number, playerHittable: boolea
   const radius = Math.max(pr.area, 6);
   c.emit({ type: 'explosion', x: pr.x, z: pr.z, radius, kind: pr.kind === 'boss-shell' ? 'medium' : 'mortar', team: pr.team });
   const p = c.state.player;
-  if (playerHittable && keelDistance(p, pr.x, pr.z) <= radius + p.beam * 0.25) c.hurtPlayer(pr.damage, pr.x, pr.z, undefined, 'projectile');
+  if (playerHittable && hullEdge(p, pr.x, pr.z) <= radius) c.hurtPlayer(pr.damage, pr.x, pr.z, undefined, 'projectile');
 }
 
 const KIND_BLAST: Partial<Record<ProjectileKind, ExplosionKind>> = {
@@ -247,6 +247,6 @@ export function explode(
   }
   const p = c.state.player;
   if (!p.alive || p.airborne > 0.2 || p.submerged > 0.5) return;
-  if (keelDistance(p, x, z) <= radius + p.beam * 0.5) c.hurtPlayer(damage, x, z, undefined, 'projectile');
+  if (hullEdge(p, x, z) <= radius) c.hurtPlayer(damage, x, z, undefined, 'projectile');
 }
 

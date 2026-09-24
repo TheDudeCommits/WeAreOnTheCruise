@@ -378,6 +378,25 @@ export function keelDistance(p: PlayerState, x: number, z: number): number {
   return Math.sqrt(dx * dx + dz * dz);
 }
 
+/** Incoming fire hits a hull 80% of the visual size (a generous, readable hitbox; contacts use the full hull). */
+export const PLAYER_HITBOX = 0.8;
+
+/**
+ * Distance from (x,z) to the edge of the player's hitbox (≤ 0 inside): the keel segment and half-beam scaled by
+ * PLAYER_HITBOX. Used for enemy shots, blasts and hazards.
+ */
+export function hullEdge(p: PlayerState, x: number, z: number): number {
+  const fx = -Math.sin(p.heading), fz = -Math.cos(p.heading);
+  const half = Math.max(0, p.length * 0.5 - p.beam * 0.5) * PLAYER_HITBOX;
+  const ax = p.x - fx * half, az = p.z - fz * half;
+  const ex = fx * 2 * half, ez = fz * 2 * half;
+  const len2 = ex * ex + ez * ez;
+  let t = len2 > 1e-6 ? ((x - ax) * ex + (z - az) * ez) / len2 : 0.5;
+  t = t < 0 ? 0 : t > 1 ? 1 : t;
+  const dx = x - (ax + ex * t), dz = z - (az + ez * t);
+  return Math.sqrt(dx * dx + dz * dz) - p.beam * 0.5 * PLAYER_HITBOX;
+}
+
 export const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
 export function wrapAngle(a: number): number {
   a = (a + Math.PI) % (Math.PI * 2);
