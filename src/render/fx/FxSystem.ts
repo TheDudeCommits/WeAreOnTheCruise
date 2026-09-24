@@ -38,6 +38,8 @@ const QUALITY_SCALE: Record<QualityTier, number> = { low: 0.5, medium: 0.75, hig
 export interface FxStats {
   cel: number; glow: number; heads: number; trails: number; beams: number; decals: number; debris: number;
   numbers: number; clock: number; spawned: number;
+  /** CPU time of the last update (ms) and an exponential average. */
+  updateMs: number; updateAvgMs: number; updateMaxMs: number;
 }
 
 export class FxSystem implements RenderSystem {
@@ -57,7 +59,10 @@ export class FxSystem implements RenderSystem {
   private readonly sunView = new THREE.Vector3();
   private readonly tmpColor = new THREE.Color();
   private readonly waterHeight = (x: number, z: number): number => this.kit.water.height(x, z);
-  readonly stats: FxStats = { cel: 0, glow: 0, heads: 0, trails: 0, beams: 0, decals: 0, debris: 0, numbers: 0, clock: 0, spawned: 0 };
+  readonly stats: FxStats = {
+    cel: 0, glow: 0, heads: 0, trails: 0, beams: 0, decals: 0, debris: 0, numbers: 0, clock: 0, spawned: 0,
+    updateMs: 0, updateAvgMs: 0, updateMaxMs: 0,
+  };
 
   constructor() {
     const s = this.shared;
@@ -89,9 +94,12 @@ export class FxSystem implements RenderSystem {
     this.scene = host.scene;
     this.camera = host.camera;
     host.scene.add(this.group);
+    // QA handle (dev builds only): FX counters and timings for scripts/perf probes.
+    if (import.meta.env.DEV) (globalThis as { __CRUISE_FX__?: FxSystem }).__CRUISE_FX__ = this;
   }
 
   update(ctx: FrameContext): void {
+    const t0 = performance.now();
     const run = ctx.run;
     const k = this.kit;
     if (run !== this.lastRun) {
@@ -156,6 +164,10 @@ export class FxSystem implements RenderSystem {
     st.cel = k.cel.pool.immediateCount; st.glow = k.glow.pool.immediateCount; st.heads = k.heads.pool.immediateCount;
     st.trails = k.trails.pool.immediateCount; st.beams = k.beams.pool.immediateCount; st.decals = k.decals.pool.immediateCount;
     st.debris = k.debris.active; st.numbers = 0;
+    const ms = performance.now() - t0;
+    st.updateMs = ms;
+    st.updateAvgMs += (ms - st.updateAvgMs) * 0.05;
+    st.updateMaxMs = Math.max(st.updateMaxMs * 0.995, ms);
   }
 
   private updateUniforms(ctx: FrameContext): void {
