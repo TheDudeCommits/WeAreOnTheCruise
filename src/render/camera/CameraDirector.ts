@@ -1,26 +1,46 @@
 /**
- * Camera director (LOOK-owned; RenderSystem + CameraServices surface is contract).
+ * Camera director (LOOK-owned in round 1, IMPACT in round 2; the RenderSystem + CameraServices surface is contract).
  *
- * Run: a readable survivor-game tactical camera — pitch ~47°, 115–175 m, zooming out as the fleet around you grows —
- * with velocity look-ahead, a lazy heading follow (turns read on screen, then the view catches up), smooth
- * critically-damped motion, island occlusion avoidance (the camera rises over cliffs), RMB orbit and wheel zoom.
+ * Run: a readable survivor-game tactical camera at 44° with velocity look-ahead, a lazy heading follow (turns read on
+ * screen, then the view catches up), smooth critically-damped motion, island occlusion avoidance (the camera rises
+ * over cliffs), RMB orbit and wheel zoom. Framing (round 2):
+ *  - Hero size: distance = 118 → 172 m with the fight + (length − 40) × 1.8 + mast height, and never so close that the
+ *    hull (bow to stern seen from astern, waterline to deck) is taller than 18% of the frame; capped a third of the
+ *    way into the fog band so thick weather never swallows the ship.
+ *  - Bosses: while a surfaced boss is within ~330 m the view looks 40% of the way to it, drops 4° of pitch and pulls to
+ *    the closest distance that keeps the hero and the whole boss hull in frame (so the boss stays big). A boss that
+ *    newly enters framing gets a 1.2 s arrival beat: 70% toward it, 2° lower, a slight pull-out, then it settles.
+ *  - settings.cinematicCamera (off by default): with fewer than ~8 enemies within 250 m the pitch eases to 33° and the
+ *    view tilts up so the horizon, sky and islands sit along the top of the frame; back to 44° in a melee or a boss
+ *    fight.
  * Shake is applied AFTER damping as trauma-shaped positional + rotational noise (respecting settings.cameraShake);
- * FOV kicks punch in and settle; focusOn(x, z, t) frames the player with a point of interest (boss intros).
- * Title/harbor: a slow, low showcase orbit close to the ship in golden light.
+ * FOV kicks punch in and settle; focusOn(x, z, t) frames the player with a point of interest.
+ * Title/harbor: a slow, low showcase orbit framed by the ship's measured mast height and length.
  * Every smoothing step runs on the render clock, so sim slow-motion never stalls or jerks the camera.
  */
 import * as THREE from 'three';
 import { SHIPS } from '../../game/content';
 import type { ShipId } from '../../game/ids';
-import type { IslandDef } from '../../game/types';
+import type { BossState, IslandDef } from '../../game/types';
 import type { CameraServices, FrameContext, RenderHostHandles, RenderSystem } from '../frame';
 
+const deg = THREE.MathUtils.degToRad;
 /** 44°: enough overview for a survivor fight, low enough that hull sides and sails still read. */
-const TACTICAL_PITCH = THREE.MathUtils.degToRad(44);
-const MIN_PITCH = THREE.MathUtils.degToRad(22);
-const MAX_PITCH = THREE.MathUtils.degToRad(72);
+const TACTICAL_PITCH = deg(44);
+/** Cinematic option: a lower camera while the sea is quiet (the horizon enters the top of the frame). */
+const CINEMATIC_PITCH = deg(33);
+const MIN_PITCH = deg(22);
+const MAX_PITCH = deg(72);
 const TACTICAL_FOV = 50;
 const SHOWCASE_FOV = 36;
+/** Largest share of the frame height the hero's hull may take (IMPACT round 2). */
+const HERO_FRAME = 0.18;
+/** A surfaced boss within this range (minus a third of its length) is framed with the hero. */
+const BOSS_RANGE = 330;
+const BOSS_ARRIVAL = 1.2;
+const BOSS_PITCH = deg(-4);
+
+const smooth01 = (x: number): number => { const t = x < 0 ? 0 : x > 1 ? 1 : x; return t * t * (3 - 2 * t); };
 
 function damp(current: number, target: number, rate: number, dt: number): number {
   return current + (target - current) * (1 - Math.exp(-rate * dt));
@@ -59,6 +79,25 @@ export class CameraDirector implements RenderSystem, CameraServices {
   /** 0..1 blend toward framing the nearest live boss together with the ship. */
   private bossFrame = 0;
   private readonly bossPoint = new THREE.Vector2();
+  private bossHeading = 0;
+  private bossLength = 90;
+  /** Smoothed look weight toward the framed boss (0.4 base … 0.75). */
+  private bossWeight = 0.4;
+  /** Hero-size distance without the fight term (m): boss framing never comes closer than 60% of it. */
+  private heroBase = 180;
+  /** Boss currently framed (−1 none) and the time left of its arrival beat. */
+  private bossId = -1;
+  private arrival = 0;
+  /** Hero measurements (world metres above the water), smoothed; re-measured every frame from ShipServices. */
+  private mastH = 0;
+  private deckH = 0;
+  /** 0..1 blend toward the cinematic band (settings.cinematicCamera) and the look-up tilt it brings (radians). */
+  private cinematic = 0;
+  private tilt = 0;
+  /** Diagnostics for QA probes: last framing decision. */
+  readonly framing = { heroDistance: 0, hullFrame: 0, bossFit: 0, bossWeight: 0, beat: 0, cinematic: 0, fogCap: 0, distance: 0, mastH: 0 };
+  private readonly fitPts = new Float32Array(8 * 3);
+  private readonly anchor = new THREE.Vector3();
   private readonly target = new THREE.Vector3();
   private readonly lookAhead = new THREE.Vector2();
   private readonly position = new THREE.Vector3(0, 90, 150);
@@ -90,6 +129,8 @@ export class CameraDirector implements RenderSystem, CameraServices {
   init(host: RenderHostHandles): void {
     this.camera = host.camera;
     this.canvas = host.renderer.domElement;
+    // Counters only (every build): the last framing decision, for the evidence probes.
+    (globalThis as { __CRUISE_CAMERA__?: unknown }).__CRUISE_CAMERA__ = this.framing;
     this.canvas.addEventListener('contextmenu', this.onContext);
     this.canvas.addEventListener('pointerdown', this.onDown);
     window.addEventListener('pointermove', this.onMove);
@@ -134,9 +175,32 @@ export class CameraDirector implements RenderSystem, CameraServices {
     this.lookAhead.x = damp(this.lookAhead.x, fx, 1.6, dt);
     this.lookAhead.y = damp(this.lookAhead.y, fz, 1.6, dt);
 
-    // Framing: zoom out with the fight and the ship's size.
-    let distance = (THREE.MathUtils.lerp(118, 172, this.pressure) + Math.max(0, shipLength - 40) * 0.7) * this.zoom;
-    let tx = focus.x + this.lookAhead.x, tz = focus.z + this.lookAhead.y;
+    const boss = run ? this.nearestBoss(run, focus.x, focus.z) : null;
+
+    // Cinematic band (option): a lower camera with the horizon at the top while the sea is quiet.
+    let quiet = false;
+    if (run && ctx.settings.cinematicCamera === true && !boss) {
+      let near = 0;
+      for (const e of run.enemies) {
+        if (e.life !== 'alive' || e.hidden >= 1) continue;
+        const dx = e.x - focus.x, dz = e.z - focus.z;
+        if (dx * dx + dz * dz < 250 * 250 && ++near >= 8) break;
+      }
+      quiet = near < 8;
+    }
+    this.cinematic = damp(this.cinematic, quiet ? 1 : 0, quiet ? 0.7 : 1.8, dt);
+    const cine = smooth01(this.cinematic);
+    this.tilt = damp(this.tilt, cine * deg(12), 2.5, dt);
+    this.framing.cinematic = cine;
+    // In the band the look-ahead shrinks, so the ship keeps clear of the skill bar at the bottom.
+    const aheadK = 1 - cine * 0.7;
+    const basePitch = THREE.MathUtils.clamp(THREE.MathUtils.lerp(TACTICAL_PITCH, CINEMATIC_PITCH, cine) + this.userPitch, MIN_PITCH, MAX_PITCH);
+
+    // Framing: hull size + the fight, never a hull taller than 18% of the frame.
+    this.measureHero(ctx, shipLength, dt);
+    let distance = this.heroDistance(ctx, shipLength, basePitch) * this.zoom;
+    this.framing.heroDistance = distance;
+    let tx = focus.x + this.lookAhead.x * aheadK, tz = focus.z + this.lookAhead.y * aheadK;
     if (this.focusTime > 0) {
       const k = this.focusEnvelope();
       const px = this.focusPoint.x, pz = this.focusPoint.y;
@@ -144,42 +208,150 @@ export class CameraDirector implements RenderSystem, CameraServices {
       tz = THREE.MathUtils.lerp(tz, focus.z * 0.4 + pz * 0.6, k);
       distance = Math.max(distance, THREE.MathUtils.lerp(distance, Math.hypot(px - focus.x, pz - focus.z) * 1.05 + 60, k));
     }
-    // Boss framing: while a surfaced boss is within reach, look between it and the ship and pull back to fit both,
-    // so the fight's centrepiece is never a marker at the screen edge.
-    const boss = run ? this.nearestBoss(run, focus.x, focus.z) : null;
+    // Boss framing: while a surfaced boss is within reach, look 40% of the way to it (up to 70% when that frames both
+    // hulls closer), drop 4° of pitch and pull to the closest distance that keeps both hulls in frame. A boss that
+    // newly enters framing gets a 1.2 s arrival beat.
+    if (boss && boss.id !== this.bossId) { this.bossId = boss.id; this.arrival = BOSS_ARRIVAL; }
+    else if (!boss && this.bossFrame < 0.02) this.bossId = -1;
+    this.arrival = Math.max(0, this.arrival - dt);
     this.bossFrame = damp(this.bossFrame, boss ? 1 : 0, boss ? 1.4 : 0.8, dt);
-    if (boss) this.bossPoint.set(boss.x, boss.z);
+    if (boss) { this.bossPoint.set(boss.x, boss.z); this.bossHeading = boss.heading; this.bossLength = boss.length; }
+    let pitchOffset = 0;
+    this.framing.beat = 0;
     if (this.bossFrame > 0.01) {
-      const k = this.bossFrame * this.bossFrame * (3 - 2 * this.bossFrame);
+      const k = smooth01(this.bossFrame);
+      const since = BOSS_ARRIVAL - this.arrival;
+      const beat = this.arrival > 0 ? Math.min(smooth01(since / 0.3), smooth01(this.arrival / 0.5)) : 0;
+      this.framing.beat = beat;
       const bx = this.bossPoint.x - focus.x, bz = this.bossPoint.y - focus.z;
-      const gap = Math.hypot(bx, bz);
-      const reach = boss ? boss.length * 0.5 : 40;
-      tx = THREE.MathUtils.lerp(tx, focus.x + bx * 0.4, k);
-      tz = THREE.MathUtils.lerp(tz, focus.z + bz * 0.4, k);
-      const fit = Math.min(430, gap * 0.95 + reach + 70);
-      distance = THREE.MathUtils.lerp(distance, Math.max(distance, fit), k);
+      pitchOffset = (BOSS_PITCH - deg(2) * beat) * k;
+      const pitchB = basePitch + pitchOffset;
+      // The boss is the centrepiece: the camera may come closer than the hero-size distance (the hero then takes up to
+      // about a third of the frame height) so the boss hull stays large; never beyond 460 m.
+      const nearest = Math.max(110, this.heroBase * 0.6 * this.zoom);
+      // Look weight: the 40% base, or up to 75% when that brings the camera closer to the boss with both hulls in frame.
+      const cpB = Math.cos(pitchB), spB = Math.sin(pitchB), syB = Math.sin(this.yaw), cyB = Math.cos(this.yaw);
+      let bestW = 0.4, bestD = Infinity;
+      for (let w = 0.4; w <= 0.751; w += 0.07) {
+        const lx = focus.x + bx * w, lz = focus.z + bz * w;
+        const d = THREE.MathUtils.clamp(this.fitBoth(ctx, focus, lx, lz, pitchB), nearest, 460);
+        const cx = lx + syB * cpB * d - this.bossPoint.x, cz = lz + cyB * cpB * d - this.bossPoint.y;
+        const toBoss = Math.hypot(cx, spB * d, cz);
+        if (toBoss < bestD * 0.97) { bestD = toBoss; bestW = w; }
+      }
+      this.bossWeight = damp(this.bossWeight, bestW, 1.5, dt);
+      const w = Math.max(this.bossWeight, 0.4 + 0.3 * beat);
+      this.framing.bossWeight = w;
+      tx = THREE.MathUtils.lerp(tx, focus.x + bx * w, k);
+      tz = THREE.MathUtils.lerp(tz, focus.z + bz * w, k);
+      const fit = this.fitBoth(ctx, focus, focus.x + bx * w, focus.z + bz * w, pitchB);
+      this.framing.bossFit = fit;
+      const bossDistance = THREE.MathUtils.clamp(fit * (1 + 0.12 * beat), nearest, 460);
+      distance = THREE.MathUtils.lerp(distance, bossDistance, k);
     }
     this.distance = damp(this.distance, distance, 2.2, dt);
+    this.framing.distance = this.distance;
     this.target.x = damp(this.target.x, tx, 5.5, dt);
     this.target.z = damp(this.target.z, tz, 5.5, dt);
     this.target.y = damp(this.target.y, 2, 4, dt);
-    if (!this.initialized) { this.target.set(tx, 2, tz); this.initialized = true; }
+    if (!this.initialized) { this.target.set(tx, 2, tz); this.distance = distance; this.initialized = true; }
 
     // Occlusion: rise over islands between the camera and the ship.
-    const basePitch = THREE.MathUtils.clamp(TACTICAL_PITCH + this.userPitch, MIN_PITCH, MAX_PITCH);
     const needed = this.occlusionPitch(ctx, basePitch);
     const lift = Math.max(0, needed - basePitch);
     this.liftPitch = damp(this.liftPitch, lift, lift > this.liftPitch ? 6 : 1.2, dt);
-    this.pitch = damp(this.pitch, Math.min(MAX_PITCH, basePitch + this.liftPitch), 4, dt);
+    this.pitch = damp(this.pitch, THREE.MathUtils.clamp(basePitch + this.liftPitch + pitchOffset, MIN_PITCH, MAX_PITCH), 4, dt);
     this.fov = damp(this.fov, TACTICAL_FOV, 2.5, dt);
 
     this.place(ctx, dt, 4.5);
   }
 
+  /** Hero mast and deck heights above the water (measured model via ShipServices anchors; length-based fallbacks). */
+  private measureHero(ctx: FrameContext, length: number, dt: number): void {
+    const ships = ctx.services.ships;
+    const water = ctx.services.ocean.heightAt(ctx.focus.x, ctx.focus.z);
+    let mast = length * 0.45, deck = Math.max(2.5, length * 0.1);
+    if (ships.anchor(0, 'mast', this.anchor)) mast = Math.max(mast, this.anchor.y - water);
+    if (ships.anchor(0, 'deck', this.anchor)) deck = THREE.MathUtils.clamp(this.anchor.y - water, 1.5, 20);
+    const first = this.mastH === 0;
+    this.mastH = first ? mast : damp(this.mastH, mast, 1.5, dt);
+    this.framing.mastH = this.mastH;
+    this.deckH = first ? deck : damp(this.deckH, deck, 1.5, dt);
+  }
+
+  /**
+   * Camera distance for the hero alone: 118 → 172 m with the fight, + (length − 40) × 1.8 + mast height; never so close
+   * that the hull (bow → stern seen from astern at this pitch, plus the freeboard) exceeds HERO_FRAME of the frame
+   * height; never deeper than a third of the way into the fog band.
+   */
+  private heroDistance(ctx: FrameContext, length: number, pitch: number): number {
+    const fight = THREE.MathUtils.lerp(0, 54, this.pressure);
+    const brief = 118 + Math.max(0, length - 40) * 1.8 + this.mastH;
+    // Hull footprint seen from astern at any heading the lazy follow allows (the diagonal covers turns), grown by the
+    // tier scale; the look-ahead brings the hull nearer the camera than the target, so it is added back as depth.
+    const run = ctx.run;
+    const beam = run ? SHIPS[run.shipId]?.beam ?? length * 0.3 : length * 0.3;
+    const grown = 1 + (run?.player.tier ?? 0) * 0.025;
+    const sp = Math.sin(pitch), cp = Math.cos(pitch);
+    const half = Math.hypot(length, beam) * grown * 0.5 * sp;
+    // Seen from astern: the hull runs from the stern at the waterline up to the bow at deck height; the whole silhouette
+    // up to the higher of that bow and the mast tops (amidships). Both must fit HERO_FRAME of the frame height.
+    const hull = half * 2 + this.deckH * cp;
+    const silhouette = half + Math.max(half + this.deckH * cp, this.mastH * cp);
+    const tanV = Math.tan(deg(TACTICAL_FOV) * 0.5);
+    const clampD = Math.max(hull, silhouette) / (HERO_FRAME * 2 * tanV) + Math.hypot(this.lookAhead.x, this.lookAhead.y) * cp;
+    const a = ctx.atmosphere;
+    const fogCap = Math.max(170, a.fogNear + (a.fogFar - a.fogNear) * 0.3);
+    this.framing.fogCap = fogCap;
+    this.heroBase = Math.min(Math.max(brief, clampD), fogCap);
+    const d = Math.min(Math.max(brief, clampD) + fight, fogCap);
+    this.framing.hullFrame = Math.max(hull, silhouette) / (2 * tanV * d);
+    return d;
+  }
+
+  /**
+   * Closest camera distance (looking at (tx, tz) from the current yaw at `pitch`) that keeps the hero (bow, stern,
+   * mast top) inside 95% of the frame and the framed boss hull (bow, stern, a top point) inside 88%.
+   */
+  private fitBoth(ctx: FrameContext, focus: FrameContext['focus'], tx: number, tz: number, pitch: number): number {
+    const p = this.fitPts;
+    const hf = -Math.sin(focus.heading), hz = -Math.cos(focus.heading);
+    const L = ctx.run ? SHIPS[ctx.run.shipId]?.length ?? 40 : 40;
+    const bfx = -Math.sin(this.bossHeading), bfz = -Math.cos(this.bossHeading);
+    const BL = this.bossLength;
+    // hero: bow, stern (deck), mast top
+    p[0] = focus.x + hf * L * 0.5; p[1] = this.deckH; p[2] = focus.z + hz * L * 0.5;
+    p[3] = focus.x - hf * L * 0.5; p[4] = this.deckH; p[5] = focus.z - hz * L * 0.5;
+    p[6] = focus.x; p[7] = this.mastH; p[8] = focus.z;
+    // boss: bow, stern (near the water), superstructure top
+    const bx = this.bossPoint.x, bz = this.bossPoint.y;
+    p[9] = bx + bfx * BL * 0.5; p[10] = 3; p[11] = bz + bfz * BL * 0.5;
+    p[12] = bx - bfx * BL * 0.5; p[13] = 3; p[14] = bz - bfz * BL * 0.5;
+    p[15] = bx; p[16] = BL * 0.18; p[17] = bz;
+    const cp = Math.cos(pitch), sp = Math.sin(pitch);
+    const sy = Math.sin(this.yaw), cy = Math.cos(this.yaw);
+    // camera axes: forward (camera → target), right, up
+    const fx = -sy * cp, fy = -sp, fz = -cy * cp;
+    const rx = cy, rz = -sy;
+    const ux = -rz * fy, uy = rz * fx - rx * fz, uz = rx * fy;
+    const tanV = Math.tan(deg(TACTICAL_FOV) * 0.5);
+    const aspect = ctx.viewport.width / Math.max(1, ctx.viewport.height);
+    let d = 0;
+    for (let i = 0; i < 6; i++) {
+      const m = i < 3 ? 0.95 : 0.88;
+      const qx = p[i * 3]! - tx, qy = p[i * 3 + 1]! - 2, qz = p[i * 3 + 2]! - tz;
+      const x = qx * rx + qz * rz;
+      const y = qx * ux + qy * uy + qz * uz;
+      const depth = qx * fx + qy * fy + qz * fz;
+      d = Math.max(d, Math.abs(x) / (m * tanV * aspect) - depth, Math.abs(y) / (m * tanV) - depth);
+    }
+    return d;
+  }
+
   /** The nearest live, surfaced boss within framing range of (x, z), or null. */
-  private nearestBoss(run: NonNullable<FrameContext['run']>, x: number, z: number): { x: number; z: number; length: number } | null {
-    let best: { x: number; z: number; length: number } | null = null;
-    let bestD = 330;
+  private nearestBoss(run: NonNullable<FrameContext['run']>, x: number, z: number): Readonly<BossState> | null {
+    let best: Readonly<BossState> | null = null;
+    let bestD = BOSS_RANGE;
     for (const b of run.bosses) {
       if (b.life !== 'alive' || b.submerged > 0.7) continue;
       const d = Math.hypot(b.x - x, b.z - z) - b.length * 0.3;
@@ -221,12 +393,21 @@ export class CameraDirector implements RenderSystem, CameraServices {
     this.showcaseYaw += dt * 0.07;
     this.yaw = wrapAngle(this.yaw + wrapAngle(this.showcaseYaw + this.userYaw - this.yaw) * (1 - Math.exp(-dt * 1.5)));
     this.pitch = damp(this.pitch, THREE.MathUtils.clamp(0.13 + this.userPitch * 0.5, 0.04, 0.6), 1.5, dt);
-    this.distance = damp(this.distance, (length * 1.15 + 22) * THREE.MathUtils.clamp(this.zoom, 0.7, 1.6), 1.5, dt);
+    this.tilt = damp(this.tilt, 0, 3, dt);
+    // Framed by the measured model: the length (+ margin) or, for tall ships, the waterline → mast top with 8% headroom
+    // at the depth of the nearest masts (they stand along the hull, up to half a length closer than the centre).
+    this.measureHero(ctx, length, dt);
+    const halfHeight = (this.mastH * 0.5) / 0.84;
+    const fit = Math.max(length * 1.15 + 22, halfHeight / Math.tan(deg(SHOWCASE_FOV) * 0.5) + length * 0.45);
+    const centreY = this.mastH * 0.48;
+    this.distance = damp(this.distance, fit * THREE.MathUtils.clamp(this.zoom, 0.7, 1.6), 1.5, dt);
+    this.framing.distance = this.distance;
+    this.framing.heroDistance = fit;
     this.fov = damp(this.fov, SHOWCASE_FOV, 1.5, dt);
     this.target.x = damp(this.target.x, ctx.focus.x, 3, dt);
     this.target.z = damp(this.target.z, ctx.focus.z, 3, dt);
-    this.target.y = damp(this.target.y, length * 0.2 + 2, 3, dt);
-    if (!this.initialized) { this.target.set(ctx.focus.x, length * 0.2 + 2, ctx.focus.z); this.initialized = true; }
+    this.target.y = damp(this.target.y, centreY, 3, dt);
+    if (!this.initialized) { this.target.set(ctx.focus.x, centreY, ctx.focus.z); this.initialized = true; }
     this.place(ctx, dt, 2.2);
     // Harbor: the fleet panel covers the left ~45% and the WANTED poster the right edge; frame the ship in the gap.
     this.showcaseShift = damp(this.showcaseShift, ctx.screen === 'harbor' ? 0.26 : 0, 2, dt);
@@ -261,6 +442,8 @@ export class CameraDirector implements RenderSystem, CameraServices {
     cam.position.copy(this.position);
     cam.up.set(0, 1, 0);
     cam.lookAt(this.lookTarget);
+    // Cinematic band: tilt the view up so the horizon sits along the top of the frame (the ship moves down).
+    if (this.tilt > 1e-4) cam.rotateX(this.tilt);
 
     // Shake after damping: trauma² envelope, positional + rotational (roll strongest).
     this.shakeClock += dt;

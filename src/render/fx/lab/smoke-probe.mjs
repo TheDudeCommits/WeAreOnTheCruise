@@ -161,11 +161,24 @@ function measureFrame() {
     const s = window.__CRUISE__.summary();
     const r4 = (v) => +v.toFixed(4);
     const fx = window.__CRUISE_FX_STATS__;
+    // Hull-only height: the measured hull box (waterline → rail, bow → stern, full beam) projected by the live camera.
+    let hullH = null;
+    const hp = S.heroShip.profile;
+    if (hp) {
+      let ymin = 1e9, ymax = -1e9;
+      const b = hp.bounds;
+      for (const x of [b.min.x, b.max.x]) for (const y of [0, hp.railY]) for (const z of [b.min.z, b.max.z]) {
+        const v = camera.position.clone().set(x, y, z).applyMatrix4(S.heroShip.root.matrixWorld).project(camera);
+        ymin = Math.min(ymin, v.y); ymax = Math.max(ymax, v.y);
+      }
+      hullH = r4((Math.min(1, ymax) - Math.max(-1, ymin)) / 2);
+    }
     return {
+      cam: window.__CRUISE_CAMERA__ ? Object.fromEntries(Object.entries(window.__CRUISE_CAMERA__).map(([k, v]) => [k, +(+v).toFixed(3)])) : null,
       gov: fx ? { est: r4(fx.smokeCoverage), raw: r4(fx.smokeCoverageRaw), thin: r4(fx.smokeThin), live: fx.smokeLive, ms: +fx.smokeMs.toFixed(3) } : null,
       t: s.time, enemies: s.enemies, bosses: s.bosses,
       smoke: r4(smokeN / n), dark: r4(darkN / n),
-      heroOcc: hero > 0 ? r4(heroCov / hero) : null, heroArea: r4(hero / n), heroH: heroTop >= 0 ? r4((heroBottom - heroTop + 1) / H) : null,
+      heroOcc: hero > 0 ? r4(heroCov / hero) : null, heroArea: r4(hero / n), heroH: heroTop >= 0 ? r4((heroBottom - heroTop + 1) / H) : null, hullH,
       bossOcc: boss > 20 ? r4(bossCov / boss) : null, bossArea: r4(boss / n),
       fov: +camera.fov.toFixed(2),
       camDist: +Math.hypot(camera.position.x - s.player.x, camera.position.z - s.player.z, camera.position.y).toFixed(1),
@@ -224,7 +237,7 @@ function summarize(list) {
     const sorted = [...v].sort((a, b) => a - b);
     return { mean: +(v.reduce((a, b) => a + b, 0) / v.length).toFixed(4), max: sorted[sorted.length - 1], min: sorted[0], n: v.length };
   };
-  return { smoke: stat('smoke'), dark: stat('dark'), heroOcc: stat('heroOcc'), heroH: stat('heroH'), bossOcc: stat('bossOcc'), bossArea: stat('bossArea'), camDist: stat('camDist') };
+  return { smoke: stat('smoke'), dark: stat('dark'), heroOcc: stat('heroOcc'), heroH: stat('heroH'), hullH: stat('hullH'), bossOcc: stat('bossOcc'), bossArea: stat('bossArea'), camDist: stat('camDist') };
 }
 
 const report = { base: BASE, samples: SAMPLES, gap: GAP, scenarios: {}, startedAt: new Date().toISOString() };
@@ -279,7 +292,7 @@ try {
   const table = Object.fromEntries(Object.entries(report.scenarios).map(([k, v]) => [k, v.summary ? {
     smoke: v.summary.smoke?.mean, smokeMax: v.summary.smoke?.max, dark: v.summary.dark?.mean, heroOcc: v.summary.heroOcc?.mean,
     heroOccMax: v.summary.heroOcc?.max, bossOcc: v.summary.bossOcc?.mean, bossArea: v.summary.bossArea?.mean, bossAreaMin: v.summary.bossArea?.min,
-    heroH: v.summary.heroH?.mean, heroHMax: v.summary.heroH?.max,
+    heroH: v.summary.heroH?.mean, heroHMax: v.summary.heroH?.max, hullH: v.summary.hullH?.mean, hullHMax: v.summary.hullH?.max,
   } : v]));
   console.log(JSON.stringify(table, null, 1));
 }
