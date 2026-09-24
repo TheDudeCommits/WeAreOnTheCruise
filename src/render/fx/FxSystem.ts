@@ -1,114 +1,203 @@
 /**
  * Effects (FX-owned; RenderSystem surface is contract): projectiles, pickups, hazards, telegraph decals,
  * explosions, muzzle flashes, splashes, smoke, fire, debris, lightning, damage numbers — everything driven by
- * RunState + SimEvents. Stub: instanced spheres for projectiles/pickups, rings for telegraphs, puffs for events.
+ * RunState + SimEvents, in the Grand Line Cel "sakuga" language (see Sakuga.ts).
+ *
+ * Draw calls (all instanced, pooled buffers, no per-frame allocations):
+ *   cel sprites · glow sprites · projectile heads · trails · beams · ropes · water decals · damage numbers ·
+ *   wave walls · debris planks · 6 prop meshes (coins, bars, crates, chests, barrels, mines)  = 16
+ *
+ * The FX clock follows the sim: it runs with run.timeScale (slow-mo/hit-stop), freezes while paused or on the
+ * level-up screen, and runs in real time after victory/defeat so finales play out.
  */
 import * as THREE from 'three';
-import type { PickupKind } from '../../game/ids';
-import type { FrameContext, RenderHostHandles, RenderSystem } from '../frame';
+import type { RunState } from '../../game/types';
+import type { FrameContext, QualityTier, RenderHostHandles, RenderSystem } from '../frame';
+import { createSharedUniforms, type FxSharedUniforms } from './core/glsl';
+import type { SpritePass } from './core/SpritePass';
+import { EventFx } from './EventFx';
+import { Juice } from './Juice';
+import type { FxKit } from './Kit';
+import { BeamPass } from './passes/Beams';
+import { createCelSprites } from './passes/CelSprites';
+import { DamageNumbers } from './passes/DamageNumbers';
+import { DebrisPass } from './passes/Debris';
+import { DecalPass } from './passes/Decals';
+import { createGlowSprites } from './passes/GlowSprites';
+import { createHeads } from './passes/Heads';
+import { PropPass } from './passes/Props';
+import { RopePass } from './passes/Ropes';
+import { TrailPass } from './passes/Trails';
+import { WaveWallPass } from './passes/WaveWalls';
+import { Sakuga } from './Sakuga';
+import { StateFx } from './StateFx';
 
-const MAX_PROJECTILES = 1600;
-const MAX_PICKUPS = 900;
-const MAX_PUFFS = 256;
-const MAX_RINGS = 96;
+const QUALITY_SCALE: Record<QualityTier, number> = { low: 0.5, medium: 0.75, high: 1, ultra: 1.2 };
 
-const PICKUP_COLORS: Record<PickupKind, number> = {
-  'xp-copper': 0xd9844a, 'xp-silver': 0xdfe8ef, 'xp-gold': 0xffd24a, doubloon: 0xffc83a, repair: 0x62e38b,
-  compass: 0x7fd6ff, 'powder-keg': 0x2b2b2b, chest: 0xb86b2a,
-};
+export interface FxStats {
+  cel: number; glow: number; heads: number; trails: number; beams: number; decals: number; debris: number;
+  numbers: number; clock: number; spawned: number;
+}
 
 export class FxSystem implements RenderSystem {
   readonly name = 'fx';
-  private scene!: THREE.Scene;
-  private readonly matrix = new THREE.Matrix4();
-  private readonly color = new THREE.Color();
-  private readonly projectiles: THREE.InstancedMesh;
-  private readonly pickups: THREE.InstancedMesh;
-  private readonly puffs: THREE.InstancedMesh;
-  private readonly rings: THREE.InstancedMesh;
-  private readonly puffState: { x: number; y: number; z: number; age: number; life: number; size: number; color: number }[] = [];
+  readonly group = new THREE.Group();
+  readonly shared: FxSharedUniforms = createSharedUniforms();
+  readonly juice = new Juice();
+  readonly kit: FxKit;
+  readonly sakuga: Sakuga;
+  readonly events: EventFx;
+  readonly state: StateFx;
+  private readonly passes: SpritePass[];
+  private camera: THREE.PerspectiveCamera | null = null;
+  private scene: THREE.Scene | null = null;
+  private lastRun: Readonly<RunState> | null = null;
+  private clock = 0;
+  private readonly sunView = new THREE.Vector3();
+  private readonly tmpColor = new THREE.Color();
+  readonly stats: FxStats = { cel: 0, glow: 0, heads: 0, trails: 0, beams: 0, decals: 0, debris: 0, numbers: 0, clock: 0, spawned: 0 };
 
   constructor() {
-    this.projectiles = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 8, 6), new THREE.MeshBasicMaterial({ color: 0x1b1b24 }), MAX_PROJECTILES);
-    this.pickups = new THREE.InstancedMesh(new THREE.OctahedronGeometry(1.4, 0), new THREE.MeshBasicMaterial({ color: 0xffffff }), MAX_PICKUPS);
-    this.puffs = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, depthWrite: false }), MAX_PUFFS);
-    this.rings = new THREE.InstancedMesh(new THREE.RingGeometry(0.86, 1, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xff3b2f, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide }), MAX_RINGS);
-    for (const mesh of [this.projectiles, this.pickups, this.puffs, this.rings]) { mesh.count = 0; mesh.frustumCulled = false; }
+    const s = this.shared;
+    const cel = createCelSprites(s, 16384, 3072);
+    const glow = createGlowSprites(s, 12288, 4096);
+    const heads = createHeads(s, 2048);
+    const trails = new TrailPass(s, 2560);
+    const beams = new BeamPass(s, 2048, 256);
+    const ropes = new RopePass(s, 96);
+    const decals = new DecalPass(s, 768, 384);
+    const debris = new DebrisPass(700, 160);
+    const props = new PropPass({ 0: 1024, 1: 256, 2: 64, 3: 48, 4: 192, 5: 160 });
+    const numbers = new DamageNumbers(s);
+    const walls = new WaveWallPass(s, 8);
+    this.passes = [cel, glow, heads];
+    this.kit = {
+      cel, glow, heads, trails, beams, ropes, decals, debris, props, numbers, walls, juice: this.juice,
+      ocean: null, ships: null, focusX: 0, focusZ: 0, windX: 0, windZ: 0, clock: 0, q: 1, spawned: 0,
+    };
+    this.sakuga = new Sakuga(this.kit);
+    this.events = new EventFx(this.kit, this.sakuga);
+    this.state = new StateFx(this.kit, this.sakuga, this.events);
+    debris.splash = (x, z, size) => this.sakuga.plop(x, z, size);
+    this.group.name = 'fx';
+    this.group.add(decals.mesh, cel.mesh, heads.mesh, trails.mesh, glow.mesh, beams.mesh, ropes.mesh, walls.mesh, debris.mesh, props.group, numbers.mesh);
   }
 
   init(host: RenderHostHandles): void {
     this.scene = host.scene;
-    this.scene.add(this.projectiles, this.pickups, this.puffs, this.rings);
+    this.camera = host.camera;
+    host.scene.add(this.group);
   }
 
   update(ctx: FrameContext): void {
-    for (const e of ctx.events) {
-      switch (e.type) {
-        case 'weapon-fired': this.puff(e.x + e.dirX * 8, 4, e.z + e.dirZ * 8, 5, 0xf5f0e6, 0.6); break;
-        case 'projectile-hit': this.puff(e.x, Math.max(1, e.y), e.z, e.target === 'water' ? 3 : 4, e.target === 'water' ? 0xe8fbff : 0xffb36b, 0.5); break;
-        case 'explosion': this.puff(e.x, 2, e.z, e.radius * 0.8, 0xffa24a, 0.7); break;
-        case 'enemy-killed': this.puff(e.x, 3, e.z, 14, 0x3a3a3a, 1.4); break;
-        case 'player-hit': ctx.services.camera.shake(Math.min(1, e.amount / 30)); break;
-        default: break;
-      }
-    }
     const run = ctx.run;
-    let n = 0;
-    if (run) for (const p of run.projectiles) {
-      if (!p.alive || n >= MAX_PROJECTILES) continue;
-      const s = p.kind.includes('mortar') || p.kind === 'boss-shell' ? 1.6 : 1;
-      this.matrix.makeScale(s, s, s).setPosition(p.x, p.y, p.z);
-      this.projectiles.setMatrixAt(n++, this.matrix);
+    const k = this.kit;
+    if (run !== this.lastRun) {
+      if (run && this.lastRun && run.seed !== this.lastRun.seed) this.reset();
+      else if (run && !this.lastRun) this.reset();
+      this.lastRun = run;
     }
-    this.projectiles.count = n; this.projectiles.instanceMatrix.needsUpdate = true;
+    // Clock: sim-synced (slow-mo, pause), real-time for finales and menus.
+    let scale = 1;
+    if (run) {
+      if (run.status === 'running') scale = run.timeScale;
+      else if (run.status === 'victory' || run.status === 'dead') scale = 1;
+      else scale = 0;
+    }
+    const dt = Math.min(0.1, ctx.dt) * scale;
+    this.clock += dt;
+    k.clock = this.clock;
+    k.ocean = ctx.services.ocean;
+    k.ships = ctx.services.ships;
+    k.focusX = ctx.focus.x;
+    k.focusZ = ctx.focus.z;
+    const wind = 2 + ctx.sea.windStrength * 5;
+    k.windX = Math.sin(ctx.sea.windDir) * wind;
+    k.windZ = Math.cos(ctx.sea.windDir) * wind;
+    k.q = QUALITY_SCALE[ctx.quality] ?? 1;
+    k.spawned = 0;
+    this.updateUniforms(ctx);
 
-    n = 0;
-    if (run) for (const k of run.pickups) {
-      if (!k.alive || n >= MAX_PICKUPS) continue;
-      const bob = Math.sin(ctx.time * 3 + k.id) * 0.6;
-      const s = k.kind === 'chest' ? 3 : k.kind === 'xp-gold' ? 1.6 : 1;
-      this.matrix.makeRotationY(ctx.time * 2 + k.id).scale(new THREE.Vector3(s, s, s)).setPosition(k.x, 2.2 + bob, k.z);
-      this.pickups.setMatrixAt(n, this.matrix);
-      this.pickups.setColorAt(n++, this.color.setHex(PICKUP_COLORS[k.kind]));
-    }
-    this.pickups.count = n; this.pickups.instanceMatrix.needsUpdate = true;
-    if (this.pickups.instanceColor) this.pickups.instanceColor.needsUpdate = true;
+    for (const p of this.passes) p.beginFrame(this.clock);
+    k.trails.beginFrame();
+    k.beams.beginFrame(this.clock);
+    k.ropes.beginFrame();
+    k.decals.beginFrame(this.clock);
+    k.props.beginFrame();
+    k.walls.beginFrame();
+    k.debris.beginFrame();
+    k.decals.setWaves(ctx.time, ctx.sea.waveScale);
+    k.numbers.enabled = ctx.settings.damageNumbers;
 
-    n = 0;
-    if (run) for (const t of run.telegraphs) {
-      if (!t.alive || n >= MAX_RINGS) continue;
-      const r = t.radius * (0.4 + 0.6 * Math.min(1, t.time / t.duration));
-      this.matrix.makeScale(r, 1, r).setPosition(t.x, 0.6, t.z);
-      this.rings.setMatrixAt(n++, this.matrix);
+    this.events.tick(dt);
+    if (run) {
+      this.events.process(ctx, run);
+      this.state.render(ctx, run, dt);
     }
-    this.rings.count = n; this.rings.instanceMatrix.needsUpdate = true;
+    k.debris.update(dt, (x, z) => (k.ocean ? k.ocean.heightAt(x, z) : 0), ctx.time);
+    const glyphPx = Math.max(22, Math.min(40, ctx.viewport.height * 0.03));
+    k.numbers.update(dt, this.clock, glyphPx);
 
-    n = 0;
-    for (let i = this.puffState.length - 1; i >= 0; i--) {
-      const puff = this.puffState[i]!;
-      puff.age += ctx.dt;
-      if (puff.age >= puff.life) { this.puffState.splice(i, 1); continue; }
-    }
-    for (const puff of this.puffState) {
-      if (n >= MAX_PUFFS) break;
-      const k = puff.age / puff.life;
-      const s = puff.size * (0.5 + k);
-      this.matrix.makeScale(s, s, s).setPosition(puff.x, puff.y + k * 4, puff.z);
-      this.puffs.setMatrixAt(n, this.matrix);
-      this.puffs.setColorAt(n++, this.color.setHex(puff.color));
-    }
-    this.puffs.count = n; this.puffs.instanceMatrix.needsUpdate = true;
-    if (this.puffs.instanceColor) this.puffs.instanceColor.needsUpdate = true;
+    for (const p of this.passes) p.endFrame();
+    k.trails.endFrame();
+    k.beams.endFrame();
+    k.ropes.endFrame();
+    k.decals.endFrame();
+    k.props.endFrame();
+    k.walls.endFrame();
+    k.debris.endFrame();
+    this.juice.flush(ctx.services, ctx.dt);
+
+    const st = this.stats;
+    st.clock = this.clock; st.spawned = k.spawned;
+    st.cel = k.cel.pool.immediateCount; st.glow = k.glow.pool.immediateCount; st.heads = k.heads.pool.immediateCount;
+    st.trails = k.trails.pool.immediateCount; st.beams = k.beams.pool.immediateCount; st.decals = k.decals.pool.immediateCount;
+    st.debris = k.debris.active; st.numbers = 0;
   }
 
-  private puff(x: number, y: number, z: number, size: number, color: number, life: number): void {
-    if (this.puffState.length >= MAX_PUFFS) this.puffState.shift();
-    this.puffState.push({ x, y, z, age: 0, life, size, color });
+  private updateUniforms(ctx: FrameContext): void {
+    const u = this.shared;
+    const a = ctx.atmosphere;
+    u.uTime.value = this.clock;
+    u.uRealTime.value = ctx.time;
+    u.uFogColor.value.copy(a.fogColor);
+    u.uFogRange.value.set(a.fogNear, a.fogFar);
+    u.uViewport.value.set(ctx.viewport.width, ctx.viewport.height);
+    u.uFlash.value = a.flash;
+    const cam = this.camera;
+    if (cam) {
+      u.uPixelWorld.value = (2 * Math.tan(THREE.MathUtils.degToRad(cam.fov) * 0.5)) / Math.max(1, ctx.viewport.height);
+      this.sunView.copy(a.sunDirection).transformDirection(cam.matrixWorldInverse);
+      u.uSunView.value.copy(this.sunView);
+    }
+    // Cel lighting tints: warm lit side, cool violet shadows; darker at night and in storms.
+    const light = THREE.MathUtils.clamp(0.32 + (a.sunIntensity / 2.2) * 0.68, 0.3, 1.08) * (1 - a.storm * 0.25);
+    const lit = u.uLitTint.value;
+    lit.setRGB(1, 1, 1).lerp(this.tmpColor.copy(a.sunColor), 0.28).multiplyScalar(light);
+    const shade = u.uShadeTint.value;
+    shade.setRGB(0.86, 0.9, 1.08).lerp(this.tmpColor.copy(a.ambientColor), 0.18).multiplyScalar(Math.max(0.42, light * 0.95));
+    if (a.night > 0) {
+      lit.lerp(this.tmpColor.setRGB(0.45, 0.52, 0.78), a.night * 0.7);
+      shade.lerp(this.tmpColor.setRGB(0.26, 0.3, 0.5), a.night * 0.7);
+    }
+  }
+
+  /** Clears every live effect (new run, lab reset). */
+  reset(): void {
+    for (const p of this.passes) p.clear();
+    this.kit.beams.clear();
+    this.kit.decals.clear();
+    this.kit.debris.clear();
+    this.kit.numbers.clear();
+    this.events.reset();
+    this.state.reset();
   }
 
   dispose(): void {
-    for (const mesh of [this.projectiles, this.pickups, this.puffs, this.rings]) {
-      this.scene.remove(mesh); mesh.geometry.dispose(); (mesh.material as THREE.Material).dispose();
-    }
+    this.scene?.remove(this.group);
+    for (const p of this.passes) p.dispose();
+    const k = this.kit;
+    k.trails.dispose(); k.beams.dispose(); k.ropes.dispose(); k.decals.dispose(); k.debris.dispose(); k.props.dispose();
+    k.numbers.dispose(); k.walls.dispose();
   }
 }
