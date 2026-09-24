@@ -655,7 +655,10 @@ export class WakeSystem {
           f.transientBatch.push(cx, cz, 1, 0, r * 0.45, r * 0.45, SHAPE_BLOB, 1, 0.3, 0.2, 0, 0, 0, 0.9 * s * d, 0.85 * d, 0.9);
         }
         if (first) {
-          f.persistentBatch.push(cx, cz, 1, 0, r * (burst ? 0.75 : 0.6), r * (burst ? 0.75 : 0.6), SHAPE_BLOB, 1, 0.65, 0.3, 0, 0, 0, 0, Math.min(1.15, 0.9 * s), 1);
+          // Lingering foam: no flat top and a steep edge, so kills and landings leave a patch that breaks into lace
+          // instead of a solid white disc (a fight's worth of them used to carpet the sea).
+          const fr = r * (burst ? 0.55 : 0.45);
+          f.persistentBatch.push(cx, cz, 1, 0, fr, fr, SHAPE_BLOB, 1.8, 0.65, 0, 0, 0, 0, 0, Math.min(0.8, 0.6 * s), 1);
           f.persistentBatch.push(cx, cz, 1, 0, r * 1.15, r * 1.15, SHAPE_BLOB, 1, 0.5, 0.2, 0, 0, 0, 0, 0, 1);
         }
         f.persistentBatch.push(cx, cz, 1, 0, R + W * 3, R + W * 3, SHAPE_RING, R, W, 0, 0, 0, 0, 0, 0.35 * k, 0.4 * k);

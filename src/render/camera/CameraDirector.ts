@@ -56,6 +56,9 @@ export class CameraDirector implements RenderSystem, CameraServices {
   private fov = TACTICAL_FOV;
   private pressure = 0;
   private liftPitch = 0;
+  /** 0..1 blend toward framing the nearest live boss together with the ship. */
+  private bossFrame = 0;
+  private readonly bossPoint = new THREE.Vector2();
   private readonly target = new THREE.Vector3();
   private readonly lookAhead = new THREE.Vector2();
   private readonly position = new THREE.Vector3(0, 90, 150);
@@ -141,6 +144,21 @@ export class CameraDirector implements RenderSystem, CameraServices {
       tz = THREE.MathUtils.lerp(tz, focus.z * 0.4 + pz * 0.6, k);
       distance = Math.max(distance, THREE.MathUtils.lerp(distance, Math.hypot(px - focus.x, pz - focus.z) * 1.05 + 60, k));
     }
+    // Boss framing: while a surfaced boss is within reach, look between it and the ship and pull back to fit both,
+    // so the fight's centrepiece is never a marker at the screen edge.
+    const boss = run ? this.nearestBoss(run, focus.x, focus.z) : null;
+    this.bossFrame = damp(this.bossFrame, boss ? 1 : 0, boss ? 1.4 : 0.8, dt);
+    if (boss) this.bossPoint.set(boss.x, boss.z);
+    if (this.bossFrame > 0.01) {
+      const k = this.bossFrame * this.bossFrame * (3 - 2 * this.bossFrame);
+      const bx = this.bossPoint.x - focus.x, bz = this.bossPoint.y - focus.z;
+      const gap = Math.hypot(bx, bz);
+      const reach = boss ? boss.length * 0.5 : 40;
+      tx = THREE.MathUtils.lerp(tx, focus.x + bx * 0.4, k);
+      tz = THREE.MathUtils.lerp(tz, focus.z + bz * 0.4, k);
+      const fit = Math.min(430, gap * 0.95 + reach + 70);
+      distance = THREE.MathUtils.lerp(distance, Math.max(distance, fit), k);
+    }
     this.distance = damp(this.distance, distance, 2.2, dt);
     this.target.x = damp(this.target.x, tx, 5.5, dt);
     this.target.z = damp(this.target.z, tz, 5.5, dt);
@@ -156,6 +174,18 @@ export class CameraDirector implements RenderSystem, CameraServices {
     this.fov = damp(this.fov, TACTICAL_FOV, 2.5, dt);
 
     this.place(ctx, dt, 4.5);
+  }
+
+  /** The nearest live, surfaced boss within framing range of (x, z), or null. */
+  private nearestBoss(run: NonNullable<FrameContext['run']>, x: number, z: number): { x: number; z: number; length: number } | null {
+    let best: { x: number; z: number; length: number } | null = null;
+    let bestD = 330;
+    for (const b of run.bosses) {
+      if (b.life !== 'alive' || b.submerged > 0.7) continue;
+      const d = Math.hypot(b.x - x, b.z - z) - b.length * 0.3;
+      if (d < bestD) { bestD = d; best = b; }
+    }
+    return best;
   }
 
   /** Minimum pitch that keeps the line of sight from the camera to the target clear of island tops. */

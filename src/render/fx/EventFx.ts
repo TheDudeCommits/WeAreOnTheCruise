@@ -149,8 +149,8 @@ export class EventFx {
       }
       case 'player-hit': this.playerHit(e, run, water); break;
       case 'enemy-spawned':
+        // Ordinary spawns rise out of the ocean's own ring (no decal); elites get the gold shock and sparkles.
         if (e.elite) { fx.shock(e.x, e.z, 18, 0.8, 0xffd84a, 0.9, 1); fx.sparkles(e.x, fx.wy(e.x, e.z) + 6, e.z, 10, 8, GlowPal.Gold, 1.2); }
-        else fx.foam(e.x, e.z, 8, 1.4, 0, 0.8);
         break;
       case 'enemy-killed': {
         const ship = findShip(run, e.id);

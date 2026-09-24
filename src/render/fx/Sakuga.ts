@@ -210,8 +210,12 @@ export class Sakuga {
     }
   }
 
+  /**
+   * Foam decal over the ocean's own foam (the ocean already stamps splash/explosion foam into its field): kept
+   * smaller, shorter and translucent so a broadside of splashes never stacks into a white carpet.
+   */
   foam(x: number, z: number, radius: number, life: number, delay = 0, thickness = 1): void {
-    this.k.decals.emit(Decal.Foam, x, z, radius, life, WHITE, 0.95, FOAM_SHADOW, 0, thickness, 0, delay);
+    this.k.decals.emit(Decal.Foam, x, z, radius * 0.72, life * 0.7, WHITE, 0.62, FOAM_SHADOW, 0, thickness * 0.85, 0, delay);
   }
 
   shock(x: number, z: number, radius: number, life: number, hex = WHITE, add = 0.8, thickness = 1, delay = 0): void {
