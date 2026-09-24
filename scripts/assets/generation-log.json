@@ -116,6 +116,15 @@
     },
     {
       "date": "2026-09-24",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro 2k (job reports nano_banana_2)",
+      "jobId": "11ab7545-85d5-4329-b757-dd9cfcda975a",
+      "credits": 2,
+      "purpose": "prop concept sheet 3x3 (mortar, rocket rack, swivel gun, harpoon gun, storm rod, mine, lantern, powder keg, iron ram) for Meshy props",
+      "output": "assets/concepts/prop-sheet.jpg"
+    },
+    {
+      "date": "2026-09-24",
       "provider": "meshy",
       "model": "image-to-3d meshy-6 textured, remove_lighting, remesh triangle 24000",
       "taskId": "01a0cfd2-7479-727b-8343-a801a489a5d0",

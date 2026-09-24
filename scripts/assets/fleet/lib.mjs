@@ -179,3 +179,87 @@ export function cloneMaterial(doc, mat, name) {
   if (t) { const t2 = t.clone().setName(`${name}-albedo`); if (t.getURI()) t2.setURI(`${name}-albedo.png`); m.setBaseColorTexture(t2); }
   return m;
 }
+
+// ───────────────────────────── sails with faction emblems ─────────────────────────────
+/**
+ * Move the triangles chosen by `select(tri, info)` into a new material textured with `svg` and give them planar UVs
+ * per connected sail (projected on the sail plane, aspect preserved, emblem centred).
+ * layout 'halves': the texture's left half carries the emblem (large sails), right half is plain canvas (small sails).
+ * layout 'full': the whole texture is used for every piece (flags).
+ * info = { mesh, material, uv:[u,v] | null, texel: ([u,v]) => [r,g,b] | null }.
+ */
+export async function sailify(doc, { select, svg, name, layout = 'halves', emblemMinShare = 0.18, texSize = [1024, 512] }) {
+  const png = await sharp(Buffer.from(svg)).resize(texSize[0], texSize[1], { fit: 'fill' }).png().toBuffer();
+  const tex = doc.createTexture(`${name}-albedo`).setImage(new Uint8Array(png)).setMimeType('image/png').setURI(`${name}-albedo.png`);
+  const mat = doc.createMaterial(name).setBaseColorTexture(tex).setDoubleSided(true).setMetallicFactor(0).setRoughnessFactor(1);
+  const texCache = new Map();
+  const texelFor = async (m) => {
+    const t = m?.getBaseColorTexture(); if (!t) return null;
+    if (!texCache.has(t)) texCache.set(t, await decode(t));
+    const img = texCache.get(t);
+    return ([u, v]) => { const x = Math.min(img.w - 1, Math.max(0, Math.floor((((u % 1) + 1) % 1) * img.w))), y = Math.min(img.h - 1, Math.max(0, Math.floor((((v % 1) + 1) % 1) * img.h))); const o = (y * img.w + x) * 4; return [img.px[o], img.px[o + 1], img.px[o + 2]]; };
+  };
+  let moved = 0;
+  for (const mesh of doc.getRoot().listMeshes()) for (const prim of [...mesh.listPrimitives()]) {
+    if (prim.getMaterial() === mat) continue;
+    const uvA = prim.getAttribute('TEXCOORD_0'); const texel = await texelFor(prim.getMaterial());
+    const U0 = [0, 0], U1 = [0, 0], U2 = [0, 0]; const posA = prim.getAttribute('POSITION');
+    // map triangles to their uv centroid via a side table keyed by first index
+    const uvOf = new Map();
+    if (uvA) forTriangles(prim, (a, b, c) => { uvA.getElement(a, U0); uvA.getElement(b, U1); uvA.getElement(c, U2); uvOf.set(`${a},${b},${c}`, [(U0[0] + U1[0] + U2[0]) / 3, (U0[1] + U1[1] + U2[1]) / 3]); });
+    const idx = []; forTriangles(prim, (a, b, c) => idx.push([a, b, c]));
+    let k = 0;
+    moved += splitPrimitive(doc, mesh, prim, (tri) => { const [a, b, c] = idx[k++]; const uv = uvOf.get(`${a},${b},${c}`) || null; return select(tri, { mesh: mesh.getName(), material: prim.getMaterial()?.getName() || '', uv, texel: texel && uv ? texel(uv) : null }); }, mat);
+    void posA;
+  }
+  if (!moved) { mat.dispose(); tex.dispose(); return 0; }
+  for (const mesh of doc.getRoot().listMeshes()) for (const prim of mesh.listPrimitives()) if (prim.getMaterial() === mat) planarSailUVs(doc, prim, layout, emblemMinShare);
+  return moved;
+}
+
+function planarSailUVs(doc, prim, layout, emblemMinShare) {
+  fn.compactPrimitive(prim);
+  const pos = prim.getAttribute('POSITION'); const n = pos.getCount(); const v = [0, 0, 0];
+  const P = []; for (let i = 0; i < n; i++) { pos.getElement(i, v); P.push([...v]); }
+  const parent = new Int32Array(n).map((_, i) => i);
+  const find = (i) => { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
+  const union = (a, b) => { a = find(a); b = find(b); if (a !== b) parent[a] = b; };
+  const byKey = new Map();
+  for (let i = 0; i < n; i++) { const kk = P[i].map((x) => Math.round(x * 100)).join(','); if (byKey.has(kk)) union(i, byKey.get(kk)); else byKey.set(kk, i); }
+  const tris = []; forTriangles(prim, (a, b, c) => { union(a, b); union(b, c); tris.push([a, b, c]); });
+  const comps = new Map();
+  for (const [a, b, c] of tris) {
+    const r = find(a); if (!comps.has(r)) comps.set(r, { verts: new Set(), nrm: [0, 0, 0], area: 0 });
+    const C = comps.get(r); C.verts.add(a); C.verts.add(b); C.verts.add(c);
+    const ux = P[b][0] - P[a][0], uy = P[b][1] - P[a][1], uz = P[b][2] - P[a][2], wx = P[c][0] - P[a][0], wy = P[c][1] - P[a][1], wz = P[c][2] - P[a][2];
+    let nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx;
+    // orient face normals consistently before accumulating (double-sided sails have both windings)
+    const ref = Math.abs(nz) >= Math.abs(nx) ? nz : nx; if (ref < 0) { nx = -nx; ny = -ny; nz = -nz; }
+    C.nrm[0] += nx; C.nrm[1] += ny; C.nrm[2] += nz; C.area += Math.hypot(nx, ny, nz) / 2;
+  }
+  const maxArea = Math.max(...[...comps.values()].map((c) => c.area));
+  const uv = new Float32Array(n * 2);
+  for (const C of comps.values()) {
+    let [nx, ny, nz] = C.nrm; const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+    // u = horizontal axis in the sail plane, v = up
+    let ux = ny * 0 - nz * 1, uz = nx * 1 - ny * 0, uy = 0; // cross(n, Y)
+    let ul = Math.hypot(ux, uy, uz); if (ul < 1e-3) { ux = 1; uz = 0; ul = 1; } ux /= ul; uz /= ul;
+    if (Math.abs(nz) >= Math.abs(nx) ? ux < 0 : uz > 0) { ux = -ux; uz = -uz; }
+    const vx = uy * nz - uz * ny, vy = uz * nx - ux * nz, vz = ux * ny - uy * nx; // cross(u, n)
+    let umin = Infinity, umax = -Infinity, vmin = Infinity, vmax = -Infinity;
+    for (const i of C.verts) { const pu = P[i][0] * ux + P[i][2] * uz, pv = P[i][0] * vx + P[i][1] * vy + P[i][2] * vz; umin = Math.min(umin, pu); umax = Math.max(umax, pu); vmin = Math.min(vmin, pv); vmax = Math.max(vmax, pv); }
+    const w = Math.max(1e-6, umax - umin), h = Math.max(1e-6, vmax - vmin), side = Math.max(w, h);
+    const emblem = layout === 'full' || (C.area >= maxArea * emblemMinShare && Math.min(w, h) / side > 0.42);
+    for (const i of C.verts) {
+      const pu = P[i][0] * ux + P[i][2] * uz, pv = P[i][0] * vx + P[i][1] * vy + P[i][2] * vz;
+      let s, t;
+      if (layout === 'full') { s = (pu - umin) / w; t = 1 - (pv - vmin) / h; }
+      else if (emblem) { s = 0.5 + (pu - (umin + umax) / 2) / side; t = 0.5 - (pv - (vmin + vmax) / 2) / side; s = 0.01 + s * 0.48; t = 0.01 + t * 0.98; }
+      else { s = 0.51 + ((pu - umin) / w) * 0.48; t = 0.01 + (1 - (pv - vmin) / h) * 0.98; }
+      uv[i * 2] = s; uv[i * 2 + 1] = t;
+    }
+  }
+  const acc = doc.createAccessor().setType('VEC2').setArray(uv); const buf = pos.getBuffer(); if (buf) acc.setBuffer(buf);
+  prim.setAttribute('TEXCOORD_0', acc);
+  for (const sem of prim.listSemantics()) if (/^TEXCOORD_[1-9]|^COLOR_/.test(sem)) prim.setAttribute(sem, null);
+}

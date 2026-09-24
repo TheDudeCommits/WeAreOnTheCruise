@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-09-23",
+  "generated": "2026-09-24",
   "conventions": "Y up, bow/forward toward -Z, metres. Ships: origin at the waterline centre, keel at -draft, `length` = bow-to-stern extent incl. bowsprit. Props/crew/nature: origin at ground centre, `height` in metres. Meshopt-compressed (EXT_meshopt_compression + KHR_mesh_quantization), WebP textures (EXT_texture_webp); plain PBR albedo materials for toonifyObject.",
   "models": {
     "man-o-war": {
@@ -133,6 +133,72 @@
       "sha256": "0de6d9a01616395819c054a143f03d2a83cd1ad741b26c46f066764fa1792e80",
       "sourceSha256": "64238c352843274556f1c7e0d2304aa3df5f35b5d6745b498f438d77f055a8dc",
       "notes": "Head + upper neck of the Tidewyrm, facing −Z, origin at the neck cut (y = 0). Attach to the procedural serpent body; scale freely."
+    },
+    "corsair-brig": {
+      "file": "/assets/fleet/corsair-brig.glb",
+      "length": 28,
+      "draft": 2.4,
+      "beam": 7.42,
+      "height": 17.95,
+      "tris": 21554,
+      "materials": 8,
+      "role": "enemy",
+      "source": {
+        "kind": "sketchfab",
+        "uid": "1c62191534174bf7a67470fb02b97db1",
+        "author": "c3posw01",
+        "title": "Stylized Pirate Ship",
+        "license": "CC-BY-4.0",
+        "url": "https://sketchfab.com/3d-models/1c62191534174bf7a67470fb02b97db1"
+      },
+      "bytes": 704264,
+      "sha256": "e7b328e8a3ee6ad147f49ebbb986913b5101466463cbf48aff306977ebae587d",
+      "sourceSha256": "87b11caf397171abdc5dfe80c79358ee2a2c80736d07a0a87370ce9af3875ffa",
+      "notes": "Redtide brig: hull and rails recoloured black, new red sails with the original cutlass-and-sun emblem, black flags. Water plane and hold props removed; deck cannons kept."
+    },
+    "corsair-galleon": {
+      "file": "/assets/fleet/corsair-galleon.glb",
+      "length": 44,
+      "draft": 3.6,
+      "beam": 14.14,
+      "height": 22.5,
+      "tris": 21599,
+      "materials": 2,
+      "role": "enemy",
+      "source": {
+        "kind": "sketchfab",
+        "uid": "fe0ea2cee119476fb1a7524d5ff380dc",
+        "author": "olemuzyka",
+        "title": "Pirate Ship",
+        "license": "CC-BY-4.0",
+        "url": "https://sketchfab.com/3d-models/fe0ea2cee119476fb1a7524d5ff380dc"
+      },
+      "bytes": 304272,
+      "sha256": "bbd86f6e729172d961ab7c92fd5333327821d1ed7399c90f55414600d45173fc",
+      "sourceSha256": "c9048bce2695ed9c4d6fd65f3f824d6a1f9c034c8572e2111dc890cc34980f03",
+      "notes": "Redtide galleon: flat colours remapped to the Redtide palette (black hull, red trim) and baked into one palette texture; new red sails with the original cutlass-and-sun emblem. Decimated from 74k tris."
+    },
+    "sloop": {
+      "file": "/assets/fleet/sloop.glb",
+      "length": 20,
+      "draft": 1.5,
+      "beam": 4.85,
+      "height": 13.97,
+      "tris": 10699,
+      "materials": 2,
+      "role": "enemy",
+      "source": {
+        "kind": "sketchfab",
+        "uid": "1b27f1f60e0e49f886984ea099977757",
+        "author": "Razer820",
+        "title": "Low Poly Sloop Sailing Ship",
+        "license": "CC-BY-4.0",
+        "url": "https://sketchfab.com/3d-models/1b27f1f60e0e49f886984ea099977757"
+      },
+      "bytes": 160996,
+      "sha256": "1a9180242be4125afe5e79cd210941eea94263c26ce25491b9215a232a3a2b64",
+      "sourceSha256": "47e1b1ed42ea2bc66695667dbcf12ca87eb682b694f2b0ae361c9382388612c5",
+      "notes": "Admiralty Cutter (enemy id cutter uses modelKey sloop): palette swapped to white topsides / navy bottom / gold stripe; skull sail replaced by white canvas with the original gold wave-crest."
     }
   }
 }

@@ -97,6 +97,7 @@ async function build(job) {
 
   // 5. geometry
   await doc.transform(fn.dedup(), fn.prune());
+  if (job.palette) await doc.transform(fn.palette({ min: 2, keepAttributes: false }));
   if (!skinned) await doc.transform(fn.join({ keepNamed: false }));
   await doc.transform(fn.weld());
   let tris = countTris(doc);
@@ -138,7 +139,7 @@ async function build(job) {
     min: fb.min.map((v) => +v.toFixed(2)),
     max: fb.max.map((v) => +v.toFixed(2)),
     clips: check.getRoot().listAnimations().map((a) => a.getName()),
-    built: new Date().toISOString().slice(0, 10),
+    built: new Date().toLocaleDateString('en-CA'),
   };
 }
 
@@ -177,7 +178,7 @@ function writeManifest() {
   }
   const manifest = {
     version: 1,
-    generated: new Date().toISOString().slice(0, 10),
+    generated: new Date().toLocaleDateString('en-CA'),
     conventions: 'Y up, bow/forward toward -Z, metres. Ships: origin at the waterline centre, keel at -draft, `length` = bow-to-stern extent incl. bowsprit. Props/crew/nature: origin at ground centre, `height` in metres. Meshopt-compressed (EXT_meshopt_compression + KHR_mesh_quantization), WebP textures (EXT_texture_webp); plain PBR albedo materials for toonifyObject.',
     models,
   };

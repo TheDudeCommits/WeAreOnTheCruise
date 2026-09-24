@@ -166,5 +166,89 @@
     ],
     "clips": [],
     "built": "2026-09-23"
+  },
+  "corsair-brig": {
+    "file": "/assets/fleet/corsair-brig.glb",
+    "bytes": 704264,
+    "sha256": "e7b328e8a3ee6ad147f49ebbb986913b5101466463cbf48aff306977ebae587d",
+    "sourceSha256": "87b11caf397171abdc5dfe80c79358ee2a2c80736d07a0a87370ce9af3875ffa",
+    "tris": 21554,
+    "materials": 8,
+    "draws": 8,
+    "textures": 8,
+    "maxTexture": 1024,
+    "size": [
+      7.42,
+      20.35,
+      28
+    ],
+    "min": [
+      -3.71,
+      -2.4,
+      -14
+    ],
+    "max": [
+      3.71,
+      17.95,
+      14
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "corsair-galleon": {
+    "file": "/assets/fleet/corsair-galleon.glb",
+    "bytes": 304272,
+    "sha256": "bbd86f6e729172d961ab7c92fd5333327821d1ed7399c90f55414600d45173fc",
+    "sourceSha256": "c9048bce2695ed9c4d6fd65f3f824d6a1f9c034c8572e2111dc890cc34980f03",
+    "tris": 21599,
+    "materials": 2,
+    "draws": 2,
+    "textures": 2,
+    "maxTexture": 1024,
+    "size": [
+      14.14,
+      26.1,
+      44
+    ],
+    "min": [
+      -7.07,
+      -3.6,
+      -22
+    ],
+    "max": [
+      7.07,
+      22.5,
+      22
+    ],
+    "clips": [],
+    "built": "2026-09-24"
+  },
+  "sloop": {
+    "file": "/assets/fleet/sloop.glb",
+    "bytes": 160996,
+    "sha256": "1a9180242be4125afe5e79cd210941eea94263c26ce25491b9215a232a3a2b64",
+    "sourceSha256": "47e1b1ed42ea2bc66695667dbcf12ca87eb682b694f2b0ae361c9382388612c5",
+    "tris": 10699,
+    "materials": 2,
+    "draws": 2,
+    "textures": 2,
+    "maxTexture": 1024,
+    "size": [
+      4.85,
+      15.47,
+      20
+    ],
+    "min": [
+      -2.42,
+      -1.5,
+      -10
+    ],
+    "max": [
+      2.42,
+      13.97,
+      10
+    ],
+    "clips": [],
+    "built": "2026-09-24"
   }
 }

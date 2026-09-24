@@ -45,6 +45,27 @@ export const JOBS = [
     source: MESHY('01a0cfd2-c593-772f-802a-12cb38fa3184', 'Tidewyrm head'),
     notes: 'Head + upper neck of the Tidewyrm, facing −Z, origin at the neck cut (y = 0). Attach to the procedural serpent body; scale freely.',
   },
+  // ───────────── Redtide Corsairs (Sketchfab CC-BY, recoloured) ─────────────
+  {
+    key: 'corsair-brig', role: 'enemy', src: 'src/1c62191534174bf7a67470fb02b97db1/source.glb', yaw: -90, length: 28, draft: 2.4, tris: 22000, tex: 1024,
+    exclude: /WaterPlane|Cannon[345]|Pallet[345]|Barrel[456]|Box(8|9|10)_/,
+    recolor: (ctx) => RECOLOR.corsairBrig(ctx),
+    source: SKETCHFAB('1c62191534174bf7a67470fb02b97db1', 'Stylized Pirate Ship', 'c3posw01'),
+    notes: 'Redtide brig: hull and rails recoloured black, new red sails with the original cutlass-and-sun emblem, black flags. Water plane and hold props removed; deck cannons kept.',
+  },
+  {
+    key: 'corsair-galleon', role: 'enemy', src: 'src/fe0ea2cee119476fb1a7524d5ff380dc/source.glb', yaw: 0, length: 44, draft: 3.6, tris: 24000, tex: 1024, palette: true,
+    recolor: (ctx) => RECOLOR.corsairGalleon(ctx),
+    source: SKETCHFAB('fe0ea2cee119476fb1a7524d5ff380dc', 'Pirate Ship', 'olemuzyka'),
+    notes: 'Redtide galleon: flat colours remapped to the Redtide palette (black hull, red trim) and baked into one palette texture; new red sails with the original cutlass-and-sun emblem. Decimated from 74k tris.',
+  },
+  // ───────────── Admiralty (Sketchfab CC-BY, recoloured) ─────────────
+  {
+    key: 'sloop', role: 'enemy', src: 'src/1b27f1f60e0e49f886984ea099977757/source.glb', yaw: 180, length: 20, draft: 1.5, tris: 12000, tex: 1024,
+    recolor: (ctx) => RECOLOR.admiraltyCutter(ctx),
+    source: SKETCHFAB('1b27f1f60e0e49f886984ea099977757', 'Low Poly Sloop Sailing Ship', 'Razer820'),
+    notes: 'Admiralty Cutter (enemy id cutter uses modelKey sloop): palette swapped to white topsides / navy bottom / gold stripe; skull sail replaced by white canvas with the original gold wave-crest.',
+  },
 ];
 
 export { RECOLOR };
