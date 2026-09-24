@@ -61,9 +61,10 @@ export function updatePlayer(c: CoreSim): void {
   const p = c.state.player;
   if (!p.alive) return;
   const ship = c.content.ships[p.shipId];
+  // Aim first: skills pressed this tick use this tick's cursor.
+  p.aimX = c.input.aimX; p.aimZ = c.input.aimZ;
   handleActions(c, ship);
   tickSkillTimers(c);
-  p.aimX = c.input.aimX; p.aimZ = c.input.aimZ;
   updateSkillEffects(c);
   if (isDashing(c.core)) updateDash(c);
   else sail(c, ship);

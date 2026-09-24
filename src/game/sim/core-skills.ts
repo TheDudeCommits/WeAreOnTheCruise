@@ -117,9 +117,10 @@ function startDash(c: CoreSim): boolean {
   const t = SPECIALS.lionburst;
   let dx = p.aimX - p.x, dz = p.aimZ - p.z;
   let d = Math.sqrt(dx * dx + dz * dz);
+  // Leap toward the cursor and land on it (70–180 m); a cursor on the ship leaps straight ahead at full length.
+  let dist: number = d < 30 ? t.distance : Math.min(t.distance, Math.max(t.minDistance, d));
   if (d < 30) { dx = -Math.sin(p.heading); dz = -Math.cos(p.heading); d = 1; }
   dx /= d; dz /= d;
-  let dist: number = t.distance;
   const margin = p.beam * 0.6 + 4;
   while (dist >= t.minDistance && !c.world.isWater(p.x + dx * dist, p.z + dz * dist, margin)) dist -= 15;
   if (dist < t.minDistance) return false;
