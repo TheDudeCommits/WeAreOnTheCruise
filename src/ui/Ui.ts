@@ -7,6 +7,7 @@
  */
 import type { AppScreen } from '../render/frame';
 import type { RunState, Settings } from '../game/types';
+import { SCRATCH } from '../game/sim/meta-runtime';
 import type { UiCallbacks, UiFrame, UiSystem } from './contracts';
 import { h } from './core/dom';
 import { ensureGlyphSprite, prefetchIcons } from './core/icons';
@@ -21,6 +22,11 @@ import { ResultsScreen } from './screens/ResultsScreen';
 import { TitleScreen } from './screens/TitleScreen';
 
 const LEAVE_MS = 320;
+
+/** The run has ended, or the final flagship is sinking (director victory lap: `scratch.victoryAt` is armed). */
+export function runIsOver(run: Readonly<RunState>): boolean {
+  return run.status === 'victory' || run.status === 'dead' || (run.director.scratch[SCRATCH.victoryAt] ?? 0) > 0;
+}
 
 export class Ui implements UiSystem {
   private root!: HTMLElement;
@@ -47,6 +53,9 @@ export class Ui implements UiSystem {
   private perfAvg = 0;
   private perfMax = 0;
   private readonly spikes: { ms: number; screen: string; status: string; events: string }[] = [];
+  /** Seed of the run whose `run-ended` event has been seen (cleared when an endless voyage sails on). */
+  private endedSeed = '';
+  private lapPickAt = -1;
 
   get blockingInput(): boolean {
     return this.mounted && (this.pause.open || this.settings.open || this.cards.open);
@@ -156,11 +165,19 @@ export class Ui implements UiSystem {
     const run = f.run;
     this.run = run;
     if (!run) return;
-    this.hud.setModal(run.status === 'levelup' || run.status === 'chest' || this.pause.open);
+    // Victory-lap guard: no card screen once the run is over or its final flagship is going down. A late offer
+    // (XP gems magnet in during the lap) is resolved here with the first card, so the results are never held back.
+    for (let i = 0; i < f.events.length; i++) if (f.events[i]!.type === 'run-ended') this.endedSeed = run.seed;
+    if (this.endedSeed === run.seed && run.endless && run.status === 'running') this.endedSeed = '';
+    const over = this.endedSeed === run.seed || runIsOver(run);
+    const cardsUp = run.status === 'levelup' || run.status === 'chest';
+    if (over && cardsUp && run.offers && f.time - this.lapPickAt > 0.05) { this.lapPickAt = f.time; this.cb.onChooseCard(0); }
+    this.hud.setModal((cardsUp && !over) || this.pause.open);
+    this.hud.over = over;
     this.hud.update(f, run);
     const prof = (window as unknown as { __CRUISE_UI_PROFILE__?: Record<string, number> }).__CRUISE_UI_PROFILE__;
     const c0 = prof ? performance.now() : 0;
-    this.cards.update(f);
+    this.cards.update(f, over);
     if (prof) { const d = performance.now() - c0; prof.cards = (prof.cards ?? 0) + d; prof.cards_max = Math.max(prof.cards_max ?? 0, d); }
     // The app can pause on its own (tab hidden): surface the pause menu so the player can resume.
     if (run.status === 'paused' && !this.pause.open) this.setPaused(true);

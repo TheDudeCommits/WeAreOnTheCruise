@@ -159,10 +159,16 @@ export class CardsModal {
     this.el.hidden = true;
   }
 
-  update(f: UiFrame): void {
+  /**
+   * `blocked`: the run is over or on its victory lap. The modal never opens then (Ui resolves any late offer itself so
+   * the sim is not held in 'levelup' / 'chest'), and a modal that is somehow up closes at once.
+   */
+  update(f: UiFrame, blocked = false): void {
     const run = f.run;
     const status = run?.status;
-    if (run && status === 'levelup' && run.offers) {
+    if (blocked) {
+      if (this.mode) this.close();
+    } else if (run && status === 'levelup' && run.offers) {
       if (this.mode !== 'levelup' || run.offers !== this.offers) this.deal(run);
       this.syncFooter(run);
     } else if (run && status === 'chest' && run.offers) {

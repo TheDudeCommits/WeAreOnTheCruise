@@ -81,6 +81,9 @@ export class Hud {
   /** A modal (cards, chest, pause) covers the centre: hold stamps until it closes. */
   setModal(open: boolean): void { this.banners.setSuppressed(open); }
 
+  /** The run is over / on its victory lap: cards picked by the guard stay quiet (no loadout toasts). */
+  over = false;
+
   resize(w: number, h: number): void { this.width = w; this.height = h; this.markers.width = w; this.markers.height = h; }
 
   update(f: UiFrame, run: Readonly<RunState>): void {
@@ -168,18 +171,19 @@ export class Hud {
         this.banners.directorEvent(e.name, e.text);
         break;
       case 'tier-up':
-        this.banners.showStamp(`Tier ${ROMAN[e.tier] ?? e.tier}`, 'Your ship grows!', 'gold', 2, 1500);
+        if (!this.over) this.banners.showStamp(`Tier ${ROMAN[e.tier] ?? e.tier}`, 'Your ship grows!', 'gold', 2, 1500);
         break;
       case 'weapon-changed': {
         this.loadout.pop(e.weapon);
         const def = CONTENT.weapons[e.weapon];
+        if (this.over) break;
         if (e.isNew) this.banners.toast(`New weapon · ${def.name}`, WEAPON_GLYPH[e.weapon], 'gold', iconPath(e.weapon));
         else if (e.overdrive) this.banners.toast(`Overdrive · ${def.overdrive.name}`, 'star', 'gold', iconPath(e.weapon));
         break;
       }
       case 'passive-changed':
         this.loadout.pop(e.passive);
-        if (e.isNew) this.banners.toast(`New passive · ${CONTENT.passives[e.passive].name}`, PASSIVE_GLYPH[e.passive], 'white', iconPath(e.passive));
+        if (e.isNew && !this.over) this.banners.toast(`New passive · ${CONTENT.passives[e.passive].name}`, PASSIVE_GLYPH[e.passive], 'white', iconPath(e.passive));
         break;
       case 'pickup-collected':
         if (e.kind === 'repair') this.banners.toast('Hull repaired +25%', 'plus', 'teal', iconPath('repair'));
