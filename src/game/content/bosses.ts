@@ -9,7 +9,7 @@ import type { BossDef } from '../types';
 export const BOSSES: Readonly<Record<BossId, BossDef>> = {
   'iron-warden': {
     id: 'iron-warden', name: 'The Iron Warden', title: "Commodore Vane's Dreadnought", modelKey: 'dreadnought',
-    length: 90, radius: 30, hp: 9000, armor: 4, speed: 8.5, turnRate: 0.35, mass: 6000, contactDamage: 40, xp: 150, doubloons: 60,
+    length: 90, radius: 30, hp: 3000, armor: 3, speed: 8.5, turnRate: 0.35, mass: 6000, contactDamage: 18, xp: 150, doubloons: 60,
     phases: [
       { hpFraction: 1, name: 'Line of Battle', attacks: ['broadside-volley', 'mortar-barrage', 'summon-cutters'] },
       { hpFraction: 0.5, name: 'Plates Off', attacks: ['broadside-volley', 'mortar-barrage', 'ram-charge'] },
@@ -17,7 +17,7 @@ export const BOSSES: Readonly<Record<BossId, BossDef>> = {
   },
   tidewyrm: {
     id: 'tidewyrm', name: 'The Tidewyrm', title: 'Serpent of the Deep', modelKey: 'tidewyrm',
-    length: 140, radius: 16, hp: 26000, armor: 2, speed: 21, turnRate: 1.1, mass: 5000, contactDamage: 42, xp: 240, doubloons: 100,
+    length: 140, radius: 16, hp: 6000, armor: 2, speed: 21, turnRate: 1.1, mass: 5000, contactDamage: 18, xp: 240, doubloons: 100,
     phases: [
       { hpFraction: 1, name: 'Hunting', attacks: ['submerge-lunge', 'tail-slam', 'water-bolts'] },
       { hpFraction: 0.5, name: 'Brood', attacks: ['submerge-lunge', 'tail-slam', 'water-bolts', 'summon-wyrmlings'] },
@@ -25,7 +25,7 @@ export const BOSSES: Readonly<Record<BossId, BossDef>> = {
   },
   sovereign: {
     id: 'sovereign', name: 'The Sovereign', title: "The Fleet Admiral's Flagship", modelKey: 'sovereign',
-    length: 120, radius: 38, hp: 70000, armor: 5, speed: 7.5, turnRate: 0.3, mass: 9000, contactDamage: 60, xp: 400, doubloons: 200,
+    length: 120, radius: 38, hp: 22000, armor: 5, speed: 7.5, turnRate: 0.3, mass: 9000, contactDamage: 34, xp: 400, doubloons: 200,
     phases: [
       { hpFraction: 1, name: 'Broadside Storm', attacks: ['broadside-storm', 'summon-man-o-war', 'broadside-storm'] },
       { hpFraction: 0.6, name: 'Judgment', attacks: ['broadside-storm', 'judgment-line', 'mortar-barrage'] },
@@ -112,25 +112,25 @@ export interface BossKitDef {
 
 export const BOSS_KITS: Readonly<Record<BossId, BossKitDef>> = {
   'iron-warden': {
-    orbitRange: 165, engageRange: 260, gap: [[2.2, 3.4], [1.5, 2.6]], phaseSpeed: [1, 1.45], phaseArmor: [4, 0], catchUpRange: 300,
-    volley: { lines: [6, 8], waves: [1, 2], bothSides: false, telegraph: 1.3, waveGap: 1.1, damage: 20, speed: 95, length: 250, width: 5 },
-    mortar: { shells: [8, 12], damage: 24, area: 16, spread: 70, flight: 2.3, salvos: 3, salvoGap: 0.35 },
+    orbitRange: 140, engageRange: 260, gap: [[3, 4.2], [2.4, 3.4]], phaseSpeed: [1, 1.35], phaseArmor: [3, 0], catchUpRange: 300,
+    volley: { lines: [5, 6], waves: [1, 2], bothSides: false, telegraph: 1.35, waveGap: 1.3, damage: 11, speed: 88, length: 250, width: 5 },
+    mortar: { shells: [5, 7], damage: 11, area: 15, spread: 80, flight: 2.4, salvos: 3, salvoGap: 0.35 },
     summonCutters: { units: [{ enemy: 'cutter', count: 3 }, { enemy: 'skiff', count: 4 }], cap: 80 },
-    ram: { telegraph: 1.5, speed: 36, duration: 2.4, damage: 40, length: 300, width: 24 },
+    ram: { telegraph: 1.6, speed: 34, duration: 2.4, damage: 22, length: 300, width: 24 },
   },
   tidewyrm: {
-    orbitRange: 130, engageRange: 240, gap: [[1.8, 2.8], [1.3, 2.2]], phaseSpeed: [1, 1.15], phaseArmor: [2, 2], catchUpRange: 280,
-    lunge: { dive: 0.8, travelSpeed: 42, startDist: 150, telegraph: 1.1, length: 280, width: 18, speed: 88, damage: 38, recover: 2 },
-    tailSlam: { telegraph: 1.3, radius: 55, damage: 30, waves: 10, waveSpeed: 26, waveDamage: 10, maxDist: 115 },
-    bolts: { fans: [2, 3], bolts: [7, 11], spread: 0.95, speed: 78, damage: 12, windup: 0.6, fanGap: 0.55 },
+    orbitRange: 130, engageRange: 240, gap: [[2.4, 3.4], [1.8, 2.8]], phaseSpeed: [1, 1.15], phaseArmor: [2, 2], catchUpRange: 280,
+    lunge: { dive: 0.8, travelSpeed: 42, startDist: 150, telegraph: 1.2, length: 280, width: 18, speed: 85, damage: 20, recover: 2.2 },
+    tailSlam: { telegraph: 1.4, radius: 55, damage: 18, waves: 10, waveSpeed: 26, waveDamage: 4, maxDist: 115 },
+    bolts: { fans: [2, 2], bolts: [7, 9], spread: 0.95, speed: 66, damage: 5, windup: 0.7, fanGap: 0.6 },
     summonWyrmlings: { units: [{ enemy: 'wyrmling', count: 4 }], cap: 80 },
   },
   sovereign: {
-    orbitRange: 200, engageRange: 300, gap: [[2.4, 3.4], [2, 3], [1.4, 2.2]], phaseSpeed: [1, 1.1, 1.6], phaseArmor: [5, 5, 1], catchUpRange: 330,
-    storm: { lines: [5, 6, 7], waves: [3, 3, 4], bothSides: true, telegraph: 1.2, waveGap: 1.25, damage: 24, speed: 100, length: 280, width: 5 },
-    mortar: { shells: [12, 14, 16], damage: 28, area: 18, spread: 90, flight: 2.4, salvos: 3, salvoGap: 0.3 },
-    judgment: { lines: [1, 1, 2], telegraph: 1.7, length: 520, width: 16, shells: 14, damage: 32, area: 18, stagger: 0.09 },
+    orbitRange: 170, engageRange: 300, gap: [[2.4, 3.4], [2, 3], [1.4, 2.2]], phaseSpeed: [1, 1.1, 1.6], phaseArmor: [5, 5, 1], catchUpRange: 330,
+    storm: { lines: [5, 6, 7], waves: [3, 3, 4], bothSides: true, telegraph: 1.25, waveGap: 1.3, damage: 20, speed: 92, length: 280, width: 5 },
+    mortar: { shells: [10, 12, 14], damage: 20, area: 17, spread: 95, flight: 2.5, salvos: 3, salvoGap: 0.3 },
+    judgment: { lines: [1, 1, 2], telegraph: 1.8, length: 520, width: 22, shells: 14, damage: 28, area: 18, stagger: 0.09 },
     summonManOWar: { units: [{ enemy: 'man-o-war', count: 2 }], cap: 84 },
-    ram: { telegraph: 1.4, speed: 34, duration: 2.6, damage: 60, length: 320, width: 32 },
+    ram: { telegraph: 1.5, speed: 34, duration: 2.6, damage: 40, length: 320, width: 32 },
   },
 };

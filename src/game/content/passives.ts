@@ -17,7 +17,7 @@ export const PASSIVES: Readonly<Record<PassiveId, PassiveDef>> = {
   'long-barrels': { id: 'long-barrels', name: 'Long Barrels', icon: icon('long-barrels'), maxRank: 5, description: 'Longer guns reach further and shoot faster.', perRank: { range: 0.1, projectileSpeed: 0.1 } },
   'salvage-nets': { id: 'salvage-nets', name: 'Salvage Nets', icon: icon('salvage-nets'), maxRank: 5, description: 'Wide nets haul in floating treasure from further away.', perRank: { pickupRadius: 0.25 } },
   'lucky-doubloon': { id: 'lucky-doubloon', name: 'Lucky Doubloon', icon: icon('lucky-doubloon'), maxRank: 5, description: 'Critical hits, rarer cards and a 4th card choice at 3 luck.', perRank: { crit: 0.06, luck: 1 } },
-  shipwright: { id: 'shipwright', name: 'Shipwright', icon: icon('shipwright'), maxRank: 5, description: 'A carpenter who patches the hull mid-battle.', perRank: { regen: 0.0035 } },
+  shipwright: { id: 'shipwright', name: 'Shipwright', icon: icon('shipwright'), maxRank: 5, description: 'A carpenter who patches the hull mid-battle.', perRank: { regen: 0.002 } },
   'figurehead-fury': { id: 'figurehead-fury', name: 'Figurehead of Fury', icon: icon('figurehead-fury'), maxRank: 5, description: 'A snarling figurehead: harder criticals and bigger blasts.', perRank: { critDamage: 0.2, area: 0.08 } },
   'weather-eye': { id: 'weather-eye', name: 'Weather Eye', icon: icon('weather-eye'), maxRank: 5, description: 'A navigator who reads the sea: more experience from treasure.', perRank: { xpGain: 0.08 } },
   'drill-master': { id: 'drill-master', name: 'Drill Master', icon: icon('drill-master'), maxRank: 5, description: 'Drilled crews: brace, boost, special and full broadside recharge faster.', perRank: { skillCooldown: 0.12 } },

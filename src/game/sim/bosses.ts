@@ -484,8 +484,8 @@ function tailSlamAttack(c: SimContext, b: BossState, def: BossDef, T: TailSlamKi
       for (let i = 0; i < T.waves; i++) {
         const a = (i / T.waves) * TAU;
         c.spawnHazard({
-          kind: 'wave-front', team: 'enemy', x: cx + Math.sin(a) * (T.radius * 0.6), z: cz + Math.cos(a) * (T.radius * 0.6), radius: 9, ttl: 3.4,
-          damage: waveDamage, tick: 0.8, vx: Math.sin(a) * T.waveSpeed, vz: Math.cos(a) * T.waveSpeed,
+          kind: 'wave-front', team: 'enemy', x: cx + Math.sin(a) * (T.radius * 0.6), z: cz + Math.cos(a) * (T.radius * 0.6), radius: 8, ttl: 3.4,
+          damage: waveDamage, tick: 1.5, vx: Math.sin(a) * T.waveSpeed, vz: Math.cos(a) * T.waveSpeed,
         });
       }
     }

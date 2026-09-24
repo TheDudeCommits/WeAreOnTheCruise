@@ -15,6 +15,7 @@ import { DIRECTOR } from '../content/director';
 import { ENEMY_AI } from '../content/enemies';
 import type { EnemyAttackDef, EnemyDef, EnemyState, StatusState } from '../types';
 import type { SimContext, Target } from './context';
+import { metaRuntime, type MetaRuntime } from './meta-runtime';
 import { enemyDamage } from './meta-spawn';
 import {
   TAU, avoidIslands, bearingFromPlayer, clamp, enterLimbo, exitLimbo, fireShot, fwdX, fwdZ, headingTo, killTelegraph,
@@ -22,6 +23,16 @@ import {
 } from './meta-steer';
 
 const blastScratch: Target[] = [];
+/** Fire-control store of the run being updated (set at the top of updateEnemies). */
+let fleet: MetaRuntime | null = null;
+
+/** Takes fire-control tokens for an attack; false = hold fire this tick. */
+function takeFire(e: EnemyState): boolean {
+  const cost = ENEMY_AI[e.defId].fireCost;
+  if (!fleet || fleet.fire < cost) return false;
+  fleet.fire -= cost;
+  return true;
+}
 
 /** Lunge line length (m), speed (m/s) and ripple telegraph (s) for wyrmlings. */
 const LUNGE_LENGTH = 150;
@@ -36,8 +47,14 @@ const LG_SWIM = 0, LG_DIVE = 1, LG_UNDER = 2, LG_RIPPLE = 3, LG_LUNGE = 4, LG_RE
 
 export function updateEnemies(c: SimContext): void {
   const enemies = c.state.enemies;
-  for (let i = 0; i < enemies.length; i++) {
-    const e = enemies[i]!;
+  const rt = metaRuntime(c.state, c.content);
+  rt.fire = Math.min(DIRECTOR.fireBank, rt.fire + DIRECTOR.fireRate(c.state.time / 60) * c.dt);
+  fleet = rt;
+  // Rotate the update order every tick so no ship is always first in line for fire-control tokens.
+  const n = enemies.length;
+  const start = n > 0 ? c.state.tick % n : 0;
+  for (let k = 0; k < n; k++) {
+    const e = enemies[(start + k) % n]!;
     if (e.life !== 'alive') { wreck(c, e); continue; }
     e.hitFlash = Math.max(0, e.hitFlash - c.dt * 4);
     tickStatuses(c, e);
@@ -104,13 +121,18 @@ function baseSpeed(c: SimContext, e: EnemyState, def: EnemyDef): number {
 /** Gunnery lead: grows with run time and captain skill (0 = current position, 1 = perfect intercept). */
 function gunLead(c: SimContext, e: EnemyState, attack: EnemyAttackDef): number {
   const minute = c.state.time / 60;
-  return clamp(attack.lead + e.ai.skill! * 0.6 * Math.min(1, minute / 14), 0, 1);
+  return clamp(attack.lead * DIRECTOR.graceLead(minute) + e.ai.skill! * 0.45 * Math.min(1, minute / 14), 0, 0.95);
 }
 
 /** Spread tightens as crews get better. */
 function gunSpread(c: SimContext, e: EnemyState, attack: EnemyAttackDef): number {
   const minute = c.state.time / 60;
-  return attack.spread * (1 - 0.4 * e.ai.skill! * Math.min(1, minute / 14));
+  return attack.spread * DIRECTOR.graceSpread(minute) * (1 - 0.4 * e.ai.skill! * Math.min(1, minute / 14));
+}
+
+/** Reload time after heat grace and elite drill. */
+function reloadTime(c: SimContext, e: EnemyState, attack: EnemyAttackDef): number {
+  return attack.cooldown * rand(c, 0.9, 1.1) * (e.elite ? 0.85 : 1) * DIRECTOR.graceReload(c.state.time / 60);
 }
 
 /** Tactical skill (T-crossing, stern rakes): grows over the run. */
@@ -162,7 +184,7 @@ function swarm(c: SimContext, e: EnemyState, def: EnemyDef): void {
     if (dist < p.radius + e.radius + 2 || ai.t! <= 0) { ai.mode = SW_PEEL; ai.t = rand(c, 1, 1.8); }
   } else if (ai.mode === SW_PEEL) {
     desired = headingTo(-dx, -dz) + ai.orbit! * 0.9;
-    if (ai.t! <= 0) { ai.mode = SW_GATHER; ai.t = rand(c, 1.2, 3.2); ai.flank = rand(c, -1.2, 1.2); }
+    if (ai.t! <= 0) { ai.mode = SW_GATHER; ai.t = rand(c, 2, 4.5); ai.flank = rand(c, -1.2, 1.2); }
   } else {
     // Fan out around the player on a flank point, then commit to a ram.
     const around = headingTo(-dx, -dz) + ai.flank! * 0.6;
@@ -238,6 +260,7 @@ function chaser(c: SimContext, e: EnemyState, def: EnemyDef): void {
   const aim = leadAim(c, e.x, e.z, attack.speed, gunLead(c, e, attack));
   const tx = aim.x, tz = aim.z;
   if (Math.abs(wrap(headingTo(tx - e.x, tz - e.z) - e.heading)) > 0.32) return;
+  if (!takeFire(e)) { e.attackCooldown = 0.25; return; }
   const bx = e.x + fwdX(e.heading) * e.length * 0.45, bz = e.z + fwdZ(e.heading) * e.length * 0.45;
   const count = attack.count + (e.elite ? 1 : 0);
   const spread = gunSpread(c, e, attack);
@@ -247,7 +270,7 @@ function chaser(c: SimContext, e: EnemyState, def: EnemyDef): void {
     fireShot(c, attack.projectile, bx, bz, tx, tz, attack.speed, damage, attack.range, 1.3, fan + (c.random() - 0.5) * 2 * spread);
   }
   c.emit({ type: 'enemy-fired', source: e.id, projectile: attack.projectile, x: bx, z: bz, dirX: fwdX(e.heading), dirZ: fwdZ(e.heading), count });
-  e.attackCooldown = attack.cooldown * rand(c, 0.9, 1.1) * (e.elite ? 0.85 : 1);
+  e.attackCooldown = reloadTime(c, e, attack);
 }
 
 // ───────────────────────── Broadside ships ─────────────────────────
@@ -306,6 +329,13 @@ function broadside(c: SimContext, e: EnemyState, def: EnemyDef): void {
       }
     }
   }
+  // Gun ships keep clear of the player's hull (only rams mean to touch).
+  const clear = e.radius + p.radius + 35;
+  if (dist < clear) {
+    const away = headingTo(-dx, -dz);
+    const w = (clear - dist) / clear;
+    desired = Math.atan2(-(fwdX(desired) * (1 - w) + fwdX(away) * w * 2), -(fwdZ(desired) * (1 - w) + fwdZ(away) * w * 2));
+  }
   steer(c, e, desired, spd, turn);
   if (ai.windup! <= 0) tryBroadside(c, e, def, dist);
 }
@@ -320,7 +350,7 @@ function tryBroadside(c: SimContext, e: EnemyState, def: EnemyDef, dist: number)
   let side = 0;
   if (ai.reloadP! <= 0 && Math.abs(wrap(rel - Math.PI / 2)) < arc) side = 1;
   else if (ai.reloadS! <= 0 && Math.abs(wrap(rel + Math.PI / 2)) < arc) side = -1;
-  if (!side) return;
+  if (!side || !takeFire(e)) return;
   if (attack.telegraph > 0) beginVolley(c, e, def, side, dist);
   else fireVolley(c, e, def, side, false);
 }
@@ -361,7 +391,7 @@ function fireVolley(c: SimContext, e: EnemyState, def: EnemyDef, side: number, l
       (c.random() - 0.5) * 2 * spread);
   }
   c.emit({ type: 'enemy-fired', source: e.id, projectile: attack.projectile, x: e.x, z: e.z, dirX: sx, dirZ: sz, count });
-  const reload = attack.cooldown * rand(c, 0.9, 1.1) * (e.elite ? 0.85 : 1);
+  const reload = reloadTime(c, e, attack);
   if (side === 1) ai.reloadP = reload; else ai.reloadS = reload;
 }
 
@@ -421,7 +451,9 @@ function artillery(c: SimContext, e: EnemyState, def: EnemyDef): void {
   else { desired = hb - ai.orbit! * (Math.PI / 2); spd = speed * 0.4; }
   steer(c, e, desired, spd, def.turnRate);
   e.attackCooldown -= c.dt;
-  if (e.attackCooldown <= 0 && dist < attack.range && dist > 60 && p.alive) fireMortars(c, e, def, dist);
+  if (e.attackCooldown <= 0 && dist < attack.range && dist > 60 && p.alive) {
+    if (takeFire(e)) fireMortars(c, e, def, dist); else e.attackCooldown = 0.3;
+  }
 }
 
 /** Lobbed shells with circle telegraphs that complete on impact (the first shell leads the player). */
@@ -447,7 +479,7 @@ function fireMortars(c: SimContext, e: EnemyState, def: EnemyDef, dist: number):
   }
   const inv = 1 / (dist || 1);
   c.emit({ type: 'enemy-fired', source: e.id, projectile: 'enemy-mortar', x: e.x, z: e.z, dirX: (p.x - e.x) * inv, dirZ: (p.z - e.z) * inv, count });
-  e.attackCooldown = attack.cooldown * rand(c, 0.9, 1.1) * (e.elite ? 0.85 : 1);
+  e.attackCooldown = reloadTime(c, e, attack);
 }
 
 // ───────────────────────── Kamikaze (fire ships) ─────────────────────────
@@ -569,7 +601,10 @@ function phaseShip(c: SimContext, e: EnemyState, def: EnemyDef): void {
       const R = attack.range * tune.rangeFrac;
       const hb = headingTo(dx, dz);
       steer(c, e, dist > R + 40 ? hb + ai.flank! * 0.4 : beamHeading(hb, ai.orbit!, dist, R), speed, def.turnRate);
-      if (ai.t! <= 0 && dist < 280 && p.alive) { ai.mode = PH_FADE_OUT; ai.fade = 0; }
+      // The blink volley is paid for up front: no fire-control token, no phase.
+      if (ai.t! <= 0 && dist < 280 && p.alive) {
+        if (takeFire(e)) { ai.mode = PH_FADE_OUT; ai.fade = 0; } else ai.t = 0.5;
+      }
     }
   }
 }
@@ -650,5 +685,7 @@ function stationary(c: SimContext, e: EnemyState, def: EnemyDef): void {
   const p = c.state.player;
   const dist = Math.hypot(p.x - e.x, p.z - e.z);
   e.attackCooldown -= c.dt;
-  if (e.attackCooldown <= 0 && dist < attack.range && dist > 40 && p.alive) fireMortars(c, e, def, dist);
+  if (e.attackCooldown <= 0 && dist < attack.range && dist > 40 && p.alive) {
+    if (takeFire(e)) fireMortars(c, e, def, dist); else e.attackCooldown = 0.3;
+  }
 }

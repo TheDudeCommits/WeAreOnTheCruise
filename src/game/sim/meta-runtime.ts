@@ -31,6 +31,8 @@ export interface MetaRuntime {
   /** Spawn bands filtered for this run's sea. */
   bands: SeaBand[];
   islands: IslandDef[];
+  /** Fleet fire-control tokens (volleys available now). */
+  fire: number;
 }
 
 const STRIKE_POOL = 32;
@@ -44,6 +46,7 @@ export function metaRuntime(state: RunState, content: ContentDb): MetaRuntime {
       fortIslands: new Set(),
       bands: buildBands(state.seaId, content),
       islands: [],
+      fire: 1,
     };
     STORES.set(state, rt);
   }

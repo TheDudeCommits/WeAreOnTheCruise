@@ -24,6 +24,8 @@ export const ENTRY_WEIGHTS = { level: 10, branch: 13, overdrive: 18 };
 export const OVERDRIVE_MIN_LEVEL = 10;
 /** Luck needed for a 4th card. */
 export const LUCK_FOURTH_CARD = 3;
+/** Every crew patches its hull a little: base regen (fraction of max hull per second) added to every ship. */
+export const BASE_REGEN = 0.001;
 /** Heal card strength (fraction of max hull). */
 export const HEAL_CARD = 0.3;
 /** Doubloon card: base + per minute. */
@@ -79,7 +81,7 @@ export const COIN_TIERS = { gold: 25, silver: 5, maxPieces: 5 };
 
 /** Rare drops on a normal kill (chance scales with the enemy's size: × (1 + xp × sizeScale)); luck adds 6% each. */
 export const RARE_DROPS = {
-  repair: 0.006,
+  repair: 0.012,
   compass: 0.002,
   powderKeg: 0.0025,
   sizeScale: 0.06,

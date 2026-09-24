@@ -16,7 +16,7 @@ const WIND: Record<WeatherId, number> = { clear: 0.45, breezy: 0.7, storm: 1, fo
 
 const STRIKE_TELEGRAPH = 1.3;
 const STRIKE_RADIUS = 16;
-const STRIKE_DAMAGE = 16;
+const STRIKE_DAMAGE = 10;
 const STRIKE_ENEMY_DAMAGE = 70;
 const strikeScratch: Target[] = [];
 
@@ -63,7 +63,7 @@ export function updateSeaState(c: SimContext): void {
   if ((st.rain > 0.55 || storm > 0) && s.player.alive) {
     const next = sc[SCRATCH.nextStrike] ?? 0;
     if (s.time >= next) {
-      sc[SCRATCH.nextStrike] = s.time + (storm > 0 ? rand(c, 1.4, 2.8) : rand(c, 3.5, 7));
+      sc[SCRATCH.nextStrike] = s.time + (storm > 0 ? rand(c, 2, 3.5) : rand(c, 5, 9));
       if (next > 0) strikeSomewhere(c);
     }
   }
@@ -75,7 +75,7 @@ function strikeSomewhere(c: SimContext): void {
   const s = c.state;
   if (c.random() < 0.55 || s.enemies.length === 0) {
     const pred = predictPlayer(c, STRIKE_TELEGRAPH, 0.8);
-    const a = c.random() * TAU, r = c.random() * 30;
+    const a = c.random() * TAU, r = 10 + c.random() * 40;
     scheduleStrike(c, pred.x + Math.sin(a) * r, pred.z + Math.cos(a) * r);
     return;
   }
@@ -131,7 +131,7 @@ export function spawnRogueWave(c: SimContext, from: number, distance: number, wi
   const dirX = -fwdX(from), dirZ = -fwdZ(from);
   const speed = 24;
   const ttl = (distance * 2) / speed;
-  const damage = bossDamage(c, 12);
+  const damage = bossDamage(c, 8);
   for (let k = 0; k < width; k++) {
     const off = (k - (width - 1) / 2) * 30;
     c.spawnHazard({

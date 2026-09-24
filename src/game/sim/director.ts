@@ -205,7 +205,8 @@ function spawnWaves(c: SimContext, sea: SeaDef, minute: number): void {
   const cost = def.xp * size;
   const underFloor = alive < floor;
   if (!underFloor && d.budget < cost) return;
-  d.budget = underFloor ? Math.max(0, d.budget - cost * 0.5) : d.budget - cost;
+  if (underFloor && d.budget - cost < -DIRECTOR.debt(minute)) return;
+  d.budget -= cost;
   sc[SCRATCH.nextEntry] = -1;
   const elite = elites < DIRECTOR.maxElites && c.random() < DIRECTOR.eliteChance(minute);
   spawnGroup(c, entry.enemy, size, elite);

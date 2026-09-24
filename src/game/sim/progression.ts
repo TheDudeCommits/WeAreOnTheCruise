@@ -10,7 +10,7 @@ import { BRANCH_LEVEL, MAX_PASSIVE_SLOTS, MAX_WEAPON_LEVEL, MAX_WEAPON_SLOTS, ti
 import { DIRECTOR, EVENT_TUNING } from '../content/director';
 import { ENEMY_AI } from '../content/enemies';
 import {
-  BOUNTY, CARD_WEIGHTS, CHESTS, COIN_TIERS, DOUBLOON_CARD, ECONOMY, ENTRY_WEIGHTS, HEAL_CARD, LUCK_FOURTH_CARD,
+  BASE_REGEN, BOUNTY, CARD_WEIGHTS, CHESTS, COIN_TIERS, DOUBLOON_CARD, ECONOMY, ENTRY_WEIGHTS, HEAL_CARD, LUCK_FOURTH_CARD,
   OVERDRIVE_MIN_LEVEL, PICKUP_EFFECTS, RARE_DROPS, type ChipDef,
 } from '../content/rewards';
 import { META_UPGRADE_IDS, PASSIVE_IDS, WEAPON_IDS, type PassiveId, type StatKey, type WeaponId } from '../ids';
@@ -47,6 +47,7 @@ export function recomputeStats(c: SimContext): void {
   }
   const sc = c.state.director.scratch;
   for (const key of STAT_KEYS) { const v = sc[CHIP_KEY[key]]; if (v) stats[key] += v; }
+  stats.regen += BASE_REGEN;
   p.stats = stats;
   const oldMax = p.maxHp;
   p.maxHp = c.content.ships[p.shipId].hp * (1 + stats.maxHp);
