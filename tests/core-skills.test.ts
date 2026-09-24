@@ -105,8 +105,10 @@ describe('CORE specials (E)', () => {
     const under = run(sim, 1.2, d, false, (s) => { s.state.sea.windDir = Math.PI / 2; });
     expect(under.some((e) => e.type === 'weapon-fired')).toBe(false);
     expect(p.speed).toBeGreaterThan(cruise * 1.2);
-    // Surface next to a ship: the burst hits it.
-    d[0]!.x = p.x + 20; d[0]!.z = p.z;
+    // Surface next to a ship: the burst hits it. The hull keeps sailing ~1.3 s (≈ 50 m at dive speed) before it comes
+    // up, so the ship waits ahead of the bow, 20 m to starboard.
+    const fx = -Math.sin(p.heading), fz = -Math.cos(p.heading);
+    d[0]!.x = p.x + fx * 45 - fz * 20; d[0]!.z = p.z + fz * 45 + fx * 20;
     const up = run(sim, 2, d);
     expect(p.submerged).toBe(0);
     expect(up.some((e) => e.type === 'hazard-spawned' && e.kind === 'shockwave')).toBe(true);
