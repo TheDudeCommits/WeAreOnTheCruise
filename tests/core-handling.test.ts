@@ -56,8 +56,11 @@ function sail(sim: Sim, seconds: number, each?: (sim: Sim) => void): SimEvent[] 
   return events;
 }
 
-/** Wind blowing toward the ship's port beam: heading 0 sails a beam reach. */
-function beamReachWind(sim: Sim): void { sim.state.sea.windDir = Math.PI / 2; }
+/**
+ * Keeps the wind on the port beam whatever the heading (windDir = direction the wind blows toward, (sin, cos)
+ * convention), so turning tests measure trim and mass, not the points of sail.
+ */
+function beamReachWind(sim: Sim): void { sim.state.sea.windDir = sim.state.player.heading + Math.PI / 2; }
 
 function lateralAndForward(sim: Sim): { lat: number; fwd: number } {
   const p = sim.state.player;
@@ -119,8 +122,9 @@ describe('CORE handling', () => {
   });
 
   it('follows the points-of-sail polar', () => {
+    // windDir: the wind blows toward (sin w, cos w); a heading equal to windDir points into the wind.
     const sea = { windDir: 0.7, windStrength: 0.5 } as never;
-    const at = (deg: number) => windFactor(0.7 + Math.PI + (deg * Math.PI) / 180, sea);
+    const at = (deg: number) => windFactor(0.7 + (deg * Math.PI) / 180, sea);
     expect(at(0)).toBeCloseTo(0.35, 2);
     expect(at(90)).toBeCloseTo(1.0, 2);
     expect(at(135)).toBeCloseTo(1.1, 2);
@@ -133,7 +137,8 @@ describe('CORE handling', () => {
       sail(sim, 15, (s) => { s.state.sea.windDir = windDir; });
       return sim.state.player.speed;
     };
-    const beam = cruise(Math.PI / 2), irons = cruise(Math.PI), broad = cruise(Math.PI / 4), running = cruise(0);
+    // Heading 0: windDir 0 = in irons, ±π/2 = beam reach, 3π/4 = broad reach, π = running.
+    const beam = cruise(Math.PI / 2), irons = cruise(0), broad = cruise((3 * Math.PI) / 4), running = cruise(Math.PI);
     expect(irons / beam).toBeGreaterThan(0.3);
     expect(irons / beam).toBeLessThan(0.4);
     expect(broad).toBeGreaterThan(beam);

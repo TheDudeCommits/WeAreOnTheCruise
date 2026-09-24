@@ -269,11 +269,14 @@ describe('CORE ultimates (R)', () => {
     const first = run(sim, 1 / 60, [...ahead, ...astern]);
     expect(first.some((e) => e.type === 'hazard-spawned' && e.kind === 'wave-front')).toBe(true);
     const shot = sim.spawnProjectile({ kind: 'enemy-cannonball', team: 'enemy', x: 0, z: -120, vx: 0, vz: 0, damage: 5, ttl: 10 })!;
+    const shotId = shot.id; // pooled slots are reused once dead: track the shot by id
     const z0 = ahead[0]!.e.z;
-    run(sim, 5, [...ahead, ...astern], true);
+    let washed = false;
+    const ev = run(sim, 5, [...ahead, ...astern], true, () => { if (!washed && !(shot.alive && shot.id === shotId)) washed = true; });
     expect(ahead.every((d) => hurt(d) > 0)).toBe(true);
     expect(ahead[0]!.e.z).toBeLessThan(z0 - 20); // carried along −Z
     expect(hurt(astern[0]!)).toBe(0);
-    expect(shot.alive).toBe(false);
+    expect(washed).toBe(true);
+    expect(ev.some((e) => e.type === 'projectile-hit' && e.team === 'enemy' && e.target === 'water' && Math.abs(e.z + 120) < 1)).toBe(true);
   });
 });

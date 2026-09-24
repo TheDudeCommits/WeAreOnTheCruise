@@ -6,8 +6,9 @@
  *    little drift (heavier hulls drift more) instead of sliding.
  *  - Sails: the throttle trims toward the gear (ANCHOR 0 · HALF 0.55 · FULL 1). Half sail turns tightest.
  *  - Wind: a points-of-sail polar scales top speed (in irons ~0.35, beam reach 1.0, broad reach ~1.1, running ~0.95).
- *    `sea.windDir` uses the heading convention for the direction the wind blows TOWARD: a ship whose heading equals
- *    windDir is running dead downwind.
+ *    `sea.windDir` follows the render side's convention: the wind blows TOWARD (sin windDir, cos windDir) (the same
+ *    vector FX/OCEAN/LOOK use for smoke, foam and clouds). A ship with heading == windDir points into the wind (in
+ *    irons); heading == windDir + π runs dead downwind.
  *  - Rudder ramps toward the input and recentres faster; yaw rate follows the rudder with a mass-scaled lag.
  *  - Boost: a punchy speed kick plus 3× thrust for BOOST_DURATION.
  *  - Visual roll/pitch are damped springs driven by turning, wind heel, acceleration and impulses (recoil, rams).
@@ -39,8 +40,8 @@ export const agilityOf = (ship: ShipDef): number => Math.sqrt(600 / ship.mass);
 
 /** Speed factor for sailing at `heading` in this sea's wind (1 = beam reach in a moderate breeze). */
 export function windFactor(heading: number, sea: SeaState): number {
-  const from = sea.windDir + Math.PI;
-  let off = (heading - from) % (Math.PI * 2);
+  // Heading whose bow points at the wind's source: forward (−sin h, −cos h) = −(sin w, cos w) ⇔ h = w.
+  let off = (heading - sea.windDir) % (Math.PI * 2);
   if (off < 0) off += Math.PI * 2;
   if (off > Math.PI) off = Math.PI * 2 - off;
   let i = 1;
@@ -201,7 +202,7 @@ function attitude(c: CoreSim, ship: ShipDef): void {
   const sea = c.state.sea;
   // Heel outward in turns, to leeward on a reach (sails drawing), none while submerged or airborne.
   const sx = Math.cos(p.heading), sz = -Math.sin(p.heading);
-  const wx = -Math.sin(sea.windDir), wz = -Math.cos(sea.windDir);
+  const wx = Math.sin(sea.windDir), wz = Math.cos(sea.windDir);
   const sails = p.submerged > 0.3 || p.airborne > 0.1 ? 0 : p.throttle;
   const heelTurn = -p.yawRate * p.speed * 0.0075;
   const heelWind = -(wx * sx + wz * sz) * clamp(sea.windStrength, 0, 1.5) * sails * 0.09;
