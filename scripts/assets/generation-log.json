@@ -176,6 +176,87 @@
       "credits": 30,
       "purpose": "model: sovereign from assets/concepts/sovereign.jpg",
       "output": "public/assets/fleet/sovereign.glb"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "meshy",
+      "model": "image-to-3d meshy-t2 smart-topology textured, target 3000",
+      "taskId": "01a0d1dd-482e-72e9-b018-3f1d41709641",
+      "credits": 15,
+      "purpose": "prop: mortar (cell of assets/concepts/prop-sheet.jpg)",
+      "output": "public/assets/fleet/mortar.glb"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "meshy",
+      "model": "image-to-3d meshy-t2 smart-topology textured, target 3000",
+      "taskId": "01a0d1dd-5c6c-762d-8e54-611dd3f5a1b3",
+      "credits": 15,
+      "purpose": "prop: rocket-rack (cell of assets/concepts/prop-sheet.jpg)",
+      "output": "public/assets/fleet/rocket-rack.glb"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "meshy",
+      "model": "image-to-3d meshy-t2 smart-topology textured, target 3000",
+      "taskId": "01a0d1dd-7198-7286-997a-559c19c534c9",
+      "credits": 15,
+      "purpose": "prop: swivel-gun (cell of assets/concepts/prop-sheet.jpg)",
+      "output": "public/assets/fleet/swivel-gun.glb"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "meshy",
+      "model": "image-to-3d meshy-t2 smart-topology textured, target 3000",
+      "taskId": "01a0d1dd-8c2f-72d7-829b-0c67bdb39bd0",
+      "credits": 15,
+      "purpose": "prop: harpoon-gun (cell of assets/concepts/prop-sheet.jpg)",
+      "output": "public/assets/fleet/harpoon-gun.glb"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "meshy",
+      "model": "image-to-3d meshy-t2 smart-topology textured, target 3000",
+      "taskId": "01a0d1dd-9f90-76c9-ac91-2899f928bb1b",
+      "credits": 15,
+      "purpose": "prop: storm-rod (cell of assets/concepts/prop-sheet.jpg)",
+      "output": "public/assets/fleet/storm-rod.glb"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "meshy",
+      "model": "image-to-3d meshy-t2 smart-topology textured, target 3000",
+      "taskId": "01a0d1dd-b0f4-76f6-97f8-b591345b4979",
+      "credits": 15,
+      "purpose": "prop: mine (cell of assets/concepts/prop-sheet.jpg)",
+      "output": "public/assets/fleet/mine.glb"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "meshy",
+      "model": "image-to-3d meshy-t2 smart-topology textured, target 3000",
+      "taskId": "01a0d1dd-c38f-759b-bb35-4592eb61b960",
+      "credits": 15,
+      "purpose": "prop: lantern (cell of assets/concepts/prop-sheet.jpg)",
+      "output": "public/assets/fleet/lantern.glb"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "meshy",
+      "model": "image-to-3d meshy-t2 smart-topology textured, target 3000",
+      "taskId": "01a0d1dd-d637-7127-8e3b-16b60d9b7ff9",
+      "credits": 15,
+      "purpose": "prop: powder-keg (cell of assets/concepts/prop-sheet.jpg)",
+      "output": "public/assets/fleet/powder-keg.glb"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "meshy",
+      "model": "image-to-3d meshy-t2 smart-topology textured, target 3000",
+      "taskId": "01a0d1dd-e992-7045-8877-559bb56a2502",
+      "credits": 15,
+      "purpose": "prop: iron-ram (cell of assets/concepts/prop-sheet.jpg)",
+      "output": "public/assets/fleet/iron-ram.glb"
     }
   ]
 }
