@@ -67,7 +67,7 @@
         "slug": "by"
       },
       "sourceSha256": "2b4e9779d82786ed90c6688c4255d1f60ecb78b2f54b47e9f10c6203241d1c17",
-      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression.",
+      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression. 2026-09-25 material re-bake (scripts/assets/atlas-hero.mjs): the 36 materials became 6 (31 textures copied texel for texel into one atlas with wrap-padded gutters, triangles split along the texture's repeat lines; 5 heavily repeating textures kept as they were); geometry and texels unchanged; the low file keeps 1×1 placeholder images and per-vertex atlas UVs for the captain hull bake.",
       "normalization": {
         "uid": "99986d1c93654c9d8889017435b5fe06",
         "kind": "thousand-sunny",
@@ -80,18 +80,18 @@
         {
           "detail": "high",
           "url": "/assets/sketchfab/thousand-sunny.glb",
-          "bytes": 891600,
-          "sha256": "b371752aab0aea952686f4bc872bfd5cad347075da4cfb594d230165dffc708f",
-          "triangles": 28064,
-          "draws": 36
+          "bytes": 1167484,
+          "sha256": "3212f10011db9c926824fef2056448f2166b2a609dcc3a9ef1bf5553aa80e679",
+          "triangles": 40874,
+          "draws": 6
         },
         {
           "detail": "low",
           "url": "/assets/sketchfab/thousand-sunny-low.glb",
-          "bytes": 680792,
-          "sha256": "6eacacac61d960091f5bb9d093295560204bea81cb700a03eacbc66bb8ecfb34",
+          "bytes": 304888,
+          "sha256": "5ae2272fc3201a50d282f74029b951193b3ae1e1f41e76ce18d06c6d9283b84b",
           "triangles": 14508,
-          "draws": 36
+          "draws": 6
         }
       ],
       "game": {

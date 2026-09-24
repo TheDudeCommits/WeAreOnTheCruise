@@ -38,14 +38,21 @@ export interface CaptainHull {
 
 type Sampler = (u: number, v: number, out: THREE.Color) => void;
 
-/** Reads a texture's pixels once (downscaled to ≤256², enough for per-vertex colour) and samples them. */
+/**
+ * Reads a texture's pixels once (downscaled to ≤256², enough for per-vertex colour) and samples them. Hero atlases
+ * (scripts/assets/atlas-hero.mjs, texture name `<kind>-atlas`) keep ≤1024 px so each packed texture is blurred about as
+ * much as it was on its own (a 256 px read-back of a 2560 px atlas would mix neighbouring tiles).
+ */
 function textureSampler(tex: THREE.Texture | null | undefined, cache: Map<THREE.Texture, Sampler | null>): Sampler | null {
   if (!tex) return null;
   if (cache.has(tex)) return cache.get(tex)!;
   let sampler: Sampler | null = null;
   const img = tex.image as (CanvasImageSource & { width?: number; height?: number }) | undefined;
   if (img && img.width && img.height && typeof document !== 'undefined') {
-    const W = Math.min(256, img.width), H = Math.min(256, img.height);
+    const cap = tex.name.endsWith('-atlas') ? 1024 : 256;
+    const scale = Math.min(1, cap / Math.max(img.width, img.height));
+    const W = cap === 256 ? Math.min(256, img.width) : Math.max(1, Math.round(img.width * scale));
+    const H = cap === 256 ? Math.min(256, img.height) : Math.max(1, Math.round(img.height * scale));
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
