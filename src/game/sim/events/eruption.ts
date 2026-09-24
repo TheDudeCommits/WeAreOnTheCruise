@@ -160,6 +160,6 @@ function gold(c: SimContext, h: HazardState, v: EruptionState): void {
     payout(c, h.x, h.z, EVENT_TUNING.eruptionDoubloons, 0, 1, 10);
     return;
   }
-  spillTreasure(c, h.x, h.z, minute >= 8 ? 12 : 6, 5, 3);
-  if (c.random() < 0.3) spillDoubloons(c, h.x, h.z, 2, 5);
+  spillTreasure(c, h.x, h.z, minute >= 8 ? 6 : 3, 5, 2);
+  if (c.random() < 0.15) spillDoubloons(c, h.x, h.z, 2, 5);
 }

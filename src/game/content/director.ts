@@ -236,8 +236,10 @@ export const EVENT_TUNING = {
   linger: 2.2,
   /** A set piece never starts if it could still be running this close to a boss arrival (s). */
   bossMargin: 15,
+  /** Weight multiplier for running the same set piece twice in a row. */
+  repeatWeight: 0.2,
   /** Rewards: XP spilled on success (minute-scaled), bounty per success (× heat). */
-  rewardXp: (minute: number): number => 10 + 4 * minute,
+  rewardXp: (minute: number): number => 6 + 2.5 * minute,
   successBounty: 1500,
 
   krakenArms: (minute: number): number => (minute < 8 ? 5 : minute < 12 ? 6 : 7),
@@ -256,7 +258,7 @@ export const EVENT_TUNING = {
   krakenGrabTelegraph: 0.9,
   krakenGrabTime: 2.2,
   krakenGrabTick: 4.5,
-  krakenDoubloons: 12,
+  krakenDoubloons: 8,
 
   rogueWaves: (minute: number): number => (minute < 8 ? 1 : 2),
   rogueWaveHalfWidth: 240,
@@ -267,7 +269,7 @@ export const EVENT_TUNING = {
   rogueWaveEnemy: 55,
   /** Forward speed gained when boosting through a wave (m/s). */
   rogueWaveSurge: 16,
-  rogueWaveDoubloons: 5,
+  rogueWaveDoubloons: 3,
 
   maelstromRadius: 150,
   maelstromEye: 36,
@@ -280,16 +282,16 @@ export const EVENT_TUNING = {
   maelstromGrindEnemy: 40,
   /** Ships the maelstrom must swallow for its treasure. */
   maelstromGoal: (minute: number): number => Math.min(16, 8 + Math.floor(minute / 2)),
-  maelstromDoubloons: 8,
+  maelstromDoubloons: 5,
 
   blockadeFrigates: (minute: number): number => (minute < 9 ? 3 : minute < 12 ? 4 : 5),
   blockadeDistance: 300,
   blockadeFlagshipHp: 1,
-  blockadeDoubloons: 12,
+  blockadeDoubloons: 8,
 
   ghostGalleons: (minute: number): number => (minute < 10 ? 2 : 3),
   ghostWisps: (minute: number): number => Math.min(12, 6 + Math.floor(minute / 2)),
-  ghostDoubloons: 12,
+  ghostDoubloons: 8,
 
   eruptionDuration: 28,
   /** Seconds between bombs (early → late run). */
@@ -298,13 +300,13 @@ export const EVENT_TUNING = {
   eruptionBombDamage: 11,
   eruptionBombEnemy: 70,
   /** Share of bombs that are treasure (gold circles, harmless). */
-  eruptionGoldShare: 0.22,
-  eruptionDoubloons: 6,
+  eruptionGoldShare: 0.16,
+  eruptionDoubloons: 4,
 
   treasureDig: (minute: number): number => Math.min(18, 12 + Math.floor(minute / 3)),
   treasureRadius: 30,
   treasureWaveEvery: 6,
-  treasureDoubloons: 10,
+  treasureDoubloons: 7,
 
-  bountyDoubloons: 12,
+  bountyDoubloons: 6,
 };

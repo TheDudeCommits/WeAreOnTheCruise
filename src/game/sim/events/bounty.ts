@@ -93,7 +93,7 @@ export const BOUNTY: WorldEventHandler = {
     const p = c.state.player;
     if (b.kills >= b.goal) {
       const ahead = 26 + p.speed * 0.8;
-      payout(c, p.x + fwdX(p.heading) * ahead, p.z + fwdZ(p.heading) * ahead, EVENT_TUNING.bountyDoubloons + b.goal, 1, 0.8, 8);
+      payout(c, p.x + fwdX(p.heading) * ahead, p.z + fwdZ(p.heading) * ahead, EVENT_TUNING.bountyDoubloons + Math.round(b.goal / 2), 1, 0.8, 8);
       resolve(c, rt, OUTCOME_SUCCESS, 'Bounty Collected!', 'The harbourmaster pays in full: doubloons and a chest.');
       complete(rt);
       return;

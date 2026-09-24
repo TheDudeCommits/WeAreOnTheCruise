@@ -47,6 +47,8 @@ export class EventRuntime {
   done = false;
   /** A boss was already about when it started (then a boss does not abort it). */
   bossAtStart = false;
+  /** The last set piece that ran (the director is steered away from repeating it back to back). */
+  lastId: DirectorEventId | null = null;
   /** Scratch for spatial queries. */
   readonly targets: Target[] = [];
   readonly islands: IslandDef[] = [];

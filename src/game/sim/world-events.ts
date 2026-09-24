@@ -30,6 +30,7 @@ export function startWorldEvent(c: SimContext, id: DirectorEventId, minute: numb
     return false;
   }
   rt.id = id;
+  rt.lastId = id;
   rt.def = DIRECTOR_EVENTS[id];
   rt.handler = handler;
   rt.ev = ev;
@@ -68,6 +69,8 @@ export function eventWeight(c: SimContext, id: DirectorEventId, base: number, mi
   let w = base * (SEA_EVENTS[s.seaId]?.weights?.[id] ?? 1);
   const handler = HANDLERS[id];
   if (!handler) return w;
+  // Variety: the same set piece twice in a row is rare.
+  if (rt.lastId === id) w *= EVENT_TUNING.repeatWeight;
   // Never let a set piece run into a boss arrival.
   const margin = DIRECTOR_EVENTS[id].duration + EVENT_TUNING.bossMargin;
   const sea = c.content.seas[s.seaId];

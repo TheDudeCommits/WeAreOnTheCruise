@@ -44,8 +44,8 @@ const SHIP_GRAB_REACH = 30;
 const SHIP_GRAB_TIME = 2;
 const SHIP_SQUEEZE = 35;
 /** The Kraken loses interest when the player stays this far from the ring for AWAY_TIME seconds. */
-const AWAY_DIST = 330;
-const AWAY_TIME = 5;
+const AWAY_DIST = 420;
+const AWAY_TIME = 8;
 const MAX_ARMS = 8;
 
 class KrakenState {
