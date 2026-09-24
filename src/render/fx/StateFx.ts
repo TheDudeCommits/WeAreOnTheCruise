@@ -192,7 +192,11 @@ export class StateFx {
       const p = list[i]!;
       if (this.slotAlive[i] && (!p.alive || p.id !== this.slotId[i])) this.ghost(i);
       if (!p.alive) { this.slotAlive[i] = 0; continue; }
-      if (this.slotId[i] !== p.id) this.emitAcc[i] = rand();
+      if (this.slotId[i] !== p.id) {
+        this.emitAcc[i] = rand();
+        // Full Broadside: balls fired inside the manual volley window get the set-piece hits (EventFx).
+        if (p.team === 'player' && p.weapon === 'broadside' && this.events.manualVolleyOpen()) this.events.trackVolleyBall(i, p.id);
+      }
       const vis = KINDS[p.kind];
       const lin = KIND_LIN.get(p.kind)!;
       let y = p.y;

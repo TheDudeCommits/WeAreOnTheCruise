@@ -48,6 +48,8 @@ export interface FxStats {
   pressure: number;
   /** Smoke rules: estimated screen coverage with / without the governor's thinning, the thinning, live puffs. */
   smokeCoverage: number; smokeCoverageRaw: number; smokeThin: number; smokeLive: number; smokeMs: number;
+  /** Full Broadside set piece: manual volleys, balls tracked, balls landed on hulls, hit-stops. */
+  volley: { volleys: number; tracked: number; hits: number; hitStops: number };
 }
 
 export class FxSystem implements RenderSystem {
@@ -83,6 +85,7 @@ export class FxSystem implements RenderSystem {
     cel: 0, glow: 0, heads: 0, trails: 0, beams: 0, decals: 0, debris: 0, numbers: 0, clock: 0, spawned: 0,
     updateMs: 0, updateAvgMs: 0, updateMaxMs: 0, pressure: 1,
     smokeCoverage: 0, smokeCoverageRaw: 0, smokeThin: 0, smokeLive: 0, smokeMs: 0,
+    volley: { volleys: 0, tracked: 0, hits: 0, hitStops: 0 },
   };
 
   constructor() {
@@ -108,6 +111,7 @@ export class FxSystem implements RenderSystem {
     this.foes = new FoeFx(this.kit, this.sakuga);
     this.events = new EventFx(this.kit, this.sakuga);
     this.state = new StateFx(this.kit, this.sakuga, this.events);
+    this.stats.volley = this.events.volleyStats;
     debris.splash = (x, z, size) => this.sakuga.plop(x, z, size);
     this.group.name = 'fx';
     this.group.add(decals.mesh, cel.mesh, heads.mesh, trails.mesh, glow.mesh, beams.mesh, ropes.mesh, walls.mesh, debris.mesh, props.group, numbers.mesh, this.worldEvents.group);

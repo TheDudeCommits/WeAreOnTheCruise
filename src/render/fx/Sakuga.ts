@@ -361,6 +361,45 @@ export class Sakuga {
     this.k.spawned += 12;
   }
 
+  /** A Full Broadside ball on a hull (on top of hullHit): gold hit ring, gold burst, plank burst, a gold ring on the water. */
+  broadsideHit(x: number, y: number, z: number, dx: number, dz: number, scale: number): void {
+    const s = scale;
+    this.ring(x, y + 1, z, 3 * s, 20 * s, GlowPal.Gold, 0.3, 1.4);
+    this.burst(x, y, z, 9 * s, GlowPal.Gold, 0.07, 0, 1.3);
+    this.shock(x, z, 15 * s, 0.4, 0xffd84a, 1.3, 1.3);
+    this.sparks(x, y, z, 10, 38 * s, GlowPal.Gold, -dx, 0.55, -dz, 0.5, 0.45);
+    this.planks(x, y, z, 7, 11 * s, 16 * s, 1.0 * s, 2.6 * s, 0.25, -dx * 8, -dz * 8);
+    this.k.spawned += 20;
+  }
+
+  /**
+   * Full Broadside smoke wall: an inked gunsmoke bank rolling off the firing side bow → stern with the ripple, then
+   * drifting out and downwind for ~2.5 s. A set piece, so it keeps its hang time; the coverage governor and the hero
+   * guard still thin it (cel shader).
+   */
+  smokeWall(x: number, gunY: number, z: number, fx: number, fz: number, dx: number, dz: number, length: number, gunSide: number): void {
+    const c = this.k.cel;
+    const cols = this.n(8, 4);
+    const out = gunSide + 7;
+    for (let i = 0; i < cols; i++) {
+      const u = cols > 1 ? i / (cols - 1) : 0.5;
+      const along = (0.46 - u * 0.92) * length;
+      const delay = u * 0.42 + rand() * 0.03;
+      for (let j = 0; j < 2; j++) {
+        const reach = out + j * 5 + spread(1.5);
+        const v = range(9, 14) - j * 3;
+        const s = c.spec.reset();
+        s.at(x + fx * along + dx * reach, gunY + 0.5 + j * 3.5 + spread(0.6), z + fz * along + dz * reach)
+          .vel(dx * v + spread(1.5), range(0.4, 1.4), dz * v + spread(1.5))
+          .dragTo(2.2, this.k.windX * 0.8, range(0.8, 1.6), this.k.windZ * 0.8)
+          .look(Cel.Puff, CelPal.Gunsmoke).sized(range(3, 4.5), range(9, 12.5) - j * 1.5, 3).rotate(rand() * TAU, spread(0.2))
+          .lived(range(2.3, 2.9), 0.32).after(delay);
+        c.emit();
+      }
+    }
+    this.k.spawned += cols * 2;
+  }
+
   /** Shot into rock/sand: dust burst, rock chips, sparks. */
   islandHit(x: number, y: number, z: number, scale: number): void {
     const s = scale;
