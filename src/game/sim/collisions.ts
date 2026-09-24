@@ -21,6 +21,7 @@ import { bossDamage, enemyContactDamage } from './meta-spawn';
 import { areaMul, damageMul, ramMul } from './stats';
 import { crit, CRIT, ex, levelOf } from './weapons/common';
 import { ironRamSlot } from './weapons/iron-ram';
+import { resolveCaptainCollisions } from './captains-collide';
 
 /** Ram damage per (m/s of closing speed × √tonnes). */
 export const RAM_K = 0.1;
@@ -58,6 +59,7 @@ export function resolveCollisions(c: CoreSim): void {
     if (b.ai.contactCd > 0) b.ai.contactCd -= c.dt;
     if (b.submerged < 0.5) pushOutOfIslands(c, b);
   }
+  resolveCaptainCollisions(c); // CAPTAINS: captains vs islands, the player, each other and enemy hulls
 }
 
 function pushOutOfIslands(c: CoreSim, t: EnemyState | BossState): void {

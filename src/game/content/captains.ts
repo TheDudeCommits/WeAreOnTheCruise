@@ -54,23 +54,23 @@ export const CAPTAIN = {
   respawn: 25,
   respawnGrace: 2.5,
   /** Hull: ship hp × hpMul × (1 + hpPerLevel × (level − 1)); armour: ship armour + level × armorPerLevel. */
-  hpMul: 1.05,
-  hpPerLevel: 0.085,
-  armorPerLevel: 0.12,
+  hpMul: 0.8,
+  hpPerLevel: 0.045,
+  armorPerLevel: 0.06,
   /** Regeneration (fraction of max hull per second): always, when out of the fight, and while falling back. */
-  regen: 0.003,
-  regenCalm: 0.02,
-  regenRetreat: 0.035,
+  regen: 0.002,
+  regenCalm: 0.008,
+  regenRetreat: 0.014,
   /** Seconds without a hit before the calm regeneration starts. */
-  calmAfter: 5,
+  calmAfter: 6,
   /** Level = 1 + minutes × levelPerMinute + kills × levelPerKill (captains keep pace with a player of their age). */
   levelPerMinute: 1.2,
-  levelPerKill: 0.06,
+  levelPerKill: 0.02,
   maxLevel: 40,
   /** Gun damage: base × damageMul × (1 + damagePerLevel × (level − 1)). Bosses take bossDamageMul (their fight is yours). */
   damageMul: 0.8,
-  damagePerLevel: 0.075,
-  bossDamageMul: 0.35,
+  damagePerLevel: 0.06,
+  bossDamageMul: 0.25,
   critChance: 0.05,
   critMul: 1.5,
   broadside: { damage: 14, cooldown: 2.6, range: 150, rangePerLevel: 1.2, speed: 95, arcDeg: 40, ripple: 0.05, gunsPerLevels: 7, maxGuns: 8 },
@@ -85,8 +85,8 @@ export const CAPTAIN = {
   escortRange: [95, 135] as readonly [number, number],
   escortAngles: [2.35, -2.35, 1.6, -1.6] as readonly number[],
   /** Hull fraction that sends a captain back to patch up, and the fraction that ends the retreat. */
-  retreatBelow: 0.3,
-  recoverAbove: 0.62,
+  retreatBelow: 0.25,
+  recoverAbove: 0.55,
   retreatMax: 14,
   /** Handling multipliers on the ship's table values. */
   speedMul: 0.96,
@@ -95,15 +95,25 @@ export const CAPTAIN = {
   /** Director: extra spawn budget per captain afloat (the sea fills up for the extra hunters). */
   budgetPerCaptain: 0.3,
   /**
+   * Fleet fire control: extra volley tokens per captain afloat (the enemy fleet shares one volley budget; without this
+   * the captains would soak up fire the player no longer takes, and runs would get easier).
+   */
+  firePerCaptain: 0.3,
+  /**
    * Aggro: enemies pick the nearest friendly by `distance × weight` and hold it for `hold` seconds. The player's
    * weight < 1 keeps roughly half of the fleet on the player; `load` penalises captains already drawing a crowd.
    */
-  aggro: { playerWeight: 0.62, hold: [4, 6] as readonly [number, number], load: 1.4, loadShare: 0.18, retreatWeight: 1.5 },
+  aggro: { playerWeight: 0.85, hold: [4, 6] as readonly [number, number], load: 1.2, loadShare: 0.2, retreatWeight: 1.5 },
   /** Contact with enemy hulls (fraction of a ram's crush the enemy takes; knock-off metres). */
   contactCrush: 0.4,
   contactBounce: 7,
   /** Seconds between 'damage' events per captain (hits are summed so the numbers stay readable). */
   damageTick: 0.3,
+  /**
+   * XP value of the treasure a captain's kill spills (the rest is the captain's own salvage): the player can scoop it,
+   * but the level pace stays near a run without captains.
+   */
+  salvageXp: 0.6,
   /** Share of the player's per-second bounty a captain earns while afloat. */
   bountyPerSecond: 0.8,
 } as const;

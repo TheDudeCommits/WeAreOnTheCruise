@@ -23,6 +23,7 @@ import { TAU, fwdX, fwdZ, headingTo, openWaterNear, rand, randInt, sideX, sideZ 
 import { doubloonMul } from './stats';
 import { spawnRogueWave } from './weather';
 import { startWorldEvent, updateWorldEvents } from './world-events';
+import { captainBudgetMul } from './captains-runtime';
 
 const SPAWN = { x: 0, z: 0, a: 0 };
 const EVENT_W = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -176,7 +177,8 @@ const COUNT = { alive: 0, elites: 0 };
 
 function spawnWaves(c: SimContext, sea: SeaDef, minute: number): void {
   const s = c.state, d = s.director, sc = d.scratch;
-  let rate = DIRECTOR.budgetRate(minute) * Math.pow(sea.difficulty, DIRECTOR.budgetDifficultyExp);
+  // CAPTAINS: the sea fills up for AI captains afloat (+CAPTAIN.budgetPerCaptain each).
+  let rate = DIRECTOR.budgetRate(minute) * Math.pow(sea.difficulty, DIRECTOR.budgetDifficultyExp) * captainBudgetMul(s);
   let floor = DIRECTOR.minAlive(minute);
   if (d.activeBoss) {
     // Focus the boss fight, but only for a while: a boss the player cannot sink must not calm the sea forever.

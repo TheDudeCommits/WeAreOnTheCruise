@@ -68,3 +68,12 @@ export function captainsAfloat(state: RunState): number {
   for (const k of state.captains) if (k.alive) n++;
   return n;
 }
+
+/** Director budget multiplier: the sea fills up for the extra hunters (+CAPTAIN.budgetPerCaptain per captain afloat). */
+export function captainBudgetMul(state: RunState): number {
+  const caps = state.captains;
+  if (caps.length === 0) return 1;
+  let n = 0;
+  for (const k of caps) if (k.alive) n++;
+  return 1 + CAPTAIN.budgetPerCaptain * n;
+}
