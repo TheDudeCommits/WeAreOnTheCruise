@@ -40,6 +40,8 @@ export class Banners {
   private stampPriority = 0;
   private stampUntil = 0;
   private now = 0;
+  private suppressed = false;
+  private pending: { text: string; sub: string; tone: Tone; priority: number; duration: number; at: number } | null = null;
 
   constructor() {
     const wn = h('span', 'cr-warn__name');
@@ -80,10 +82,22 @@ export class Banners {
 
   tick(time: number): void { this.now = time; }
 
+  /** While a modal covers the centre, stamps are held and the most important one plays when it closes. */
+  setSuppressed(on: boolean): void {
+    if (on === this.suppressed) return;
+    this.suppressed = on;
+    if (on) return;
+    const p = this.pending;
+    this.pending = null;
+    if (p && this.now - p.at < 10) this.showStamp(p.text, p.sub, p.tone, p.priority, p.duration);
+  }
+
   reset(): void {
     this.warn.hide(); this.event.hide(); this.stamp.hide(); this.cutin.hide();
     this.toasts.replaceChildren();
     this.stampPriority = 0;
+    this.pending = null;
+    this.suppressed = false;
   }
 
   bossWarning(name: string, title: string, eta: number): void {
@@ -112,6 +126,10 @@ export class Banners {
 
   /** Centre stamp. Higher priority stamps are not interrupted by lower ones while visible. */
   showStamp(text: string, sub: string, tone: Tone, priority = 1, duration = 1300): void {
+    if (this.suppressed) {
+      if (!this.pending || priority >= this.pending.priority) this.pending = { text, sub, tone, priority, duration, at: this.now };
+      return;
+    }
     if (priority < this.stampPriority && this.now < this.stampUntil) return;
     this.stampPriority = priority;
     this.stampUntil = this.now + duration / 1000;

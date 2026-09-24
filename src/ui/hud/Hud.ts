@@ -70,27 +70,38 @@ export class Hud {
     this.ended = false;
   }
 
+  /** A modal (cards, chest, pause) covers the centre: hold stamps until it closes. */
+  setModal(open: boolean): void { this.banners.setSuppressed(open); }
+
   resize(w: number, h: number): void { this.width = w; this.height = h; this.markers.width = w; this.markers.height = h; }
 
   update(f: UiFrame, run: Readonly<RunState>): void {
     if (run.seed !== this.seed) { this.seed = run.seed; this.reset(); this.el.style.setProperty('--accent', hex(CONTENT.ships[run.shipId].accent)); }
     const p = run.player;
     const ship = CONTENT.ships[run.shipId];
-    this.banners.tick(f.time);
+    const prof = (window as unknown as { __CRUISE_UI_PROFILE__?: Record<string, number> }).__CRUISE_UI_PROFILE__;
+    let t = prof ? performance.now() : 0;
+    const mark = prof ? (k: string) => { const n = performance.now(); prof[k] = (prof[k] ?? 0) + n - t; t = n; } : null;
+    // Read phase first: project() reads layout (RendererHost.getViewport), so no DOM writes before it.
     this.basis.update(f, p.x, p.z);
-    this.top.update(run, f.time);
-    this.boss.update(run, f.dt);
-    this.ring.update(p, ship);
-    this.skills.update(p, ship);
-    this.loadout.update(p);
-    this.minimap.update(run, this.basis, f.dt);
-    this.markers.update(f, run, this.basis);
-    this.feedback.update(p);
+    this.markers.measure(f, run, this.basis); mark?.('measure');
+    // Write phase.
+    this.banners.tick(f.time);
+    this.top.update(run, f.time); mark?.('top');
+    this.boss.update(run, f.dt); mark?.('boss');
+    this.ring.update(p, ship); mark?.('ring');
+    this.skills.update(p, ship); mark?.('skills');
+    this.loadout.update(p); mark?.('loadout');
+    this.minimap.update(run, this.basis, f.dt); mark?.('minimap');
+    this.markers.apply(); mark?.('markers');
+    this.feedback.update(p); mark?.('feedback');
     if (this.skills.ultJustReady) this.banners.toast(`${ULTIMATES[ship.ultimate].name} ready — press R`, ULTIMATES[ship.ultimate].glyph, 'gold');
     // FPS readout.
     this.fpsEl.hidden = !f.settings.showFps;
     if (f.settings.showFps) { const v = Math.round(f.fps); if (v !== this.lastFps) { this.lastFps = v; this.fps.set(`${v} FPS`); } }
     for (let i = 0; i < f.events.length; i++) this.onEvent(f.events[i]!, run, f);
+    mark?.('events');
+    if (prof) prof.frames = (prof.frames ?? 0) + 1;
   }
 
   private onEvent(e: SimEvent, run: Readonly<RunState>, f: UiFrame): void {

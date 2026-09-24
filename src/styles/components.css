@@ -263,6 +263,16 @@
     radial-gradient(circle at 50% 26%, rgba(255, 230, 120, .6), transparent 55%),
     linear-gradient(170deg, #5a3a06, #1c1204 75%);
 }
+.cr-card.is-legendary .cr-card__frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 250, 220, .38) 48%, transparent 60%) no-repeat;
+  background-size: 250% 100%;
+  animation: cr-card-shine 2.8s ease-in-out infinite;
+}
+@keyframes cr-card-shine { 0% { background-position: 110% 0; } 60%, 100% { background-position: -10% 0; } }
 .cr-card__rays {
   position: absolute;
   inset: calc(-40 * var(--u));
@@ -319,7 +329,7 @@
 .cr-wanted__stamp {
   position: absolute;
   left: 50%;
-  top: 56%;
+  top: 36%;
   transform: translate(-50%, -50%) rotate(-14deg);
   padding: calc(6 * var(--u)) calc(22 * var(--u));
   border: calc(6 * var(--u)) solid currentColor;

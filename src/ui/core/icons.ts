@@ -78,6 +78,9 @@ const GLYPHS = {
   anchor: `<path d="M28.5 15h7v40h-7z"/><circle cx="32" cy="10" r="6" ${S} stroke-width="4"/><path d="M19 22h26v6H19z"/><path d="M6 35c2 15 12.5 24 26 24s24-9 26-24l-9 4c-2 8-8 13-17 13s-15-5-17-13z"/>`,
   sword: '<path d="M50 4h10v10L28 46l-10-10z"/><path d="M13 35l16 16-4 4-5-2-7 7-5-5 7-7-2-5z"/>',
   xp: `<path d="${star(4, 29, 11)}"/>`,
+  speaker: `<path d="M5 23h13l17-15v48L18 41H5z"/><path d="M43 21c6 6 6 16 0 22M50 13c11 11 11 27 0 38" ${S} stroke-width="5"/>`,
+  music: '<path d="M22 9 57 2v40a9.5 9.5 0 1 1-6-8.8V15.5L28 20v31a9.5 9.5 0 1 1-6-8.8z"/>',
+  mute: `<path d="M5 23h13l17-15v48L18 41H5z"/><path d="M43 23l16 18M59 23 43 41" ${S} stroke-width="5.5"/>`,
 } as const;
 
 export type GlyphId = keyof typeof GLYPHS;

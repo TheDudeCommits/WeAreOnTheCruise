@@ -167,7 +167,7 @@
 @keyframes cr-pulse-gold { 50% { transform: scale(1.12); filter: brightness(1.35); } }
 
 /* Ship details */
-.cr-details { --accent: var(--gold); flex: 1; padding: calc(16 * var(--u)) calc(26 * var(--u)) calc(14 * var(--u)); display: flex; flex-direction: column; gap: calc(10 * var(--u)); }
+.cr-details { --accent: var(--gold); flex: none; padding: calc(16 * var(--u)) calc(26 * var(--u)) calc(14 * var(--u)); display: flex; flex-direction: column; gap: calc(10 * var(--u)); }
 .cr-details__head { display: flex; align-items: flex-start; justify-content: space-between; gap: calc(16 * var(--u)); }
 .cr-details__name { font: 400 var(--fs-40)/.95 var(--f-comic); letter-spacing: .04em; text-transform: uppercase; color: var(--accent); -webkit-text-stroke: var(--stroke-m) var(--ink); paint-order: stroke fill; text-shadow: 0 calc(4 * var(--u)) 0 var(--ink); }
 .cr-details__epithet { font: 900 var(--fs-14)/1.1 var(--f-ui); letter-spacing: .18em; text-transform: uppercase; color: #cdd7f5; margin-top: calc(4 * var(--u)); }

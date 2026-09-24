@@ -46,6 +46,7 @@ export class Ui implements UiSystem {
   /** Rolling UI update cost (ms) for QA: window.__CRUISE_UI__.perf(). */
   private perfAvg = 0;
   private perfMax = 0;
+  private readonly spikes: { ms: number; screen: string; status: string; events: string }[] = [];
 
   get blockingInput(): boolean {
     return this.mounted && (this.pause.open || this.settings.open || this.cards.open);
@@ -94,7 +95,8 @@ export class Ui implements UiSystem {
     prefetchIcons(['doubloon', 'broadside', 'brace', 'boost', 'heal', 'bounty'].map(iconPath));
     (window as unknown as { __CRUISE_UI__?: unknown }).__CRUISE_UI__ = {
       perf: () => ({ avgMs: +this.perfAvg.toFixed(4), maxMs: +this.perfMax.toFixed(4) }),
-      resetPerf: () => { this.perfAvg = 0; this.perfMax = 0; },
+      resetPerf: () => { this.perfAvg = 0; this.perfMax = 0; this.spikes.length = 0; },
+      spikes: () => this.spikes.slice(),
       screen: () => this.screen,
       blocking: () => this.blockingInput,
     };
@@ -141,12 +143,18 @@ export class Ui implements UiSystem {
     const dt = performance.now() - t0;
     this.perfAvg += (dt - this.perfAvg) * 0.05;
     if (dt > this.perfMax) this.perfMax = dt;
+    if (dt > 3 && this.spikes.length < 40) {
+      const types = new Set<string>();
+      for (const e of f.events) types.add(e.type);
+      this.spikes.push({ ms: +dt.toFixed(2), screen: this.screen, status: f.run?.status ?? '-', events: [...types].join(',') });
+    }
   }
 
   private updateRun(f: UiFrame): void {
     const run = f.run;
     this.run = run;
     if (!run) return;
+    this.hud.setModal(run.status === 'levelup' || run.status === 'chest' || this.pause.open);
     this.hud.update(f, run);
     this.cards.update(f);
     // The app can pause on its own (tab hidden): surface the pause menu so the player can resume.

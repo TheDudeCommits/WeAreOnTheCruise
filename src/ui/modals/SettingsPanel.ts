@@ -21,10 +21,10 @@ export class SettingsPanel {
 
   constructor(private readonly onChange: (s: Settings) => void) {
     this.body = h('div', 'cr-settings__rows');
-    this.slider('masterVolume', 'Master volume', 'wind');
-    this.slider('musicVolume', 'Music', 'book');
+    this.slider('masterVolume', 'Master volume', 'speaker');
+    this.slider('musicVolume', 'Music', 'music');
     this.slider('sfxVolume', 'Effects', 'cannon');
-    this.toggle('muted', 'Mute all audio', 'spot');
+    this.toggle('muted', 'Mute all audio', 'mute');
     this.slider('cameraShake', 'Camera shake', 'quake');
     this.toggle('damageNumbers', 'Damage numbers', 'burst');
     this.quality();
