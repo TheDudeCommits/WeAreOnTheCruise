@@ -3,13 +3,22 @@
  *
  * Two top-down, world-anchored half-float targets cover `size` metres around the focus (origin snapped to whole
  * texels, so scrolling never resamples):
- *   - persistent (ping-pong): R = foam, G = aeration (turquoise churn). Each frame the previous target is shifted
- *     by the whole-texel scroll, lightly diffused and decayed (frame-rate independent), then new deposits are
- *     MAX-blended in. Wakes, splash foam, sinking whirls and shore-independent foam live here.
+ *   - persistent (ping-pong): R = foam, G = aeration (turquoise churn), B = fresh foam (the same deposits, but
+ *     decaying in under a second: night bioluminescence keys on it, so only just-stirred water glows). Each frame
+ *     the previous target is shifted by the whole-texel scroll, lightly diffused and decayed (frame-rate
+ *     independent), then new deposits are MAX-blended in. Wakes, splash foam, sinking whirls and shore-independent
+ *     foam live here.
  *   - transient (cleared every frame): R = raise (m), G = lower (m), B = fresh foam, A = aeration. Everything that
  *     moves with its source (bow waves, hull troughs, Kelvin arm particles, ring waves, whirlpools) is redrawn
  *     from CPU state every frame, so it never smears.
  * The ocean vertex shader reads transient R-G as visual-only displacement; the fragment shader reads both.
+ *
+ * Foam coverage (round 2, "foam never carpets the sea"): after both passes a coverage pass averages the *visible*
+ * foam fraction (the same expected-coverage curve the ocean shader converges to at distance) into a small mipmapped
+ * target, one texel per 8×8 field texels: R = all foam (persistent + transient), G = persistent foam only.
+ * Next frame, persistent deposits are scaled down where the neighbourhood (mip 2, ~25-50 m) is already covered and
+ * crowded foam dissolves faster, so a melee's pile-up converges to lace instead of a white slab. The ocean shader
+ * reads R to render saturated foam as turquoise aeration + lace. `foamCoverage()` reads it back for QA only.
  */
 import * as THREE from 'three';
 import { StampBatch } from './StampBatch';
@@ -31,6 +40,9 @@ uniform vec2 uTexel;
 uniform vec4 uMul;
 uniform vec4 uSub;
 uniform vec4 uDiffuse;
+uniform sampler2D uCoverage;
+uniform vec2 uCovShift;          // coverage uv of this texel = uv + uCovShift (coverage lags one frame)
+uniform vec2 uCrowd;             // x = extra foam decay per second at full crowding (as a multiplier exponent), y = dt
 void main() {
   vec2 uv = vUv + uShift;
   if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) {
@@ -41,9 +53,52 @@ void main() {
   vec4 n = texture2D(uPrev, uv + vec2(uTexel.x, 0.0)) + texture2D(uPrev, uv - vec2(uTexel.x, 0.0))
     + texture2D(uPrev, uv + vec2(0.0, uTexel.y)) + texture2D(uPrev, uv - vec2(0.0, uTexel.y));
   c = mix(c, n * 0.25, uDiffuse);
-  gl_FragColor = max(c * uMul - uSub, vec4(0.0));
+  c = max(c * uMul - uSub, vec4(0.0));
+  // Crowded foam dissolves faster (neighbourhood coverage from last frame, ~25-50 m average): lace survives,
+  // a white slab does not.
+  float crowd = smoothstep(0.2, 0.55, textureLod(uCoverage, uv + uCovShift, 2.0).g);
+  c.r *= exp(-uCrowd.x * uCrowd.y * crowd);
+  gl_FragColor = c;
 }
 `;
+
+const COVERAGE_FRAG = /* glsl */ `
+precision highp float;
+varying vec2 vUv;
+uniform sampler2D uPersist;
+uniform sampler2D uTransient;
+uniform vec2 uStep;
+// Expected visible fraction for a coverage value (the curve the ocean shader converges to at distance).
+float vis(float c) { return clamp(c * 1.15 - 0.12, 0.0, 1.0); }
+void main() {
+  // 4x4 bilinear taps on texel corners = the mean of the 8x8 field texels under this coverage texel.
+  float all = 0.0;
+  float per = 0.0;
+  for (int j = 0; j < 4; j++) {
+    for (int i = 0; i < 4; i++) {
+      vec2 uv = vUv + (vec2(float(i), float(j)) - 1.5) * uStep;
+      vec4 p = texture2D(uPersist, uv);
+      vec4 t = texture2D(uTransient, uv);
+      all += vis(max(p.r, t.b));
+      per += vis(p.r);
+    }
+  }
+  gl_FragColor = vec4(all / 16.0, per / 16.0, 0.0, 1.0);
+}
+`;
+
+/** Field texels per coverage texel (per axis). */
+const COVERAGE_DIV = 8;
+
+export interface FoamCoverageStats {
+  /** Mean visible foam fraction (persistent + transient) inside the disc. */
+  total: number;
+  /** Persistent foam only. */
+  persistent: number;
+  /** Fraction of the disc's coverage texels (≈6 m cells) that read as mostly foam (> 50%). */
+  saturatedCells: number;
+  radius: number;
+}
 
 export interface InteractionSettings {
   resolution: number;
@@ -57,6 +112,11 @@ const AER_TAU = 2.6;
 const AER_LINEAR = 0.035;
 const FOAM_DIFFUSE = 1.2;
 const AER_DIFFUSE = 4.0;
+/** Fresh foam (channel B): the last ~second of deposits (night glow keys on it). */
+const FRESH_TAU = 0.55;
+const FRESH_LINEAR = 0.25;
+/** Extra foam decay rate (1/s) where the neighbourhood is fully crowded. */
+const CROWD_DECAY = 0.9;
 
 export class InteractionField {
   resolution: number;
@@ -72,6 +132,16 @@ export class InteractionField {
 
   private targets: [THREE.WebGLRenderTarget, THREE.WebGLRenderTarget];
   private transient: THREE.WebGLRenderTarget;
+  private coverage: THREE.WebGLRenderTarget;
+  /** World XZ of the coverage target's (0,0) corner (the field origin when it was computed). */
+  private coverageX = 0;
+  private coverageZ = 0;
+  private coverageValid = false;
+  private readonly coverageScene = new THREE.Scene();
+  private readonly coverageMaterial: THREE.ShaderMaterial;
+  private coveragePixels: Uint8Array | null = null;
+  /** Coverage uv offset for this frame's deposits: (origin − coverage origin) / size. Shared by the stamp shaders. */
+  readonly coverageShift = new THREE.Vector2();
   private readIndex = 0;
   private initialized = false;
   private pendingShiftX = 0;
@@ -90,6 +160,7 @@ export class InteractionField {
     this.texel = this.size / this.resolution;
     this.targets = [this.makeTarget(), this.makeTarget()];
     this.transient = this.makeTarget();
+    this.coverage = this.makeCoverageTarget();
     this.fadeGeometry = new THREE.BufferGeometry();
     this.fadeGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-1, -1, 0, 3, -1, 0, -1, 3, 0]), 3));
     this.fadeGeometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array([0, 0, 2, 0, 0, 2]), 2));
@@ -107,11 +178,34 @@ export class InteractionField {
         uMul: { value: new THREE.Vector4(1, 1, 1, 1) },
         uSub: { value: new THREE.Vector4() },
         uDiffuse: { value: new THREE.Vector4() },
+        uCoverage: { value: this.coverage.texture },
+        uCovShift: { value: new THREE.Vector2() },
+        uCrowd: { value: new THREE.Vector2(CROWD_DECAY, 0) },
       },
     });
     const fade = new THREE.Mesh(this.fadeGeometry, this.fadeMaterial);
     fade.frustumCulled = false;
     this.fadeScene.add(fade);
+    this.coverageMaterial = new THREE.ShaderMaterial({
+      name: 'OceanFoamCoverage',
+      vertexShader: FADE_VERT,
+      fragmentShader: COVERAGE_FRAG,
+      depthTest: false,
+      depthWrite: false,
+      blending: THREE.NoBlending,
+      uniforms: {
+        uPersist: { value: null },
+        uTransient: { value: null },
+        uStep: { value: new THREE.Vector2(2 / this.resolution, 2 / this.resolution) },
+      },
+    });
+    const cover = new THREE.Mesh(this.fadeGeometry, this.coverageMaterial);
+    cover.frustumCulled = false;
+    this.coverageScene.add(cover);
+    for (const batch of [this.persistentBatch, this.transientBatch]) {
+      batch.material.uniforms.uCoverage!.value = this.coverage.texture;
+      batch.material.uniforms.uCovShift!.value = this.coverageShift;
+    }
     this.persistentScene.add(this.persistentBatch.mesh);
     this.transientScene.add(this.transientBatch.mesh);
     this.syncUniforms();
@@ -133,6 +227,23 @@ export class InteractionField {
     return target;
   }
 
+  private makeCoverageTarget(): THREE.WebGLRenderTarget {
+    const n = Math.max(8, Math.round(this.resolution / COVERAGE_DIV));
+    const target = new THREE.WebGLRenderTarget(n, n, {
+      type: THREE.UnsignedByteType,
+      format: THREE.RGBAFormat,
+      minFilter: THREE.LinearMipmapLinearFilter,
+      magFilter: THREE.LinearFilter,
+      wrapS: THREE.ClampToEdgeWrapping,
+      wrapT: THREE.ClampToEdgeWrapping,
+      generateMipmaps: true,
+      depthBuffer: false,
+      stencilBuffer: false,
+    });
+    target.texture.colorSpace = THREE.NoColorSpace;
+    return target;
+  }
+
   /** Changes resolution/coverage (quality tier). Content is cleared. */
   configure(settings: InteractionSettings): void {
     if (settings.resolution === this.resolution && settings.size === this.size) return;
@@ -141,15 +252,24 @@ export class InteractionField {
     this.texel = this.size / this.resolution;
     for (const t of this.targets) t.dispose();
     this.transient.dispose();
+    this.coverage.dispose();
     this.targets = [this.makeTarget(), this.makeTarget()];
     this.transient = this.makeTarget();
+    this.coverage = this.makeCoverageTarget();
+    this.coverageValid = false;
+    this.coveragePixels = null;
     (this.fadeMaterial.uniforms.uTexel!.value as THREE.Vector2).set(1 / this.resolution, 1 / this.resolution);
+    this.fadeMaterial.uniforms.uCoverage!.value = this.coverage.texture;
+    (this.coverageMaterial.uniforms.uStep!.value as THREE.Vector2).set(2 / this.resolution, 2 / this.resolution);
+    for (const batch of [this.persistentBatch, this.transientBatch]) batch.material.uniforms.uCoverage!.value = this.coverage.texture;
     this.initialized = false;
     this.syncUniforms();
   }
 
   get persistentTexture(): THREE.Texture { return this.targets[this.readIndex]!.texture; }
   get transientTexture(): THREE.Texture { return this.transient.texture; }
+  /** Visible-foam coverage (R = all, G = persistent), mipmapped, aligned with the field of the last render. */
+  get coverageTexture(): THREE.Texture { return this.coverage.texture; }
 
   /** Snaps the window to the focus and resets the stamp batches. Call before pushing stamps. */
   beginFrame(focusX: number, focusZ: number): void {
@@ -172,6 +292,9 @@ export class InteractionField {
 
   private syncUniforms(): void {
     this.rect.set(this.originX, this.originZ, this.size, 1 / this.size);
+    // Last frame's coverage sits at its own origin: shift into this frame's field (and gate it off until valid).
+    if (this.coverageValid) this.coverageShift.set((this.originX - this.coverageX) / this.size, (this.originZ - this.coverageZ) / this.size);
+    else this.coverageShift.set(4, 4); // out of range → clamp-to-edge of an empty target reads 0
     const noiseX = this.originX - Math.floor(this.originX / 4096) * 4096;
     const noiseZ = this.originZ - Math.floor(this.originZ / 4096) * 4096;
     this.syncBatch(this.transientBatch, noiseX, noiseZ);
@@ -211,9 +334,16 @@ export class InteractionField {
     u.uPrev!.value = read.texture;
     (u.uShift!.value as THREE.Vector2).set(this.pendingShiftX / this.resolution, this.pendingShiftZ / this.resolution);
     const d = Math.max(0, dt);
-    (u.uMul!.value as THREE.Vector4).set(Math.exp(-d / FOAM_TAU), Math.exp(-d / AER_TAU), 0, 0);
-    (u.uSub!.value as THREE.Vector4).set(FOAM_LINEAR * d, AER_LINEAR * d, 0, 0);
-    (u.uDiffuse!.value as THREE.Vector4).set(1 - Math.exp(-d * FOAM_DIFFUSE), 1 - Math.exp(-d * AER_DIFFUSE), 0, 0);
+    (u.uMul!.value as THREE.Vector4).set(Math.exp(-d / FOAM_TAU), Math.exp(-d / AER_TAU), Math.exp(-d / FRESH_TAU), 0);
+    (u.uSub!.value as THREE.Vector4).set(FOAM_LINEAR * d, AER_LINEAR * d, FRESH_LINEAR * d, 0);
+    const foamDiffuse = 1 - Math.exp(-d * FOAM_DIFFUSE);
+    (u.uDiffuse!.value as THREE.Vector4).set(foamDiffuse, 1 - Math.exp(-d * AER_DIFFUSE), foamDiffuse, 0);
+    // The fade samples last frame's coverage at this frame's scrolled uv: uv(prev) = vUv + shift.
+    (u.uCovShift!.value as THREE.Vector2).set(
+      this.coverageValid ? (this.originX - this.coverageX) / this.size - this.pendingShiftX / this.resolution : 4,
+      this.coverageValid ? (this.originZ - this.coverageZ) / this.size - this.pendingShiftZ / this.resolution : 4,
+    );
+    (u.uCrowd!.value as THREE.Vector2).set(CROWD_DECAY, d);
     renderer.setRenderTarget(write);
     renderer.render(this.fadeScene, this.camera);
     this.persistentBatch.commit();
@@ -230,14 +360,56 @@ export class InteractionField {
     this.transientBatch.commit();
     if (this.transientBatch.count > 0) renderer.render(this.transientScene, this.camera);
 
+    // Coverage (mipmaps regenerate after the render).
+    const cu = this.coverageMaterial.uniforms;
+    cu.uPersist!.value = this.targets[this.readIndex]!.texture;
+    cu.uTransient!.value = this.transient.texture;
+    renderer.setRenderTarget(this.coverage);
+    renderer.render(this.coverageScene, this.camera);
+    this.coverageX = this.originX;
+    this.coverageZ = this.originZ;
+    this.coverageValid = true;
+
     renderer.setRenderTarget(previousTarget);
     renderer.setClearColor(this.savedClear, previousAlpha);
     renderer.autoClear = previousAutoClear;
   }
 
+  /**
+   * QA only (synchronous GPU readback, stalls the pipeline): foam coverage inside a disc of `radius` metres around
+   * (x, z), from the coverage target of the last render. Never call this per frame.
+   */
+  foamCoverage(renderer: THREE.WebGLRenderer, x: number, z: number, radius: number): FoamCoverageStats {
+    const target = this.coverage;
+    const n = target.width;
+    const out: FoamCoverageStats = { total: 0, persistent: 0, saturatedCells: 0, radius };
+    if (!this.coverageValid) return out;
+    const pixels = (this.coveragePixels ??= new Uint8Array(n * n * 4));
+    renderer.readRenderTargetPixels(target, 0, 0, n, n, pixels);
+    const cell = this.size / n;
+    let count = 0;
+    for (let j = 0; j < n; j++) {
+      const wz = this.coverageZ + (j + 0.5) * cell;
+      for (let i = 0; i < n; i++) {
+        const wx = this.coverageX + (i + 0.5) * cell;
+        if ((wx - x) * (wx - x) + (wz - z) * (wz - z) > radius * radius) continue;
+        const o = (j * n + i) * 4;
+        const all = pixels[o]! / 255;
+        out.total += all;
+        out.persistent += pixels[o + 1]! / 255;
+        if (all > 0.5) out.saturatedCells++;
+        count++;
+      }
+    }
+    if (count > 0) { out.total /= count; out.persistent /= count; out.saturatedCells /= count; }
+    return out;
+  }
+
   dispose(): void {
     for (const t of this.targets) t.dispose();
     this.transient.dispose();
+    this.coverage.dispose();
+    this.coverageMaterial.dispose();
     this.transientBatch.dispose();
     this.persistentBatch.dispose();
     this.fadeMaterial.dispose();

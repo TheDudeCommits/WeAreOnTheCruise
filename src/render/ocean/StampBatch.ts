@@ -4,8 +4,12 @@
  *
  * Shapes are analytic (evaluated per texel in the fragment shader) and output four profiles:
  *   raise (m), lower (m), foam (0..1), aeration (0..1)
- * The transient target stores them as RGBA directly. The persistent target stores (foam, aeration) in RG.
- * Per-instance channel weights scale the four profiles.
+ * The transient target stores them as RGBA directly. The persistent target stores (foam, aeration, fresh foam) in
+ * RGB. Per-instance channel weights scale the four profiles.
+ *
+ * Coverage-aware foam: the foam profile is scaled by the neighbourhood's existing persistent foam (last frame's
+ * coverage target, mip 2): persistent deposits by (1 − c) with a shaped cutoff, transient stamps (except the hull
+ * contact, which must always read) more gently. A pile-up therefore stops growing instead of carpeting the sea.
  */
 import * as THREE from 'three';
 
@@ -26,6 +30,7 @@ attribute vec4 iC; // p1, p2, p3, p4
 attribute vec4 iD; // channel weights (raise, lower, foam, aeration)
 uniform float uInvSize;
 uniform vec2 uNoiseOrigin;
+uniform vec2 uCovShift;
 varying vec2 vLocal;
 varying vec2 vHalf;
 varying float vShape;
@@ -33,6 +38,7 @@ varying vec4 vP;
 varying float vP4;
 varying vec4 vChan;
 varying vec2 vNoise;
+varying vec2 vCovUv;
 void main() {
   vec2 axis = iA.zw;
   vec2 perp = vec2(-axis.y, axis.x);
@@ -44,6 +50,7 @@ void main() {
   vP4 = iC.w;
   vChan = iD;
   vNoise = rel + uNoiseOrigin;
+  vCovUv = rel * uInvSize + uCovShift;
   gl_Position = vec4(rel * uInvSize * 2.0 - 1.0, 0.0, 1.0);
 }
 `;
@@ -57,7 +64,10 @@ varying vec4 vP;
 varying float vP4;
 varying vec4 vChan;
 varying vec2 vNoise;
+varying vec2 vCovUv;
 uniform float uHullHole;
+uniform sampler2D uCoverage;
+uniform vec4 uCovGain;           // persistent lo, hi; transient lo, hi (on persistent neighbourhood coverage)
 
 float hash12(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -193,9 +203,13 @@ void main() {
     prof = vec4(0.0, 0.0, clamp(max(streak, churn), 0.0, 1.0), max(inside, streak));
   }
   prof = max(prof, vec4(0.0)) * vChan;
+  // Neighbourhood persistent foam (~25-50 m): crowded water takes less new foam.
+  float cov = textureLod(uCoverage, vCovUv, 2.0).g;
 #ifdef PERSISTENT
-  gl_FragColor = vec4(prof.z, prof.w, 0.0, 0.0);
+  prof.z *= (1.0 - cov) * (1.0 - smoothstep(uCovGain.x, uCovGain.y, cov));
+  gl_FragColor = vec4(prof.z, prof.w, prof.z, 0.0);
 #else
+  if (shape != 2) prof.z *= 1.0 - 0.6 * smoothstep(uCovGain.z, uCovGain.w, cov);
   gl_FragColor = prof;
 #endif
 }
@@ -234,6 +248,9 @@ export class StampBatch {
         uInvSize: { value: 1 / 768 },
         uNoiseOrigin: { value: new THREE.Vector2() },
         uHullHole: { value: 1.5 },
+        uCoverage: { value: null },
+        uCovShift: { value: new THREE.Vector2(4, 4) },
+        uCovGain: { value: new THREE.Vector4(0.14, 0.42, 0.18, 0.5) },
       },
       blending: THREE.CustomBlending,
       blendEquation: THREE.MaxEquation,

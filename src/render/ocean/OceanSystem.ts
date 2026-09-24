@@ -19,7 +19,7 @@ import type { ShipId } from '../../game/ids';
 import { DEFAULT_GERSTNER_WAVES, sampleGerstnerHeight, sampleGerstnerNormal } from '../../core/waves';
 import type { FrameContext, OceanServices, QualityTier, RenderHostHandles, RenderSystem } from '../frame';
 import { GpuTimer } from './GpuTimer';
-import { InteractionField, type InteractionSettings } from './InteractionField';
+import { InteractionField, type FoamCoverageStats, type InteractionSettings } from './InteractionField';
 import { OceanLook } from './OceanLook';
 import { OceanSurface } from './OceanSurface';
 import { createOceanTextures, type OceanTextureSet } from './OceanTextures';
@@ -44,6 +44,25 @@ export interface OceanDebugStats {
   gpu: Record<string, number>;
 }
 
+/** QA: what the ocean shader draws, classified per pixel (see screenStats). Fractions of water pixels. */
+export interface OceanScreenStats {
+  /** Water pixels in the stats view (the ocean alone, main camera, ~1/5 resolution). */
+  waterPixels: number;
+  /** Visible white foam (> 50%) over all water / inside the disc around the focus. */
+  foam: number;
+  foamInDisc: number;
+  /** Mean foam amount (0..1) inside the disc (partial foam counts partially). */
+  foamMeanInDisc: number;
+  /** Crest foam (whitecaps / night crest strokes) over all water. */
+  crest: number;
+  /** Visible glow (≥ 25% of the rim reference) over all water, and its brightest pixel relative to the reference. */
+  glow: number;
+  glowPeak: number;
+  /** Any of foam, crest or glow: the "pattern" share of the water. */
+  pattern: number;
+  radius: number;
+}
+
 export class OceanSystem implements RenderSystem, OceanServices {
   readonly name = 'ocean';
   private renderer: THREE.WebGLRenderer | null = null;
@@ -58,6 +77,10 @@ export class OceanSystem implements RenderSystem, OceanServices {
   private quality: QualityTier = 'high';
   private lastRun: unknown = null;
   private timer: GpuTimer | null = null;
+  private focusX = 0;
+  private focusZ = 0;
+  private statsTarget: THREE.WebGLRenderTarget | null = null;
+  private statsPixels: Uint8Array | null = null;
 
   init(host: RenderHostHandles): void {
     this.renderer = host.renderer;
@@ -99,6 +122,8 @@ export class OceanSystem implements RenderSystem, OceanServices {
     const fieldDt = run ? (run.status === 'running' ? ctx.dt * (run.timeScale || 1) : 0) : ctx.dt;
 
     this.look.update(ctx.atmosphere, ctx.sea);
+    this.focusX = ctx.focus.x;
+    this.focusZ = ctx.focus.z;
     field.beginFrame(ctx.focus.x, ctx.focus.z);
     field.setHullHole(1.1 + 1.3 * this.strength);
     wakes.begin(fieldDt, ctx.time);
@@ -154,9 +179,85 @@ export class OceanSystem implements RenderSystem, OceanServices {
 
   // ───────────────────────────── Debug ─────────────────────────────
 
-  /** 0 = off, 1 = transient target, 2 = persistent target, 3 = shore field. */
+  /**
+   * 0 = off, 1 = transient target, 2 = persistent target (R foam, G aeration, B fresh), 3 = shore field,
+   * 4 = foam shapes, 5 = glints/sheen, 6 = coverage sources, 7 = crowding (coverage, saturation, glow).
+   */
   setDebugView(mode: number): void {
     if (this.surface) this.surface.uniforms.uDebug!.value = mode;
+  }
+
+  /**
+   * QA (round 2 acceptance): visible foam coverage in a disc of `radius` metres around the focus (the player in a
+   * run), from the field's coverage target: wakes, splashes, kills, FX stamps (not crest whitecaps or coastal surf).
+   * Synchronous GPU readback; call it from tools, never per frame. Returns the mean visible fraction (0..1).
+   */
+  foamCoverage(radius = 150): number {
+    return this.foamCoverageStats(radius).total;
+  }
+
+  foamCoverageStats(radius = 150): FoamCoverageStats {
+    if (!this.field || !this.renderer) return { total: 0, persistent: 0, saturatedCells: 0, radius };
+    return this.field.foamCoverage(this.renderer, this.focusX, this.focusZ, radius);
+  }
+
+  /**
+   * QA: renders the ocean alone from the main camera into a small target with the stats view (surfaceShaders:
+   * uDebug 8) and counts pixels: white foam, crest foam and glow as fractions of the water pixels. Measures what the
+   * water shader draws (no occlusion by ships, no bloom). `rimReference` is the luminance glow is compared with.
+   * Synchronous readback; tools only.
+   */
+  screenStats(radius = 150, rimReference = 1): OceanScreenStats {
+    const out: OceanScreenStats = { waterPixels: 0, foam: 0, foamInDisc: 0, foamMeanInDisc: 0, crest: 0, glow: 0, glowPeak: 0, pattern: 0, radius };
+    const renderer = this.renderer;
+    const surface = this.surface;
+    const camera = surface?.mainCamera;
+    if (!renderer || !surface || !camera) return out;
+    const w = 400, h = 225;
+    const target = (this.statsTarget ??= new THREE.WebGLRenderTarget(w, h, { type: THREE.UnsignedByteType, depthBuffer: true, stencilBuffer: false }));
+    target.texture.colorSpace = THREE.NoColorSpace;
+    const u = surface.uniforms;
+    const previousDebug = u.uDebug!.value as number;
+    const previousTarget = renderer.getRenderTarget();
+    const clear = new THREE.Color();
+    renderer.getClearColor(clear);
+    const clearAlpha = renderer.getClearAlpha();
+    const autoClear = renderer.autoClear;
+    u.uDebug!.value = 8;
+    (u.uStats!.value as THREE.Vector4).set(this.focusX, this.focusZ, radius, rimReference);
+    try {
+      renderer.autoClear = false;
+      renderer.setRenderTarget(target);
+      renderer.setClearColor(0x000000, 0);
+      renderer.clear(true, true, false);
+      renderer.render(surface.mesh, camera);
+      const pixels = (this.statsPixels ??= new Uint8Array(w * h * 4));
+      renderer.readRenderTargetPixels(target, 0, 0, w, h, pixels);
+      let water = 0, foam = 0, disc = 0, foamDisc = 0, foamMean = 0, crest = 0, glow = 0, peak = 0, pattern = 0;
+      for (let i = 0; i < w * h; i++) {
+        const a = pixels[i * 4 + 3]!;
+        if (a < 64) continue;
+        water++;
+        const f = pixels[i * 4]! / 255, c = pixels[i * 4 + 1]! / 255, g = pixels[i * 4 + 2]! / 255;
+        const isFoam = f > 0.5, isCrest = c > 0.5, isGlow = g > 0.25;
+        if (isFoam) foam++;
+        if (isCrest) crest++;
+        if (isGlow) glow++;
+        if (isFoam || isCrest || isGlow) pattern++;
+        if (g > peak) peak = g;
+        if (a > 192) { disc++; foamMean += f; if (isFoam) foamDisc++; }
+      }
+      out.waterPixels = water;
+      if (water) { out.foam = foam / water; out.crest = crest / water; out.glow = glow / water; out.pattern = pattern / water; }
+      if (disc) { out.foamInDisc = foamDisc / disc; out.foamMeanInDisc = foamMean / disc; }
+      out.glowPeak = peak;
+    } finally {
+      u.uDebug!.value = previousDebug;
+      renderer.setRenderTarget(previousTarget);
+      renderer.setClearColor(clear, clearAlpha);
+      renderer.autoClear = autoClear;
+    }
+    return out;
   }
 
   /** Debug: measures GPU time of the interaction passes and the surface draw (EXT_disjoint_timer_query_webgl2). */
@@ -197,6 +298,7 @@ export class OceanSystem implements RenderSystem, OceanServices {
   }
 
   dispose(): void {
+    this.statsTarget?.dispose();
     this.surface?.mesh.removeFromParent();
     this.surface?.dispose();
     this.field?.dispose();

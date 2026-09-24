@@ -678,7 +678,9 @@ export class WakeSystem {
           f.persistentBatch.push(cx, cz, 1, 0, fr, fr, SHAPE_BLOB, 1.8, 0.65, 0, 0, 0, 0, 0, Math.min(0.8, 0.6 * s), 1);
           f.persistentBatch.push(cx, cz, 1, 0, r * 1.15, r * 1.15, SHAPE_BLOB, 1, 0.5, 0.2, 0, 0, 0, 0, 0, 1);
         }
-        f.persistentBatch.push(cx, cz, 1, 0, R + W * 3, R + W * 3, SHAPE_RING, R, W, 0, 0, 0, 0, 0, 0.35 * k, 0.4 * k);
+        // The expanding crest leaves a thin foam trace early on (aeration keeps the turquoise churn); sweeping full
+        // strength over the whole disc for two seconds is what made a melee's kills pile up into a slab.
+        f.persistentBatch.push(cx, cz, 1, 0, R + W * 3, R + W * 3, SHAPE_RING, R, W, 0, 0, 0, 0, 0, 0.24 * k * (1 - smooth(0.3, 0.7, t)), 0.4 * k);
         break;
       }
       case EFFECT_RING:
@@ -689,7 +691,10 @@ export class WakeSystem {
         const k = 1 - t;
         const height = Math.min(2.5, (shock ? 0.9 : 0.5) * s * Math.pow(k, 1.5));
         f.transientBatch.push(cx, cz, 1, 0, R + W * 3, R + W * 3, SHAPE_RING, R, W, 0, 0, 0, height, height, Math.min(1, (shock ? 1 : 0.8) * s) * k, 0.7 * k);
-        f.persistentBatch.push(cx, cz, 1, 0, R + W * 3, R + W * 3, SHAPE_RING, R, W, 0, 0, 0, 0, 0, (shock ? 0.5 : 0.3) * k, 0.45 * k);
+        // Persistent trace only while the ring is young, thinned for big rings: a 160 m seaquake used to sweep foam
+        // over its whole disc (the round-1 "leopard" sea). The transient crest above is the readable wave.
+        const trace = (1 - smooth(0.2, 0.55, t)) * Math.min(1, 24 / Math.max(24, R));
+        f.persistentBatch.push(cx, cz, 1, 0, R + W * 3, R + W * 3, SHAPE_RING, R, W, 0, 0, 0, 0, 0, (shock ? 0.42 : 0.28) * k * trace, 0.45 * k);
         break;
       }
       case EFFECT_FOAM:
