@@ -122,7 +122,7 @@ export function spawnBossAhead(c: SimContext, id: BossId, loop: number): void {
     if (c.world.isWater(px, pz, def.radius + 25)) { x = px; z = pz; break; }
   }
   const b = c.spawnBoss(id, x, z, headingTo(p.x - x, p.z - z));
-  const hp = def.hp * DIRECTOR.bossHpScale(sea.difficulty, loop);
+  const hp = def.hp * DIRECTOR.bossHpScale(sea.difficulty, loop, id);
   b.hp = hp;
   b.maxHp = hp;
   s.director.activeBoss = id;

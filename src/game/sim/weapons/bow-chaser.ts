@@ -2,7 +2,7 @@
  * Bow Chaser (CORE-owned): long-range shots at ships ahead (±25°, `cone`).
  *  - A Twin Chasers: +`twin` (1) guns, each on a different target in the cone.
  *  - B Longtom: faster (×1.25), longer (`longtomRange` ×1.2) shots that pierce everything (`pierce` 99).
- *  - ★ Lance of Dawn: every `lanceCooldown` (3.2 s) a searing lance (×`lanceDamage` 3, burning, infinite pierce,
+ *  - ★ Lance of Dawn: every `lanceCooldown` (2.7 s) a searing lance (×`lanceDamage` 3, burning, infinite pierce,
  *    ignores islands) at the nearest ship in a wider cone.
  */
 import type { WeaponSlot } from '../../types';
@@ -38,7 +38,7 @@ export function updateBowChaser(c: CoreSim, slot: WeaponSlot, rate: number): voi
         if (idx >= 0) { core.pFlags[idx] = PF_BURN; core.pBurn[idx] = E.damage * 0.3; core.pKnock[idx] = 4; }
         c.emit({ type: 'weapon-fired', weapon: 'bow-chaser', owner: 0, x: bowX, z: bowZ, dirX: dx, dirZ: dz, side: 'bow', count: 1 });
         core.kickPitch(0.08);
-        slot.scratch.lance = ex(l, 'lanceCooldown', 3.2) * cooldownMul(p.stats);
+        slot.scratch.lance = ex(l, 'lanceCooldown', 2.7) * cooldownMul(p.stats);
       }
     }
   }

@@ -12,8 +12,20 @@ import { num, pct } from './text';
 
 type Numbers = Omit<WeaponLevelDef, 'text'>;
 
-const N = (damage: number, cooldown: number, count: number, range: number, more: Partial<Numbers> = {}): Numbers =>
-  ({ damage, cooldown, count, range, ...more });
+/**
+ * Battle pace (PACE round 1): every table cooldown below is scaled by `cooldown` (weapons fire ~18% more often)
+ * and every projectile speed by `shotSpeed` (shots land sooner and read as snappier), so the tables keep their
+ * relative balance. The numbers written in the tables are the v2 values.
+ */
+export const WEAPON_PACE = { cooldown: 0.85, shotSpeed: 1.15 } as const;
+
+const r2 = (v: number): number => Math.round(v * 100) / 100;
+
+const N = (damage: number, cooldown: number, count: number, range: number, more: Partial<Numbers> = {}): Numbers => {
+  const n: Numbers = { damage, cooldown: r2(cooldown * WEAPON_PACE.cooldown), count, range, ...more };
+  if (n.speed !== undefined) n.speed = Math.round(n.speed * WEAPON_PACE.shotSpeed);
+  return n;
+};
 
 interface TextSpec {
   /** Noun for `count` (singular / plural); empty = count is not shown. */

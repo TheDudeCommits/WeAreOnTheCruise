@@ -6,7 +6,7 @@
  *  - B Thunderclap: the first strike also blasts everything within `clapRadius` (32 m, ×area) for ×`clapDamage` 0.6
  *    and stuns for `stun` (1.2 s).
  *  - ★ Thunderhead: a storm cloud follows the ship and strikes a random ship within `cloudRadius` (110 m) every
- *    `cloudInterval` (0.7 s) for ×`cloudDamage` 1.2.
+ *    `cloudInterval` (0.6 s) for ×`cloudDamage` 1.2.
  */
 import type { Vec2, WeaponLevelDef, WeaponSlot } from '../../types';
 import type { Target } from '../context';
@@ -105,5 +105,5 @@ function ensureCloud(c: CoreSim, slot: WeaponSlot, l: WeaponLevelDef): void {
   }
   h.radius = ex(l, 'cloudRadius', 110) * areaMul(p.stats);
   h.damage = E.damage * ex(l, 'cloudDamage', 1.2);
-  h.tick = ex(l, 'cloudInterval', 0.7) * cooldownMul(p.stats);
+  h.tick = ex(l, 'cloudInterval', 0.6) * cooldownMul(p.stats);
 }

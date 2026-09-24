@@ -30,6 +30,9 @@ export const BOOST_SPEED = 1.45;
 export const FULL_BROADSIDE_COOLDOWN = 8;
 
 const GEAR_THROTTLE = [0, 0.55, 1] as const;
+/** Sail trim rates (throttle per second) when setting / striking sail (PACE: was 0.85 / 1.25). */
+const TRIM_SET = 1.5;
+const TRIM_STRIKE = 2.1;
 
 /** Points-of-sail polar: angle off the wind source (0 = bow into the wind … π = running) → speed factor. */
 const POLAR_ANGLE = [0, 0.35, 0.61, 0.785, 1.22, 1.5708, 2.0, 2.356, 2.79, Math.PI] as const;
@@ -134,9 +137,9 @@ function sail(c: CoreSim, ship: ShipDef): void {
   const agility = agilityOf(ship);
   const stunned = statusOf(p.statuses, 'stunned') !== null;
 
-  // Sail trim follows the gear (sails are set slower than they are struck).
+  // Sail trim follows the gear (sails are set slower than they are struck); a gear change reads within ~⅓ s.
   const trimTarget = c.input.throttleAxis !== 0 ? clamp(c.input.throttleAxis, 0, 1) : GEAR_THROTTLE[p.gear];
-  const trimRate = trimTarget > p.throttle ? 0.85 : 1.25;
+  const trimRate = trimTarget > p.throttle ? TRIM_SET : TRIM_STRIKE;
   p.throttle += clamp(trimTarget - p.throttle, -trimRate * dt, trimRate * dt);
 
   const fx = -Math.sin(p.heading), fz = -Math.cos(p.heading);

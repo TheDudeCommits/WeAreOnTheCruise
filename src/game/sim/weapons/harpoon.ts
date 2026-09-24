@@ -4,7 +4,7 @@
  *  - A Chain Harpoon: after a hit the harpoon flies on to the next ship within `chainRange` (70 m), up to
  *    `chainTargets` (3) ships, each hooked.
  *  - B Tow Line: stronger haul (×1.4); hauled ships smash into neighbours (×`smashDamage` 0.8, stun, 'ram' events).
- *  - ★ Leviathan Hook: every `giantCooldown` (4.5 s) a giant hook hits the densest cluster and drags every ship within
+ *  - ★ Leviathan Hook: every `giantCooldown` (3.8 s) a giant hook hits the densest cluster and drags every ship within
  *    `giantRadius` (45 m) together into the struck ship (tow-line smashes), which is hauled to you.
  */
 import type { ProjectileState, WeaponSlot } from '../../types';
@@ -39,7 +39,7 @@ export function updateHarpoon(c: CoreSim, slot: WeaponSlot, rate: number): void 
           core.pFlags[idx] = PF_HOOK | PF_GIANT | PF_TOW;
           core.pA[idx] = E.duration * 1.3; core.pB[idx] = pull; core.pC[idx] = ex(l, 'giantRadius', 45) * areaMul(p.stats); core.pD[idx] = smash * 1.5;
         }
-        slot.scratch.giant = ex(l, 'giantCooldown', 4.5) * cooldownMul(p.stats);
+        slot.scratch.giant = ex(l, 'giantCooldown', 3.8) * cooldownMul(p.stats);
       }
     }
   }

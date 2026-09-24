@@ -3,7 +3,7 @@
  * Extra shells go to the next-densest clusters (or scatter around the first).
  *  - A Cluster Shells: each shell bursts into `bomblets` (3) bomblets (×`bombletDamage` 0.45, ×`bombletArea` 0.55).
  *  - B Firepots: each shell leaves a fire patch (`fireDuration` 4 s, ×`fireDamage` 0.25 per tick, ×`fireArea` 0.8).
- *  - ★ Meteor Rain: shells keep falling from the sky around the ship (`meteorInterval` 0.22 s, ×`meteorDamage` 0.7).
+ *  - ★ Meteor Rain: shells keep falling from the sky around the ship (`meteorInterval` 0.19 s, ×`meteorDamage` 0.7).
  */
 import type { WeaponLevelDef, WeaponSlot } from '../../types';
 import { GRAVITY, PF_CLUSTER, PF_FIREPOT, type CoreSim } from '../core-runtime';
@@ -84,7 +84,7 @@ function meteorRain(c: CoreSim, slot: WeaponSlot, l: WeaponLevelDef, rate: numbe
   const buf = core.bufW2;
   const n = core.near(c.state, p.x, p.z, maxR, buf);
   if (n === 0) { slot.scratch.meteor = 0.25; return; }
-  const interval = ex(l, 'meteorInterval', 0.22) * cooldownMul(p.stats);
+  const interval = ex(l, 'meteorInterval', 0.19) * cooldownMul(p.stats);
   const damage = E.damage * ex(l, 'meteorDamage', 0.7), area = E.area * 0.8;
   const fall = 45, y0 = 90;
   const T = (-fall + Math.sqrt(fall * fall + 2 * GRAVITY * y0)) / GRAVITY;

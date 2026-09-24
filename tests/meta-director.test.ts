@@ -72,7 +72,7 @@ describe('director', () => {
     const spawned = evs.find((e) => e.type === 'boss-spawned');
     expect(spawned && spawned.type === 'boss-spawned' && spawned.boss).toBe('iron-warden');
     const b = sim.state.bosses[0]!;
-    expect(b.maxHp).toBeCloseTo(sim.content.bosses['iron-warden'].hp * DIRECTOR.bossHpScale(1, 0));
+    expect(b.maxHp).toBeCloseTo(sim.content.bosses['iron-warden'].hp * DIRECTOR.bossHpScale(1, 0, 'iron-warden'));
     expect(sim.state.director.activeBoss).toBe('iron-warden');
     expect(sim.state.director.nextBossIndex).toBe(1);
   });

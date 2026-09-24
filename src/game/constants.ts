@@ -9,9 +9,12 @@ export const MAX_PASSIVE_SLOTS = 6;
 export const MAX_WEAPON_LEVEL = 6;
 export const BRANCH_LEVEL = 3;
 
-/** Enemy spawn ring (metres from the player). */
-export const SPAWN_RING_MIN = 260;
-export const SPAWN_RING_MAX = 420;
+/**
+ * Enemy spawn ring (metres from the player). PACE round 1: pulled in from 260–420 m so the horde arrives sooner
+ * (still just outside the default tactical view: ~150 m ahead, ~100 m abeam).
+ */
+export const SPAWN_RING_MIN = 235;
+export const SPAWN_RING_MAX = 380;
 /** Enemies further than this from the player are recycled/teleported closer by the director. */
 export const DESPAWN_RADIUS = 700;
 
@@ -21,8 +24,12 @@ export const HAZARD_POOL = 256;
 export const PICKUP_POOL = 900;
 export const TELEGRAPH_POOL = 96;
 
-/** XP required to go from `level` to `level + 1`. */
-export const xpToNext = (level: number): number => 6 + 4 * (level - 1);
+/**
+ * XP required to go from `level` to `level + 1`. PACE round 1: cheap early levels (5, 8, 12, 15, 19 …) so the
+ * opening level-ups come every 15–25 s, and a quadratic tail (… 116 at level 20, 163 at level 25) so late ones take
+ * 40–60 s even with the bigger horde. Was 6 + 4 × (level − 1).
+ */
+export const xpToNext = (level: number): number => Math.round(5 + 3 * (level - 1) + 0.15 * (level - 1) ** 2);
 
 /** Visual growth tier for a level. */
 export const tierForLevel = (level: number): number =>
