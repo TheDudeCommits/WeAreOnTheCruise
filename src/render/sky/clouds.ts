@@ -56,8 +56,10 @@ float h11( float n ) { return fract( sin( n * 127.1 + 311.7 ) * 43758.5453 ); }
 void main() {
 	vec2 p = vUv;
 	float shape = -1.0;
-	vec3 n = vec3( 0.0, 0.0, 1.0 );
-	vec2 bestC = vec2( 0.5 );
+	// Smooth-max heightfield over the puffs: its gradient gives one continuous bulbous surface, so terminators run
+	// across the whole cloud instead of capping every puff.
+	vec2 grad = vec2( 0.0 );
+	float wsum = 1e-4;
 	for ( int i = 0; i < 12; i++ ) {
 		float fi = float( i );
 		float row = i < 5 ? 0.0 : ( i < 9 ? 1.0 : 2.0 );
@@ -66,44 +68,48 @@ void main() {
 		float a = h11( vSeed * 13.1 + fi * 7.3 );
 		float b = h11( vSeed * 5.7 + fi * 3.1 );
 		float spread = 1.0 - row * 0.3;
-		float cx = 0.5 + ( ( idx + 0.5 ) / count - 0.5 ) * spread * 0.86 + ( a - 0.5 ) * 0.09;
-		float cy = 0.3 + row * 0.2 + ( b - 0.5 ) * 0.07;
-		float r = ( 0.2 - row * 0.03 ) * ( 0.8 + a * 0.45 );
+		float u = ( idx + 0.5 ) / count - 0.5;
+		float cx = 0.5 + u * spread * 0.84 + ( a - 0.5 ) * 0.08;
+		float cy = 0.27 + row * 0.2 + ( b - 0.5 ) * 0.06 - abs( u ) * 0.08;
+		float r = ( 0.21 - row * 0.03 ) * ( 0.78 + a * 0.4 ) * ( 1.0 - abs( u ) * 0.45 );
 		if ( row == 2.0 && b < 0.3 ) r *= 0.6;
 		vec2 dp = ( p - vec2( cx, cy ) ) * vec2( vAspect, 1.0 );
-		float rr = r * ( 0.9 + 0.2 * h11( vSeed + fi ) );
-		float s = rr - length( dp );
-		if ( s > shape ) {
-			shape = s;
-			vec2 q = dp / rr;
-			n = vec3( q, sqrt( max( 1.0 - dot( q, q ), 0.0 ) ) );
-			bestC = vec2( cx, cy );
-		}
+		float d2 = dot( dp, dp );
+		shape = max( shape, r - sqrt( d2 ) );
+		float h = sqrt( max( r * r - d2, 0.0 ) );
+		float w = exp( 8.0 * h ) * step( 1e-4, h );
+		grad += w * dp / max( h, 0.035 );
+		wsum += w;
 	}
-	// Flat base, eroded edges.
-	shape = min( shape, ( p.y - 0.16 ) * 0.9 );
-	float edgeNoise = texture2D( uCruiseNoise, p * vec2( 2.2 * vAspect, 1.4 ) + vSeed * 0.37 ).g - 0.5;
-	shape += edgeNoise * 0.04;
-	float aa = fwidth( shape ) * 1.2 + 1e-4;
+	vec3 nPuff = normalize( vec3( grad / wsum, 1.0 ) );
+	// The cloud's overall mass (a squat ellipsoid) carries the big light/shadow split; puffs add the lobes.
+	vec2 m = ( p - vec2( 0.5, 0.26 ) ) / vec2( 0.5, 0.62 );
+	vec3 nMass = normalize( vec3( m, sqrt( max( 1.0 - dot( m, m ), 0.08 ) ) ) );
+	vec3 n = normalize( nPuff * 0.6 + nMass * 0.8 );
+	// Flat base.
+	shape = min( shape, ( p.y - 0.13 ) * 0.8 );
+	float aa = fwidth( shape ) * 1.1 + 1e-4;
 	float alpha = smoothstep( -aa, aa, shape );
 	if ( alpha < 0.01 ) discard;
 
 	vec3 sun = normalize( vSunCard );
 	float ndl = dot( n, sun );
 	float litAA = fwidth( ndl ) + 1e-3;
-	float lit = smoothstep( -0.12 - litAA, -0.12 + litAA, ndl );
-	float core = smoothstep( 0.35, 0.8, ndl ) * 0.12;
-	vec3 col = mix( uShade, uLit, lit ) * ( 1.0 + core );
+	float lit = smoothstep( -0.05 - litAA, -0.05 + litAA, ndl );
+	// Second, deeper shade band in the cores facing away from the sun.
+	float deep = 1.0 - smoothstep( -0.45 - litAA, -0.45 + litAA, ndl );
+	vec3 col = mix( uShade, uLit, lit );
+	col = mix( col, uShade * 0.84, deep * 0.6 );
 	// Heavier, cooler underside.
-	float base = 1.0 - smoothstep( 0.17, 0.34, p.y );
-	col = mix( col, uShade * 0.86, base * 0.55 );
+	float base = 1.0 - smoothstep( 0.14, 0.3, p.y );
+	col = mix( col, uShade * 0.9, base * 0.5 );
 	// Silver lining on sun-facing edges.
-	float edge = 1.0 - smoothstep( 0.0, 0.018, shape );
-	float facing = smoothstep( 0.2, 0.6, dot( normalize( n.xy + 1e-4 ), normalize( sun.xy + 1e-4 ) ) );
-	col += uRimColor * edge * facing * 0.6;
+	float edge = 1.0 - smoothstep( 0.0, 0.014, shape );
+	float facing = smoothstep( 0.1, 0.5, dot( normalize( nPuff.xy + 1e-4 ), normalize( sun.xy + 1e-4 ) ) );
+	col += uRimColor * edge * facing * 0.55;
 	col += vec3( 0.8, 0.88, 1.0 ) * uFlash * ( 0.4 + lit * 0.6 );
 	// Aerial perspective: far and low cards melt into the haze.
-	float fade = clamp( ( vDist - 900.0 ) / 3200.0, 0.0, 1.0 ) * 0.62 + ( 1.0 - smoothstep( 0.0, 0.12, vElevation ) ) * 0.25;
+	float fade = clamp( ( vDist - 900.0 ) / 3200.0, 0.0, 1.0 ) * 0.42 + ( 1.0 - smoothstep( 0.0, 0.1, vElevation ) ) * 0.18;
 	col = mix( col, uHaze, clamp( fade + uFade, 0.0, 0.96 ) );
 	gl_FragColor = vec4( col, alpha * uOpacity );
 }

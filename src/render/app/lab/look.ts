@@ -22,7 +22,7 @@ import { WorldVisuals } from '../../world/WorldVisuals';
 import { PostStack } from '../PostStack';
 import { RendererHost } from '../RendererHost';
 
-type CamMode = 'showcase' | 'tactical' | 'fleet';
+type CamMode = 'showcase' | 'tactical' | 'fleet' | 'sky';
 
 /** Lengths the downloaded GLBs were normalized to at intake (metres). */
 const SOURCE_LENGTH: Record<HeroModelKey, number> = {
@@ -52,7 +52,7 @@ const scene = host.scene;
 const camera = host.camera;
 
 let quality: QualityTier = (['low', 'medium', 'high', 'ultra'] as const).find((q) => q === params.get('quality')) ?? 'high';
-let camMode: CamMode = (['showcase', 'tactical', 'fleet'] as const).find((c) => c === params.get('cam')) ?? 'showcase';
+let camMode: CamMode = (['showcase', 'tactical', 'fleet', 'sky'] as const).find((c) => c === params.get('cam')) ?? 'showcase';
 let selected: ShipId = (SHIP_ORDER.find((s) => s === params.get('ship')) ?? 'sunlion');
 let hour = Number(params.get('hour') ?? 16.8);
 let playing = params.get('play') === '1';
@@ -270,9 +270,18 @@ function tick(dt: number): void {
   worldVisuals.update(ctx);
   updateShips(ctx);
   cameraDirector.update(ctx);
+  if (camMode === 'sky') {
+    // Sky review: low eye point looking at the cloud ring and the horizon, slowly panning.
+    const az = time * 0.05 + skyYaw;
+    camera.position.set(focus.x, 26, focus.z);
+    camera.lookAt(focus.x + Math.sin(az) * 1000, 26 + skyPitch * 1000, focus.z + Math.cos(az) * 1000);
+    camera.fov = 55; camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+  }
   post.update(ctx);
   host.render(() => post.render(scene, camera));
 }
+let skyYaw = Number(params.get('yaw') ?? 0);
+let skyPitch = Number(params.get('pitch') ?? 0.18);
 
 function frame(now: number): void {
   requestAnimationFrame(frame);
@@ -334,7 +343,7 @@ panel.append(
   toggle('time flows', playing, (v) => { playing = v; }),
   select('Weather', ['clear', 'breezy', 'storm', 'fog'] as const, weather, (v) => { weather = v; }),
   select('Quality', ['low', 'medium', 'high', 'ultra'] as const, quality, (v) => { quality = v; }),
-  select('Camera', ['showcase', 'tactical', 'fleet'] as const, camMode, (v) => { camMode = v; cameraDirector.resetView(); }),
+  select('Camera', ['showcase', 'tactical', 'fleet', 'sky'] as const, camMode, (v) => { camMode = v; cameraDirector.resetView(); }),
   select('Ship', SHIP_ORDER, selected, (v) => { selected = v; }),
   select('Enemy fleet', ['0', '12', '24', '48'] as const, String(fleetCount) as '0', (v) => { fleetCount = Number(v); }),
   toggle('ink', true, (v) => { post.overrides.ink = v; }),
@@ -363,7 +372,7 @@ panel.append(
 export interface LookLabApi {
   ready: boolean;
   loaded(): number;
-  set(opts: Partial<{ hour: number; weather: WeatherId; quality: QualityTier; cam: CamMode; ship: ShipId; fleet: number; ink: boolean; bloom: boolean; grade: boolean; flash: boolean; glow: boolean; spectral: boolean; dpr: number }>): void;
+  set(opts: Partial<{ yaw: number; pitch: number; hour: number; weather: WeatherId; quality: QualityTier; cam: CamMode; ship: ShipId; fleet: number; ink: boolean; bloom: boolean; grade: boolean; flash: boolean; glow: boolean; spectral: boolean; dpr: number }>): void;
   advance(seconds: number): void;
   impact(strength?: number): void;
   speed(strength?: number, duration?: number): void;
@@ -376,6 +385,8 @@ const api: LookLabApi = {
   ready: false,
   loaded: () => slots.filter((s) => s.loaded).length,
   set(opts) {
+    if (opts.yaw !== undefined) skyYaw = opts.yaw;
+    if (opts.pitch !== undefined) skyPitch = opts.pitch;
     if (opts.hour !== undefined) { hour = opts.hour; hourInput.value = String(hour); }
     if (opts.weather) {
       weather = opts.weather;

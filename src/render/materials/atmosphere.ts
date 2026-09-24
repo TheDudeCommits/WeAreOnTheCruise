@@ -192,13 +192,18 @@ float cruiseFogFactor(float viewDistance) {
 vec3 cruiseApplyFog(vec3 color, float viewDistance) {
   return mix(color, uCruiseFogColor, cruiseFogFactor(viewDistance));
 }
-/** 0..1 amount of cloud shadow at a world XZ position (soft cel-edged blobs drifting with the wind). */
+/** 0..1 amount of cloud shadow at a world XZ position on the sea (big soft-edged blobs drifting with the wind). */
 float cruiseCloudShadow(vec2 worldXZ) {
   if (uCruiseCloudShadow.w <= 0.001) return 0.0;
   vec2 uv = (worldXZ + uCruiseCloudShadow.xy) * uCruiseCloudShadow.z;
-  float n = texture2D(uCruiseNoise, uv).r * 0.75 + texture2D(uCruiseNoise, uv * 2.7 + 0.37).r * 0.25;
+  float n = texture2D(uCruiseNoise, uv).r * 0.85 + texture2D(uCruiseNoise, uv * 1.9 + 0.37).r * 0.15;
   float edge = 1.0 - uCruiseCloudCover;
-  return smoothstep(edge - 0.035, edge + 0.035, n) * uCruiseCloudShadow.w;
+  return smoothstep(edge - 0.05, edge + 0.05, n) * uCruiseCloudShadow.w;
+}
+/** Cloud shadow for any surface: the point is projected to sea level along the key light (no streaks on sails). */
+float cruiseCloudShadow(vec3 worldPos) {
+  vec2 xz = worldPos.xz - uCruiseSunDir.xz * (worldPos.y / max(uCruiseSunDir.y, 0.2));
+  return cruiseCloudShadow(xz);
 }
 /** Cheap sky gradient for reflections and glints (world direction, y up). */
 vec3 cruiseSkyColor(vec3 dir) {

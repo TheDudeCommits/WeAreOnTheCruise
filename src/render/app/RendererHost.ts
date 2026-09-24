@@ -5,9 +5,10 @@
  * inside PostStack), so the context is created without antialiasing. Shadow maps are updated only by the post stack's
  * colour pass (autoUpdate off), never by the ink prepass or other agents' utility renders.
  *
- * Adaptive DPR steps both ways: with EXT_disjoint_timer_query_webgl2 it reads real GPU frame time; without it, it
- * probes one step up after a stable stretch and reverts (with back-off) if the display starts missing frames — the
- * only way to find headroom on a 60 Hz display where frame intervals never drop below 16.7 ms.
+ * Adaptive DPR steps both ways from frame intervals alone: it steps down when the display misses frames, and after a
+ * stable stretch it probes one step up and reverts (with doubling back-off) if frames start missing — the only way to
+ * find headroom on a 60 Hz display where intervals never drop below 16.7 ms. EXT_disjoint_timer_query_webgl2 is read
+ * for diagnostics only: on Chrome/ANGLE-Metal its TIME_ELAPSED results include scheduling gaps and cannot drive DPR.
  */
 import * as THREE from 'three';
 import type { QualityTier } from '../frame';
@@ -22,8 +23,13 @@ export interface RenderMetrics {
   textures: number;
   programs: number;
   dpr: number;
-  /** GPU frame time (ms, p50 of recent frames) when EXT_disjoint_timer_query_webgl2 is available, else null. */
+  /**
+   * Diagnostic GPU frame time (ms, p50) from EXT_disjoint_timer_query_webgl2, else null. Approximate on
+   * ANGLE/Metal (includes scheduling gaps); use benchmark() for headroom.
+   */
   gpuMs: number | null;
+  /** Share of recent frames that missed a display refresh (the adaptive DPR signal). */
+  missRate: number;
   /** p90 frame interval (ms). */
   frameP90: number;
   tier: QualityTier;
@@ -36,11 +42,20 @@ const hosts = new WeakMap<THREE.WebGLRenderer, RendererHost>();
 /** The host that owns a renderer (PostStack uses this to apply quality tiers). */
 export function hostFor(renderer: THREE.WebGLRenderer): RendererHost | undefined { return hosts.get(renderer); }
 
+/**
+ * GPU frame timing with sequential (never nested) TIME_ELAPSED queries: one per labelled pass, summed per frame.
+ * `samples` holds per-frame totals (ms); `passes` holds a smoothed time per label.
+ */
 class GpuTimer {
   private readonly ext: { TIME_ELAPSED_EXT: number; GPU_DISJOINT_EXT: number } | null;
-  private readonly pending: WebGLQuery[] = [];
-  private active: WebGLQuery | null = null;
+  private readonly pending: { query: WebGLQuery; label: string; frame: number }[] = [];
+  private active: { query: WebGLQuery; label: string } | null = null;
+  private frame = 0;
+  private sumFrame = -1;
+  private sum = 0;
+  private skipFrame = false;
   readonly samples: number[] = [];
+  readonly passes = new Map<string, number>();
 
   constructor(private readonly gl: WebGL2RenderingContext) {
     this.ext = gl.getExtension('EXT_disjoint_timer_query_webgl2') as GpuTimer['ext'];
@@ -48,34 +63,56 @@ class GpuTimer {
 
   get available(): boolean { return this.ext !== null; }
 
-  begin(): void {
-    if (!this.ext || this.active || this.pending.length > 4) return;
+  /** Starts timing a pass (ends the previous one). */
+  mark(label: string): void {
+    if (!this.ext || this.skipFrame) return;
+    this.stop();
     const query = this.gl.createQuery();
     if (!query) return;
     this.gl.beginQuery(this.ext.TIME_ELAPSED_EXT, query);
-    this.active = query;
+    this.active = { query, label };
   }
 
-  end(): void {
+  beginFrame(): void {
+    // Back-pressure: never let unresolved queries pile up (the frame is simply not timed).
+    this.skipFrame = this.pending.length > 24;
+    this.mark('scene');
+  }
+
+  endFrame(): void {
+    this.stop();
+    this.frame++;
+    this.poll();
+  }
+
+  private stop(): void {
     if (!this.ext || !this.active) return;
     this.gl.endQuery(this.ext.TIME_ELAPSED_EXT);
-    this.pending.push(this.active);
+    this.pending.push({ query: this.active.query, label: this.active.label, frame: this.frame });
     this.active = null;
-    this.poll();
   }
 
   private poll(): void {
     const gl = this.gl;
     while (this.pending.length) {
-      const query = this.pending[0]!;
-      if (!gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE)) break;
+      const entry = this.pending[0]!;
+      if (!gl.getQueryParameter(entry.query, gl.QUERY_RESULT_AVAILABLE)) break;
       const disjoint = gl.getParameter(this.ext!.GPU_DISJOINT_EXT) as boolean;
-      if (!disjoint) {
-        const ns = gl.getQueryParameter(query, gl.QUERY_RESULT) as number;
-        this.samples.push(ns / 1e6);
-        if (this.samples.length > 90) this.samples.shift();
+      if (entry.frame !== this.sumFrame) {
+        if (this.sumFrame >= 0 && this.sum > 0) {
+          this.samples.push(this.sum);
+          if (this.samples.length > 90) this.samples.shift();
+        }
+        this.sumFrame = entry.frame;
+        this.sum = 0;
       }
-      gl.deleteQuery(query);
+      if (!disjoint) {
+        const ms = (gl.getQueryParameter(entry.query, gl.QUERY_RESULT) as number) / 1e6;
+        this.sum += ms;
+        const previous = this.passes.get(entry.label);
+        this.passes.set(entry.label, previous === undefined ? ms : previous + (ms - previous) * 0.1);
+      }
+      gl.deleteQuery(entry.query);
       this.pending.shift();
     }
   }
@@ -166,10 +203,10 @@ export class RendererHost {
     this.frameSamples.push(frameMs);
     if (this.frameSamples.length > 120) this.frameSamples.shift();
     this.renderer.info.reset();
-    this.gpu.begin();
+    this.gpu.beginFrame();
     if (renderScene) renderScene();
     else this.renderer.render(this.scene, this.camera);
-    this.gpu.end();
+    this.gpu.endFrame();
 
     if (now - this.lastReviewAt > 1000) {
       this.reviewPixelRatio(now);
@@ -194,6 +231,7 @@ export class RendererHost {
       dpr: this.pixelRatio,
       gpuMs: this.gpu.available && this.gpu.samples.length ? percentile(this.gpu.samples, 0.5, this.scratch) : null,
       frameP90: percentile(this.frameSamples, 0.9, this.scratch),
+      missRate: this.missRate(),
       tier: this.profile.tier,
       dprRange: [this.minDpr(), this.maxDpr()],
       width: size.x, height: size.y,
@@ -254,19 +292,28 @@ export class RendererHost {
     this.renderer.setSize(width, height, false);
   }
 
-  private reviewPixelRatio(now: number): void {
-    if (!this.adaptive || this.frameSamples.length < 45 || document.hidden) return;
-    const p90 = percentile(this.frameSamples, 0.9, this.scratch);
+  /** Share of the recent frames whose interval exceeded 1.5 refresh periods (a missed presentation). */
+  private missRate(): number {
+    if (!this.frameSamples.length) return 0;
     const median = percentile(this.frameSamples, 0.5, this.scratch);
     // Refresh interval: 60 Hz → 16.7 ms, 120 Hz → 8.3 ms. The budget follows the display.
     const interval = median < 11 ? 8.33 : 16.67;
+    let missed = 0;
+    for (const s of this.frameSamples) if (s > interval * 1.5) missed++;
+    return missed / this.frameSamples.length;
+  }
+
+  private reviewPixelRatio(now: number): void {
+    if (!this.adaptive || this.frameSamples.length < 45 || document.hidden) return;
+    // Missed presentations, not jitter: rAF intervals wander ±2 ms on a healthy 60 Hz frame loop.
+    const missRate = this.missRate();
     const min = this.minDpr(), max = this.maxDpr();
     const sinceChange = now - this.lastChangeAt;
 
     // A probe that made the display miss frames is undone at once, with a longer wait before the next one.
     if (this.probe) {
       if (now - this.probe.at > 2500) {
-        if (p90 > interval * 1.12) {
+        if (missRate > 0.04) {
           const from = this.probe.from;
           this.probe = null;
           this.probeCooldownUntil = now + this.probeBackoff;
@@ -280,24 +327,28 @@ export class RendererHost {
       return;
     }
 
-    const gpuSamples = this.gpu.samples;
-    if (this.gpu.available && gpuSamples.length >= 30) {
-      const gpu = percentile(gpuSamples, 0.75, this.scratch);
-      if ((gpu > interval * 0.9 || p90 > interval * 1.25) && this.pixelRatio > min) {
-        this.setPixelRatio(Math.max(min, this.pixelRatio - 0.1));
-      } else if (gpu < interval * 0.62 && p90 < interval * 1.08 && this.pixelRatio < max && sinceChange > 3000) {
-        this.setPixelRatio(Math.min(max, this.pixelRatio + 0.1));
-      }
-      return;
-    }
-
-    if (p90 > interval * 1.18 && this.pixelRatio > min) {
+    if (missRate > 0.08 && this.pixelRatio > min) {
       this.setPixelRatio(Math.max(min, this.pixelRatio - 0.1));
-    } else if (p90 < interval * 1.06 && this.pixelRatio < max && sinceChange > 6000 && now > this.probeCooldownUntil) {
+    } else if (missRate < 0.01 && this.pixelRatio < max && sinceChange > 6000 && now > this.probeCooldownUntil) {
       const from = this.pixelRatio;
       this.setPixelRatio(Math.min(max, this.pixelRatio + 0.1));
       this.probe = { from, at: now };
     }
+  }
+
+  /**
+   * Throughput benchmark: renders `frames` frames back to back through `renderFrame` and waits for the GPU, returning
+   * ms per frame (CPU + GPU serialised, no vsync). A GPU-bound frame loop runs at this cost; 16.7 ms is the 60 Hz budget.
+   */
+  benchmark(frames: number, renderFrame: () => void): number {
+    const gl = this.renderer.getContext();
+    const pixel = new Uint8Array(4);
+    renderFrame();
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+    const t0 = performance.now();
+    for (let i = 0; i < frames; i++) renderFrame();
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+    return (performance.now() - t0) / frames;
   }
 
   private readonly onContextLost = (event: Event): void => {

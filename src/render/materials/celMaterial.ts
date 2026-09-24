@@ -125,7 +125,7 @@ const FRAGMENT_LIGHTING = /* glsl */ `
 		celShadowMap = smoothstep( 0.3, 0.7, celRaw );
 	}
 	#endif
-	float celCloud = cruiseCloudShadow( vCelWorldPos.xz );
+	float celCloud = cruiseCloudShadow( vCelWorldPos );
 
 	float celAA = clamp( fwidth( celNdotL ) * 0.75, 1e-4, 0.2 );
 	float celLitBand = smoothstep( uCelBands.x - celAA, uCelBands.x + celAA, celNdotL );

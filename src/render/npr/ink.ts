@@ -218,6 +218,8 @@ export class InkPass {
   private readonly hidden: THREE.Object3D[] = [];
   private readonly savedMaterials: (THREE.Material | THREE.Material[])[] = [];
   private readonly colorWriteOff: THREE.Material[] = [];
+  private readonly savedOccluderMaterials: (THREE.Material | THREE.Material[])[] = [];
+  private readonly occluderProxies = new Map<THREE.Material, THREE.ShaderMaterial>();
   private readonly clearColor = new THREE.Color();
   private scaleY = 1;
   /** Meshes drawn in the last prepass (diagnostics). */
@@ -343,7 +345,7 @@ export class InkPass {
     if (!this.enabled) return;
 
     this.inkMeshes.length = 0; this.inkMarkers.length = 0; this.occluders.length = 0; this.hidden.length = 0;
-    this.savedMaterials.length = 0; this.colorWriteOff.length = 0;
+    this.savedMaterials.length = 0; this.colorWriteOff.length = 0; this.savedOccluderMaterials.length = 0;
     this.collect(scene, null);
     this.lastInked = this.inkMeshes.length;
     this.lastOccluders = this.occluders.length;
@@ -364,14 +366,22 @@ export class InkPass {
     renderer.clear(true, true, false);
 
     try {
-      // a. Depth-only occluders (ocean, opaque FX): hide inked meshes, colour writes off.
+      // a. Depth-only occluders (ocean, opaque FX): hide inked meshes, colour writes off. ShaderMaterials (the ocean)
+      //    draw through a proxy with their own vertex shader and live uniforms but an empty fragment shader.
       for (const mesh of this.inkMeshes) mesh.visible = false;
       for (const mesh of this.occluders) {
+        const proxy = this.occluderMaterialFor(mesh);
+        this.savedOccluderMaterials.push(mesh.material);
+        if (proxy) { mesh.material = proxy; continue; }
         const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
         for (const m of materials) if (m.colorWrite) { m.colorWrite = false; this.colorWriteOff.push(m); }
       }
-      if (this.occluders.length) renderer.render(scene, camera);
-      for (const m of this.colorWriteOff) m.colorWrite = true;
+      try {
+        if (this.occluders.length) renderer.render(scene, camera);
+      } finally {
+        for (const m of this.colorWriteOff) m.colorWrite = true;
+        for (let i = 0; i < this.occluders.length; i++) this.occluders[i]!.material = this.savedOccluderMaterials[i]!;
+      }
 
       // b. Inked meshes with their prepass variant; occluders hidden (their depth stays in the buffer).
       for (const mesh of this.occluders) mesh.visible = false;
@@ -399,6 +409,37 @@ export class InkPass {
     }
   }
 
+  /**
+   * Depth-only material for a non-inked occluder: `userData.inkDepthMaterial` if the owner supplies one, else a proxy
+   * for ShaderMaterials (same vertex shader, defines and live uniform objects; empty fragment), else null (the mesh's
+   * own material is drawn with colour writes off).
+   */
+  occluderMaterialFor(mesh: THREE.Mesh): THREE.Material | null {
+    const own = mesh.userData.inkDepthMaterial as THREE.Material | undefined;
+    if (own) return own;
+    const base = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+    const src = base as THREE.ShaderMaterial | undefined;
+    if (!src || !src.isShaderMaterial || (src as unknown as THREE.RawShaderMaterial).isRawShaderMaterial || Array.isArray(mesh.material)) return null;
+    let proxy = this.occluderProxies.get(src);
+    if (!proxy) {
+      const glsl3 = src.glslVersion === THREE.GLSL3;
+      proxy = new THREE.ShaderMaterial({
+        name: `ink-occluder:${src.name}`,
+        vertexShader: src.vertexShader,
+        fragmentShader: glsl3 ? 'out highp vec4 inkOccluderOut;\nvoid main() { inkOccluderOut = vec4( 0.0 ); }' : 'void main() { gl_FragColor = vec4( 0.0 ); }',
+        uniforms: src.uniforms,
+        defines: src.defines,
+        glslVersion: src.glslVersion,
+        side: src.side,
+        fog: false, lights: false, colorWrite: false, depthWrite: true, depthTest: true,
+      });
+      proxy.onBeforeRender = src.onBeforeRender.bind(src);
+      this.occluderProxies.set(src, proxy);
+      src.addEventListener('dispose', () => { proxy?.dispose(); this.occluderProxies.delete(src); });
+    }
+    return proxy;
+  }
+
   /** Every prepass material currently cached (for warm-up). */
   materials(): THREE.ShaderMaterial[] { return [...this.variants.values()].map((v) => v.material); }
 
@@ -408,6 +449,8 @@ export class InkPass {
     this.overlay.geometry.dispose();
     for (const v of this.variants.values()) v.material.dispose();
     this.variants.clear();
+    for (const p of this.occluderProxies.values()) p.dispose();
+    this.occluderProxies.clear();
   }
 }
 

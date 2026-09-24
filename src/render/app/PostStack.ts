@@ -15,7 +15,7 @@ import * as THREE from 'three';
 import type { FrameContext, PostServices, QualityTier } from '../frame';
 import { CelMaterial } from '../materials/celMaterial';
 import { ensureInstanceTint } from '../materials/toon';
-import { InkPass, readInkMarker } from '../npr/ink';
+import { InkPass, readInkMarker, type InkMarker } from '../npr/ink';
 import { GRADES, createGrade, gradeForHour, lerpGrade, type Grade } from './grading';
 import { COMPOSITE_FRAGMENT, DOWNSAMPLE_FRAGMENT, FULLSCREEN_VERTEX, PREFILTER_FRAGMENT, UPSAMPLE_FRAGMENT } from './post/shaders';
 import { qualityProfile, type QualityProfile } from './quality';
@@ -271,17 +271,17 @@ export class PostStack implements PostServices {
       for (const m of renderer.compile(root, camera, scene) as Set<THREE.Material>) all.add(m);
       // Prepass variants: swap, compile, restore before anything else runs.
       const swapped: [THREE.Mesh, THREE.Material | THREE.Material[]][] = [];
-      const visit = (object: THREE.Object3D, inked: boolean) => {
+      const visit = (object: THREE.Object3D, inherited: InkMarker | null) => {
         if (object.userData.inkSkip === true) return;
-        const marker = object.userData.noInk === true ? false : readInkMarker(object) !== null || inked;
+        const marker = object.userData.noInk === true ? null : readInkMarker(object) ?? inherited;
         const mesh = object as THREE.Mesh;
-        if (mesh.isMesh && marker) {
-          const variant = this.ink.variantFor(mesh, readInkMarker(object) ?? { width: 1, crease: 1 });
+        if (mesh.isMesh) {
+          const variant = marker ? this.ink.variantFor(mesh, marker) : this.ink.occluderMaterialFor(mesh);
           if (variant) { swapped.push([mesh, mesh.material]); mesh.material = variant; }
         }
         for (const child of object.children) visit(child, marker);
       };
-      visit(root, false);
+      visit(root, null);
       if (swapped.length) {
         renderer.setRenderTarget(this.ink.target);
         try {

@@ -176,10 +176,12 @@ export class SkySystem implements RenderSystem {
     this.hemi.color.copy(look.zenith).lerp(this.tmpColor.setRGB(1, 1, 1), 0.55);
     this.hemi.groundColor.copy(look.shadow);
     this.hemi.intensity = 0.9 + 0.3 * (1 - night);
+    // A subtle warm pool around the focus at night (ship lanterns); SHIPS adds the emissive lanterns themselves.
     const lanternOn = night * (1 - fogAmount * 0.3);
-    this.lantern.intensity = 42 * lanternOn;
+    this.lantern.intensity = 5.5 * lanternOn;
+    this.lantern.distance = 60;
     this.lantern.visible = true;
-    this.lantern.position.set(focusX, 16, focusZ);
+    this.lantern.position.set(focusX, 22, focusZ);
     this.fitShadow(focusX, focusZ);
 
     // ── Fog ──
