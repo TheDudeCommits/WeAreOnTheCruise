@@ -7,11 +7,16 @@
   "balances": {
     "meshy": {
       "before": 1285,
-      "after": null
+      "after": 970,
+      "spent": 315,
+      "checked": "2026-09-24"
     },
     "higgsfield": {
       "before": 2157.24,
-      "after": null
+      "after": 2157.24,
+      "spent": 24,
+      "checked": "2026-09-24",
+      "note": "The balance endpoint did not move (shared account, boost grants); the transaction list shows the 12 Nano Banana Pro jobs below at 2 credits each."
     }
   },
   "entries": [
