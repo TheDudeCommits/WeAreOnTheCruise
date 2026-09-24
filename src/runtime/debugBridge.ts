@@ -77,8 +77,9 @@ export function installDebugBridge(app: GameApp): void {
       return list.slice(0, count);
     },
     press: (action) => sim()?.press(action),
-    steer: (value) => sim()?.setInput({ steer: value }),
-    aim: (x, z) => sim()?.setInput({ aimX: x, aimZ: z }),
+    // Overrides live input for 2 s of render time (call repeatedly to hold).
+    steer: (value) => { app.inputOverride = { ...(app.inputOverride ?? {}), steer: value, until: app.renderClock() + 2 }; },
+    aim: (x, z) => { app.inputOverride = { ...(app.inputOverride ?? {}), aimX: x, aimZ: z, until: app.renderClock() + 2 }; },
     chooseCard: (index) => { sim()?.chooseCard(index); },
     pause: (paused) => sim()?.setPaused(paused),
     advance: (seconds) => { const frames = Math.round(seconds * 60); for (let i = 0; i < frames; i++) app.tick(1 / 60); },
