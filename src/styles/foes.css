@@ -1,5 +1,5 @@
-/* Round-1 foes (FOES): elite nameplates, affix tags on offscreen markers, bounty-captain and signal markers, "Marked!" chip.
-   Imported by src/ui/hud/Markers.ts. */
+/* Elite nameplates, affix tags on offscreen markers, bounty-captain and signal markers, "Marked!" chip (FOES built them;
+   FLOW owns the HUD now). Imported by src/ui/hud/Markers.ts. */
 
 /* ── Nameplates over on-screen elites and named captains ── */
 .cr-plate { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; align-items: center; gap: calc(3 * var(--u)); translate: -50% calc(-100% - 10 * var(--u)); will-change: transform; white-space: nowrap; }
@@ -27,9 +27,14 @@
 .cr-marker__label { position: absolute; left: 50%; top: calc(-44 * var(--u)); transform: translateX(-50%); display: flex; align-items: center; gap: calc(3 * var(--u)); white-space: nowrap; }
 .cr-marker__labeltext { font: 400 var(--fs-14)/1 var(--f-comic); letter-spacing: .05em; color: #ffe066; -webkit-text-stroke: var(--stroke-s) var(--ink); paint-order: stroke fill; }
 .cr-marker__labeltext:empty { display: none; }
+/* Near a side edge the label hangs inwards instead of being cut off. */
+.cr-marker[data-edge='l'] .cr-marker__label { left: calc(-22 * var(--u)); transform: none; }
+.cr-marker[data-edge='r'] .cr-marker__label { left: auto; right: calc(-22 * var(--u)); transform: none; }
 .cr-marker__tag { display: inline-grid; place-items: center; }
 .cr-marker__tagico.cr-ico { width: calc(20 * var(--u)); height: calc(20 * var(--u)); background: var(--ax, var(--gold)); color: var(--ink); border-width: calc(2 * var(--u)); box-shadow: 0 0 calc(6 * var(--u)) var(--ax, var(--gold)); }
 
 /* ── "Marked!" chip under the player's ship while a signal flare marks it ── */
-.cr-markchip { position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: calc(5 * var(--u)); translate: -50% 0; padding: calc(3 * var(--u)) calc(10 * var(--u)) calc(3 * var(--u)) calc(6 * var(--u)); border-radius: 999px; background: #6b1010; border: calc(2 * var(--u)) solid var(--ink); color: #ffd3cd; font: 900 var(--fs-12)/1 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; box-shadow: 0 0 calc(12 * var(--u)) rgba(255, 60, 40, .8); animation: cr-mk-pulse .8s ease-in-out infinite; will-change: transform; }
+.cr-markchip { position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: calc(5 * var(--u)); translate: -50% 0; padding: calc(3 * var(--u)) calc(10 * var(--u)) calc(3 * var(--u)) calc(6 * var(--u)); border-radius: 999px; background: #6b1010; border: calc(2 * var(--u)) solid var(--ink); color: #ffd3cd; font: 900 var(--fs-12)/1 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; box-shadow: 0 0 calc(12 * var(--u)) rgba(255, 60, 40, .8); animation: cr-mk-pop .8s ease-in-out infinite; will-change: transform; }
+/* The chip is positioned by an inline transform, so its pulse animates `scale` (a transform keyframe would drag it to 0,0). */
+@keyframes cr-mk-pop { 50% { scale: 1.14; } }
 .cr-markchip__icon .cr-glyph { width: calc(16 * var(--u)); height: calc(16 * var(--u)); color: #ff8a7a; }

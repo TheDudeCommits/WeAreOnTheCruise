@@ -69,10 +69,7 @@
 .cr-stat.is-bounty small { font: 900 var(--fs-12)/1 var(--f-ui); letter-spacing: .16em; text-transform: uppercase; color: #ffb0a6; }
 
 .cr-eta {
-  position: absolute;
-  left: 50%;
-  top: calc(80 * var(--u));
-  transform: translateX(-50%);
+  position: relative;
   display: none;
   align-items: center;
   gap: calc(8 * var(--u));
@@ -90,10 +87,12 @@
 .cr-eta b { font: 400 var(--fs-24)/1 var(--f-comic); color: var(--white); font-variant-numeric: tabular-nums; }
 .cr-eta__icon .cr-glyph { width: calc(20 * var(--u)); height: calc(20 * var(--u)); color: var(--red); }
 .cr-eta.is-urgent { animation: cr-urgent .6s ease-in-out infinite; }
-@keyframes cr-urgent { 50% { background: rgba(160, 20, 20, .9); transform: translateX(-50%) scale(1.06); } }
+@keyframes cr-urgent { 50% { background: rgba(160, 20, 20, .9); transform: scale(1.06); } }
 
 /* ── Boss bar ── */
-.cr-boss { position: absolute; left: 50%; top: calc(82 * var(--u)); transform: translateX(-50%); width: calc(660 * var(--u)); display: none; align-items: center; gap: calc(12 * var(--u)); z-index: 2; }
+/* Top-centre stack: boss ETA pill · boss bar · world-event tracker (flex column, so they can never overlap). */
+.cr-hud__tc { position: absolute; left: 50%; top: calc(80 * var(--u)); transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: calc(8 * var(--u)); z-index: 2; }
+.cr-boss { position: relative; width: calc(660 * var(--u)); display: none; align-items: center; gap: calc(12 * var(--u)); }
 .cr-boss.is-on { display: flex; }
 .cr-boss__emblem { flex: none; display: grid; place-items: center; width: calc(66 * var(--u)); height: calc(66 * var(--u)); border-radius: 50%; background: radial-gradient(circle at 40% 35%, #ff6a5a, #9c1512 70%); border: calc(4 * var(--u)) solid var(--ink); box-shadow: 0 0 0 calc(3 * var(--u)) #ffb0a6, 0 calc(4 * var(--u)) 0 var(--ink); color: var(--white); }
 .cr-boss__emblem .cr-glyph { width: calc(38 * var(--u)); height: calc(38 * var(--u)); }
@@ -141,6 +140,20 @@
 .cr-marker[data-kind='boss'] { --mk: #ff4a3d; }
 .cr-marker[data-kind='boss'] .cr-marker__icon { color: var(--white); width: calc(48 * var(--u)); height: calc(48 * var(--u)); left: calc(-24 * var(--u)); top: calc(-24 * var(--u)); animation: cr-mk-pulse 1s ease-in-out infinite; }
 .cr-marker[data-kind='elite'] { --mk: var(--gold); }
+.cr-marker__count { position: absolute; left: calc(12 * var(--u)); top: calc(-30 * var(--u)); padding: calc(2 * var(--u)) calc(6 * var(--u)); border-radius: 999px; background: var(--ink); border: calc(2 * var(--u)) solid var(--mk, var(--gold)); font: 400 var(--fs-14)/1 var(--f-comic); letter-spacing: .04em; color: var(--mk, var(--gold)); white-space: nowrap; }
+.cr-marker__count:empty { display: none; }
+.cr-marker[data-kind='event'] { --mk: var(--ev, var(--gold)); }
+.cr-marker[data-kind='event'] .cr-marker__icon { width: calc(46 * var(--u)); height: calc(46 * var(--u)); left: calc(-23 * var(--u)); top: calc(-23 * var(--u)); border-radius: calc(12 * var(--u)); transform: rotate(45deg); }
+.cr-marker[data-kind='event'] .cr-marker__icon .cr-glyph { transform: rotate(-45deg); }
+.cr-marker[data-event='kraken-rising'] { --ev: #c07bff; }
+.cr-marker[data-event='rogue-wave'] { --ev: #5fd8ff; }
+.cr-marker[data-event='maelstrom'] { --ev: #3ff5d0; }
+.cr-marker[data-event='admiralty-blockade'] { --ev: #ffcf33; }
+.cr-marker[data-event='ghost-fleet'] { --ev: #7ff5dc; }
+.cr-marker[data-event='volcanic-eruption'] { --ev: #ff8a1c; }
+.cr-marker[data-event='sunken-treasure'] { --ev: #ffd84a; }
+.cr-marker[data-event='bounty-contract'] { --ev: #ff6a5a; }
+.cr-marker[data-event='treasure-convoy'] { --ev: #ffc93a; }
 .cr-marker[data-kind='chest'] { --mk: #ffb35a; }
 @keyframes cr-mk-pulse { 50% { transform: scale(1.14); } }
 
@@ -172,7 +185,7 @@
 .cr-warn__sub { display: flex; justify-content: center; gap: calc(18 * var(--u)); padding: 0 0 calc(10 * var(--u)); background: rgba(60, 2, 6, .92); font: 900 italic var(--fs-16)/1 var(--f-ui); letter-spacing: .06em; color: #ffd3cd; }
 .cr-warn__eta { font-style: normal; color: var(--gold); text-transform: uppercase; letter-spacing: .14em; }
 
-.cr-event { position: absolute; left: calc(-20 * var(--u)); top: calc(136 * var(--u)); display: flex; align-items: center; gap: calc(14 * var(--u)); padding: calc(12 * var(--u)) calc(44 * var(--u)) calc(12 * var(--u)) calc(52 * var(--u)); isolation: isolate; max-width: calc(620 * var(--u)); }
+.cr-event { position: absolute; left: calc(-20 * var(--u)); top: calc(136 * var(--u)); display: flex; align-items: center; gap: calc(14 * var(--u)); padding: calc(12 * var(--u)) calc(44 * var(--u)) calc(12 * var(--u)) calc(52 * var(--u)); isolation: isolate; max-width: calc(540 * var(--u)); }
 .cr-event::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(8, 12, 30, .95), rgba(22, 32, 74, .92)); -webkit-mask: url('/ui/brush-stroke.svg') center / 100% 100% no-repeat; mask: url('/ui/brush-stroke.svg') center / 100% 100% no-repeat; }
 .cr-event__flag { display: grid; place-items: center; width: calc(52 * var(--u)); height: calc(52 * var(--u)); border-radius: 50%; background: var(--orange); border: calc(3 * var(--u)) solid var(--ink); color: var(--ink); transform: skewX(8deg); }
 .cr-event__flag .cr-glyph { width: calc(32 * var(--u)); height: calc(32 * var(--u)); }
@@ -204,7 +217,8 @@
 .cr-cutin.is-big .cr-cutin__name { font-size: var(--fs-80); color: var(--gold); }
 .cr-cutin.is-big .cr-cutin__icon { width: calc(100 * var(--u)); height: calc(100 * var(--u)); }
 
-.cr-toasts { position: absolute; right: calc(24 * var(--u)); top: calc(356 * var(--u)); display: flex; flex-direction: column; align-items: flex-end; gap: calc(8 * var(--u)); }
+.cr-toasts { position: absolute; right: calc(20 * var(--u)); bottom: calc(166 * var(--u)); display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; gap: calc(6 * var(--u)); }
+.cr-toasts:empty { display: none; }
 .cr-toast { display: inline-flex; align-items: center; gap: calc(10 * var(--u)); padding: calc(8 * var(--u)) calc(16 * var(--u)) calc(8 * var(--u)) calc(10 * var(--u)); border-radius: calc(10 * var(--u)); background: rgba(8, 12, 30, .86); border-left: calc(5 * var(--u)) solid var(--white); font: 800 var(--fs-16)/1.1 var(--f-ui); color: var(--white); box-shadow: 0 calc(4 * var(--u)) 0 rgba(4, 8, 22, .5); white-space: nowrap; }
 .cr-toast .cr-glyph { width: calc(24 * var(--u)); height: calc(24 * var(--u)); }
 .cr-toast.is-gold { border-color: var(--gold); }

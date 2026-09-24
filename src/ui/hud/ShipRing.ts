@@ -71,6 +71,8 @@ export class ShipRing {
   private readonly braced: ClassCell;
   private readonly hasShield: ClassCell;
   private readonly emblem: SVGSVGElement;
+  /** Status chips above the ring (the HUD keeps markers off them). */
+  readonly statusesEl: HTMLElement;
   private lastHullQ = -1;
   private lastShieldQ = -1;
   private lastHp = -1;
@@ -112,6 +114,7 @@ export class ShipRing {
     this.boost = new MiniSkill('is-boost', 'speed', 'SHIFT', 'B', 'Boost');
     this.brace = new MiniSkill('is-brace', 'shield', 'SPACE', 'A', 'Brace');
     const statuses = h('div', 'cr-statuses');
+    this.statusesEl = statuses;
     for (const s of STATUS) {
       const el = h('span', `cr-status is-${s.tone}`, glyph(s.glyph), s.label);
       statuses.append(el);

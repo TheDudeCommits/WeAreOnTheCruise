@@ -1,13 +1,11 @@
-/* World-event tracker (EVENTS-owned): a compact plate under the boss bar — icon, name + clock, objective line,
-   progress bar, outcome stamp. Same language as the HUD: navy plates, ink borders, comic caps, gold accents. */
+/* World-event tracker: a compact plate in the HUD's top-centre stack (under the boss ETA / boss bar) — icon, name +
+   clock, objective line, progress bar, outcome stamp. Same language as the HUD: navy plates, ink borders, comic caps,
+   gold accents. While a boss bar shows, it drops the objective line and shrinks. */
 
 .cr-evtrack {
   --ev: var(--gold);
   --ev-2: var(--gold-3);
-  position: absolute;
-  left: 50%;
-  top: calc(84 * var(--u));
-  transform: translateX(-50%);
+  position: relative;
   width: calc(440 * var(--u));
   display: none;
   align-items: center;
@@ -17,13 +15,18 @@
   background: linear-gradient(180deg, rgba(16, 24, 56, .93), rgba(8, 12, 30, .9));
   border: calc(3 * var(--u)) solid var(--ink);
   box-shadow: 0 0 0 calc(2 * var(--u)) color-mix(in srgb, var(--ev) 55%, transparent), 0 calc(4 * var(--u)) 0 var(--ink);
-  z-index: 2;
-  transition: top .35s var(--ease-out), opacity .4s ease-out;
+  transition: opacity .4s ease-out;
 }
 .cr-evtrack.is-on { display: flex; }
 .cr-evtrack.is-leaving { opacity: 0; }
-/* A boss bar takes the slot: the tracker tucks in beneath it. */
-.cr-boss.is-on + .cr-evtrack { top: calc(160 * var(--u)); }
+/* A boss bar is up: the tracker tucks in beneath it as a single line (no objective text, smaller type). */
+.cr-boss.is-on + .cr-evtrack { width: calc(400 * var(--u)); padding: calc(4 * var(--u)) calc(12 * var(--u)) calc(5 * var(--u)) calc(6 * var(--u)); gap: calc(8 * var(--u)); }
+.cr-boss.is-on + .cr-evtrack .cr-evtrack__goal { display: none; }
+.cr-boss.is-on + .cr-evtrack .cr-evtrack__icon { width: calc(36 * var(--u)); height: calc(36 * var(--u)); }
+.cr-boss.is-on + .cr-evtrack .cr-evtrack__icon .cr-glyph { width: calc(22 * var(--u)); height: calc(22 * var(--u)); }
+.cr-boss.is-on + .cr-evtrack .cr-evtrack__name, .cr-boss.is-on + .cr-evtrack .cr-evtrack__time { font-size: var(--fs-18); }
+.cr-boss.is-on + .cr-evtrack .cr-evtrack__bar { height: calc(16 * var(--u)); margin-top: 0; }
+.cr-boss.is-on + .cr-evtrack .cr-evtrack__count { font-size: calc(12 * var(--u)); -webkit-text-stroke-width: calc(2 * var(--u)); }
 
 .cr-evtrack[data-event='kraken-rising'] { --ev: #c07bff; --ev-2: #5b2a99; }
 .cr-evtrack[data-event='rogue-wave'] { --ev: #5fd8ff; --ev-2: #1a6fb0; }

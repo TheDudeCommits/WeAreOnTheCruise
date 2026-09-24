@@ -258,6 +258,7 @@ export class Ui implements UiSystem {
       if (this.pause.open) handled = this.pause.onKey(e);
       else if ((e.code === 'Escape' || e.code === 'KeyP') && !e.repeat && this.canPause()) { this.setPaused(true); handled = true; }
       else if (this.cards.open) handled = this.cards.onKey(e);
+      else if (e.code === 'Tab') { if (!e.repeat) this.hud.toggleRoster(); handled = true; }
     } else if (this.screen === 'title') handled = this.title.onKey(e);
     else if (this.screen === 'harbor') handled = this.harbor.onKey(e);
     else if (this.screen === 'results') handled = this.results.onKey(e);
