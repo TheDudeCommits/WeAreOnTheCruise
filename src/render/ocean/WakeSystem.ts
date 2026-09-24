@@ -14,7 +14,7 @@
 import type { ProjectileKind } from '../../game/ids';
 import type { BossState, EnemyState, HazardState, RunState, SimEvent } from '../../game/types';
 import type { InteractionField } from './InteractionField';
-import { SHAPE_BLOB, SHAPE_CAPSULE, SHAPE_FRONT, SHAPE_HULL, SHAPE_RING, SHAPE_WHIRL } from './StampBatch';
+import { SHAPE_BLOB, SHAPE_CAPSULE, SHAPE_FRONT, SHAPE_HULL, SHAPE_RING, SHAPE_WAKE, SHAPE_WHIRL } from './StampBatch';
 
 const KELVIN = (19.47 * Math.PI) / 180;
 const KELVIN_TAN = Math.tan(KELVIN);
@@ -232,11 +232,12 @@ export class WakeSystem {
         this.capsule(
           true,
           track.prevX + pfX * sternU, track.prevZ + pfZ * sternU, src.x + fwdX * sternU, src.z + fwdZ * sternU,
-          halfB * (0.42 + 0.25 * Math.min(s, 1)), 0.5, 0.62 * deposit * wakeK, deposit, 0.25,
+          halfB * (0.34 + 0.2 * Math.min(s, 1)), 0.5, 0.42 * deposit * wakeK, deposit, 0.2,
         );
         const shoulderU = halfL * 0.05;
-        const sideR = 0.7 + 0.7 * Math.min(s, 1.2) + halfB * 0.06;
-        const sideFoam = 0.38 * smooth(0.12, 0.65, s) * deposit * wakeK;
+        // Crisp white side streaks (the anime wake lines); the central band above stays lacy turquoise churn.
+        const sideR = 0.8 + 0.35 * Math.min(s, 1.2) + halfB * 0.03;
+        const sideFoam = 0.8 * smooth(0.12, 0.65, s) * deposit * wakeK;
         for (let side = -1; side <= 1; side += 2) {
           const off = halfB * 1.02 * side;
           this.capsule(
@@ -667,7 +668,8 @@ export class WakeSystem {
         break;
       }
       case EFFECT_FOAM:
-        f.persistentBatch.push(cx, cz, 1, 0, r, r, SHAPE_BLOB, 1, 0.6, 0.3, 0, 0, 0, 0, Math.min(1.2, s), Math.min(1, s));
+        // Tapered: dense only in the core, lace towards the edge (no flat opaque disc at any radius).
+        f.persistentBatch.push(cx, cz, 1, 0, r, r, SHAPE_BLOB, 1.6, 0.6, 0, 0, 0, 0, 0, Math.min(0.95, s), Math.min(1, s));
         f.transientBatch.push(cx, cz, 1, 0, r * 1.2, r * 1.2, SHAPE_BLOB, 1, 0.3, 0.2, 0, 0, 0, 0, 0, Math.min(1, s));
         break;
       case EFFECT_DISPLACE: {
@@ -677,11 +679,17 @@ export class WakeSystem {
         break;
       }
       case EFFECT_WAKE: {
+        // A short trail segment ending at (x, z): two crisp edge streaks + lacy churn (SHAPE_WAKE). Width is
+        // clamped and the segment kept short, so large or repeated calls never paint an opaque slab.
         const dx = this.edx[i]!;
         const dz = this.edz[i]!;
-        const len = Math.max(r * 1.5, 2.5);
-        this.capsule(true, x - dx * len, z - dz * len, x, z, r * 0.5, 0.45, Math.min(1.2, s), Math.min(1, s), 0.3);
-        f.transientBatch.push(cx, cz, dx, dz, r * 0.8, r * 0.6, SHAPE_BLOB, 1, 0.4, 0.2, 0, 0, 0, 0, 0.8 * Math.min(1, s), 0.6 * Math.min(1, s));
+        const halfW = clamp(r * 0.5, 0.8, 15);
+        const len = clamp(r * 0.5, 2.5, 10);
+        const k = Math.min(1, s);
+        const streakW = clamp(halfW * 0.12, 0.5, 1.4);
+        const mx = x - dx * len * 0.5;
+        const mz = z - dz * len * 0.5;
+        f.persistentBatch.push(f.relX(mx), f.relZ(mz), dx, dz, len * 0.5 + halfW + streakW * 3, halfW + streakW * 3, SHAPE_WAKE, len * 0.5, halfW, streakW, 0, 0, 0, 0, 0.9 * k, k);
         break;
       }
       default:
