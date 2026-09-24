@@ -47,7 +47,7 @@ export const JOBS = [
   },
   // ───────────── Redtide Corsairs (Sketchfab CC-BY, recoloured) ─────────────
   {
-    key: 'corsair-brig', role: 'enemy', src: 'src/1c62191534174bf7a67470fb02b97db1/source.glb', yaw: -90, length: 28, draft: 2.4, tris: 22000, tex: 1024,
+    key: 'corsair-brig', role: 'enemy', atlas: true, src: 'src/1c62191534174bf7a67470fb02b97db1/source.glb', yaw: -90, length: 28, draft: 2.4, tris: 22000, tex: 1024,
     exclude: /WaterPlane|Cannon[345]|Pallet[345]|Barrel[456]|Box(8|9|10)_/,
     recolor: (ctx) => RECOLOR.corsairBrig(ctx),
     source: SKETCHFAB('1c62191534174bf7a67470fb02b97db1', 'Stylized Pirate Ship', 'c3posw01', 'Maksim Batyrev'),
@@ -67,7 +67,7 @@ export const JOBS = [
     notes: 'Admiralty Cutter (enemy id cutter uses modelKey sloop): palette swapped to white topsides / navy bottom / gold stripe; skull sail replaced by white canvas with the original gold wave-crest.',
   },
   {
-    key: 'brig', role: 'enemy', src: 'src/d9953f66583340c4879a3770f6d09a37/source.glb', yaw: 180, length: 28, draft: 2.2, tris: 14000, tex: 1024,
+    key: 'brig', role: 'enemy', atlas: true, src: 'src/d9953f66583340c4879a3770f6d09a37/source.glb', yaw: 180, length: 28, draft: 2.2, tris: 14000, tex: 1024,
     recolor: (ctx) => RECOLOR.admiraltyBrig(ctx),
     source: SKETCHFAB('d9953f66583340c4879a3770f6d09a37', 'Pirate Ship (Low Poly)', 'anagvf', 'Ana Vassallo'),
     notes: 'Admiralty Brig: hull sides repainted white with a navy boot-top (texture copies through luminance ramps), sails re-mapped to white canvas with the original gold wave-crest.',
@@ -80,20 +80,20 @@ export const JOBS = [
     notes: 'Admiralty Frigate: flat colours remapped (white upper hull, navy lower hull, gold trim) and baked into one palette texture; black sails re-mapped to white canvas with the original gold wave-crest; loose deck clutter (cannonballs, cups, bottles) removed; decimated from 73k tris.',
   },
   {
-    key: 'fireship', role: 'enemy', src: 'src/83b5b588468f4d89a463dd0729f234ce/source.glb', yaw: 0, length: 22, draft: 1.8, tris: 13500, tex: 1024,
+    key: 'fireship', role: 'enemy', atlas: true, src: 'src/83b5b588468f4d89a463dd0729f234ce/source.glb', yaw: 0, length: 22, draft: 1.8, tris: 13500, tex: 1024,
     recolor: (ctx) => RECOLOR.fireship(ctx),
     source: SKETCHFAB('83b5b588468f4d89a463dd0729f234ce', 'Stylized Pirate Ship', 'Nik_kale'),
     notes: 'Redtide Fire Ship: hull charred, blue trim turned ember orange, sails re-mapped to Redtide red with the cutlass-and-sun. Attach powder-keg props on deck (y ≈ 2 m) and fire FX at runtime.',
   },
   {
-    key: 'skiff', role: 'enemy', src: 'src/c9b94c52d0704614930ad5e076e02198/source.glb', yaw: 90, length: 12, draft: 0.6, tris: 8000, tex: 512,
+    key: 'skiff', role: 'enemy', atlas: { maxTiles: 6 }, src: 'src/c9b94c52d0704614930ad5e076e02198/source.glb', yaw: 90, length: 12, draft: 0.6, tris: 8000, tex: 512,
     recolor: (ctx) => RECOLOR.raiderSkiff(ctx), post: (ctx) => RECOLOR.raiderSkiffRig(ctx),
     source: SKETCHFAB('c9b94c52d0704614930ad5e076e02198', 'Boat', 'local.yany'),
     notes: 'Raider Skiff: rowboat hull stained black with a red gunwale; a simple mast, yard and red square sail (cutlass-and-sun) were added so skiffs read as Redtide at a distance. Also suitable for escort-skiff summons with a different tint.',
   },
   // ───────────── Gloam Wraiths ─────────────
   {
-    key: 'wraith', role: 'enemy', src: 'src/31f365301da8410d83dce11d3ace5813/source.glb', yaw: -90, length: 30, draft: 2.2, tris: 22000, tex: 1024, keepEmissive: true,
+    key: 'wraith', role: 'enemy', atlas: true, src: 'src/31f365301da8410d83dce11d3ace5813/source.glb', yaw: -90, length: 30, draft: 2.2, tris: 22000, tex: 1024, keepEmissive: true,
     recolor: (ctx) => RECOLOR.wraith(ctx),
     source: SKETCHFAB('31f365301da8410d83dce11d3ace5813', 'Ghost ship', 'Sololopenko'),
     notes: 'Gloam Wraith: whole hull shifted to spectral teal, purple sails re-mapped to torn pale-teal canvas with a spiral sigil, lanterns keep a teal emissive glow (material wraith-light). Decimated from 105k tris.',
@@ -174,13 +174,13 @@ export const JOBS = [
   { key: 'tower', role: 'nature', src: 'kenney/pirate-kit/Models/GLB format/tower-complete-large.glb', yaw: 0, height: 14, tris: 3000, tex: 256, source: KENNEY('tower-complete-large.glb'), notes: 'Stone watchtower with a blue conical roof, 14 m (Admiralty outposts / lighthouse stand-in).' },
   // ───────────── Extras: player escort skiff, Treasure-convoy trader ─────────────
   {
-    key: 'escort-skiff', role: 'prop', origin: 'waterline', src: 'src/c9b94c52d0704614930ad5e076e02198/source.glb', yaw: 90, length: 9, draft: 0.45, tris: 3000, tex: 512,
+    key: 'escort-skiff', role: 'prop', atlas: { maxTiles: 6 }, origin: 'waterline', src: 'src/c9b94c52d0704614930ad5e076e02198/source.glb', yaw: 90, length: 9, draft: 0.45, tris: 2900, tex: 512,
     post: (ctx) => RECOLOR.escortSkiffRig(ctx),
     source: SKETCHFAB('c9b94c52d0704614930ad5e076e02198', 'Boat', 'local.yany'),
     notes: 'Extra: friendly escort boat for the Escort Skiffs weapon (hazard kind escort-skiff): the rowboat in its original blue/amber paint with an added mast and plain cream sail. Waterline origin, bow −Z, 9 m.',
   },
   {
-    key: 'merchant', role: 'enemy', src: 'src/d9953f66583340c4879a3770f6d09a37/source.glb', yaw: 180, length: 26, draft: 2, tris: 14000, tex: 1024,
+    key: 'merchant', role: 'enemy', atlas: true, src: 'src/d9953f66583340c4879a3770f6d09a37/source.glb', yaw: 180, length: 26, draft: 2, tris: 14000, tex: 1024,
     recolor: (ctx) => RECOLOR.merchant(ctx),
     source: SKETCHFAB('d9953f66583340c4879a3770f6d09a37', 'Pirate Ship (Low Poly)', 'anagvf', 'Ana Vassallo'),
     notes: 'Extra: neutral trader for the Treasure convoy event: natural wood hull, cream sails with russet stripes and a gold coin mark.',

@@ -68,13 +68,13 @@ export async function paintHull(doc, { material, deckY, navyTop, minSide = 0.35,
 }
 /** Mast, yard and a gently bulging square sail for the rowboat skiffs; half = 'emblem' | 'plain' part of the sail canvas. */
 async function addSkiffRig(doc, sailName, half) {
-  const mats = doc.getRoot().listMaterials();
-  const wood = mats.find((x) => x.getName() === 'Metal');
+  // mast and yard share the sail material: their UVs sit on the dark frame line between the canvas halves (u = 0.5)
+  const sailMat = await makeSailMaterial(doc, sailName);
   const acc = { positions: [], indices: [], uvs: [] };
   L.pushBox(acc, [-0.13, 0.2, -1.73], [0.13, 7.6, -1.47]);
   L.pushBox(acc, [-2.7, 6.9, -1.72], [2.7, 7.1, -1.52]);
-  L.addGeometry(doc, { ...acc, material: wood, name: 'skiff-rig' });
-  const sailMat = await makeSailMaterial(doc, sailName);
+  acc.uvs = acc.uvs.map((v, i) => (i % 2 === 0 ? 0.5 : 0.5));
+  L.addGeometry(doc, { ...acc, material: sailMat, name: 'skiff-rig' });
   const S = { positions: [], indices: [], uvs: [] };
   const cols = 4, rows = 3, x0 = -2.5, x1 = 2.5, y0 = 2.3, y1 = 6.85, zc = -1.8, bulge = 0.45, u0 = half === 'plain' ? 0.51 : 0.01;
   for (let r = 0; r <= rows; r++) for (let c = 0; c <= cols; c++) {

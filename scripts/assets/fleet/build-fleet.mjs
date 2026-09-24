@@ -97,7 +97,8 @@ async function build(job) {
   }
   for (const ext of root.listExtensionsUsed()) if (/KHR_materials_(?!unlit)|KHR_texture_transform/.test(ext.extensionName) && !/emissive_strength/.test(ext.extensionName)) ext.dispose();
 
-  // 5. geometry
+  // 5. geometry (optional atlas merge first: fewer materials → fewer draw calls per instanced class)
+  if (job.atlas) await L.atlasMaterials(doc, { size: job.tex || 1024, ...(typeof job.atlas === 'object' ? job.atlas : {}) });
   await doc.transform(fn.dedup(), fn.prune());
   if (!skinned) await doc.transform(fn.join({ keepNamed: false }));
   await doc.transform(fn.weld());

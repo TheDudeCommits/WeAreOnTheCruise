@@ -307,3 +307,75 @@ export function pushBox(acc, [x0, y0, z0], [x1, y1, z1]) {
   for (const f of faces) { const b = acc.positions.length / 3; for (const i of f) acc.positions.push(...P[i]); acc.uvs?.push(0.9, 0.5, 0.95, 0.5, 0.95, 0.55, 0.9, 0.55); acc.indices.push(b, b + 1, b + 2, b, b + 2, b + 3); }
   return base;
 }
+
+// ───────────────────────────── texture atlas (draw-call reduction) ─────────────────────────────
+/**
+ * Merge textured materials that share alphaMode/doubleSided into one material with a packed atlas (≤ size²).
+ * Tiled UVs are supported by pre-tiling each source texture over its integer UV range (max 4×4 tiles).
+ * Materials with emissive maps are left alone. Call before join(); returns the number of materials merged.
+ */
+export async function atlasMaterials(doc, { size = 1024, pad = 6, maxTiles = 4 } = {}) {
+  const root = doc.getRoot();
+  const usage = new Map(); // material -> prims
+  for (const mesh of root.listMeshes()) for (const p of mesh.listPrimitives()) { const m = p.getMaterial(); if (!m) continue; if (!usage.has(m)) usage.set(m, []); usage.get(m).push(p); }
+  const buckets = new Map();
+  for (const [m, prims] of usage) {
+    const t = m.getBaseColorTexture(); if (!t || m.getEmissiveTexture()) continue;
+    if (prims.some((p) => !p.getAttribute('TEXCOORD_0'))) continue;
+    let u0 = Infinity, u1 = -Infinity, v0 = Infinity, v1 = -Infinity; const uv = [0, 0];
+    for (const p of prims) { const a = p.getAttribute('TEXCOORD_0'); for (let i = 0; i < a.getCount(); i++) { a.getElement(i, uv); u0 = Math.min(u0, uv[0]); u1 = Math.max(u1, uv[0]); v0 = Math.min(v0, uv[1]); v1 = Math.max(v1, uv[1]); } }
+    const fu0 = Math.floor(u0 + 1e-3), fv0 = Math.floor(v0 + 1e-3);
+    const tu = Math.max(1, Math.ceil(u1 - 1e-3) - fu0), tv = Math.max(1, Math.ceil(v1 - 1e-3) - fv0);
+    if (tu > maxTiles || tv > maxTiles) continue;
+    const key = `${m.getAlphaMode()}|${m.getDoubleSided()}`;
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push({ m, prims, t, fu0, fv0, tu, tv, sz: t.getSize() });
+  }
+  let merged = 0;
+  for (const items of buckets.values()) {
+    if (items.length < 2) continue;
+    // shelf pack at a scale that fits size×size
+    const area = items.reduce((a, it) => a + it.sz[0] * it.tu * it.sz[1] * it.tv, 0);
+    let s = Math.min(1, size / Math.sqrt(area * 1.15)), layout = null;
+    for (let tries = 0; tries < 40 && !layout; tries++, s *= 0.93) {
+      const rects = items.map((it) => ({ it, w: Math.max(8, Math.floor(it.sz[0] * it.tu * s)), h: Math.max(8, Math.floor(it.sz[1] * it.tv * s)) })).sort((a, b) => b.h - a.h);
+      let x = 0, y = 0, rowH = 0, ok = rects.every((r) => r.w + 2 * pad <= size && r.h + 2 * pad <= size);
+      for (const r of ok ? rects : []) {
+        if (x + r.w + 2 * pad > size) { x = 0; y += rowH; rowH = 0; }
+        r.x = x + pad; r.y = y + pad; x += r.w + 2 * pad; rowH = Math.max(rowH, r.h + 2 * pad);
+        if (y + rowH > size) { ok = false; break; }
+      }
+      if (ok) layout = rects;
+    }
+    if (!layout) continue;
+    const comps = [];
+    for (const r of layout) {
+      const { it } = r;
+      const tile = await sharp(Buffer.from(it.t.getImage())).ensureAlpha().png().toBuffer();
+      const tiles = []; for (let j = 0; j < it.tv; j++) for (let i = 0; i < it.tu; i++) tiles.push({ input: tile, left: i * it.sz[0], top: j * it.sz[1] });
+      const big = await sharp({ create: { width: it.sz[0] * it.tu, height: it.sz[1] * it.tv, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).composite(tiles).png().toBuffer();
+      const fitted = await sharp(big).resize(r.w, r.h, { fit: 'fill', kernel: 'lanczos3' }).extend({ top: pad, bottom: pad, left: pad, right: pad, extendWith: 'copy' }).png().toBuffer();
+      comps.push({ input: fitted, left: r.x - pad, top: r.y - pad });
+    }
+    const atlasPng = await sharp({ create: { width: size, height: size, channels: 4, background: { r: 128, g: 128, b: 128, alpha: 255 } } }).composite(comps).png().toBuffer();
+    const first = layout[0].it.m;
+    const tex = doc.createTexture(`${first.getName()}-atlas`).setImage(new Uint8Array(atlasPng)).setMimeType('image/png').setURI(`${first.getName()}-atlas.png`);
+    const mat = first.clone().setName(`${first.getName()}-atlas`).setBaseColorTexture(tex).setBaseColorFactor([1, 1, 1, 1]);
+    for (const r of layout) {
+      const { it } = r;
+      const f = it.m.getBaseColorFactor();
+      if (Math.abs(f[0] - 1) + Math.abs(f[1] - 1) + Math.abs(f[2] - 1) > 0.02) continue; // tinted materials stay separate
+      for (const p of it.prims) {
+        const a = p.getAttribute('TEXCOORD_0').clone(); const uv = [0, 0];
+        for (let i = 0; i < a.getCount(); i++) {
+          a.getElement(i, uv);
+          const lu = (uv[0] - it.fu0) / it.tu, lv = (uv[1] - it.fv0) / it.tv;
+          a.setElement(i, [(r.x + lu * r.w) / size, (r.y + lv * r.h) / size]);
+        }
+        p.setAttribute('TEXCOORD_0', a).setMaterial(mat);
+      }
+      merged++;
+    }
+  }
+  return merged;
+}

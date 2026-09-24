@@ -145,9 +145,9 @@
       "draft": 2.4,
       "beam": 7.42,
       "height": 17.95,
-      "tris": 21554,
+      "tris": 21558,
       "sourceTris": 30994,
-      "materials": 8,
+      "materials": 3,
       "role": "enemy",
       "source": {
         "kind": "sketchfab",
@@ -158,8 +158,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/1c62191534174bf7a67470fb02b97db1"
       },
-      "bytes": 708028,
-      "sha256": "7929aefeddfc28bcc04141be91e82021e0e1deeccab652af5d89bb67603bad1b",
+      "bytes": 401872,
+      "sha256": "ccfc508d57fc0275b7281257feee0d81caba10cc46bf0e8b5e91fea8f8d15fdc",
       "sourceSha256": "87b11caf397171abdc5dfe80c79358ee2a2c80736d07a0a87370ce9af3875ffa",
       "notes": "Redtide brig: hull and rails recoloured black, new red sails with the original cutlass-and-sun emblem, black flags. Water plane and hold props removed; deck cannons kept."
     },
@@ -219,7 +219,7 @@
       "height": 18.4,
       "tris": 9731,
       "sourceTris": 9731,
-      "materials": 4,
+      "materials": 1,
       "role": "enemy",
       "source": {
         "kind": "sketchfab",
@@ -230,8 +230,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/d9953f66583340c4879a3770f6d09a37"
       },
-      "bytes": 295908,
-      "sha256": "5570ab59f974bf1c4e8b9931b0303f84013444c664b0c36b32f8c92852216ca5",
+      "bytes": 227568,
+      "sha256": "3013ffbc6119bd1c75ad8dbcf193ee75d9018b1c28fa7825a8bc646250740ad7",
       "sourceSha256": "6b12d15106dab8f727d9d99395a96c6b80a28d9f030db35d5202114a09063082",
       "notes": "Admiralty Brig: hull sides repainted white with a navy boot-top (texture copies through luminance ramps), sails re-mapped to white canvas with the original gold wave-crest."
     },
@@ -267,7 +267,7 @@
       "height": 19.75,
       "tris": 13272,
       "sourceTris": 13272,
-      "materials": 3,
+      "materials": 1,
       "role": "enemy",
       "source": {
         "kind": "sketchfab",
@@ -278,8 +278,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/83b5b588468f4d89a463dd0729f234ce"
       },
-      "bytes": 273060,
-      "sha256": "55af3051ee62dd6701cf342bd580462362555c4168d403f12e39d0208caf5e69",
+      "bytes": 216092,
+      "sha256": "9caef79c290d5e83398193d7cdf41a55a84fcf11b6721629b306b8265738c979",
       "sourceSha256": "152d711258da9ea58bdd9d7961c08db8c8f6aaca628293298bd7dc33d6e6f18f",
       "notes": "Redtide Fire Ship: hull charred, blue trim turned ember orange, sails re-mapped to Redtide red with the cutlass-and-sun. Attach powder-keg props on deck (y ≈ 2 m) and fire FX at runtime."
     },
@@ -291,7 +291,7 @@
       "height": 7.6,
       "tris": 7364,
       "sourceTris": 7292,
-      "materials": 4,
+      "materials": 2,
       "role": "enemy",
       "source": {
         "kind": "sketchfab",
@@ -302,8 +302,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/c9b94c52d0704614930ad5e076e02198"
       },
-      "bytes": 150832,
-      "sha256": "4828cc6f02a5558a7c8688713c5377664dc8982e3ee0d26ed1e18be98344a1e9",
+      "bytes": 102304,
+      "sha256": "347bacb9071639bb3fec1f043087349e6edc4410ef89fb5773ff403fd01bd1e6",
       "sourceSha256": "977e03cf75b9a5c96061a92ffc76bed01b4c8fa50fe498290e57f3ed32dfc060",
       "notes": "Raider Skiff: rowboat hull stained black with a red gunwale; a simple mast, yard and red square sail (cutlass-and-sun) were added so skiffs read as Redtide at a distance. Also suitable for escort-skiff summons with a different tint."
     },
@@ -313,9 +313,9 @@
       "draft": 2.2,
       "beam": 12.28,
       "height": 24.34,
-      "tris": 21599,
+      "tris": 21559,
       "sourceTris": 105535,
-      "materials": 3,
+      "materials": 2,
       "role": "enemy",
       "source": {
         "kind": "sketchfab",
@@ -326,8 +326,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/31f365301da8410d83dce11d3ace5813"
       },
-      "bytes": 364476,
-      "sha256": "d8b33aa7a97747101f3263cd7d5afca4229a03eb2ec0e829e2fb5f6b0514639d",
+      "bytes": 303496,
+      "sha256": "dafa149a4214319a5f3427f618ad665fb8e8fe3b9bea86d56acf4eb17473605a",
       "sourceSha256": "b58740bec63b2141d6539a955f46c3ca1e1cc2f92c783c8f905a0985453ef646",
       "notes": "Gloam Wraith: whole hull shifted to spectral teal, purple sails re-mapped to torn pale-teal canvas with a spiral sigil, lanterns keep a teal emissive glow (material wraith-light). Decimated from 105k tris."
     },
@@ -1102,9 +1102,9 @@
       "draft": 0.45,
       "beam": 5.4,
       "height": 7.6,
-      "tris": 2767,
+      "tris": 2913,
       "sourceTris": 7292,
-      "materials": 4,
+      "materials": 2,
       "role": "prop",
       "source": {
         "kind": "sketchfab",
@@ -1115,8 +1115,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/c9b94c52d0704614930ad5e076e02198"
       },
-      "bytes": 115404,
-      "sha256": "bf87d654d69c5f782304b7fcffa751b54f14dfe6e3ec617466b99010d8ac57e4",
+      "bytes": 66764,
+      "sha256": "3bf1f74a9ba0d6c381abfcfa50543ac74e75d68c961354c1b9da8e2f660c6b1f",
       "sourceSha256": "977e03cf75b9a5c96061a92ffc76bed01b4c8fa50fe498290e57f3ed32dfc060",
       "notes": "Extra: friendly escort boat for the Escort Skiffs weapon (hazard kind escort-skiff): the rowboat in its original blue/amber paint with an added mast and plain cream sail. Waterline origin, bow −Z, 9 m."
     },
@@ -1128,7 +1128,7 @@
       "height": 17.13,
       "tris": 9731,
       "sourceTris": 9731,
-      "materials": 2,
+      "materials": 1,
       "role": "enemy",
       "source": {
         "kind": "sketchfab",
@@ -1139,8 +1139,8 @@
         "license": "CC-BY-4.0",
         "url": "https://sketchfab.com/3d-models/d9953f66583340c4879a3770f6d09a37"
       },
-      "bytes": 232388,
-      "sha256": "924699f7369c469603979084329797eb4df85d58e868e7c48d671055778f209a",
+      "bytes": 207164,
+      "sha256": "de97bee74a36998b8c24af03d80f74820643a722840490eb5c49ed9b7daa5c23",
       "sourceSha256": "6b12d15106dab8f727d9d99395a96c6b80a28d9f030db35d5202114a09063082",
       "notes": "Extra: neutral trader for the Treasure convoy event: natural wood hull, cream sails with russet stripes and a gold coin mark."
     }
