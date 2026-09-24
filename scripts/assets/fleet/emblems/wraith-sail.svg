@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="512" viewBox="0 0 1024 512">
+  <!-- Gloam Wraith sails: pale teal ghost canvas with torn dark holes; left half with a faint spiral sigil -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe9e2"/><stop offset="1" stop-color="#5fb3a8"/></linearGradient>
+  </defs>
+  <rect width="1024" height="512" fill="url(#g)"/>
+  <g stroke="#8fcfc5" stroke-width="5">
+    <line x1="96" y1="0" x2="96" y2="512"/><line x1="224" y1="0" x2="224" y2="512"/><line x1="352" y1="0" x2="352" y2="512"/>
+    <line x1="608" y1="0" x2="608" y2="512"/><line x1="736" y1="0" x2="736" y2="512"/><line x1="864" y1="0" x2="864" y2="512"/>
+  </g>
+  <!-- tears (alpha holes via dark 'shadow' shapes; runtime can alpha-test the darkest texels if it wants) -->
+  <g fill="#0d2b2a">
+    <path d="M 40 512 L 70 430 L 95 470 L 120 400 L 150 512 Z"/><path d="M 300 512 L 330 452 L 350 480 L 372 420 L 400 512 Z"/>
+    <path d="M 560 512 L 590 440 L 620 490 L 648 410 L 680 512 Z"/><path d="M 840 512 L 870 460 L 900 486 L 930 430 L 960 512 Z"/>
+    <path d="M 180 60 L 200 40 L 216 70 L 196 96 Z"/><path d="M 760 120 L 786 96 L 800 132 L 776 150 Z"/>
+  </g>
+  <g transform="translate(256 240)" fill="none" stroke="#0d2b2a" stroke-width="18" stroke-linecap="round" opacity="0.85">
+    <path d="M 0 0 C 0 -30 40 -30 40 0 C 40 50 -40 60 -60 0 C -80 -70 20 -110 80 -60 C 130 -10 110 90 20 110"/>
+  </g>
+</svg>

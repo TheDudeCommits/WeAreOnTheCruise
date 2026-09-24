@@ -1,0 +1,181 @@
+{
+  "note": "Paid generation ledger for the v2 asset pass (ASSETS agent). Task/job ids only; no URLs, keys or signed links. Credits are the provider's quoted cost.",
+  "budget": {
+    "meshyCredits": 400,
+    "higgsfieldCredits": 50
+  },
+  "balances": {
+    "meshy": {
+      "before": 1285,
+      "after": null
+    },
+    "higgsfield": {
+      "before": 2157.24,
+      "after": null
+    }
+  },
+  "entries": [
+    {
+      "date": "2026-09-24",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro 2k (job reports nano_banana_2)",
+      "jobId": "7c8f8f1a-85e8-4683-9050-afea65cfe45f",
+      "credits": 2,
+      "purpose": "concept: man-o-war (Admiralty ship of the line) for Meshy image-to-3D",
+      "output": "assets/concepts/man-o-war.jpg"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro 2k (job reports nano_banana_2)",
+      "jobId": "1d4c2d07-81ac-4733-b4a4-c4bf6f93347b",
+      "credits": 2,
+      "purpose": "concept: mortar-barge",
+      "output": "assets/concepts/mortar-barge.jpg"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro 2k (job reports nano_banana_2)",
+      "jobId": "b6722d13-995d-4dfc-8472-a31e1e266cad",
+      "credits": 2,
+      "purpose": "concept: dreadnought (Iron Warden boss)",
+      "output": "assets/concepts/dreadnought.jpg"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro 2k (job reports nano_banana_2)",
+      "jobId": "e751fbbe-4865-4e14-8643-ddfabe8927ba",
+      "credits": 2,
+      "purpose": "concept: sovereign v1 (lion figurehead; replaced)",
+      "output": "(superseded by the edited sovereign concept)"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro 2k (job reports nano_banana_2)",
+      "jobId": "100e81b5-192b-43a2-8bf5-fd75ecd052dc",
+      "credits": 2,
+      "purpose": "concept: fort (Cliff Battery)",
+      "output": "assets/concepts/fort.jpg"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro 2k (job reports nano_banana_2)",
+      "jobId": "0c7e10f8-64c0-4a18-9be5-754ec157f6b1",
+      "credits": 2,
+      "purpose": "concept: tidewyrm-head",
+      "output": "assets/concepts/tidewyrm-head.jpg"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro 2k (job reports nano_banana_2)",
+      "jobId": "71051fc3-0dc4-4298-bc03-f968db73a559",
+      "credits": 2,
+      "purpose": "icon sheet A (weapons 1-12, passives 1-4)",
+      "output": "public/assets/icons/*.png (sliced)"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro 2k (job reports nano_banana_2)",
+      "jobId": "119b8607-7140-4d45-99ae-0832466bd5ab",
+      "credits": 2,
+      "purpose": "icon sheet B (passives 5-12, specials, ultimates 1-2)",
+      "output": "public/assets/icons/*.png (sliced)"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro 2k (job reports nano_banana_2)",
+      "jobId": "929e1e86-10a0-4e21-aa9a-babd17701304",
+      "credits": 2,
+      "purpose": "icon sheet C (ultimates 3-6, meta upgrades, xp pickups)",
+      "output": "public/assets/icons/*.png (sliced)"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro 2k (job reports nano_banana_2)",
+      "jobId": "5680c1df-229c-4f4c-8eb2-f2b4b4cbe820",
+      "credits": 2,
+      "purpose": "icon sheet D (pickups, brace/boost/heal/bounty, spares)",
+      "output": "public/assets/icons/*.png (sliced)"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro 2k image edit (job reports nano_banana_2)",
+      "jobId": "be44577a-0393-4b3b-b802-a7063eb99bd1",
+      "credits": 2,
+      "purpose": "concept: sovereign v2 (eagle figurehead instead of lion, trident removed)",
+      "output": "assets/concepts/sovereign.jpg"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro 2k (job reports nano_banana_2)",
+      "jobId": "11ab7545-85d5-4329-b757-dd9cfcda975a",
+      "credits": 2,
+      "purpose": "prop concept sheet 3x3 (mortar, rocket rack, swivel gun, harpoon gun, storm rod, mine, lantern, powder keg, iron ram) for Meshy props",
+      "output": "assets/concepts/prop-sheet.jpg"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "meshy",
+      "model": "image-to-3d meshy-6 textured, remove_lighting, remesh triangle 24000",
+      "taskId": "01a0cfd2-7479-727b-8343-a801a489a5d0",
+      "credits": 30,
+      "purpose": "model: man-o-war from assets/concepts/man-o-war.jpg",
+      "output": "public/assets/fleet/man-o-war.glb"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "meshy",
+      "model": "image-to-3d meshy-6 textured, remove_lighting, remesh triangle 50000",
+      "taskId": "01a0cfd2-8df7-7094-bc09-1d0c9682b2cc",
+      "credits": 30,
+      "purpose": "model: dreadnought from assets/concepts/dreadnought.jpg",
+      "output": "public/assets/fleet/dreadnought.glb"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "meshy",
+      "model": "image-to-3d meshy-6 textured, remove_lighting, remesh triangle 20000",
+      "taskId": "01a0cfd2-a8e2-708d-a2ed-ec1c6d47df30",
+      "credits": 30,
+      "purpose": "model: fort from assets/concepts/fort.jpg",
+      "output": "public/assets/fleet/fort.glb"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "meshy",
+      "model": "image-to-3d meshy-6 textured, remove_lighting, remesh triangle 30000",
+      "taskId": "01a0cfd2-c593-772f-802a-12cb38fa3184",
+      "credits": 30,
+      "purpose": "model: tidewyrm-head from assets/concepts/tidewyrm-head.jpg",
+      "output": "public/assets/fleet/tidewyrm-head.glb"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "meshy",
+      "model": "image-to-3d meshy-6 textured, remove_lighting, remesh triangle 20000",
+      "taskId": "01a0cfd3-a6a4-75a2-b2a7-e67d8c0b8d4b",
+      "credits": 30,
+      "purpose": "model: mortar-barge from assets/concepts/mortar-barge.jpg",
+      "output": "public/assets/fleet/mortar-barge.glb"
+    },
+    {
+      "date": "2026-09-24",
+      "provider": "meshy",
+      "model": "image-to-3d meshy-6 textured, remove_lighting, remesh triangle 50000",
+      "taskId": "01a0cfd4-3712-74dc-a16e-938b8d635374",
+      "credits": 30,
+      "purpose": "model: sovereign from assets/concepts/sovereign.jpg",
+      "output": "public/assets/fleet/sovereign.glb"
+    }
+  ]
+}

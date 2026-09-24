@@ -1,0 +1,204 @@
+{
+  "version": 1,
+  "generated": "2026-09-24",
+  "conventions": "Y up, bow/forward toward -Z, metres. Ships: origin at the waterline centre, keel at -draft, `length` = bow-to-stern extent incl. bowsprit. Props/crew/nature: origin at ground centre, `height` in metres. Meshopt-compressed (EXT_meshopt_compression + KHR_mesh_quantization), WebP textures (EXT_texture_webp); plain PBR albedo materials for toonifyObject.",
+  "models": {
+    "man-o-war": {
+      "file": "/assets/fleet/man-o-war.glb",
+      "length": 50,
+      "draft": 4.2,
+      "beam": 17.65,
+      "height": 37.67,
+      "tris": 23519,
+      "materials": 1,
+      "role": "enemy",
+      "source": {
+        "kind": "meshy",
+        "uid": "01a0cfd2-7479-727b-8343-a801a489a5d0",
+        "author": "Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)",
+        "title": "Admiralty Man-o'-War",
+        "license": "Meshy (owner-generated)",
+        "url": ""
+      },
+      "bytes": 994620,
+      "sha256": "155732e8640af548fd1b1eae42c9b81c85920d2b7881dc932f94e9b2a868942e",
+      "sourceSha256": "598184016ed347593a9fb6fbd503ba0157b7a3c434d92aafc651c86e7d328839",
+      "notes": "Three-decker ship of the line: white hull, navy bands, gold rails, white sails with the gold wave-crest emblem. Single mesh, single 1024² atlas."
+    },
+    "mortar-barge": {
+      "file": "/assets/fleet/mortar-barge.glb",
+      "length": 24,
+      "draft": 1.6,
+      "beam": 11.87,
+      "height": 11.87,
+      "tris": 19578,
+      "materials": 1,
+      "role": "enemy",
+      "source": {
+        "kind": "meshy",
+        "uid": "01a0cfd3-a6a4-75a2-b2a7-e67d8c0b8d4b",
+        "author": "Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)",
+        "title": "Admiralty Mortar Barge",
+        "license": "Meshy (owner-generated)",
+        "url": ""
+      },
+      "bytes": 680240,
+      "sha256": "6c411ae8fd1da2c7821124445c59a7a139bbd4ab7d470c8eebe18566f0eb8341",
+      "sourceSha256": "bc61a3fc1b11e162a365db72837677e0347219174a971c06797e4d325327b2e8",
+      "notes": "Boxy armoured barge; the siege mortar sits on a turntable amidships (about z = 0, y ≈ 3 m) — a good muzzle anchor for the lob FX."
+    },
+    "dreadnought": {
+      "file": "/assets/fleet/dreadnought.glb",
+      "length": 90,
+      "draft": 6.5,
+      "beam": 34.76,
+      "height": 39.63,
+      "tris": 48999,
+      "materials": 1,
+      "role": "boss",
+      "source": {
+        "kind": "meshy",
+        "uid": "01a0cfd2-8df7-7094-bc09-1d0c9682b2cc",
+        "author": "Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)",
+        "title": "The Iron Warden (dreadnought)",
+        "license": "Meshy (owner-generated)",
+        "url": ""
+      },
+      "bytes": 1980332,
+      "sha256": "3add7c7e2fd0b9d2fcec6653583c99b65855a3a29bf87e532c0f70f507b66350",
+      "sourceSha256": "6423f6ba3d05f24f59ceacf77ac0bef6b4f24795a0d985f8a630ef459fd02c8d",
+      "notes": "Commodore's ironclad for the Iron Warden boss: riveted steel over a white/navy hull, bow ram, two turrets, smokestack, gold wave-crest on the bow. Phase-2 'plates off' is left to shaders/FX (single mesh)."
+    },
+    "sovereign": {
+      "file": "/assets/fleet/sovereign.glb",
+      "length": 120,
+      "draft": 8.5,
+      "beam": 45.36,
+      "height": 87.99,
+      "tris": 51386,
+      "materials": 1,
+      "role": "boss",
+      "source": {
+        "kind": "meshy",
+        "uid": "01a0cfd4-3712-74dc-a16e-938b8d635374",
+        "author": "Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)",
+        "title": "The Sovereign (flagship)",
+        "license": "Meshy (owner-generated)",
+        "url": ""
+      },
+      "bytes": 2746284,
+      "sha256": "e6846fb4147212947860e191dd735e794efed65cfb6dc38148ca3429146ecfc3",
+      "sourceSha256": "f1fd1f6ff834606eb5f711d37e187aae85c867432725824facace908304ad419",
+      "notes": "Fleet Admiral's four-masted flagship: white hull, navy bands, gold filigree, gold eagle figurehead, wave-crest sails, lantern-lit stern castle."
+    },
+    "fort": {
+      "file": "/assets/fleet/fort.glb",
+      "length": 20,
+      "draft": 1.2,
+      "beam": 18.97,
+      "height": 19.17,
+      "tris": 19599,
+      "materials": 1,
+      "role": "enemy",
+      "source": {
+        "kind": "meshy",
+        "uid": "01a0cfd2-a8e2-708d-a2ed-ec1c6d47df30",
+        "author": "Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)",
+        "title": "Cliff Battery",
+        "license": "Meshy (owner-generated)",
+        "url": ""
+      },
+      "bytes": 612012,
+      "sha256": "7756836c0549967c19fce4011be3e2efa198e58fb096f8b1a576c4db596b7156",
+      "sourceSha256": "e8b024c616b89d6e4efc839766b8aeb53f1b6f4a0b2f175f7add129cae7d2338",
+      "notes": "Round stone bastion on a rock base with cannon embrasures and an Admiralty flag. Origin at base centre, base sunk 1.2 m so it can sit on an island or reef."
+    },
+    "tidewyrm-head": {
+      "file": "/assets/fleet/tidewyrm-head.glb",
+      "draft": 0,
+      "beam": 7.11,
+      "height": 18,
+      "tris": 29400,
+      "materials": 1,
+      "role": "boss",
+      "source": {
+        "kind": "meshy",
+        "uid": "01a0cfd2-c593-772f-802a-12cb38fa3184",
+        "author": "Owner-generated with Meshy image-to-3D (concept: Higgsfield Nano Banana Pro)",
+        "title": "Tidewyrm head",
+        "license": "Meshy (owner-generated)",
+        "url": ""
+      },
+      "bytes": 1349868,
+      "sha256": "0de6d9a01616395819c054a143f03d2a83cd1ad741b26c46f066764fa1792e80",
+      "sourceSha256": "64238c352843274556f1c7e0d2304aa3df5f35b5d6745b498f438d77f055a8dc",
+      "notes": "Head + upper neck of the Tidewyrm, facing −Z, origin at the neck cut (y = 0). Attach to the procedural serpent body; scale freely."
+    },
+    "corsair-brig": {
+      "file": "/assets/fleet/corsair-brig.glb",
+      "length": 28,
+      "draft": 2.4,
+      "beam": 7.42,
+      "height": 17.95,
+      "tris": 21554,
+      "materials": 8,
+      "role": "enemy",
+      "source": {
+        "kind": "sketchfab",
+        "uid": "1c62191534174bf7a67470fb02b97db1",
+        "author": "c3posw01",
+        "title": "Stylized Pirate Ship",
+        "license": "CC-BY-4.0",
+        "url": "https://sketchfab.com/3d-models/1c62191534174bf7a67470fb02b97db1"
+      },
+      "bytes": 704264,
+      "sha256": "e7b328e8a3ee6ad147f49ebbb986913b5101466463cbf48aff306977ebae587d",
+      "sourceSha256": "87b11caf397171abdc5dfe80c79358ee2a2c80736d07a0a87370ce9af3875ffa",
+      "notes": "Redtide brig: hull and rails recoloured black, new red sails with the original cutlass-and-sun emblem, black flags. Water plane and hold props removed; deck cannons kept."
+    },
+    "corsair-galleon": {
+      "file": "/assets/fleet/corsair-galleon.glb",
+      "length": 44,
+      "draft": 3.6,
+      "beam": 14.14,
+      "height": 22.5,
+      "tris": 21599,
+      "materials": 2,
+      "role": "enemy",
+      "source": {
+        "kind": "sketchfab",
+        "uid": "fe0ea2cee119476fb1a7524d5ff380dc",
+        "author": "olemuzyka",
+        "title": "Pirate Ship",
+        "license": "CC-BY-4.0",
+        "url": "https://sketchfab.com/3d-models/fe0ea2cee119476fb1a7524d5ff380dc"
+      },
+      "bytes": 304272,
+      "sha256": "bbd86f6e729172d961ab7c92fd5333327821d1ed7399c90f55414600d45173fc",
+      "sourceSha256": "c9048bce2695ed9c4d6fd65f3f824d6a1f9c034c8572e2111dc890cc34980f03",
+      "notes": "Redtide galleon: flat colours remapped to the Redtide palette (black hull, red trim) and baked into one palette texture; new red sails with the original cutlass-and-sun emblem. Decimated from 74k tris."
+    },
+    "sloop": {
+      "file": "/assets/fleet/sloop.glb",
+      "length": 20,
+      "draft": 1.5,
+      "beam": 4.85,
+      "height": 13.97,
+      "tris": 10699,
+      "materials": 2,
+      "role": "enemy",
+      "source": {
+        "kind": "sketchfab",
+        "uid": "1b27f1f60e0e49f886984ea099977757",
+        "author": "Razer820",
+        "title": "Low Poly Sloop Sailing Ship",
+        "license": "CC-BY-4.0",
+        "url": "https://sketchfab.com/3d-models/1b27f1f60e0e49f886984ea099977757"
+      },
+      "bytes": 160996,
+      "sha256": "1a9180242be4125afe5e79cd210941eea94263c26ce25491b9215a232a3a2b64",
+      "sourceSha256": "47e1b1ed42ea2bc66695667dbcf12ca87eb682b694f2b0ae361c9382388612c5",
+      "notes": "Admiralty Cutter (enemy id cutter uses modelKey sloop): palette swapped to white topsides / navy bottom / gold stripe; skull sail replaced by white canvas with the original gold wave-crest."
+    }
+  }
+}
