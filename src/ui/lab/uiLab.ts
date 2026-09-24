@@ -141,7 +141,7 @@ ui.mount(root, callbacks);
 let last = performance.now();
 const frame: UiFrame = {
   screen: 'boot', time: 0, dt: 0, run: null, events: [], profile: state.profile, settings: state.settings, result: null,
-  selectedShip: state.selectedShip, fps: 60, project,
+  selectedShip: state.selectedShip, fps: 60, world: null, project,
 };
 
 function tick(now: number): void {

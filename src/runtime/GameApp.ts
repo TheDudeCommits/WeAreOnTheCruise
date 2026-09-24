@@ -210,7 +210,7 @@ export class GameApp {
     this.ui.update({
       screen: this.screen, time: this.renderTime, dt, run: ctx.run, events: this.frameEvents, profile: this.profile,
       settings: this.settings, result: this.result, selectedShip: this.selectedShip, fps: this.fps,
-      project: (x, y, z, out) => this.project(x, y, z, out),
+      world: ctx.run ? this.world : null, project: (x, y, z, out) => this.project(x, y, z, out),
     });
     const cam = this.host.camera;
     const forward = cam.getWorldDirection(this.projectVec);

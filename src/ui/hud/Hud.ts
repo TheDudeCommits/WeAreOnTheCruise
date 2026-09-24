@@ -94,7 +94,7 @@ export class Hud {
     this.ring.update(p, ship); mark?.('ring');
     this.skills.update(p, ship); mark?.('skills');
     this.loadout.update(p); mark?.('loadout');
-    this.minimap.update(run, this.basis, f.dt); mark?.('minimap');
+    this.minimap.update(run, this.basis, f.dt, f.world); mark?.('minimap');
     this.markers.apply(); mark?.('markers');
     this.feedback.update(p); mark?.('feedback');
     if (this.skills.ultJustReady) this.banners.toast(`${ULTIMATES[ship.ultimate].name} ready — press R`, ULTIMATES[ship.ultimate].glyph, 'gold', iconPath(ship.ultimate));

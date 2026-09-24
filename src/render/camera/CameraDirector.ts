@@ -62,6 +62,8 @@ export class CameraDirector implements RenderSystem, CameraServices {
   private initialized = false;
   private lastScreen = '';
   private showcaseYaw = 0.6;
+  /** Harbor framing: fraction of the half-width the ship sits right of centre (the fleet panel covers the left). */
+  private showcaseShift = 0;
   // Effects.
   private shakeAmp = 0;
   private shakeTime = 0;
@@ -196,6 +198,14 @@ export class CameraDirector implements RenderSystem, CameraServices {
     this.target.y = damp(this.target.y, length * 0.2 + 2, 3, dt);
     if (!this.initialized) { this.target.set(ctx.focus.x, length * 0.2 + 2, ctx.focus.z); this.initialized = true; }
     this.place(ctx, dt, 2.2);
+    // Harbor: the fleet panel covers the left ~45% and the WANTED poster the right edge; frame the ship in the gap.
+    this.showcaseShift = damp(this.showcaseShift, ctx.screen === 'harbor' ? 0.26 : 0, 2, dt);
+    if (this.showcaseShift > 1e-3) {
+      const aspect = ctx.viewport.width / Math.max(1, ctx.viewport.height);
+      const s = this.showcaseShift * this.distance * Math.tan(THREE.MathUtils.degToRad(this.fov) / 2) * aspect;
+      this.lookTarget.x -= Math.cos(this.yaw) * s;
+      this.lookTarget.z += Math.sin(this.yaw) * s;
+    }
   }
 
   // ───────────── Placement + effects ─────────────

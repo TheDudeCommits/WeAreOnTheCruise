@@ -1,9 +1,9 @@
 /**
  * Minimap with a compass rim, rotated with the camera (screen-up = camera forward). Enemies are coloured by
  * faction; elites and bosses are bigger; chests are gold. Drawn on a small canvas at ~30 Hz.
- * Islands are skipped: no WorldQuery is reachable through UiFrame (see the report's contract request).
+ * Islands are drawn from the run's WorldQuery as sand-filled coastlines, clipped to the map disc.
  */
-import type { RunState } from '../../game/types';
+import type { IslandDef, RunState, WorldQuery } from '../../game/types';
 import { h, svg } from '../core/dom';
 import { FACTION_COLOR, FACTION_EDGE } from '../core/names';
 import type { ScreenBasis } from './camera';
@@ -24,6 +24,7 @@ export class Minimap {
   private acc = 0;
   private lastNorth = Number.NaN;
   private pulse = 0;
+  private readonly islands: IslandDef[] = [];
 
   constructor() {
     this.canvas = h('canvas', 'cr-minimap__canvas');
@@ -72,7 +73,7 @@ export class Minimap {
 
   reset(): void { this.lastNorth = Number.NaN; this.acc = 1; }
 
-  update(run: Readonly<RunState>, basis: ScreenBasis, dt: number): void {
+  update(run: Readonly<RunState>, basis: ScreenBasis, dt: number, world: WorldQuery | null = null): void {
     this.acc += dt;
     this.pulse += dt;
     if (this.acc < 1 / 30) return;
@@ -112,6 +113,33 @@ export class Minimap {
       return out;
     };
     const pt = { x: 0, y: 0, clamped: false };
+
+    // Islands (clipped to the map disc; outlines are unclamped so coasts cross the rim cleanly).
+    if (world) {
+      const near = world.islandsNear(p.x, p.z, RANGE * 1.45, this.islands);
+      if (near.length) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(half, half, edge + 6, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.fillStyle = '#e8c98a';
+        ctx.strokeStyle = '#7a5a2a';
+        ctx.lineWidth = 1.4;
+        for (const isl of near) {
+          ctx.beginPath();
+          for (let i = 0; i < isl.outline.length; i++) {
+            const v = isl.outline[i]!;
+            const e = v.x - p.x, n = -(v.z - p.z);
+            const mx = half + (e * cos + n * sin) * scale, my = half + (e * sin - n * cos) * scale;
+            if (i === 0) ctx.moveTo(mx, my); else ctx.lineTo(mx, my);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
 
     // Chests.
     for (const k of run.pickups) {
