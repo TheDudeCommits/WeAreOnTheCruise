@@ -49,6 +49,8 @@ export const STAT_GLYPH: Readonly<Record<StatKey, GlyphId>> = {
   area: 'quake', range: 'scope', projectileSpeed: 'scope', duration: 'clock', amount: 'crate', crit: 'star',
   critDamage: 'flame', pickupRadius: 'magnet', xpGain: 'eye', luck: 'coin', skillCooldown: 'clock', ramDamage: 'ram',
   doubloonGain: 'coin', revives: 'wind',
+  accel: 'speed', fullSail: 'sail', carve: 'wheel', helm: 'wheel', surge: 'speed', boostDuration: 'wind', boostCooldown: 'clock',
+  boostCharges: 'wind',
 };
 
 export const PICKUP_GLYPH: Readonly<Record<PickupKind, GlyphId>> = {
@@ -61,6 +63,8 @@ export const STAT_LABEL: Readonly<Record<StatKey, string>> = {
   area: 'Area', range: 'Range', projectileSpeed: 'Shot speed', duration: 'Duration', amount: 'Projectiles', crit: 'Crit chance',
   critDamage: 'Crit damage', pickupRadius: 'Pickup radius', xpGain: 'Experience', luck: 'Luck', skillCooldown: 'Skill cooldown',
   ramDamage: 'Ram damage', doubloonGain: 'Doubloons', revives: 'Revives',
+  accel: 'Acceleration', fullSail: 'Full-sail speed', carve: 'Turn carry', helm: 'Helm response', surge: 'Momentum',
+  boostDuration: 'Boost duration', boostCooldown: 'Boost recharge', boostCharges: 'Boost charges',
 };
 
 export const GEAR_NAMES = ['ANCHOR', 'HALF SAIL', 'FULL SAIL'] as const;

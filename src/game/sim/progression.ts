@@ -25,6 +25,7 @@ import { CHIP_PREFIX, SCRATCH } from './meta-runtime';
 import { TAU } from './meta-steer';
 import { STAT_KEYS, addStats, doubloonMul, emptyStats, xpMul } from './stats';
 import { onAffixDeath } from './affixes';
+import { gainMomentum } from './player';
 
 const CHIP_KEY = Object.fromEntries(STAT_KEYS.map((k) => [k, `${CHIP_PREFIX}${k}`])) as Record<StatKey, string>;
 
@@ -409,6 +410,7 @@ export function onEnemyKilled(c: SimContext, e: EnemyState): void {
   s.stats.bounty += Math.round(def.xp * BOUNTY.perXp * s.director.heat * (e.elite ? BOUNTY.eliteMul : 1));
   c.emit({ type: 'enemy-killed', id: e.id, defId: e.defId, x: e.x, z: e.z, elite: e.elite, weapon: e.lastHitBy });
   if (def.behavior === 'kamikaze') e.ai.detonate = 1;
+  gainMomentum(c);
   if (e.affixes.length) onAffixDeath(c, e);
   if (e.ai.limbo === 1) { e.ai.limbo = 0; e.x = e.ai.hx ?? e.x; e.z = e.ai.hz ?? e.z; }
 

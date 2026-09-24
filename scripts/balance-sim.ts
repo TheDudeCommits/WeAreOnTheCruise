@@ -69,6 +69,7 @@ const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.m
 const PASSIVE_PRIORITY: Record<string, number> = {
   'master-gunner': 66, 'powder-monkeys': 63, 'ironwood-hull': 60, 'deep-stores': 57, shipwright: 52, 'weather-eye': 46,
   'long-barrels': 45, 'lucky-doubloon': 42, 'figurehead-fury': 41, 'salvage-nets': 40, 'cloudsilk-sails': 36, 'drill-master': 30,
+  momentum: 38, 'clipper-rigging': 35, 'trade-winds': 33, 'racing-keel': 32,
 };
 const RARITY_BONUS: Record<string, number> = { common: 0, rare: 8, epic: 16, legendary: 26 };
 const BALLISTIC = new Set(['enemy-mortar', 'boss-shell']);
@@ -393,7 +394,12 @@ interface RunReport {
 
 function metaProfile(): MetaProfile {
   const m = defaultProfile();
-  if (META === 'mid') m.upgrades = { hull: 3, powder: 3, gunnery: 2, sails: 1, salvage: 2, wisdom: 2, fortune: 1, charts: 1, 'second-wind': 1 };
+  if (META === 'mid') {
+    m.upgrades = {
+      hull: 3, powder: 3, gunnery: 2, sails: 1, salvage: 2, wisdom: 2, fortune: 1, charts: 1, 'second-wind': 1,
+      'copper-sheathing': 1, 'storm-sails': 1, 'rudder-chains': 1,
+    };
+  }
   return m;
 }
 

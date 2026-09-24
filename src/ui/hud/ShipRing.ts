@@ -16,6 +16,7 @@ const ARC = 0.75 * C;
 const STATUS: readonly { kind: StatusKind; label: string; glyph: GlyphId; tone: 'good' | 'bad' }[] = [
   { kind: 'shielded', label: 'Shield', glyph: 'shield', tone: 'good' },
   { kind: 'frenzy', label: 'Frenzy', glyph: 'flame', tone: 'good' },
+  { kind: 'momentum', label: 'Momentum', glyph: 'speed', tone: 'good' },
   { kind: 'invulnerable', label: 'Untouchable', glyph: 'star', tone: 'good' },
   { kind: 'airborne', label: 'Airborne', glyph: 'burst', tone: 'good' },
   { kind: 'submerged', label: 'Submerged', glyph: 'dive', tone: 'good' },

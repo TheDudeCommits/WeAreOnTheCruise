@@ -1,5 +1,6 @@
 import type { MetaUpgradeId, SeaId } from '../ids';
-import type { MetaUpgradeDef, SeaDef } from '../types';
+import type { MetaUpgradeDef, SeaDef, Stats } from '../types';
+import { sentence, statsText } from './text';
 
 export const SEAS: Readonly<Record<SeaId, SeaDef>> = {
   'sunward-shallows': {
@@ -30,13 +31,20 @@ export const SEAS: Readonly<Record<SeaId, SeaDef>> = {
 /** Rising doubloon costs, rounded to 5. */
 const costs = (base: number, max: number, growth = 1.6) => Array.from({ length: max }, (_, i) => Math.round((base * growth ** i) / 5) * 5);
 
+/** "+2% top speed, +6% acceleration per rank." generated from the table (never out of date after a re-tune). */
+const perRankText = (perRank: Readonly<Partial<Stats>>): string => `${sentence(statsText(perRank)).slice(0, -1)} per rank.`;
+
+const COPPER: Readonly<Partial<Stats>> = { speed: 0.02, accel: 0.06 };
+const STORM_SAILS: Readonly<Partial<Stats>> = { boostDuration: 0.08, boostCooldown: 0.06 };
+const RUDDER_CHAINS: Readonly<Partial<Stats>> = { turn: 0.04, helm: 0.12 };
+
 /**
  * Harbor upgrades. A decent run banks ~150–400 doubloons (see content/rewards.ts ECONOMY), so the first ranks
  * are affordable after one run and the long tails need many.
  */
 export const META_UPGRADES: Readonly<Record<MetaUpgradeId, MetaUpgradeDef>> = {
   hull: { id: 'hull', name: 'Hull Plating', description: '+6% max hull per rank.', maxRank: 8, costs: costs(40, 8), perRank: { maxHp: 0.06 } },
-  sails: { id: 'sails', name: 'Better Sails', description: '+4% speed per rank.', maxRank: 5, costs: costs(50, 5), perRank: { speed: 0.04 } },
+  sails: { id: 'sails', name: 'Better Sails', description: '+4% top speed per rank.', maxRank: 5, costs: costs(50, 5), perRank: { speed: 0.04 } },
   powder: { id: 'powder', name: 'Fine Powder', description: '+5% damage per rank.', maxRank: 8, costs: costs(60, 8), perRank: { damage: 0.05 } },
   gunnery: { id: 'gunnery', name: 'Gunnery Drills', description: '4% faster weapon reloads per rank.', maxRank: 5, costs: costs(80, 5), perRank: { cooldown: 0.04 } },
   salvage: { id: 'salvage', name: 'Salvage Hooks', description: '+10% treasure pickup radius per rank.', maxRank: 5, costs: costs(30, 5), perRank: { pickupRadius: 0.1 } },
@@ -45,8 +53,8 @@ export const META_UPGRADES: Readonly<Record<MetaUpgradeId, MetaUpgradeDef>> = {
   'second-wind': { id: 'second-wind', name: 'Second Wind', description: 'Revive once per run per rank (half hull, 3 s invulnerable).', maxRank: 2, costs: [400, 1200], perRank: { revives: 1 } },
   charts: { id: 'charts', name: 'Sea Charts', description: '+1 card reroll per run per rank.', maxRank: 5, costs: costs(50, 5), perRank: {} },
   banish: { id: 'banish', name: 'Black Spot', description: '+1 card banish per run per rank.', maxRank: 3, costs: costs(120, 3, 2), perRank: {} },
-  // Round 1 placeholders (contract): PACE designs these.
-  'copper-sheathing': { id: 'copper-sheathing', name: 'Copper Sheathing', description: '+3% speed per rank.', maxRank: 5, costs: costs(70, 5), perRank: { speed: 0.03 } },
-  'storm-sails': { id: 'storm-sails', name: 'Storm Sails', description: '5% faster skill recharge per rank.', maxRank: 5, costs: costs(80, 5), perRank: { skillCooldown: 0.05 } },
-  'rudder-chains': { id: 'rudder-chains', name: 'Rudder Chains', description: '+5% turning per rank.', maxRank: 5, costs: costs(50, 5), perRank: { turn: 0.05 } },
+  // Round 1 (PACE): speed, boost and helm refits.
+  'copper-sheathing': { id: 'copper-sheathing', name: 'Copper Sheathing', description: perRankText(COPPER), maxRank: 5, costs: costs(70, 5), perRank: COPPER },
+  'storm-sails': { id: 'storm-sails', name: 'Storm Sails', description: perRankText(STORM_SAILS), maxRank: 5, costs: costs(60, 5), perRank: STORM_SAILS },
+  'rudder-chains': { id: 'rudder-chains', name: 'Rudder Chains', description: perRankText(RUDDER_CHAINS), maxRank: 5, costs: costs(50, 5), perRank: RUDDER_CHAINS },
 };
