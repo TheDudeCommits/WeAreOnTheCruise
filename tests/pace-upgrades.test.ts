@@ -183,15 +183,14 @@ describe('PACE pacing knobs', () => {
     let early = 0, v2 = 0;
     for (let l = 1; l < 8; l++) { early += xpToNext(l); v2 += 6 + 4 * (l - 1); }
     expect(early).toBeLessThan(v2 * 0.9);
-    expect(xpToNext(25)).toBeGreaterThan(4 * xpToNext(5));
+    expect(xpToNext(25)).toBeGreaterThan(20 * xpToNext(5));
+    for (let l = 1; l < 40; l++) expect(xpToNext(l + 1)).toBeGreaterThan(xpToNext(l));
   });
 
   it('the horde floor starts with a pack and reaches the 60–90 band by 12:00; loot per ship thins as it grows', () => {
     expect(DIRECTOR.minAlive(0)).toBeGreaterThanOrEqual(6);
     expect(DIRECTOR.minAlive(12)).toBeGreaterThanOrEqual(60);
     expect(DIRECTOR.minAlive(12)).toBeLessThanOrEqual(90);
-    expect(DIRECTOR.xpScale(1)).toBe(1);
-    expect(DIRECTOR.xpScale(12)).toBeLessThan(DIRECTOR.xpScale(6));
     expect(DIRECTOR.dropScale(12)).toBeLessThan(DIRECTOR.dropScale(3));
   });
 });

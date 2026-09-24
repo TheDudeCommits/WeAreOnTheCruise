@@ -26,7 +26,8 @@ function battle(seed: string, ship: ShipId = 'sunlion', seconds = 20) {
     sim.setInput({ steer: Math.sin(t / 90), aimX: sim.state.player.x + Math.cos(t / 50) * 120, aimZ: sim.state.player.z + Math.sin(t / 50) * 120 });
     // Mixed frame lengths through the public step() path (accumulator + time scale).
     sim.step(t % 3 === 0 ? 1 / 30 : 1 / 120);
-    while (sim.state.status === 'levelup') sim.chooseCard(0);
+    // Level-ups and chests (the wider treasure magnet reaches the elite frigates' chests) resume with card 0.
+    while (sim.state.status === 'levelup' || sim.state.status === 'chest') sim.chooseCard(0);
     for (const e of sim.drainEvents()) eventTypes.push(e.type);
   }
   return { sim, eventTypes };

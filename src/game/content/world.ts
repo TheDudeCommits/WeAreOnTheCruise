@@ -15,7 +15,7 @@ export const SEAS: Readonly<Record<SeaId, SeaDef>> = {
     description: 'Rogue waves, lightning and a sky the colour of gunmetal.',
     duration: 900, bosses: [{ at: 300, boss: 'iron-warden' }, { at: 600, boss: 'tidewyrm' }, { at: 900, boss: 'sovereign' }],
     startHour: 15, hoursPerRun: 8, weather: [{ at: 0, weather: 'breezy' }, { at: 210, weather: 'storm' }, { at: 480, weather: 'breezy' }, { at: 630, weather: 'storm' }],
-    enemyFactions: ['admiralty', 'corsair', 'deep'], difficulty: 1.3,
+    enemyFactions: ['admiralty', 'corsair', 'deep'], difficulty: 1.4,
     unlock: { kind: 'achievement', achievement: 'survive-10', text: 'Survive 10:00 on any sea' },
   },
   'the-gloam': {

@@ -39,7 +39,7 @@ export const SPAWN_BANDS: readonly SpawnBand[] = [
 ];
 
 /** Per-boss HP multipliers on top of content/bosses.ts (PACE round 1; see DIRECTOR.bossHpScale). */
-const BOSS_HP_MUL: Readonly<Record<BossId, number>> = { 'iron-warden': 1.6, tidewyrm: 1.7, sovereign: 1.3 };
+const BOSS_HP_MUL: Readonly<Record<BossId, number>> = { 'iron-warden': 1.6, tidewyrm: 1.7, sovereign: 1.2 };
 
 export const DIRECTOR = {
   /**
@@ -64,16 +64,11 @@ export const DIRECTOR = {
   /** Unspent budget is capped so a quiet spell never turns into one giant burst. */
   bankMax: 40,
   /**
-   * Floor spawns may run the budget into debt down to −debt(minute): the floor keeps the sea busy for a slow
-   * player, but a fast killer cannot farm unlimited experience (the budget sets the XP pace). PACE: was 12 + 2.5m;
-   * deeper now so the floor, not the budget, sets the horde size (xpScale keeps the experience in check).
+   * Floor spawns may run the budget into debt down to −debt(minute). PACE: was 12 + 2.5m, which left a fast killer
+   * sailing an empty sea; now practically bottomless, so the floor always holds and the steep xpToNext tail keeps a
+   * fast killer's levels in check instead.
    */
-  debt: (minute: number): number => 200 + 400 * minute,
-  /**
-   * Experience per ship over the run (× on every kill's coins; bosses excluded). Later minutes field more ships,
-   * not more experience: the horde doubles, the level pace stays designed (see constants.xpToNext).
-   */
-  xpScale: (minute: number): number => { const m = Math.max(0, minute - 2); return 1 / (1 + 0.2 * m + 0.012 * m * m); },
+  debt: (minute: number): number => 400 + 1500 * minute,
   /**
    * Loot per ship (× the doubloon, repair, compass and powder-keg drop chances of an ordinary kill): the bigger horde
    * must not triple the healing or the doubloon income (elites, bosses, convoys and wages are unaffected).
@@ -91,7 +86,7 @@ export const DIRECTOR = {
   hpScale: (minute: number, difficulty: number): number => (1 + 0.13 * minute + 0.006 * minute * minute) * (1 + (difficulty - 1) * 0.35),
   /** Enemy damage multiplier (time and difficulty), capped. */
   damageScale: (minute: number, difficulty: number): number =>
-    Math.min(2.4, (1 + 0.03 * minute + 0.0015 * minute * minute) * (1 + (difficulty - 1) * 0.35)),
+    Math.min(2.6, (1 + 0.045 * minute + 0.0035 * minute * minute) * (1 + (difficulty - 1) * 0.2)),
   /**
    * Green crews: early enemy gunnery is forgiving and hardens over the first minutes (multipliers on lead, spread
    * and reload time), so the opening is about learning to sail, not about dodging perfect volleys.
@@ -103,9 +98,9 @@ export const DIRECTOR = {
    * Fire control: the whole enemy fleet shares a budget of volleys per second (tokens). The horde can be huge
    * for spectacle while incoming fire stays a designed curve. Bosses are exempt (their attacks are telegraphed).
    */
-  fireRate: (minute: number): number => 0.1 + 0.0275 * minute,
+  fireRate: (minute: number): number => 0.1 + 0.03 * minute,
   /** Fire-control rate multiplier from sea difficulty. */
-  fireDifficultyExp: 0.5,
+  fireDifficultyExp: 0.3,
   fireBank: 3,
   /** Enemy sailing speed multiplier (PACE: +12% at every minute, so the horde closes in and keeps up). */
   speedScale: (minute: number): number => 1.12 + Math.min(0.25, 0.0064 * minute + 0.00024 * minute * minute),
