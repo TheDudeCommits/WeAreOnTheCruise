@@ -105,7 +105,7 @@ export const DIRECTOR = {
   /** Enemy sailing speed multiplier (PACE: +12% at every minute, so the horde closes in and keeps up). */
   speedScale: (minute: number): number => 1.12 + Math.min(0.25, 0.0064 * minute + 0.00024 * minute * minute),
   /**
-   * Boss HP multiplier for the sea difficulty, the endless loop (0 = first pass) and the boss (`bossHpMul`: the
+   * Boss HP multiplier for the sea difficulty, the endless loop (0 = first pass) and the boss (BOSS_HP_MUL: the
    * faster level curve meets each boss with a stronger ship, so fights still last 45–120 s).
    */
   bossHpScale: (difficulty: number, loop: number, boss?: BossId): number =>
