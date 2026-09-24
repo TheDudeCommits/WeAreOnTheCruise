@@ -63,6 +63,8 @@ export class EventRouter {
   private now = 0;
   private coinStreak = 0;
   private lastCoin = -10;
+  /** Last volley time per AI captain (ms), for the per-captain gunfire cap. */
+  private readonly captainShot = new Map<number, number>();
   private readonly killTimes: number[] = [];
   private lastCheer = -30;
   private prevScreen: AppScreen | null = null;
