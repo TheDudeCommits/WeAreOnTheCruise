@@ -97,6 +97,8 @@ export interface ToonifyOptions {
   saturation?: number;
   /** Albedo gain (default 1). */
   gain?: number;
+  /** Albedo contrast as a luminance power (default 1 = off). */
+  contrast?: number;
   /** Cap for source emissive intensity (default 1.2; lanterns that should bloom want ~3). */
   emissiveCap?: number;
   /** Hard highlight strength for metallic source materials (default 0.4; 0 disables). */
@@ -119,8 +121,8 @@ export function toonifyObject(root: THREE.Object3D, opts: ToonifyOptions = {}): 
       if (isCelMaterial(material)) {
         if (opts.rim !== undefined) material.rim = opts.rim;
         if (opts.tintable !== undefined) material.tintable = opts.tintable;
-        if (opts.delight !== undefined || opts.saturation !== undefined || opts.gain !== undefined) {
-          material.setLevels(opts.delight ?? 0, opts.saturation ?? 1, opts.gain ?? 1);
+        if (opts.delight !== undefined || opts.saturation !== undefined || opts.gain !== undefined || opts.contrast !== undefined) {
+          material.setLevels(opts.delight ?? 0, opts.saturation ?? 1, opts.gain ?? 1, opts.contrast ?? 1);
         }
         result = material;
       } else {
@@ -175,7 +177,7 @@ function convertMaterial(material: THREE.Material, opts: ToonifyOptions, normalC
     cel.aoMapIntensity = Math.min(1, source.aoMapIntensity ?? 1);
   }
   const delight = opts.delight ?? (map ? 0.3 : 0);
-  cel.setLevels(delight, opts.saturation ?? 1, opts.gain ?? 1);
+  cel.setLevels(delight, opts.saturation ?? 1, opts.gain ?? 1, opts.contrast ?? 1);
   return cel;
 }
 

@@ -42,12 +42,14 @@ const SPECS: Record<'night' | 'dawn' | 'noon' | 'golden' | 'dusk' | 'storm' | 'f
     shadowTint: 0x3553b4, highlightTint: 0xfff4e2, split: 0.12, vignette: 0.2, vignetteColor: 0x0a1a44, bloomStrength: 0.55, bloomThreshold: 1.05,
   },
   golden: {
-    exposure: 1.02, lift: [0.025, 0.008, 0.035], gamma: [1.03, 1.0, 0.97], gain: [1.08, 0.98, 0.86], saturation: 1.12, contrast: 1.05,
-    shadowTint: 0x5f4aa6, highlightTint: 0xffc070, split: 0.3, vignette: 0.3, vignetteColor: 0x2a1030, bloomStrength: 0.85, bloomThreshold: 0.92,
+    exposure: 1.03, lift: [0.022, 0.012, 0.03], gamma: [1.03, 1.0, 0.97], gain: [1.08, 0.99, 0.86], saturation: 1.1, contrast: 1.05,
+    shadowTint: 0x4c58a8, highlightTint: 0xffc070, split: 0.28, vignette: 0.3, vignetteColor: 0x1a1430, bloomStrength: 0.85, bloomThreshold: 0.92,
   },
+  // Dusk (round 2): warm amber highlights over blue shadows. The old green-cut gain (0.92) and violet lift/shadows
+  // turned the whole sea magenta.
   dusk: {
-    exposure: 1.02, lift: [0.035, 0.014, 0.06], gamma: [1.02, 0.99, 1.02], gain: [1.04, 0.92, 0.96], saturation: 1.06, contrast: 1.05,
-    shadowTint: 0x3b2f86, highlightTint: 0xff9e74, split: 0.32, vignette: 0.34, vignetteColor: 0x180a2a, bloomStrength: 0.9, bloomThreshold: 0.86,
+    exposure: 1.05, lift: [0.028, 0.02, 0.042], gamma: [1.02, 1.0, 1.0], gain: [1.05, 0.97, 0.9], saturation: 1.05, contrast: 1.05,
+    shadowTint: 0x33428c, highlightTint: 0xffb070, split: 0.3, vignette: 0.32, vignetteColor: 0x0e1230, bloomStrength: 0.9, bloomThreshold: 0.86,
   },
   storm: {
     exposure: 1.0, lift: [0.03, 0.05, 0.05], gamma: [1, 1.02, 1.02], gain: [0.92, 1.0, 0.98], saturation: 0.62, contrast: 1.08,

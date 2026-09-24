@@ -89,18 +89,20 @@ const KEYS: readonly [number, LookSpec][] = [
     fogNear: 320, fogFar: 2600, stars: 0,
   }],
   [17.6, {
-    zenith: 0x3456ae, horizon: 0xffc48a, haze: 0xf0c49c, key: [1.0, 0.7, 0.4], keyIntensity: 1.05,
-    shadow: [0.42, 0.35, 0.66], rim: [1.0, 0.68, 0.36], cloudLit: 0xffdcb0, cloudShade: 0x8d7cc6, ink: 0x21193e,
+    zenith: 0x3458ae, horizon: 0xffc48a, haze: 0xf0c49c, key: [1.0, 0.73, 0.44], keyIntensity: 1.14,
+    shadow: [0.46, 0.41, 0.64], rim: [1.0, 0.7, 0.38], cloudLit: 0xffdcb0, cloudShade: 0x8a82c2, ink: 0x201c3e,
     fogNear: 300, fogFar: 2500, stars: 0,
   }],
+  // Dusk (round 2): amber, not magenta. A golden key that still lights the hero (it read as a purple silhouette), a
+  // bluer zenith (the tactical camera's water reflects it) and a peach haze instead of mauve.
   [18.9, {
-    zenith: 0x252c6e, horizon: 0xff8a6a, haze: 0xc47a8c, key: [1.0, 0.5, 0.34], keyIntensity: 0.72,
-    shadow: [0.3, 0.24, 0.5], rim: [1.0, 0.52, 0.4], cloudLit: 0xffa888, cloudShade: 0x5a4a96, ink: 0x1a1236,
+    zenith: 0x2a3a7c, horizon: 0xffa060, haze: 0xd89a82, key: [1.0, 0.63, 0.4], keyIntensity: 0.96,
+    shadow: [0.37, 0.33, 0.53], rim: [1.0, 0.6, 0.38], cloudLit: 0xffb488, cloudShade: 0x57508f, ink: 0x1a1838,
     fogNear: 280, fogFar: 2300, stars: 0.1,
   }],
   [19.9, {
-    zenith: 0x0f184a, horizon: 0x3a3d86, haze: 0x383c7a, key: [0.6, 0.62, 1.0], keyIntensity: 0.5,
-    shadow: [0.16, 0.17, 0.38], rim: [0.55, 0.6, 1.0], cloudLit: 0x6f72bc, cloudShade: 0x22285e, ink: 0x0e1234,
+    zenith: 0x0f1a4c, horizon: 0x3c4a8a, haze: 0x3a4478, key: [0.68, 0.7, 1.0], keyIntensity: 0.84,
+    shadow: [0.25, 0.27, 0.46], rim: [0.58, 0.64, 1.0], cloudLit: 0x6f78bc, cloudShade: 0x222a5e, ink: 0x0e1434,
     fogNear: 250, fogFar: 2100, stars: 0.7,
   }],
   [21, NIGHT],

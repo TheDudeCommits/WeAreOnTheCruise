@@ -10,12 +10,15 @@
  *        └ hard band 2 (deep back-side band)
  *   + lit-side rim (hard-edged), hard brass/wet highlight shapes (optional), cel-stepped lantern point/spot lights,
  *   + emissive (HDR, blooms), AO maps become crevice ink, hit-flash / elite glow / spectral tint (ShipTint).
+ *   + faction light (instanced variants, faction.ts): at night / in storms and fog an enemy instance whose origin is
+ *     in the faction map gets a hard faction-coloured rim and a +0.3 EV albedo lift, so a dark horde stays countable.
  *
  * All frame lighting comes from the shared atmosphere uniforms (./atmosphere.ts), so the ocean, islands, ships and FX
  * agree on one sun without reading three's light list.
  */
 import * as THREE from 'three';
 import { ATMOSPHERE_GLSL, atmosphereUniforms, ensureAtmosphereResources, installUnifiedFog } from './atmosphere';
+import { FACTION_VERTEX_GLSL } from './faction';
 
 export interface CelParameters extends THREE.MeshToonMaterialParameters {
   /** 0..1 lit-side rim strength. */
@@ -30,6 +33,8 @@ export interface CelParameters extends THREE.MeshToonMaterialParameters {
   saturation?: number;
   /** Albedo gain (1 = unchanged). */
   gain?: number;
+  /** Albedo contrast as a luminance power (1 = unchanged, >1 = deeper darks, whites kept). */
+  contrast?: number;
   /** Facet normals from derivatives (three's FLAT_SHADED path works for the toon template). */
   flatShading?: boolean;
 }
@@ -38,6 +43,11 @@ const VERTEX_PARS = /* glsl */ `
 varying vec3 vCelWorldPos;
 #if defined( CEL_TINTABLE ) && defined( USE_INSTANCING_COLOR )
 varying vec3 vCelInstanceTint;
+#endif
+// Faction light (instanced variants look it up; USE_INSTANCING is a vertex-only define, so the varying is always on).
+varying vec4 vCelFaction;
+#ifdef USE_INSTANCING
+${FACTION_VERTEX_GLSL}
 #endif
 `;
 
@@ -74,6 +84,11 @@ const VERTEX_WORLD = /* glsl */ `
 		#endif
 		vCelWorldPos = ( modelMatrix * celWorld ).xyz;
 	}
+	vCelFaction = vec4( 0.0 );
+	#ifdef USE_INSTANCING
+		// Faction light: look this instance's origin up in the faction map (skipped in daylight).
+		if ( uCruiseFactionRim.x > 0.001 ) vCelFaction = cruiseFactionAt( ( modelMatrix * instanceMatrix * vec4( 0.0, 0.0, 0.0, 1.0 ) ).xz );
+	#endif
 `;
 
 const FRAGMENT_PARS = /* glsl */ `
@@ -87,13 +102,15 @@ ${ATMOSPHERE_GLSL}
 uniform vec4 uCelBands;
 /** x: deep-band strength, y: rim strength, z: rim threshold (on 1 - N·V), w: hard highlight strength. */
 uniform vec4 uCelShape;
-/** x: delight, y: saturation, z: gain. */
-uniform vec3 uCelLevels;
+/** x: delight, y: saturation, z: gain, w: contrast (luminance power). */
+uniform vec4 uCelLevels;
 /** x: hit flash, y: glow strength, z: spectral. */
 uniform vec3 uCelTint;
 uniform vec3 uCelGlowColor;
 uniform vec3 uCelSpectralColor;
 const vec3 CEL_LUMA = vec3( 0.2126, 0.7152, 0.0722 );
+varying vec4 vCelFaction;
+uniform vec4 uCruiseFactionRim;
 `;
 
 const FRAGMENT_LIGHTING = /* glsl */ `
@@ -108,8 +125,14 @@ const FRAGMENT_LIGHTING = /* glsl */ `
 		celAlbedo *= celL1 / celL0;
 		float celL2 = dot( celAlbedo, CEL_LUMA );
 		celAlbedo = max( mix( vec3( celL2 ), celAlbedo, uCelLevels.y ), 0.0 ) * uCelLevels.z;
+		// Contrast: luminance to a power (hue kept); pivots near white so painted whites stay white.
+		float celL4 = max( dot( celAlbedo, CEL_LUMA ), 1e-4 );
+		celAlbedo *= pow( min( celL4 / 0.85, 4.0 ), uCelLevels.w - 1.0 );
 	}
 	#endif
+	// Matched enemy instances (materials with a rim; glow parts have none) get the night exposure lift.
+	float celFactionK = vCelFaction.a * step( 0.01, uCelShape.y );
+	celAlbedo *= mix( 1.0, uCruiseFactionRim.y, celFactionK );
 
 	vec3 celN = normalize( normal );
 	vec3 celV = isOrthographic ? vec3( 0.0, 0.0, 1.0 ) : normalize( vViewPosition );
@@ -153,6 +176,9 @@ const FRAGMENT_LIGHTING = /* glsl */ `
 		float celRim = smoothstep( uCelShape.z - celRimAA, uCelShape.z + celRimAA, celFres );
 		celRim *= smoothstep( -0.2, 0.3, celNdotL ) * mix( 0.3, 1.0, celShadowMap );
 		celColor += uCruiseRimColor * ( 0.35 + 0.65 * celAlbedo ) * celRim * uCelShape.y;
+		// Faction rim: all around the silhouette (not only the lit side), hard-edged, HDR.
+		float celFRim = smoothstep( uCruiseFactionRim.z - celRimAA, uCruiseFactionRim.z + celRimAA, celFres );
+		celColor += vCelFaction.rgb * celFRim * uCruiseFactionRim.x * celFactionK;
 	}
 
 	// Lanterns and searchlights: cel-stepped pools of light.
@@ -206,7 +232,7 @@ const FRAGMENT_LIGHTING = /* glsl */ `
 	vec3 celOutgoing = celColor + totalEmissiveRadiance;
 `;
 
-const CACHE_KEY = 'cruise-cel-v1';
+const CACHE_KEY = 'cruise-cel-v2';
 
 let celCount = 0;
 
@@ -218,7 +244,7 @@ export class CelMaterial extends THREE.MeshToonMaterial {
   readonly cel = {
     uCelBands: { value: new THREE.Vector4(0.0, -0.55, 0.34, 0.16) },
     uCelShape: { value: new THREE.Vector4(0.12, 0.35, 0.62, 0) },
-    uCelLevels: { value: new THREE.Vector3(0, 1, 1) },
+    uCelLevels: { value: new THREE.Vector4(0, 1, 1, 1) },
     uCelTint: { value: new THREE.Vector3(0, 0, 0) },
     uCelGlowColor: { value: new THREE.Color(0xffb640) },
     uCelSpectralColor: { value: new THREE.Color(0x3ff0d0) },
@@ -231,13 +257,13 @@ export class CelMaterial extends THREE.MeshToonMaterial {
     // `type` stays 'MeshToonMaterial': three picks the shader template by type.
     this.name = 'cel';
     this.defines = {};
-    const { rim, specular, tintable, delight, saturation, gain, ...toon } = parameters;
+    const { rim, specular, tintable, delight, saturation, gain, contrast, ...toon } = parameters;
     this.setValues(toon);
     if (rim !== undefined) this.rim = rim;
     if (specular !== undefined) this.specular = specular;
     if (tintable) this.tintable = true;
-    if (delight !== undefined || saturation !== undefined || gain !== undefined) {
-      this.setLevels(delight ?? 0, saturation ?? 1, gain ?? 1);
+    if (delight !== undefined || saturation !== undefined || gain !== undefined || contrast !== undefined) {
+      this.setLevels(delight ?? 0, saturation ?? 1, gain ?? 1, contrast ?? 1);
     }
     celCount++;
   }
@@ -255,10 +281,10 @@ export class CelMaterial extends THREE.MeshToonMaterial {
     this.needsUpdate = true;
   }
 
-  /** Albedo levels: delight 0..1 (tames baked lighting), saturation and gain multipliers. */
-  setLevels(delight: number, saturation = 1, gain = 1): this {
-    this.cel.uCelLevels.value.set(delight, saturation, gain);
-    const active = delight > 0.001 || Math.abs(saturation - 1) > 0.001 || Math.abs(gain - 1) > 0.001;
+  /** Albedo levels: delight 0..1 (tames baked lighting), saturation and gain multipliers, contrast (1 = off). */
+  setLevels(delight: number, saturation = 1, gain = 1, contrast = 1): this {
+    this.cel.uCelLevels.value.set(delight, saturation, gain, contrast);
+    const active = delight > 0.001 || Math.abs(saturation - 1) > 0.001 || Math.abs(gain - 1) > 0.001 || Math.abs(contrast - 1) > 0.001;
     const had = this.defines!.CEL_LEVELS !== undefined;
     if (active && !had) { this.defines!.CEL_LEVELS = ''; this.needsUpdate = true; }
     if (!active && had) { delete this.defines!.CEL_LEVELS; this.needsUpdate = true; }
