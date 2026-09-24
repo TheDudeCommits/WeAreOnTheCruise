@@ -16,6 +16,7 @@ import { ENEMY_AI } from '../content/enemies';
 import type { EnemyAttackDef, EnemyDef, EnemyState, StatusState } from '../types';
 import type { SimContext, Target } from './context';
 import { focusOf } from './targeting';
+import { fireBlastCaptains } from './captains-damage';
 import { metaRuntime, type MetaRuntime } from './meta-runtime';
 import { enemyDamage } from './meta-spawn';
 import {
@@ -529,6 +530,7 @@ function detonate(c: SimContext, e: EnemyState, def: EnemyDef, selfDestruct: boo
     const falloff = 1 - 0.4 * clamp(d / reach, 0, 1);
     c.damagePlayer(enemyDamage(c, e, def.contactDamage) * falloff, { x: e.x, z: e.z, source: e.id, kind: 'hazard' });
   }
+  fireBlastCaptains(c, e.x, e.z, r, enemyDamage(c, e, def.contactDamage)); // CAPTAINS
   const near = c.targetsNear(e.x, e.z, r, blastScratch);
   for (let i = 0; i < near.length; i++) {
     const t = near[i]!;

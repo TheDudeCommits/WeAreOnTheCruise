@@ -18,6 +18,8 @@
  *   --verbose            per-run event log
  *   --tank               diagnostic: hull ×100 so the bot survives; prints damage taken per minute as % of the
  *                        real hull (use it to tune incoming damage without deaths cutting runs short)
+ *   --captains N         AI captains sailing with the bot (0–4, default 0); adds captain kills, sinkings and the
+ *                        share of the fleet's attention on the player to the report
  */
 import { writeFileSync } from 'node:fs';
 import { CONTENT } from '../src/game/content';
@@ -25,6 +27,7 @@ import type { BossId, SeaId, ShipId, WeaponId } from '../src/game/ids';
 import { SEA_IDS } from '../src/game/ids';
 import { defaultProfile } from '../src/game/meta/save';
 import { Sim } from '../src/game/sim/Sim';
+import { captainRuntime, configureCaptains } from '../src/game/sim/captains-runtime';
 import { cooldownMul, damageMul, extraAmount, rangeMul } from '../src/game/sim/stats';
 import type { CardOffer, ContentDb, MetaProfile, WeaponSlot } from '../src/game/types';
 import { IslandField } from '../src/world/IslandField';
@@ -49,6 +52,7 @@ const VERBOSE = flag('verbose');
 const TANK = flag('tank');
 const SOURCES = flag('sources');
 const TANK_MUL = 100;
+const CAPTAINS = Math.max(0, Math.min(4, Math.floor(Number(opt('captains', '0')) || 0)));
 
 function contentFor(ship: ShipId): ContentDb {
   if (!TANK) return CONTENT;
@@ -120,6 +124,13 @@ export class Bot {
       // Keep hulls apart: contact damage is the easiest damage to avoid.
       const personal = p.radius + e.radius + 22;
       if (d < personal) { const k = ((personal - d) / personal) * 1.4; rx -= (dx / d) * k; rz -= (dz / d) * k; }
+    }
+    // AI captains: give allied hulls room too (they yield, but ramming them wastes the turn).
+    for (const cap of s.captains) {
+      if (!cap.alive) continue;
+      const dx = cap.x - p.x, dz = cap.z - p.z, d = Math.hypot(dx, dz) || 1;
+      const personal = (p.length + cap.length) * 0.5 + 12;
+      if (d < personal) { const k = ((personal - d) / personal) * 1.2; rx -= (dx / d) * k; rz -= (dz / d) * k; }
     }
     const boss = s.bosses.find((b) => b.life === 'alive');
     const bossD = boss ? Math.hypot(boss.x - p.x, boss.z - p.z) : Infinity;
@@ -353,7 +364,7 @@ export class Bot {
 
 // ───────────────────────── Runs ─────────────────────────
 
-interface Checkpoint { minute: number; level: number; kills: number; alive: number; hp: number; weapons: number }
+interface Checkpoint { minute: number; level: number; kills: number; alive: number; hp: number; weapons: number; capKills: number }
 
 interface RunReport {
   ship: ShipId;
@@ -381,6 +392,8 @@ interface RunReport {
   shots: Record<string, { fired: number; hits: number; volleys: number }>;
   bot: BotStats;
   ms: number;
+  /** AI captains: kills (all captains), sinkings, share of enemy attention on the player, captain levels at the end. */
+  captains: { kills: number; sinkings: number; playerShare: number; levels: number[]; dealt: number; taken: number };
 }
 
 function metaProfile(): MetaProfile {
@@ -393,6 +406,7 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
   const t0 = Date.now();
   const world = new IslandField(seed, { sea });
   const sim = new Sim({ seed, shipId: ship, seaId: sea, meta: metaProfile(), world, content: contentFor(ship) });
+  configureCaptains(sim.state, CAPTAINS);
   const perMinute: number[] = [];
   const shots: Record<string, { fired: number; hits: number; volleys: number }> = {};
   const sourcesPerMinute: Record<string, number>[] = [];
@@ -455,6 +469,7 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
       checkpoints.push({
         minute: CHECKPOINTS[next]!, level: p.level, kills: sim.state.stats.kills,
         alive: sim.state.enemies.filter((e) => e.life === 'alive').length, hp: p.hp / p.maxHp, weapons: p.weapons.length,
+        capKills: sim.state.captains.reduce((a, k) => a + k.kills, 0),
       });
       next++;
     }
@@ -473,6 +488,15 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
     sourcesPerMinute: Array.from({ length: Math.ceil(s.time / 60) }, (_, i) => sourcesPerMinute[i] ?? {}),
     shots,
     bot: bot.stats, ms: Date.now() - t0,
+    captains: (() => {
+      const rt = captainRuntime(s);
+      return {
+        kills: s.captains.reduce((a, k) => a + k.kills, 0), sinkings: rt.sinkings,
+        playerShare: rt.ticksPlayer + rt.ticksCaptains > 0 ? rt.ticksPlayer / (rt.ticksPlayer + rt.ticksCaptains) : 1,
+        levels: s.captains.map((k) => k.level), dealt: Math.round(s.captains.reduce((a, k) => a + (k.ai.dealt ?? 0), 0)),
+        taken: Math.round(s.captains.reduce((a, k) => a + (k.ai.taken ?? 0), 0)),
+      };
+    })(),
   };
 }
 
@@ -487,7 +511,7 @@ const f1 = (v: number): string => (Number.isFinite(v) ? v.toFixed(1) : '—');
 /** CLI entry: runs only when this file is executed directly (so the bot can be imported by other scripts). */
 function main(): void {
   const reports: RunReport[] = [];
-  console.log(`balance-sim: seeds=${SEEDS} ships=${SHIPS.join(',')} seas=${SEAS.join(',')} minutes=${MINUTES} proxy=${PROXY} meta=${META}`);
+  console.log(`balance-sim: seeds=${SEEDS} ships=${SHIPS.join(',')} seas=${SEAS.join(',')} minutes=${MINUTES} proxy=${PROXY} meta=${META} captains=${CAPTAINS}`);
   console.log('sea               ship             seed  L@1 L@3 L@5 L@10 L@15 | kills@5/10/15   | alive@5/10/12max/15 | hp%@5/10/15   | died   | warden tidewyrm sovereign (s)  | ◈    | outcome');
   for (const sea of SEAS) {
     for (const ship of SHIPS) {
@@ -501,7 +525,8 @@ function main(): void {
         const H = (m: number) => { const c = cp(r, m); return c ? Math.round(c.hp * 100) : '—'; };
         const boss = (id: BossId) => { const b = r.bosses.find((x) => x.boss === id); return b ? (b.killed !== null ? `${Math.round(b.killed - b.spawned)}` : 'alive') : '—'; };
         console.log(
-          `${sea.padEnd(17)} ${ship.padEnd(16)} ${seed.padEnd(5)} ${L(1)} ${L(3)} ${L(5)} ${L(10)} ${L(15)} | ${String(`${K(5)}/${K(10)}/${K(15)}`).padEnd(15)} | ${String(`${A(5)}/${A(10)}/${r.maxAlive12}/${A(15)}`).padEnd(19)} | ${String(`${H(5)}/${H(10)}/${H(15)}`).padEnd(13)} | ${fmtTime(r.died).padEnd(6)} | ${pad(boss('iron-warden'), 6)} ${pad(boss('tidewyrm'), 8)} ${pad(boss('sovereign'), 9)}      | ${pad(r.doubloons, 4)} | ${r.outcome}${r.revives ? ` (+${r.revives} revive)` : ''}`,
+          `${sea.padEnd(17)} ${ship.padEnd(16)} ${seed.padEnd(5)} ${L(1)} ${L(3)} ${L(5)} ${L(10)} ${L(15)} | ${String(`${K(5)}/${K(10)}/${K(15)}`).padEnd(15)} | ${String(`${A(5)}/${A(10)}/${r.maxAlive12}/${A(15)}`).padEnd(19)} | ${String(`${H(5)}/${H(10)}/${H(15)}`).padEnd(13)} | ${fmtTime(r.died).padEnd(6)} | ${pad(boss('iron-warden'), 6)} ${pad(boss('tidewyrm'), 8)} ${pad(boss('sovereign'), 9)}      | ${pad(r.doubloons, 4)} | ${r.outcome}${r.revives ? ` (+${r.revives} revive)` : ''}`
+          + (CAPTAINS ? ` | capK ${cp(r, 5)?.capKills ?? '—'}/${cp(r, 10)?.capKills ?? '—'}/${cp(r, 15)?.capKills ?? '—'} sunk ${r.captains.sinkings} focus ${Math.round(r.captains.playerShare * 100)}% capL ${r.captains.levels.join(',')} taken ${r.captains.taken}` : ''),
         );
         if (VERBOSE) {
           console.log(`   loadout ${r.loadout.join(' ')} proxied=[${r.proxied.join(',')}] bot=${JSON.stringify(r.bot)} ${r.ms}ms`);
@@ -523,6 +548,9 @@ function main(): void {
       return met ? `${times.length}/${met} killed, ${times.length ? `${Math.round(Math.min(...times))}–${Math.round(Math.max(...times))} s (avg ${Math.round(mean(times))})` : '—'}` : 'not reached';
     };
     console.log(`${sea}: L@5 ${f1(lv(5))} · L@10 ${f1(lv(10))} · L@15 ${f1(lv(15))} · alive@12 max ${f1(mean(rs.map((r) => r.maxAlive12)))} · deaths ${deaths.length}/${rs.length}${deaths.length ? ` (avg ${fmtTime(mean(deaths.map((r) => r.died!)))})` : ''} · ◈ avg ${Math.round(mean(rs.map((r) => r.doubloons)))} · victories ${rs.filter((r) => r.outcome === 'victory').length}`);
+    const kl = (m: number) => mean(rs.map((r) => cp(r, m)?.kills).filter((v): v is number => v !== undefined));
+    const ck = (m: number) => mean(rs.map((r) => cp(r, m)?.capKills).filter((v): v is number => v !== undefined));
+    console.log(`   player kills @5/10/15 ${f1(kl(5))}/${f1(kl(10))}/${f1(kl(15))}` + (CAPTAINS ? ` · captain kills @5/10/15 ${f1(ck(5))}/${f1(ck(10))}/${f1(ck(15))} · player kill share @15 ${Math.round((100 * kl(15)) / Math.max(1, kl(15) + ck(15)))}% · captain sinkings avg ${f1(mean(rs.map((r) => r.captains.sinkings)))} · fleet attention on player ${Math.round(100 * mean(rs.map((r) => r.captains.playerShare)))}%` : ''));
     console.log(`   Iron Warden ${bossStat('iron-warden')} · Tidewyrm ${bossStat('tidewyrm')} · Sovereign ${bossStat('sovereign')}`);
   }
   if (TANK) {

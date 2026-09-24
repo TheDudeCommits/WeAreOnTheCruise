@@ -6,6 +6,8 @@ import type * as THREE from 'three';
 import type { BossId, EnemyId, SeaId, ShipId, WeaponId } from '../game/ids';
 import type { SimAction } from '../game/types';
 import type { GameApp } from './GameApp';
+import { hurtCaptain } from '../game/sim/captains-damage';
+import { captainRuntime } from '../game/sim/captains-runtime';
 
 export interface CruiseBridge {
   version: 2;
@@ -26,6 +28,8 @@ export interface CruiseBridge {
   metrics(): unknown;
   /** Visible meshes/triangles per top-level scene group (instancing counted; frustum culling not applied). */
   sceneStats(): Record<string, { meshes: number; tris: number; shadowTris: number }>;
+  /** AI captains (CAPTAINS): state, the fleet's attention split, and the baked hull stats. */
+  captains(): unknown;
   /** Per-frame CPU breakdown: enable, run frames, then read the report (mean/max per part and the slowest frames). */
   profiler: { enable(on: boolean): void; reset(): void; report(worst?: number): unknown };
   debug: {
@@ -39,6 +43,8 @@ export interface CruiseBridge {
     killAll(): void;
     sinkBosses(): void;
     chargeUltimate(): void;
+    /** Sinks an AI captain (id −1…−4; default the first afloat) — QA for sinking and respawn. */
+    sinkCaptain(id?: number): void;
   };
 }
 
@@ -92,6 +98,20 @@ export function installDebugBridge(app: GameApp): void {
     pause: (paused) => sim()?.setPaused(paused),
     advance: (seconds) => { const frames = Math.round(seconds * 60); for (let i = 0; i < frames; i++) app.tick(1 / 60); },
     metrics: () => app.host.getMetrics(),
+    captains: () => {
+      const s = sim()?.state;
+      if (!s) return null;
+      const rt = captainRuntime(s);
+      return {
+        configured: rt.count, attentionOnPlayer: rt.focusPlayer, liveEnemies: rt.aliveEnemies, sinkings: rt.sinkings,
+        captains: s.captains.map((k) => ({
+          id: k.id, name: k.name, ship: k.shipId, alive: k.alive, hp: Math.round(k.hp), maxHp: Math.round(k.maxHp), level: k.level,
+          kills: k.kills, bounty: k.bounty, respawn: +k.respawn.toFixed(1), mode: k.ai.mode, attackers: k.ai.attackers,
+          x: Math.round(k.x), z: Math.round(k.z), fromPlayer: Math.round(Math.hypot(k.x - s.player.x, k.z - s.player.z)),
+        })),
+        hulls: app.ships.captains.stats(),
+      };
+    },
     profiler: {
       enable: (on) => { app.profiler.enabled = on; },
       reset: () => app.profiler.reset(),
@@ -125,6 +145,12 @@ export function installDebugBridge(app: GameApp): void {
       killAll: () => sim()?.debug.killAll(),
       sinkBosses: () => sim()?.debug.sinkBosses(),
       chargeUltimate: () => sim()?.debug.chargeUltimate(),
+      sinkCaptain: (id) => {
+        const s = sim();
+        if (!s) return;
+        const k = s.state.captains.find((x) => (id === undefined ? x.alive : x.id === id));
+        if (k && k.alive) { k.ai.grace = 0; hurtCaptain(s, k, k.hp * 4 + 100); }
+      },
     },
   };
   window.__CRUISE__ = bridge;

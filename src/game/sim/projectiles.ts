@@ -16,6 +16,8 @@ import {
   PF_CLUSTER, PF_FIREPOT, PF_HOOK, PF_SLOW, PF_SPARKS, PF_STUN, PF_WATER, targetable, wrapAngle, type CoreSim, type ExplosionKind,
 } from './core-runtime';
 import { applyBurn } from './core-forces';
+import { blastCaptains, shotVsCaptains } from './captains-damage';
+import { captainBlast, captainHit } from './captains-credit';
 import { onHarpoonHit } from './weapons/harpoon';
 
 export { GRAVITY };
@@ -58,6 +60,8 @@ export function updateProjectiles(c: CoreSim): void {
         continue;
       }
     }
+    // CAPTAINS: enemy shots also hit AI captains.
+    if (pr.team !== 'player' && s.captains.length > 0 && shotVsCaptains(c, pr)) continue;
 
     if (pr.age >= pr.ttl) { expire(c, pr, i, traits); continue; }
     if ((traits & K_ISLAND) && core.onLand(c, pr.x, pr.z)) {
@@ -97,7 +101,10 @@ function onHit(c: CoreSim, pr: ProjectileState, i: number, t: Target): boolean {
   let status: StatusKind | null = null, st = 0, sm = 0;
   if (flags & PF_SLOW) { status = 'slowed'; st = core.pSlowTime[i]!; sm = core.pSlowMag[i]!; }
   const back = 0.05;
-  const dealt = c.hitTarget(t, pr.damage, pr.weapon, pr.crit, core.pKnock[i]!, pr.x - pr.vx * back, pr.z - pr.vz * back, status, st, sm, false);
+  // CAPTAINS: a captain's shot (pFrom < 0) is credited to that captain.
+  const dealt = core.pFrom[i]! < 0
+    ? captainHit(c, core.pFrom[i]!, t, pr.damage, pr.crit, core.pKnock[i]!, pr.x - pr.vx * back, pr.z - pr.vz * back)
+    : c.hitTarget(t, pr.damage, pr.weapon, pr.crit, core.pKnock[i]!, pr.x - pr.vx * back, pr.z - pr.vz * back, status, st, sm, false);
   if ((flags & PF_BURN) && core.pBurn[i]! > 0) applyBurn(c, t, core.pBurn[i]!, pr.weapon);
   if ((flags & PF_STUN) && core.pStun[i]! > 0 && !isBoss(t)) c.applyStatus(t, 'stunned', core.pStun[i]!, 1);
   c.emit({ type: 'projectile-hit', projectile: pr.kind, team: pr.team, x: pr.x, y: pr.y, z: pr.z, target: 'ship', targetId: t.id, damage: dealt, crit: pr.crit });
@@ -176,6 +183,7 @@ function land(c: CoreSim, pr: ProjectileState, i: number, playerHittable: boolea
   c.emit({ type: 'explosion', x: pr.x, z: pr.z, radius, kind: pr.kind === 'boss-shell' ? 'medium' : 'mortar', team: pr.team });
   const p = c.state.player;
   if (playerHittable && hullEdge(p, pr.x, pr.z) <= radius) c.hurtPlayer(pr.damage, pr.x, pr.z, undefined, 'projectile');
+  blastCaptains(c, pr.x, pr.z, radius, pr.damage); // CAPTAINS
 }
 
 const KIND_BLAST: Partial<Record<ProjectileKind, ExplosionKind>> = {
@@ -188,6 +196,8 @@ function detonate(c: CoreSim, pr: ProjectileState, i: number, x: number, z: numb
   const flags = core.pFlags[i]!;
   const radius = Math.max(pr.area, 4);
   const kind: ExplosionKind = flags & PF_BIG ? 'large' : flags & PF_WATER ? 'water' : KIND_BLAST[pr.kind] ?? 'medium';
+  // CAPTAINS: a captain's shell bursts with credited damage.
+  if (core.pFrom[i]! < 0) { captainBlast(c, core.pFrom[i]!, x, z, radius, pr.damage, pr.crit, core.pKnock[i]!, kind); return; }
   let status: StatusKind | null = null, st = 0, sm = 0;
   if (flags & PF_SLOW) { status = 'slowed'; st = core.pSlowTime[i]!; sm = core.pSlowMag[i]!; }
   explode(c, x, z, radius, pr.damage, pr.team, pr.weapon, pr.crit, core.pKnock[i]!, kind, status, st, sm);
@@ -245,6 +255,7 @@ export function explode(
     }
     return;
   }
+  blastCaptains(c, x, z, radius, damage); // CAPTAINS
   const p = c.state.player;
   if (!p.alive || p.airborne > 0.2 || p.submerged > 0.5) return;
   if (hullEdge(p, x, z) <= radius) c.hurtPlayer(damage, x, z, undefined, 'projectile');

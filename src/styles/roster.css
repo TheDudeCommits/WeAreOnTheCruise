@@ -1,1 +1,90 @@
-/* AI captains roster, kill feed and nameplates (CAPTAINS-owned). */
+/* AI captains roster, kill feed, callouts and nameplates (CAPTAINS-owned). Sizes in --u (1u = 1px at 1600×900). */
+
+.cr-roster {
+  align-self: flex-end;
+  width: calc(252 * var(--u));
+  margin-top: calc(4 * var(--u));
+  display: flex;
+  flex-direction: column;
+  gap: calc(4 * var(--u));
+  padding: calc(8 * var(--u)) calc(10 * var(--u)) calc(9 * var(--u));
+  border-radius: calc(10 * var(--u));
+  background: rgba(8, 12, 30, .74);
+  border: calc(2 * var(--u)) solid var(--ink);
+  box-shadow: 0 0 0 calc(2 * var(--u)) rgba(63, 224, 200, .28), 0 calc(4 * var(--u)) 0 rgba(4, 8, 22, .45);
+}
+.cr-roster__head { display: flex; flex-direction: column; gap: calc(1 * var(--u)); }
+.cr-roster__title { font: 400 var(--fs-18)/1 var(--f-comic); letter-spacing: .08em; text-transform: uppercase; color: #9ff5e4; -webkit-text-stroke: var(--stroke-s) var(--ink); paint-order: stroke fill; }
+.cr-roster__sub { font: 800 calc(11 * var(--u))/1.2 var(--f-ui); color: rgba(255, 250, 240, .62); letter-spacing: .02em; }
+
+.cr-roster__rows { display: flex; flex-direction: column; gap: calc(3 * var(--u)); }
+.cr-roster__row {
+  --cap: var(--teal);
+  display: grid;
+  grid-template-columns: calc(22 * var(--u)) calc(8 * var(--u)) 1fr auto calc(58 * var(--u));
+  align-items: center;
+  column-gap: calc(5 * var(--u));
+  padding: calc(3 * var(--u)) calc(5 * var(--u));
+  border-radius: calc(6 * var(--u));
+  background: rgba(255, 255, 255, .05);
+}
+.cr-roster__row.is-you { background: rgba(255, 207, 51, .12); }
+.cr-roster__rank { font: 400 var(--fs-14)/1 var(--f-comic); color: var(--gold); letter-spacing: .04em; text-align: right; }
+.cr-roster__swatch { width: calc(8 * var(--u)); height: calc(22 * var(--u)); border-radius: calc(3 * var(--u)); background: var(--cap); box-shadow: 0 0 0 calc(1.5 * var(--u)) var(--ink); }
+.cr-roster__who { display: flex; flex-direction: column; min-width: 0; }
+.cr-roster__name { font: 900 calc(13 * var(--u))/1.1 var(--f-ui); color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cr-roster__ship { font: 700 calc(10.5 * var(--u))/1.1 var(--f-ui); color: rgba(255, 250, 240, .55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cr-roster__lv { font: 400 var(--fs-14)/1 var(--f-comic); letter-spacing: .05em; color: #cfe9ff; }
+.cr-roster__hull { position: relative; height: calc(9 * var(--u)); border-radius: 999px; background: rgba(0, 0, 0, .45); box-shadow: inset 0 0 0 calc(1.5 * var(--u)) var(--ink); overflow: hidden; }
+.cr-roster__bar { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: var(--cap); transition: width .2s linear; }
+.cr-roster__row.is-low .cr-roster__bar { background: var(--red); }
+.cr-roster__state { position: absolute; inset: 0; display: grid; place-items: center; font: 900 calc(9.5 * var(--u))/1 var(--f-ui); letter-spacing: .06em; text-transform: uppercase; color: #ffd0c8; }
+.cr-roster__row.is-sunk { opacity: .78; }
+.cr-roster__row.is-sunk .cr-roster__hull { background: rgba(120, 20, 20, .5); }
+.cr-roster__row.is-sunk .cr-roster__name { text-decoration: line-through; text-decoration-color: rgba(255, 90, 80, .8); }
+
+.cr-roster__feed { display: flex; flex-direction: column; gap: calc(2 * var(--u)); margin-top: calc(2 * var(--u)); }
+.cr-roster__feedrow { font: 800 calc(11.5 * var(--u))/1.25 var(--f-ui); color: rgba(255, 250, 240, .86); padding-left: calc(8 * var(--u)); border-left: calc(2 * var(--u)) solid rgba(63, 224, 200, .55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cr-roster__feedrow.is-new { animation: cr-roster-in .35s var(--ease-out); }
+
+.cr-roster__call {
+  position: relative;
+  margin-top: calc(6 * var(--u));
+  padding: calc(5 * var(--u)) calc(9 * var(--u));
+  border-radius: calc(8 * var(--u));
+  background: var(--paper);
+  color: var(--paper-ink);
+  box-shadow: 0 0 0 calc(2 * var(--u)) var(--ink), 0 calc(3 * var(--u)) 0 rgba(4, 8, 22, .45);
+  font: 800 calc(12 * var(--u))/1.25 var(--f-ui);
+}
+.cr-roster__call::before { content: ''; position: absolute; left: calc(18 * var(--u)); top: calc(-7 * var(--u)); border: calc(7 * var(--u)) solid transparent; border-top: 0; border-bottom-color: var(--paper); }
+.cr-roster__callwho { font-weight: 1000; margin-right: calc(4 * var(--u)); }
+.cr-roster__call.is-new { animation: cr-roster-pop .3s var(--ease-pop); }
+
+@keyframes cr-roster-in { from { opacity: 0; transform: translateX(calc(10 * var(--u))); } to { opacity: 1; transform: none; } }
+@keyframes cr-roster-pop { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: none; } }
+
+/* Nameplates over captain ships (positioned by transform from project()). */
+.cr-plates { position: absolute; inset: 0; pointer-events: none; }
+.cr-plate { --cap: var(--teal); position: absolute; left: 0; top: 0; width: 0; height: 0; will-change: transform; }
+.cr-plate__top {
+  position: absolute; left: 0; bottom: calc(8 * var(--u));
+  transform: translateX(-50%);
+  display: flex; align-items: baseline; gap: calc(5 * var(--u));
+  white-space: nowrap;
+  font: 900 calc(12.5 * var(--u))/1 var(--f-ui);
+  color: var(--white);
+  -webkit-text-stroke: var(--stroke-s) var(--ink);
+  paint-order: stroke fill;
+}
+.cr-plate__lv { font: 400 calc(13 * var(--u))/1 var(--f-comic); letter-spacing: .05em; color: var(--cap); }
+.cr-plate__hull {
+  position: absolute; left: 0; bottom: 0;
+  width: calc(64 * var(--u)); height: calc(6 * var(--u));
+  transform: translateX(-50%);
+  border-radius: 999px; overflow: hidden;
+  background: rgba(0, 0, 0, .55);
+  box-shadow: 0 0 0 calc(1.5 * var(--u)) var(--ink);
+}
+.cr-plate__bar { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: var(--cap); }
+.cr-plate.is-low .cr-plate__bar { background: var(--red); }

@@ -20,6 +20,7 @@ import {
 } from './core-runtime';
 import { applyBurn } from './core-forces';
 import { explode } from './projectiles';
+import { areaVsCaptains, frontVsCaptains, ringVsCaptains, whirlVsCaptains } from './captains-damage';
 
 const DEPTH_FUSE = 0.55;
 
@@ -75,6 +76,7 @@ function tickArea(c: CoreSim, h: HazardState, i: number): void {
     const p = c.state.player;
     if (hullEdge(p, h.x, h.z) <= h.radius) c.hurtPlayer(h.damage, h.x, h.z, undefined, 'hazard');
   }
+  if (h.team !== 'player') areaVsCaptains(c, h); // CAPTAINS
 }
 
 function updateBarrel(c: CoreSim, h: HazardState, i: number): void {
@@ -211,6 +213,7 @@ function updateWhirlpool(c: CoreSim, h: HazardState, i: number): void {
       if (grind) c.hurtPlayer(h.damage, h.x, h.z, undefined, 'hazard');
     }
   }
+  if (h.team !== 'player') whirlVsCaptains(c, h, pull, grind); // CAPTAINS
 }
 
 function updateCloud(c: CoreSim, h: HazardState, i: number): void {
@@ -264,6 +267,7 @@ function updateShockwave(c: CoreSim, h: HazardState, i: number): void {
     const p = c.state.player;
     if (hullEdge(p, h.x, h.z) <= cur) { hits.push(0); c.hurtPlayer(h.damage, h.x, h.z, undefined, 'hazard'); }
   }
+  if (h.team !== 'player') ringVsCaptains(c, h, cur, hits); // CAPTAINS
 }
 
 function updateWaveFront(c: CoreSim, h: HazardState, i: number): void {
@@ -311,6 +315,7 @@ function updateWaveFront(c: CoreSim, h: HazardState, i: number): void {
       p.vx += dirX * speed * 0.5 * dt; p.vz += dirZ * speed * 0.5 * dt;
     }
   }
+  if (h.team !== 'player') frontVsCaptains(c, h, dirX, dirZ, band, speed, hits); // CAPTAINS
 }
 
 function expire(c: CoreSim, h: HazardState, i: number): void {

@@ -1,5 +1,6 @@
-/** Settings: volumes, mute, camera shake, damage numbers, quality, FPS. Every change calls onSettingsChange. */
+/** Settings: volumes, mute, camera shake, damage numbers, quality, AI captains, FPS. Every change calls onSettingsChange. */
 import type { QualitySetting, Settings } from '../../game/types';
+import { CAPTAIN } from '../../game/content/captains';
 import { h, navButton, play } from '../core/dom';
 import { glyph, type GlyphId } from '../core/icons';
 import { focusDefault, keyDir, moveFocus, type PadIntent } from '../core/nav';
@@ -31,6 +32,7 @@ export class SettingsPanel {
     this.toggle('reduceFlashing', 'Reduce flashing', 'bolt');
     this.toggle('damageNumbers', 'Damage numbers', 'burst');
     this.quality();
+    this.captains();
     this.toggle('showFps', 'Show FPS', 'clock');
     const back = navButton('cr-btn is-primary cr-settings__done', prompt(['ESC'], 'B', ''), h('span', 'cr-btn__label', 'Done'));
     back.addEventListener('click', () => this.close());
@@ -136,6 +138,28 @@ export class SettingsPanel {
       this.commit();
     };
     const sync = (s: UiSettings) => buttons.forEach((b, i) => b.classList.toggle('is-on', QUALITIES[i] === s.quality));
+    this.rows.push({ el, left: () => step(-1), right: () => step(1), activate: () => step(1), sync });
+  }
+
+  /** AI captains sailing with you (0–4; applies to the next voyage). CAPTAINS. */
+  private captains(): void {
+    const group = h('span', 'cr-segment');
+    const counts = Array.from({ length: CAPTAIN.max + 1 }, (_, i) => i);
+    const current = (s: UiSettings) => Math.max(0, Math.min(CAPTAIN.max, Math.round(s.captains ?? CAPTAIN.defaultCount)));
+    const buttons = counts.map((n) => {
+      const b = navButton('cr-segment__opt', n === 0 ? 'Off' : String(n));
+      b.addEventListener('click', () => { if (this.settings) { this.settings.captains = n; this.commit(); } });
+      group.append(b);
+      return b;
+    });
+    const el = this.row('AI captains', 'ship', h('span', 'cr-setting__control', group));
+    el.title = 'Other captains sailing your sea while no live captains are online (from the next voyage).';
+    const step = (d: number) => {
+      if (!this.settings) return;
+      this.settings.captains = Math.max(0, Math.min(CAPTAIN.max, current(this.settings) + d));
+      this.commit();
+    };
+    const sync = (s: UiSettings) => { const c = current(s); buttons.forEach((b, i) => b.classList.toggle('is-on', counts[i] === c)); };
     this.rows.push({ el, left: () => step(-1), right: () => step(1), activate: () => step(1), sync });
   }
 
