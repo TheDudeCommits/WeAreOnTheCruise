@@ -268,20 +268,21 @@ export class EnemyFleet {
       if (s > 0) {
         const list = e.id % 2 === 0 ? 1 : -1;
         const ease = 1 - Math.pow(1 - Math.min(1, s * 1.6), 2);
-        // List (and break in two) first, then go down.
-        const descent = Math.pow(THREE.MathUtils.smoothstep(s, 0.22, 1), 1.4);
-        if (stationary) {
-          y -= descent * (visual.height * 0.9 + 4);
-          roll += list * ease * 0.18;
-        } else if (visual.split) {
+        // Two-phase descent: the hull settles to its deck while listing (and breaking in two) so the wreck stays
+        // readable, then everything — masts last — goes under before the sim removes it at sink = 1.
+        const hullDepth = visual.pivotY * 2 * scale + 2;
+        const fullDepth = (visual.height + 6) * scale + (visual.split ? e.length * 0.36 : 0);
+        const settle = THREE.MathUtils.smoothstep(s, 0.2, 0.72) * hullDepth * 0.75;
+        const plunge = Math.pow(THREE.MathUtils.smoothstep(s, 0.58, 1), 1.3) * Math.max(0, fullDepth - hullDepth * 0.75);
+        y -= settle + plunge;
+        if (stationary) roll += list * ease * 0.18;
+        else if (visual.split) {
           splitAngle = ease * 0.62;
           gap = ease * 2.2;
           roll += list * ease * 0.22;
-          y -= descent * (visual.height * scale + e.length * 0.36 + 6);
         } else {
           roll += list * ease * 0.62;
           pitch += (e.id % 3 === 0 ? 1 : -1) * ease * 0.32;
-          y -= descent * (visual.height * scale + 4);
         }
       }
       const riseScale = scale * (0.55 + 0.45 * riseEase);

@@ -314,8 +314,10 @@ export class Bosses {
     const ease = 1 - Math.pow(1 - Math.min(1, s * 1.5), 2);
     const lastStand = v.defId === 'sovereign' && b.phase >= 2 ? 0.07 : 0;
     // List and break first, then go down.
-    const descent = Math.pow(THREE.MathUtils.smoothstep(s, 0.28, 1), 1.5);
-    const y = v.heave - descent * (v.height + L * 0.3 + 8);
+    const hullDepth = v.pivotY * 2 + 3;
+    const settle = THREE.MathUtils.smoothstep(s, 0.15, 0.65) * hullDepth * 0.8;
+    const plunge = Math.pow(THREE.MathUtils.smoothstep(s, 0.55, 1), 1.3) * Math.max(0, v.height + L * 0.3 + 8 - hullDepth * 0.8);
+    const y = v.heave - settle - plunge;
     v.root.position.set(b.x, y, b.z);
     v.root.rotation.set(v.pitch, b.heading, v.roll + b.roll + lastStand + ease * 0.18);
     // Split in two while sinking.
