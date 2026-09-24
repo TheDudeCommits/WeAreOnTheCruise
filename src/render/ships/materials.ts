@@ -20,6 +20,17 @@ export function chainShader(material: THREE.Material, key: string, patch: (shade
   material.customProgramCacheKey = () => `${previousKey.call(material)}|${key}`;
 }
 
+/**
+ * Clones a material WITH its shader hooks (Material.clone() drops onBeforeCompile/customProgramCacheKey, which would
+ * silently strip LOOK's toon patch and SHIPS' glow patch from the copy).
+ */
+export function cloneMaterial<T extends THREE.Material>(material: T): T {
+  const copy = material.clone() as T;
+  copy.onBeforeCompile = material.onBeforeCompile;
+  copy.customProgramCacheKey = material.customProgramCacheKey;
+  return copy;
+}
+
 /** Vertex-coloured toon material for procedural parts and fleets. */
 export function partMaterial(name: string, opts: ToonOptions = {}): THREE.Material {
   return createToonMaterial({ vertexColors: true, rim: 0.35, tintable: true, name, ...opts });

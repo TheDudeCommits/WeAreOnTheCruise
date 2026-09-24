@@ -8,7 +8,9 @@ import type { HeroModelKey } from '../../../game/ids';
 import type { OceanServices, ShipAnchor } from '../../frame';
 import { HERO_SOURCE_LENGTH, type SketchfabShipAssets, type HeroTemplate } from '../../loaders/SketchfabShipAssets';
 import { markInk } from '../../materials/toon';
+import type { FleetAssets } from '../../loaders/FleetAssets';
 import { FlashDriver } from '../materials';
+import { HeroCrew } from './Crew';
 import { HeroGrowth, type GrowthInput, type ShipGrowthEvent } from './HeroGrowth';
 import { measureHero, type HeroProfile } from './heroProfile';
 
@@ -40,6 +42,7 @@ export class HeroShip {
   private modelMaterials: THREE.Material[] = [];
   private flash: FlashDriver | null = null;
   growth: HeroGrowth | null = null;
+  crew: HeroCrew | null = null;
   profile: HeroProfile | null = null;
   kind: HeroModelKey | null = null;
   length = 34;
@@ -65,7 +68,7 @@ export class HeroShip {
   private readonly events: ShipGrowthEvent[] = [];
   ready = false;
 
-  constructor(private readonly assets: SketchfabShipAssets) {
+  constructor(private readonly assets: SketchfabShipAssets, private readonly fleetAssets: FleetAssets | null = null) {
     this.root.name = 'hero-ship';
     this.root.rotation.order = 'YXZ';
     this.root.add(this.body);
@@ -99,6 +102,8 @@ export class HeroShip {
     this.growth = new HeroGrowth(profile, accent);
     this.body.add(this.growth.group);
     this.flash = new FlashDriver([...materials, ...this.growth.materials]);
+    this.crew = new HeroCrew(profile.crew, accent, THREE.MathUtils.clamp(profile.partScale * 0.95, 1, 1.4), this.fleetAssets);
+    this.body.add(this.crew.group);
     this.growthPrimed = false;
     this.ready = true;
   }
@@ -106,7 +111,8 @@ export class HeroShip {
   private clearModel(): void {
     if (this.model) { this.holder.remove(this.model); for (const m of this.modelMaterials) m.dispose(); }
     if (this.growth) { this.body.remove(this.growth.group); this.growth.dispose(); }
-    this.model = null; this.modelMaterials = []; this.growth = null; this.profile = null; this.flash = null;
+    if (this.crew) { this.body.remove(this.crew.group); this.crew.dispose(); }
+    this.model = null; this.modelMaterials = []; this.growth = null; this.crew = null; this.profile = null; this.flash = null;
   }
 
   /** Called on 'player-hit' events: colour of the next flash (white hit, gold parry, cyan braced). */
@@ -186,8 +192,11 @@ export class HeroShip {
       if (Math.abs(yaw) < 0.55) yaw = (yaw >= 0 ? 1 : -1) * 0.55;
       this.windYaw += (yaw - this.windYaw) * (1 - Math.exp(-dt * 1.5));
       this.growth.update(dt, time, night, pose.speed, this.windYaw);
+      const before = this.events.length;
       this.growth.drainEvents(this.events);
+      if (this.events.length > before && this.crew) this.crew.cheer();
     }
+    this.crew?.update(dt, time);
   }
 
   /** Growth events in world space (drained). */

@@ -13,6 +13,7 @@ import { GLTFLoader, type GLTFLoaderPlugin, type GLTFParser } from 'three/addons
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import type { HeroModelKey } from '../../game/ids';
 import { toonifyObject } from '../materials/toon';
+import { cloneMaterial } from '../ships/materials';
 
 /** Provenance of the six downloaded hero models (kept for now; renamed in game). See ASSET-LICENSES.md. */
 export const HERO_MODEL_SOURCES: Readonly<Record<HeroModelKey, { uid: string; author: string; license: string }>> = {
@@ -100,7 +101,7 @@ export class SketchfabShipAssets {
     const copies = new Map<THREE.Material, THREE.Material>();
     root.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
-      const copy = (m: THREE.Material) => { let c = copies.get(m); if (!c) { c = m.clone(); copies.set(m, c); } return c; };
+      const copy = (m: THREE.Material) => { let c = copies.get(m); if (!c) { c = cloneMaterial(m); copies.set(m, c); } return c; };
       object.material = Array.isArray(object.material) ? object.material.map(copy) : copy(object.material);
     });
     return { root, materials: [...copies.values()] };
