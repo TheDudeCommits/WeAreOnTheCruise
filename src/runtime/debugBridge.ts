@@ -143,7 +143,7 @@ export function installDebugBridge(app: GameApp): void {
       const groups: Record<string, { meshes: number; tris: number; shadowTris: number }> = {};
       scene.traverseVisible((o) => {
         const mesh = o as THREE.Mesh;
-        if (!mesh.isMesh) return;
+        if (!mesh.isMesh || o.userData.shadowProxy) return;
         let top: THREE.Object3D = o;
         while (top.parent && top.parent !== scene) top = top.parent;
         const g = mesh.geometry;

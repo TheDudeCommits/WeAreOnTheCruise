@@ -23,7 +23,9 @@ export const Decal = {
 } as const;
 
 export const DECAL_STRIDE = 20;
-const GRID = 22;
+// Wave-conforming grid: 16×16 (512 triangles) follows the swell on decals up to the 150 m whirl; the ring draws every
+// slot each frame (dead ones cull in the vertex shader), so this sets most of the FX triangle count.
+const GRID = 16;
 
 const vertexShader = /* glsl */ `
 ${GERSTNER_GLSL}
