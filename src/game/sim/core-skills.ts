@@ -18,7 +18,10 @@ import { crit, CRIT, lobShell, selectNearest } from './weapons/common';
 export const ULT_CHARGE_DAMAGE = 2500;
 
 export const SPECIALS = {
-  'second-wind': { cooldown: 20, heal: 0.3, shield: 0.5, time: 3 },
+  // DIFFICULTY round 3: cooldown 20 → 30 s and shield 0.5 → 0.3 (the heal stays 30%, as its card says): every 20 s it
+  // out-healed the harder fleet, so the Dawn Ram survived runs the Sunlion sank in (balance-sim deaths 33% vs 79%
+  // before, 44% vs 72% after).
+  'second-wind': { cooldown: 30, heal: 0.3, shield: 0.3, time: 3 },
   lionburst: { cooldown: 12, distance: 180, minDistance: 70, time: 1, damage: 70, radius: 42, knockback: 14 },
   'deep-dive': { cooldown: 14, time: 3, damage: 80, radius: 46, knockback: 14, stun: 0.6 },
   'chefs-banquet': { cooldown: 22, heal: 0.2, time: 6, fireRate: 1.5 },

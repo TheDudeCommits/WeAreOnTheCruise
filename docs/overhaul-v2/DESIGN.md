@@ -53,7 +53,7 @@ Player ships (models kept, renamed; `modelKey` = legacy file name in `/assets/sk
 
 ## 4. Core numbers (tuned by `scripts/balance-sim.ts`; content tables are the source of truth)
 
-- Tick 60 Hz fixed step. Run 15:00 (Sunward), bosses at 5:00 / 10:00 / 15:00; beating the 15:00 boss = **Victory** (then optional endless).
+- Tick 60 Hz fixed step. Run 15:00 (Sunward). Bosses on the run clock (DIFFICULTY round 3): Iron Warden 3:00, Tidewyrm 6:00, tougher rematches at 8:30 (Warden) and 11:00 (Tidewyrm), the Sovereign at 15:00; a boss still afloat does not hold the next one back; beating the 15:00 boss = **Victory** (then optional endless).
 - XP to next level: `6 + 4 × (level − 1)` (tunable). Target ~level 25–35 at 15:00.
 - Slots: **6 weapons** (slot 1 = ship's starting weapon, normally Broadside) and **6 passives**.
 - Weapon levels 1–6; **level 3 = branch A/B choice**; **level 6 = OVERDRIVE ★** (replaces the level card once the weapon is 5 and the run has reached ~level 10+).
@@ -112,8 +112,8 @@ Elites: any enemy may spawn elite (×3.5 HP, glow, bigger, drops a chest).
 ### Bosses
 | id | At | Name | Kit |
 |---|---|---|---|
-| `iron-warden` | 5:00 | **The Iron Warden** (Commodore's dreadnought) | broadside volleys with line telegraphs, mortar barrage circles, summons cutters; phase 2 at 50%: armour plates off, ram charge |
-| `tidewyrm` | 10:00 | **The Tidewyrm** | submerge → telegraphed ripple → lunge; tail-slam wave rings; water-bolt volleys; phase 2 summons wyrmlings |
+| `iron-warden` | 3:00 (rematch 8:30) | **The Iron Warden** (Commodore's dreadnought) | broadside volleys with line telegraphs, mortar barrage circles, summons cutters; phase 2 at 50%: armour plates off, ram charge |
+| `tidewyrm` | 6:00 (rematch 11:00) | **The Tidewyrm** | submerge → telegraphed ripple → lunge; tail-slam wave rings; water-bolt volleys; phase 2 summons wyrmlings |
 | `sovereign` | 15:00 | **The Sovereign** (Fleet Admiral's flagship) | broadside storms, Judgment-line artillery, man-o'-war escorts; defeat = Victory |
 
 ### Director

@@ -148,13 +148,26 @@ export interface BossDef {
   doubloons: number;
 }
 
+/** One boss arrival on a sea's run clock. */
+export interface SeaBossEntry {
+  /** Run time (s) the boss arrives (its warning comes DIRECTOR.warningLead earlier). */
+  at: number;
+  boss: BossId;
+  /** Extra hull for this meeting on top of DIRECTOR.bossHpScale (rematches of an earlier boss are tougher). Default 1. */
+  hpMul?: number;
+}
+
 export interface SeaDef {
   id: SeaId;
   name: string;
   description: string;
   /** Run length in seconds; the final boss spawns at this time. */
   duration: number;
-  bosses: readonly { at: number; boss: BossId }[];
+  /**
+   * Boss schedule on the run clock (seconds of run time, never the player's level). The LAST entry is the final
+   * boss: sinking it wins the run. A boss may appear more than once (a rematch with `hpMul`).
+   */
+  bosses: readonly SeaBossEntry[];
   /** Time of day (0–24 h) at run start and hours advanced over the run. */
   startHour: number;
   hoursPerRun: number;

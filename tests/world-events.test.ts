@@ -155,11 +155,13 @@ describe('world events', () => {
   it('blockade: a flagship leads a frigate line; sinking it breaks the line', () => {
     const sim = makeSim('blockade', 'sunward-shallows', 8);
     run(sim, 0.5);
+    // Only the blockade's own ships (the director's regular frigates sail in their own lines at minute 8).
+    const before = new Set(sim.state.enemies.map((e) => e.id));
     startEvent(sim, 'admiralty-blockade');
-    const flag = alive(sim, 'man-o-war')[0]!;
+    const flag = alive(sim, 'man-o-war').filter((e) => !before.has(e.id))[0]!;
     expect(flag).toBeTruthy();
     expect(flag.title).toMatch(/^Flagship /);
-    const frigates = alive(sim, 'frigate');
+    const frigates = alive(sim, 'frigate').filter((e) => !before.has(e.id));
     expect(frigates.length).toBeGreaterThanOrEqual(3);
     expect(frigates.every((f) => f.ai.leader === flag.id)).toBe(true);
     sim.damageTarget(flag, 1e7, { pierceArmor: true });
@@ -253,7 +255,8 @@ describe('world events', () => {
     let active = 0, maxActive = 0;
     sim.setInput({ steer: 0.25 });
     let guard = 0;
-    while (sim.state.time < 290 && guard++ < 290 * 70) {
+    const firstBoss = sim.content.seas['stormwrack-reach'].bosses[0]!.at;
+    while (sim.state.time < firstBoss - 1 && guard++ < firstBoss * 70) {
       if (sim.state.status === 'levelup' || sim.state.status === 'chest') sim.chooseCard(0);
       sim.step(1 / 60);
       for (const e of sim.drainEvents()) {
@@ -266,12 +269,12 @@ describe('world events', () => {
         maxActive = Math.max(maxActive, active);
       }
     }
-    expect(starts.length).toBeGreaterThanOrEqual(3);
+    expect(starts.length).toBeGreaterThanOrEqual(2);
     expect(starts[0]!.t).toBeGreaterThanOrEqual(59);
     for (let i = 1; i < starts.length; i++) expect(starts[i]!.t - starts[i - 1]!.t).toBeGreaterThanOrEqual(35);
     expect(maxActive).toBeLessThanOrEqual(1);
-    // The Iron Warden arrives at 5:00: no set piece may still be running then.
-    for (const s of starts) if (EVENT_IDS.includes(s.id)) expect(s.t + DIRECTOR_EVENTS[s.id].duration).toBeLessThanOrEqual(300);
+    // The Iron Warden arrives on the run clock (3:00): no set piece may still be running then.
+    for (const s of starts) if (EVENT_IDS.includes(s.id)) expect(s.t + DIRECTOR_EVENTS[s.id].duration).toBeLessThanOrEqual(firstBoss);
   });
 
   it("mirrors META's treasure convoy on the tracker", () => {
