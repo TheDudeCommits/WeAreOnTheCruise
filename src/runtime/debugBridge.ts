@@ -10,6 +10,8 @@ import { forcePoi } from '../game/sim/events/poi';
 import type { SimAction } from '../game/types';
 import type { GameApp } from './GameApp';
 import { hurtCaptain } from '../game/sim/captains-damage';
+import { playerHitCaptain } from '../game/sim/captains-rival';
+import { CAPTAIN } from '../game/content/captains';
 import { captainRuntime } from '../game/sim/captains-runtime';
 
 export interface CruiseBridge {
@@ -55,6 +57,8 @@ export interface CruiseBridge {
     chargeUltimate(): void;
     /** Sinks an AI captain (id −1…−4; default the first afloat) — QA for sinking and respawn. */
     sinkCaptain(id?: number): void;
+    /** Rivals: the player's fire provokes a captain (nearest afloat by default) into turning hostile. */
+    provokeCaptain(id?: number): void;
     /**
      * Forces a director set piece now (EVENTS QA): any DirectorEventId, or a point of interest in front of the ship
      * with 'poi:trade-wind' | 'poi:salvage' | 'poi:beacon'. False for an unknown id or no run.
@@ -125,9 +129,11 @@ export function installDebugBridge(app: GameApp): void {
       const rt = captainRuntime(s);
       return {
         configured: rt.count, attentionOnPlayer: rt.focusPlayer, liveEnemies: rt.aliveEnemies, sinkings: rt.sinkings,
+        sunkByPlayer: rt.sunkByPlayer, hostileTime: +rt.hostileTime.toFixed(1),
         captains: s.captains.map((k) => ({
           id: k.id, name: k.name, ship: k.shipId, alive: k.alive, hp: Math.round(k.hp), maxHp: Math.round(k.maxHp), level: k.level,
           kills: k.kills, bounty: k.bounty, respawn: +k.respawn.toFixed(1), mode: k.ai.mode, attackers: k.ai.attackers,
+          grudge: +(k.ai.grudge ?? 0).toFixed(1), taken: Math.round(k.ai.taken ?? 0),
           x: Math.round(k.x), z: Math.round(k.z), fromPlayer: Math.round(Math.hypot(k.x - s.player.x, k.z - s.player.z)),
         })),
         hulls: app.ships.captains.stats(),
@@ -173,6 +179,14 @@ export function installDebugBridge(app: GameApp): void {
         if (!s) return;
         const k = s.state.captains.find((x) => (id === undefined ? x.alive : x.id === id));
         if (k && k.alive) { k.ai.grace = 0; hurtCaptain(s, k, k.hp * 4 + 100); }
+      },
+      provokeCaptain: (id) => {
+        const s = sim();
+        if (!s) return;
+        const p = s.state.player;
+        let k = id === undefined ? undefined : s.state.captains.find((x) => x.id === id && x.alive);
+        if (!k) for (const x of s.state.captains) if (x.alive && (!k || Math.hypot(x.x - p.x, x.z - p.z) < Math.hypot(k.x - p.x, k.z - p.z))) k = x;
+        if (k) { k.ai.grace = 0; playerHitCaptain(s, k, k.maxHp * 0.35 / CAPTAIN.rival.playerDamageMul); }
       },
       event: (id) => {
         const s = sim();

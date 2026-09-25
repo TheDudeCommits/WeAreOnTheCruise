@@ -33,8 +33,8 @@ export function captainHullEdge(k: CaptainState, x: number, z: number): number {
   return Math.sqrt(dx * dx + dz * dz) - k.beam * 0.5 * HITBOX;
 }
 
-/** Applies armour and spawn protection; sinks the captain at 0. Returns the damage taken. */
-export function hurtCaptain(c: SimContext, k: CaptainState, amount: number): number {
+/** Applies armour and spawn protection; sinks the captain at 0 (`byPlayer`: the player's hit). Returns the damage taken. */
+export function hurtCaptain(c: SimContext, k: CaptainState, amount: number, byPlayer = false): number {
   if (!k.alive || !(amount > 0)) return 0;
   const ai = k.ai;
   if ((ai.grace ?? 0) > 0) return 0;
@@ -45,7 +45,7 @@ export function hurtCaptain(c: SimContext, k: CaptainState, amount: number): num
   ai.sinceHit = 0;
   ai.dmgAcc = (ai.dmgAcc ?? 0) + value;
   ai.taken = (ai.taken ?? 0) + value;
-  if (k.hp <= 0) sinkCaptain(c, k);
+  if (k.hp <= 0) sinkCaptain(c, k, byPlayer);
   return value;
 }
 
@@ -58,16 +58,18 @@ export function flushCaptainDamage(c: SimContext, k: CaptainState): void {
   ai.dmgT = CAPTAIN.damageTick;
 }
 
-function sinkCaptain(c: SimContext, k: CaptainState): void {
+function sinkCaptain(c: SimContext, k: CaptainState, byPlayer: boolean): void {
   const ai = k.ai;
   flushCaptainDamage(c, k);
   k.hp = 0;
   k.alive = false;
   k.respawn = CAPTAIN.respawn;
   k.statuses.length = 0;
-  ai.mode = 0; ai.tgt = 0; ai.ripLeft = 0; ai.sinkT = 0; ai.sunk = (ai.sunk ?? 0) + 1;
-  captainRuntime(c.state).sinkings++;
-  c.emit({ type: 'captain-sunk', id: k.id, name: k.name, x: k.x, z: k.z });
+  ai.mode = 0; ai.tgt = 0; ai.ripLeft = 0; ai.sinkT = 0; ai.sunk = (ai.sunk ?? 0) + 1; ai.grudge = 0;
+  const rt = captainRuntime(c.state);
+  rt.sinkings++;
+  if (byPlayer) rt.sunkByPlayer++;
+  c.emit({ type: 'captain-sunk', id: k.id, name: k.name, x: k.x, z: k.z, byPlayer, bounty: byPlayer ? Math.round(k.bounty * CAPTAIN.rival.bountyShare) : 0 });
 }
 
 /** A flat enemy shot against every captain (projectiles.ts). Returns true when the shot is spent. */

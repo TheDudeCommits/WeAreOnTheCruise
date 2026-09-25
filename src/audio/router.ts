@@ -298,6 +298,9 @@ export class EventRouter {
         this.h.moment?.('captain-sunk');
         return;
       case 'captain-kill': return; // Their sinkings already sound through enemy-killed.
+      // Rivals: a captain turning on the player gets a short, low horn (not the boss's).
+      case 'captain-hostile': this.p('captain-joined', 'war-horn', { pitch: 3, gain: 0.5 }); return;
+      case 'captain-calm': return;
       case 'weather-changed':
         if (e.weather === 'storm') this.p('weather-changed', 'thunder-far', { gain: 1.1 });
         else if (e.weather === 'fog') this.p('weather-changed', 'boss-horn', { pitch: 3, gain: 0.35 });

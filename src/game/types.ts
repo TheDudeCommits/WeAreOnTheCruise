@@ -610,7 +610,11 @@ export type SimEvent =
   | { type: 'director-event'; name: string; text: string }
   | { type: 'world-event'; id: string; phase: 'start' | 'success' | 'fail' | 'end'; name: string; text: string; x?: number; z?: number }
   | { type: 'captain-joined'; id: ShipRef; name: string; shipId: ShipId }
-  | { type: 'captain-sunk'; id: ShipRef; name: string; x: number; z: number }
+  | { type: 'captain-sunk'; id: ShipRef; name: string; x: number; z: number; byPlayer?: boolean; bounty?: number }
+  /** A rival captain turns on the player (provoked by the player's fire, an opportunist, or back for revenge). */
+  | { type: 'captain-hostile'; id: ShipRef; name: string; reason: 'provoked' | 'opportunist' | 'revenge' }
+  /** A hostile captain's grudge ran out. */
+  | { type: 'captain-calm'; id: ShipRef; name: string }
   | { type: 'captain-respawned'; id: ShipRef; name: string }
   | { type: 'captain-kill'; id: ShipRef; name: string; victim: EnemyId | BossId; x: number; z: number }
   | { type: 'weather-changed'; weather: WeatherId }

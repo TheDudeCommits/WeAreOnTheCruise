@@ -1,7 +1,7 @@
 /**
  * AI captains' hull contacts (CAPTAINS-owned), called at the end of CORE's resolveCollisions:
  *  - islands: the hull (a row of circles along the keel) is pushed out of land and loses its inward velocity;
- *  - the player: captains always yield (the player's handling is never disturbed by an ally);
+ *  - the player: captains always yield (the player's handling is never disturbed); a hard ram hurts the rival;
  *  - other captains: pushed apart evenly;
  *  - enemies: pushed apart by a capped mass ratio; a touching enemy deals its contact damage (scaled by how hard it
  *    hit, once per enemy contact cooldown), glances off and takes a little crush credited to the captain;
@@ -11,6 +11,7 @@ import { CAPTAIN } from '../content/captains';
 import type { CaptainState } from '../types';
 import { captainHit } from './captains-credit';
 import { hurtCaptain } from './captains-damage';
+import { playerRamCaptain } from './captains-rival';
 import { CLOSEST, isBoss, keelDistance, type CoreSim } from './core-runtime';
 import { enemyContactDamage } from './meta-spawn';
 
@@ -83,7 +84,8 @@ function player(c: CoreSim, k: CaptainState): void {
     if (d > 1e-4) { nx = (CX[i]! - CLOSEST.x) / d; nz = (CZ[i]! - CLOSEST.z) / d; }
     k.x += nx * overlap; k.z += nz * overlap;
     const vn = (k.vx - p.vx) * nx + (k.vz - p.vz) * nz;
-    if (vn < 0) { k.vx -= vn * nx; k.vz -= vn * nz; }
+    if (vn < 0) { playerRamCaptain(c, k, -vn); k.vx -= vn * nx; k.vz -= vn * nz; }
+    if (!k.alive) return;
   }
 }
 

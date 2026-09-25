@@ -4,10 +4,13 @@
  * CAPTAIN.mortar.level a stern mortar. Every shot is a team-'player' CORE projectile tagged with the captain's ship
  * ref in `core.pFrom` (projectiles.ts routes its hits to captains-credit.ts) and announced with 'weapon-fired'
  * (owner = captain id) for muzzle flashes, smoke and audio. Side convention here: +1 starboard, −1 port (CORE's).
+ * A hostile rival (captains-rival.ts) turns its broadside and bow chaser on the player: those shots are team 'enemy'
+ * (they hit the player, never captains) at CAPTAIN.rival.damageToPlayer, still tagged with the captain's ref.
  */
 import { CAPTAIN } from '../content/captains';
 import type { CaptainState } from '../types';
 import type { Target } from './context';
+import { isHostile } from './captains-rival';
 import { acquirable, type CoreSim } from './core-runtime';
 import { lobShell } from './weapons/common';
 
@@ -28,7 +31,9 @@ export function broadsideGuns(c: CoreSim, k: CaptainState): number {
   return Math.min(B.maxGuns, c.content.ships[k.shipId].broadsideGuns + Math.floor((k.level - 1) / B.gunsPerLevels));
 }
 
-const SCAN = { star: null as Target | null, port: null as Target | null };
+/** Anything the guns can lead: an enemy, a boss or (for a hostile rival) the player. */
+type Mark = { x: number; z: number; vx: number; vz: number; radius: number };
+const SCAN = { star: null as Mark | null, port: null as Mark | null, starFoe: false, portFoe: false };
 
 function scanBeams(c: CoreSim, k: CaptainState, range: number): void {
   const fx = -Math.sin(k.heading), fz = -Math.cos(k.heading);
@@ -45,11 +50,20 @@ function scanBeams(c: CoreSim, k: CaptainState, range: number): void {
     if (dx * sx + dz * sz >= 0) { if (d < starD) { starD = d; SCAN.star = t; } }
     else if (d < portD) { portD = d; SCAN.port = t; }
   }
+  // A hostile rival prefers the player on whichever beam it lies.
+  SCAN.starFoe = false; SCAN.portFoe = false;
+  const p = c.state.player;
+  if (isHostile(k) && p.alive && p.submerged < 0.5 && p.airborne < 0.2) {
+    const dx = p.x - k.x, dz = p.z - k.z, d = Math.sqrt(dx * dx + dz * dz);
+    if (d > 1e-3 && d - p.radius <= range && Math.abs((dx * fx + dz * fz) / d) <= SIN_ARC) {
+      if (dx * sx + dz * sz >= 0) { SCAN.star = p; SCAN.starFoe = true; } else { SCAN.port = p; SCAN.portFoe = true; }
+    }
+  }
 }
 
 /** Lead point of a target for a shot of `speed` from (sx, sz). */
 const AIM = { x: 0, z: 0 };
-function lead(sx: number, sz: number, t: Target, speed: number): typeof AIM {
+function lead(sx: number, sz: number, t: Mark, speed: number): typeof AIM {
   let tx = t.x, tz = t.z;
   for (let i = 0; i < 2; i++) {
     const time = Math.min(3, Math.hypot(tx - sx, tz - sz) / Math.max(1, speed));
@@ -80,6 +94,7 @@ export function updateCaptainGuns(c: CoreSim, k: CaptainState): void {
       const bx = Math.cos(k.heading) * side, bz = -Math.sin(k.heading) * side;
       const angle = Math.atan2(ux * fx + uz * fz, ux * bx + uz * bz);
       ai.ripSide = side; ai.ripAngle = Math.max(-ARC, Math.min(ARC, angle));
+      ai.ripFoe = (side > 0 ? SCAN.starFoe : SCAN.portFoe) ? 1 : 0;
       ai.ripGuns = broadsideGuns(c, k); ai.ripIdx = 0; ai.ripLeft = ai.ripGuns; ai.ripNext = 0;
       const reload = B.cooldown * (1 - Math.min(0.3, 0.012 * (k.level - 1)));
       if (side > 0) ai.reloadS = reload; else ai.reloadP = reload;
@@ -116,8 +131,9 @@ function fireGun(c: CoreSim, k: CaptainState, side: number, i: number, guns: num
   const z = k.z + fz * along * k.length + bz * k.beam * 0.5;
   const speed = B.speed + k.level;
   const cm = crit(c);
-  const damage = B.damage * captainDamageMul(k.level) * cm;
-  const idx = c.shoot('cannonball', 'player', x, 3.2, z, dirX * speed, 0, dirZ * speed, damage, 1.6, 0, broadsideRange(k) / speed, undefined, cm > 1, 0);
+  const foe = k.ai.ripFoe === 1;
+  const damage = B.damage * captainDamageMul(k.level) * cm * (foe ? CAPTAIN.rival.damageToPlayer : 1);
+  const idx = c.shoot('cannonball', foe ? 'enemy' : 'player', x, 3.2, z, dirX * speed, 0, dirZ * speed, damage, 1.6, 0, broadsideRange(k) / speed, undefined, cm > 1, 0);
   if (idx >= 0) { core.pFrom[idx] = k.id; core.pKnock[idx] = 1; }
   c.emit({ type: 'weapon-fired', weapon: 'broadside', owner: k.id, x, z, dirX, dirZ, side: side > 0 ? 'starboard' : 'port', count: 1 });
   k.roll += side * 0.006;
@@ -128,9 +144,14 @@ function chaser(c: CoreSim, k: CaptainState): void {
   const C = CAPTAIN.chaser;
   const fx = -Math.sin(k.heading), fz = -Math.cos(k.heading);
   const bowX = k.x + fx * k.length * 0.5, bowZ = k.z + fz * k.length * 0.5;
-  let best: Target | null = null, bestD = Infinity;
+  let best: Mark | null = null, bestD = Infinity, foe = false;
+  const p = c.state.player;
+  if (isHostile(k) && p.alive && p.submerged < 0.5 && p.airborne < 0.2) {
+    const dx = p.x - bowX, dz = p.z - bowZ, d = Math.sqrt(dx * dx + dz * dz);
+    if (d > 1e-3 && d - p.radius <= C.range && (dx * fx + dz * fz) / d >= CHASER_COS) { best = p; foe = true; }
+  }
   const list = c.state.enemies, bosses = c.state.bosses;
-  for (let i = 0; i < list.length + bosses.length; i++) {
+  for (let i = 0; !foe && i < list.length + bosses.length; i++) {
     const t: Target = i < list.length ? list[i]! : bosses[i - list.length]!;
     if (!acquirable(t)) continue;
     const dx = t.x - bowX, dz = t.z - bowZ, d = Math.sqrt(dx * dx + dz * dz);
@@ -143,8 +164,8 @@ function chaser(c: CoreSim, k: CaptainState): void {
   const d = Math.hypot(dx, dz) || 1;
   dx /= d; dz /= d;
   const cm = crit(c);
-  const idx = c.shoot('chaser-shot', 'player', bowX, 3.4, bowZ, dx * C.speed, 0, dz * C.speed, C.damage * captainDamageMul(k.level) * cm, 1.4, 0,
-    C.range / C.speed, undefined, cm > 1, 0);
+  const idx = c.shoot('chaser-shot', foe ? 'enemy' : 'player', bowX, 3.4, bowZ, dx * C.speed, 0, dz * C.speed,
+    C.damage * captainDamageMul(k.level) * cm * (foe ? CAPTAIN.rival.damageToPlayer : 1), 1.4, 0, C.range / C.speed, undefined, cm > 1, 0);
   if (idx >= 0) { c.core.pFrom[idx] = k.id; c.core.pKnock[idx] = 1.5; }
   c.emit({ type: 'weapon-fired', weapon: 'bow-chaser', owner: k.id, x: bowX, z: bowZ, dirX: dx, dirZ: dz, side: 'bow', count: 1 });
   k.ai.chaserCd = C.cooldown;

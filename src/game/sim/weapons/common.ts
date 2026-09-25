@@ -53,7 +53,7 @@ export function crit(c: CoreSim): number {
 
 /** Intercept point for a shot of `speed` from (sx,sz) at a target moving with its current velocity. */
 export const AIM = { x: 0, z: 0, t: 0 };
-export function lead(sx: number, sz: number, t: Target, speed: number): typeof AIM {
+export function lead(sx: number, sz: number, t: Pick<Target, 'x' | 'z' | 'vx' | 'vz'>, speed: number): typeof AIM {
   let tx = t.x, tz = t.z, time = 0;
   for (let i = 0; i < 2; i++) {
     const dx = tx - sx, dz = tz - sz;

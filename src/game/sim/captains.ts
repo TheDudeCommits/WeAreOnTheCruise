@@ -1,7 +1,7 @@
 /**
  * AI captains (CAPTAINS-owned). Other captains sailing the same sea: while no live captains are online (see
  * src/runtime/presence.ts) they fill the roster, fight the fleet near the player, draw part of its fire (targeting.ts),
- * sink and sail back in. `state.captains` holds them; ids are negative ShipRefs (−1 … −4 by slot).
+ * sink and sail back in. They are rivals (captains-rival.ts): the player can shoot them, and they fire back. `state.captains` holds them; ids are negative ShipRefs (−1 … −4 by slot).
  *
  * Called once per tick after enemies and bosses (Sim.ts). The count comes from Settings.captains through
  * `configureCaptains(sim.state, n)` (captains-runtime.ts); unconfigured sims (tests, tools) have none and are
@@ -26,6 +26,7 @@ import type { CaptainState } from '../types';
 import { flushCaptainDamage } from './captains-damage';
 import { updateCaptainGuns } from './captains-guns';
 import { captainRuntime, captainSlot, type CaptainRuntime } from './captains-runtime';
+import { onCaptainRespawn, updateRivalry } from './captains-rival';
 import { MODE_RETREAT, steerCaptain } from './captains-steer';
 import type { SimContext } from './context';
 import type { CoreSim } from './core-runtime';
@@ -168,6 +169,8 @@ function afloat(c: CoreSim, k: CaptainState): void {
     k.heading = Math.atan2(-(p.x - k.x), -(p.z - k.z));
     k.vx = 0; k.vz = 0; k.speed = 6; ai.tgt = 0;
   }
+  updateRivalry(c, k);
+  if ((ai.grudge ?? 0) > 0) captainRuntime(s).hostileTime += dt;
   if (s.player.alive) {
     steerCaptain(c, k);
     updateCaptainGuns(c, k);
@@ -199,6 +202,7 @@ function sunk(c: CoreSim, k: CaptainState): void {
   ai.grace = CAPTAIN.respawnGrace; ai.fade = 0; ai.sinkT = 0; ai.mode = 0; ai.tgt = 0; ai.sinceHit = 99; ai.ripLeft = 0;
   ai.reloadP = 0.8; ai.reloadS = 1;
   c.emit({ type: 'captain-respawned', id: k.id, name: k.name });
+  onCaptainRespawn(c, k);
 }
 
 // ───────────────────────── Aggro tally ─────────────────────────

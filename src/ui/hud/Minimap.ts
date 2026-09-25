@@ -233,7 +233,7 @@ export class Minimap {
       ctx.lineWidth = 2;
       ctx.stroke();
     }
-    // AI captains: teal arrows (friendly), hollow while sunk.
+    // AI captains: teal arrows (red while hostile to the player), hollow while sunk.
     for (const k of run.captains) {
       plot(k.x, k.z, pt);
       const fe2 = -Math.sin(k.heading), fn2 = Math.cos(k.heading);
@@ -248,9 +248,10 @@ export class Minimap {
       ctx.lineTo(0, 2.5);
       ctx.lineTo(-4.8, 5);
       ctx.closePath();
-      ctx.fillStyle = k.alive ? '#3fe0c8' : 'rgba(63, 224, 200, 0)';
+      const cap = k.alive && (k.ai.grudge ?? 0) > 0 ? '#ff5a4a' : '#3fe0c8';
+      ctx.fillStyle = k.alive ? cap : 'rgba(63, 224, 200, 0)';
       ctx.fill();
-      ctx.strokeStyle = k.alive ? '#0b1026' : '#3fe0c8';
+      ctx.strokeStyle = k.alive ? '#0b1026' : cap;
       ctx.lineWidth = 1.6;
       ctx.stroke();
       ctx.restore();

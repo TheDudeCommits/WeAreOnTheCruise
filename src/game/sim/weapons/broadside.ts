@@ -1,7 +1,8 @@
 /**
  * Broadside Battery (CORE-owned).
  *  - Auto: when a ship is within ±40° of either beam and in range, that side's guns ripple-fire bow → stern
- *    (≈50 ms apart) toward the target's lead point. Guns per side = ship.broadsideGuns + level growth + Amount.
+ *    (≈50 ms apart) toward the target's lead point. Rival captains are only auto-targeted while hostile.
+ *    (Hand-aimed Full Broadsides and stray shots hit any captain — captains-rival.ts.) Guns per side = ship.broadsideGuns + level growth + Amount.
  *  - A Chain Shot: wide balls that slow (40%, `slow`/`slowTime`). B Heavy Shot: pierce (`pierce` 1) + knockback (6 m).
  *  - ★ Rolling Thunder: both batteries walk bow → stern continuously while anything is in range (±60° aim arc).
  *  - Full Broadside (Q / LMB): the side facing the aim point fires every gun +2 at ×2 power, aimed at the cursor.
@@ -10,6 +11,7 @@
 import type { ProjectileKind } from '../../ids';
 import type { WeaponSlot } from '../../types';
 import type { Target } from '../context';
+import { isHostile } from '../captains-rival';
 import { clamp, GUN_QUEUE, PF_BURN, PF_SLOW, acquirable, type CoreSim } from '../core-runtime';
 import { ULTIMATES } from '../core-skills';
 import { cooldownMul, damageMul, extraAmount, projectileSpeedMul, rangeMul } from '../stats';
@@ -53,7 +55,8 @@ function buildSpec(c: CoreSim, slot: WeaponSlot | undefined, power: number, burn
   return SPEC;
 }
 
-const SCAN = { port: null as Target | null, star: null as Target | null, any: false };
+type Mark = Pick<Target, 'x' | 'z' | 'vx' | 'vz'>;
+const SCAN = { port: null as Mark | null, star: null as Mark | null, any: false };
 
 function scanSides(c: CoreSim, range: number, arc: number): void {
   const p = c.state.player;
@@ -74,10 +77,22 @@ function scanSides(c: CoreSim, range: number, arc: number): void {
     if (dx * sx + dz * sz >= 0) { if (d < starD) { starD = d; SCAN.star = t; } }
     else if (d < portD) { portD = d; SCAN.port = t; }
   }
+  // Rivals: a captain fighting the player is fair game for the batteries.
+  const caps = c.state.captains;
+  for (let i = 0; i < caps.length; i++) {
+    const k = caps[i]!;
+    if (!isHostile(k)) continue;
+    const dx = k.x - p.x, dz = k.z - p.z, d = Math.sqrt(dx * dx + dz * dz);
+    if (d < 1e-3 || d - k.radius > range) continue;
+    SCAN.any = true;
+    if (Math.abs((dx * fx + dz * fz) / d) > sinArc) continue;
+    if (dx * sx + dz * sz >= 0) { if (d < starD) { starD = d; SCAN.star = k; } }
+    else if (d < portD) { portD = d; SCAN.port = k; }
+  }
 }
 
 /** Gun angle off the beam (positive toward the bow) that points `side`'s guns at the target's lead point. */
-function aimAngle(c: CoreSim, t: Target, side: number, speed: number, arc: number): number {
+function aimAngle(c: CoreSim, t: Mark, side: number, speed: number, arc: number): number {
   const p = c.state.player;
   lead(p.x, p.z, t, speed);
   const ux = AIM.x - p.x, uz = AIM.z - p.z;

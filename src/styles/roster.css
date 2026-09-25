@@ -90,7 +90,7 @@
 .cr-capplate__lv { font: 400 calc(13 * var(--u))/1 var(--f-comic); letter-spacing: .05em; color: var(--cap); }
 .cr-capplate__hull {
   position: absolute; left: 0; bottom: 0;
-  width: calc(60 * var(--u)); height: calc(6 * var(--u));
+  width: calc(84 * var(--u)); height: calc(8 * var(--u));
   transform: translateX(-50%);
   border-radius: 999px; overflow: hidden;
   background: rgba(0, 0, 0, .55);
@@ -98,3 +98,10 @@
 }
 .cr-capplate__bar { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: var(--cap); }
 .cr-capplate.is-low .cr-capplate__bar { background: var(--red); }
+/* Rivals: a captain fighting the player reads red (row, nameplate, tag). */
+.cr-capplate__tag { display: none; font: 900 calc(9 * var(--u))/1 var(--f-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--white); background: var(--red); padding: calc(2 * var(--u)) calc(4 * var(--u)); border-radius: calc(3 * var(--u)); -webkit-text-stroke: 0; box-shadow: 0 0 0 calc(1.5 * var(--u)) var(--ink); align-self: center; }
+.cr-capplate.is-hostile .cr-capplate__tag { display: inline-block; }
+.cr-capplate.is-hostile { --cap: var(--red); }
+.cr-capplate.is-hostile .cr-capplate__name { color: #ffd0c8; }
+.cr-roster__row.is-hostile .cr-roster__name { color: #ff9a8a; }
+.cr-roster__row.is-hostile .cr-roster__swatch { box-shadow: 0 0 0 calc(1.5 * var(--u)) var(--ink), 0 0 calc(6 * var(--u)) var(--red); }

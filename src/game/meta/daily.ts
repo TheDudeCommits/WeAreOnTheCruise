@@ -27,8 +27,8 @@ export const DAILY_RULES: readonly DailyRule[] = [
   { id: 'lean-holds', name: 'Lean Holds', text: 'Heals and repairs mend 40% less; doubloons +25%.', effect: { healing: 0.6, reward: 1.25 } },
   { id: 'wanted', name: 'Wanted, Dead or Alive', text: 'Two more bounty captains hunt you.', effect: { bountyCaptains: 2 } },
   { id: 'heavy-shot', name: 'Heavy Shot', text: 'Enemy fire hits 25% harder; your guns 15% harder.', effect: { enemyDamage: 1.25, playerDamage: 0.15 } },
-  { id: 'lone-wolf', name: 'Lone Wolf', text: 'No AI captains sail with you; experience +15%.', effect: { xp: 1.15 }, captains: 0 },
-  { id: 'wolf-pack', name: 'Wolf Pack', text: 'Four AI captains sail with you; enemy hulls +15%.', effect: { enemyHp: 1.15 }, captains: 4 },
+  { id: 'lone-wolf', name: 'Lone Wolf', text: 'No AI rival captains sail this sea; experience +15%.', effect: { xp: 1.15 }, captains: 0 },
+  { id: 'wolf-pack', name: 'Wolf Pack', text: 'Four AI rival captains sail this sea; enemy hulls +15%.', effect: { enemyHp: 1.15 }, captains: 4 },
 ];
 
 export interface DailyVoyage {

@@ -245,12 +245,12 @@ export class SettingsPanel {
       (s) => Math.max(0, QUALITIES.indexOf(s.quality)), (s, i) => { s.quality = QUALITIES[i]!; });
   }
 
-  /** AI captains sailing with you (0–4; applies to the next voyage). CAPTAINS. */
+  /** AI rival captains on your sea (0–4; applies to the next voyage). CAPTAINS. */
   private captains(): void {
     const counts = Array.from({ length: CAPTAIN.max + 1 }, (_, i) => i);
     const current = (s: UiSettings) => Math.max(0, Math.min(CAPTAIN.max, Math.round(s.captains ?? CAPTAIN.defaultCount)));
-    this.segment('AI captains', 'ship', counts.map((n) => (n === 0 ? 'Off' : String(n))), current, (s, i) => { s.captains = i; },
-      'Other captains sailing your sea while no live captains are online (from the next voyage).');
+    this.segment('AI rivals', 'ship', counts.map((n) => (n === 0 ? 'Off' : String(n))), current, (s, i) => { s.captains = i; },
+      'Rival captains hunting your sea while no live captains are online. Shoot one and it fights back; sink it for its bounty (from the next voyage).');
   }
 
   /** Hold or toggle for Full Broadside / Brace (control prefs, not Settings). */

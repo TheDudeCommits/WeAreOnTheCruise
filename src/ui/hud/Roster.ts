@@ -1,7 +1,8 @@
 /**
  * Captains roster (CAPTAINS built it; FLOW owns the HUD now): who is sailing this sea (you + AI captains) with name,
  * level, bounty rank, hull and a sunk/respawn countdown; a two-line kill feed; short radio callouts ("Mira: Covering
- * your stern!"); and nameplates (name, level, small hull bar) over the two nearest captain ships.
+ * your stern!"); and nameplates (name, level, hull bar) over the two nearest captain ships. Captains are rivals: a
+ * hostile one (captains-rival.ts) shows red with a HOSTILE tag on its row and nameplate, and the feed/callouts say why.
  *
  * Compact by default (one line per captain; the presence line — "No live captains online — AI captains sail with
  * you" — only shows for the first seconds of a voyage). Tab collapses it to a single header line (rank and count;
@@ -33,8 +34,8 @@ const PLATE_RANGE = 520;
 /** The presence line shows for the first seconds of a voyage only. */
 const SUB_SECONDS = 14;
 
-interface Row { el: HTMLElement; rank: TextCell; name: TextCell; lv: TextCell; state: TextCell; bar: HTMLElement; barW: number; sunk: boolean; color: string; on: boolean }
-interface Plate { el: HTMLElement; name: TextCell; lv: TextCell; bar: HTMLElement; barW: number; on: boolean; x: number; y: number; k: number; sx: number; sy: number; color: string }
+interface Row { el: HTMLElement; rank: TextCell; name: TextCell; lv: TextCell; state: TextCell; bar: HTMLElement; barW: number; sunk: boolean; hostile: boolean; color: string; on: boolean }
+interface Plate { el: HTMLElement; name: TextCell; lv: TextCell; bar: HTMLElement; barW: number; hostile: boolean; on: boolean; x: number; y: number; k: number; sx: number; sy: number; color: string }
 
 const pick = <T>(list: readonly T[]): T => list[Math.floor(Math.random() * list.length)]!;
 const ENEMY_NAME = (id: string): string => (CONTENT.enemies as Record<string, { name: string } | undefined>)[id]?.name ?? (CONTENT.bosses as Record<string, { name: string } | undefined>)[id]?.name ?? id;
@@ -80,7 +81,7 @@ export class Roster {
       if (i === 0) el.classList.add('is-you');
       el.hidden = true;
       list.append(el);
-      this.rows.push({ el, rank: new TextCell(rank), name: new TextCell(name), lv: new TextCell(lv), state: new TextCell(state), bar, barW: -1, sunk: false, color: '', on: false });
+      this.rows.push({ el, rank: new TextCell(rank), name: new TextCell(name), lv: new TextCell(lv), state: new TextCell(state), bar, barW: -1, sunk: false, hostile: false, color: '', on: false });
     }
     this.feedEl = h('div', 'cr-roster__feed');
     for (let i = 0; i < FEED; i++) {
@@ -105,10 +106,10 @@ export class Roster {
     this.plateLayer = h('div', 'cr-capplates');
     for (let i = 0; i < PLATES; i++) {
       const name = h('span', 'cr-capplate__name'), lv = h('span', 'cr-capplate__lv'), bar = h('span', 'cr-capplate__bar');
-      const el = h('div', 'cr-capplate', h('span', 'cr-capplate__top', name, lv), h('span', 'cr-capplate__hull', bar));
+      const el = h('div', 'cr-capplate', h('span', 'cr-capplate__top', h('span', 'cr-capplate__tag', 'Hostile'), name, lv), h('span', 'cr-capplate__hull', bar));
       el.hidden = true;
       this.plateLayer.append(el);
-      this.plates.push({ el, name: new TextCell(name), lv: new TextCell(lv), bar, barW: -1, on: false, x: -1e4, y: -1e4, k: -1, sx: 0, sy: 0, color: '' });
+      this.plates.push({ el, name: new TextCell(name), lv: new TextCell(lv), bar, barW: -1, hostile: false, on: false, x: -1e4, y: -1e4, k: -1, sx: 0, sy: 0, color: '' });
     }
   }
 
@@ -209,8 +210,10 @@ export class Roster {
       row.lv.set(`Lv ${k ? k.level : p.level}`);
       const alive = k ? k.alive : p.alive;
       if (row.sunk !== !alive) { row.sunk = !alive; row.el.classList.toggle('is-sunk', !alive); }
+      const hostile = !!k && alive && (k.ai.grudge ?? 0) > 0;
+      if (row.hostile !== hostile) { row.hostile = hostile; row.el.classList.toggle('is-hostile', hostile); }
       if (!alive && k) row.state.set(`Sunk · ${Math.ceil(k.respawn)}s`);
-      else row.state.set('');
+      else row.state.set(hostile ? 'Hostile' : '');
       const frac = alive ? Math.max(0, Math.min(1, (k ? k.hp / k.maxHp : p.hp / p.maxHp))) : 0;
       const w = Math.round(frac * 100);
       if (w !== row.barW) { row.barW = w; row.bar.style.width = `${w}%`; row.el.classList.toggle('is-low', frac < 0.3); }
@@ -273,8 +276,21 @@ export class Roster {
         break;
       }
       case 'captain-sunk':
-        this.feed(`${e.name} was sunk!`);
-        this.call(e.name, CAPTAIN_LINES.sunk, true);
+        if (e.byPlayer) {
+          this.feed(e.bounty ? `You sank ${e.name}! +${e.bounty.toLocaleString('en-US')} bounty` : `You sank ${e.name}!`);
+          this.call(e.name, CAPTAIN_LINES.sunkByYou, true);
+        } else {
+          this.feed(`${e.name} was sunk!`);
+          this.call(e.name, CAPTAIN_LINES.sunk, true);
+        }
+        break;
+      case 'captain-hostile':
+        this.feed(e.reason === 'revenge' ? `${e.name} is back for revenge!` : `${e.name} turned on you!`);
+        this.call(e.name, e.reason === 'revenge' ? CAPTAIN_LINES.revenge : e.reason === 'opportunist' ? CAPTAIN_LINES.opportunist : CAPTAIN_LINES.hostile, true);
+        break;
+      case 'captain-calm':
+        this.feed(`${e.name} broke off the fight`);
+        this.call(e.name, CAPTAIN_LINES.calm);
         break;
       case 'captain-respawned':
         this.feed(`${e.name} sails back in`);
@@ -325,6 +341,8 @@ export class Roster {
       plate.lv.set(`Lv ${k.level}`);
       const color = hex(CAPTAIN_COLORS[plate.k] ?? 0xffffff);
       if (color !== plate.color) { plate.color = color; plate.el.style.setProperty('--cap', color); }
+      const hostile = (k.ai.grudge ?? 0) > 0;
+      if (hostile !== plate.hostile) { plate.hostile = hostile; plate.el.classList.toggle('is-hostile', hostile); }
       const w = Math.round(Math.max(0, Math.min(1, k.hp / k.maxHp)) * 100);
       if (w !== plate.barW) { plate.barW = w; plate.bar.style.width = `${w}%`; plate.el.classList.toggle('is-low', w < 30); }
       if (Math.abs(plate.sx - plate.x) >= 1 || Math.abs(plate.sy - plate.y) >= 1) {

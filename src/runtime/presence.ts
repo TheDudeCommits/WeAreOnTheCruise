@@ -43,7 +43,7 @@ export const presence: PresenceService = new AiPresence();
 export function presenceHeadline(service: PresenceService = presence, aiCaptains = 0): string {
   const online = service.onlineCaptains();
   if (service.mode === 'online' && online > 0) return `${online} live captain${online === 1 ? '' : 's'} online`;
-  return aiCaptains > 0 ? 'No live captains online — AI captains sail with you' : 'No live captains online';
+  return aiCaptains > 0 ? 'No live captains online — AI rival captains sail this sea' : 'No live captains online';
 }
 
 /**

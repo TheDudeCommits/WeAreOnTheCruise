@@ -54,12 +54,12 @@ export const CAPTAIN = {
   respawn: 25,
   respawnGrace: 2.5,
   /** Hull: ship hp × hpMul × (1 + hpPerLevel × (level − 1)); armour: ship armour + level × armorPerLevel. */
-  hpMul: 1.05,
+  hpMul: 0.9,
   hpPerLevel: 0.055,
   armorPerLevel: 0.06,
   /** Regeneration (fraction of max hull per second): always, when out of the fight, and while falling back. */
-  regen: 0.002,
-  regenCalm: 0.008,
+  regen: 0.001,
+  regenCalm: 0.006,
   regenRetreat: 0.014,
   /** Seconds without a hit before the calm regeneration starts. */
   calmAfter: 6,
@@ -116,16 +116,53 @@ export const CAPTAIN = {
   salvageXp: 0.6,
   /** Share of the player's per-second bounty a captain earns while afloat. */
   bountyPerSecond: 0.8,
+  /**
+   * Rivals (owner, 2026-09-25: the AI captains play like rival players). The player's guns, shells and rams hurt
+   * captains; a captain the player keeps hitting turns hostile, fires back and hunts the player until the grudge runs
+   * out; captains may also turn on a badly holed player; sinking one pays out. Captains never hit each other.
+   */
+  rival: {
+    /** Share of the player's damage that reaches a captain's hull (a late build would otherwise one-shot them). */
+    playerDamageMul: 0.4,
+    /** Hull share the player must knock off (decaying at provokeDecay of max hull per second) before a captain turns. */
+    provokeShare: 0.1,
+    provokeDecay: 0.04,
+    /** Seconds a hostile captain keeps fighting the player after the player's last hit on it. */
+    grudge: 20,
+    /** A captain the player sank sails back in hostile for this long ("round two"). */
+    revenge: 16,
+    /** Opportunists: chance per second that a captain within range turns on a player below this hull share (one at a time). */
+    opportunist: 0.025,
+    opportunistHull: 0.35,
+    opportunistRange: 260,
+    /** A hostile captain's guns against the player deal this share (the fleet is firing too). */
+    damageToPlayer: 0.6,
+    /** Ramming a captain: damage per m/s of closing speed × √(mass/600), at most once per ramCooldown seconds. */
+    ram: 2.4,
+    ramCooldown: 0.6,
+    /** Sinking a rival: XP coins (base + per level), doubloons (base + per level), a chest and a share of its bounty. */
+    xp: 30,
+    xpPerLevel: 4,
+    doubloons: 20,
+    doubloonsPerLevel: 1,
+    bountyShare: 0.3,
+  },
 } as const;
 
 /** Short radio lines (UI callouts). `{s}` is not used: lines are spoken by the captain named in front. */
 export const CAPTAIN_LINES = {
-  join: ['Sails up — I\'m with you!', 'Running out the guns!', 'Formed up on your flank!', 'Fair winds, let\'s hunt!'],
-  kill: ['Scratch one!', 'That one\'s going down!', 'Another for the deep!', 'Covering your stern!', 'Got \'em!'],
-  retreat: ['Taking water — falling back!', 'Patching the hull, cover me!', 'Hull\'s holed, pulling out!'],
+  join: ['These waters are big enough for both of us — for now.', 'Stay out of my line of fire!', 'That bounty\'s mine, rookie!', 'Race you to the flagship!'],
+  kill: ['Scratch one!', 'That one\'s going down!', 'Another for the deep!', 'Mine! Keep up!', 'Got \'em!'],
+  retreat: ['Taking water — falling back!', 'Patching the hull, keep off me!', 'Hull\'s holed, pulling out!'],
   respawn: ['Back in the fight!', 'New hull, same captain!', 'Sailing back in!'],
   sunk: ['Abandon ship!', 'She\'s going under!'],
-  boss: ['Big one on the horizon — stay close!', 'All guns on the flagship!'],
-  playerLow: ['Hold on, we\'ve got you!', 'Pull back, we\'ll cover you!'],
+  boss: ['Big one on the horizon — the bounty\'s mine!', 'All guns on the flagship!'],
+  playerLow: ['Looking holed there, rival!', 'Sink already, the sea\'s crowded!'],
   elite: ['Elite off the bow — watch it!', 'That one\'s trouble, mind the guns!'],
+  /** Turning on the player: provoked, opportunist, back for revenge. */
+  hostile: ['You\'ll pay for that!', 'Wrong ship to shoot, captain!', 'Oh, it\'s like that? Guns out!', 'That\'s it — you\'re sunk!'],
+  opportunist: ['You\'re holed — your bounty\'s mine!', 'Easy prey! Run out the guns!', 'Nothing personal, captain!'],
+  revenge: ['Round two!', 'Remember me?', 'I\'m back — and I\'m angry!'],
+  calm: ['Fine, truce. For now.', 'Not worth my powder.', 'Back to the real enemy.'],
+  sunkByYou: ['Curse you!', 'You\'ll hear from me!', 'Not like this!'],
 } as const;

@@ -18,6 +18,7 @@ import {
 import { applyBurn } from './core-forces';
 import { blastCaptains, shotVsCaptains } from './captains-damage';
 import { captainBlast, captainHit } from './captains-credit';
+import { captainInPath, playerBlastCaptains, playerHitCaptain } from './captains-rival';
 import { onHarpoonHit } from './weapons/harpoon';
 
 export { GRAVITY };
@@ -53,15 +54,15 @@ export function updateProjectiles(c: CoreSim): void {
       if (hitShips(c, pr, i, px, pz)) continue;
     } else if (playerHittable) {
       if (hullEdge(p, pr.x, pr.z) <= pr.radius) {
-        const dealt = c.hurtPlayer(pr.damage, pr.x, pr.z, undefined, 'projectile');
+        const dealt = c.hurtPlayer(pr.damage, pr.x, pr.z, core.pFrom[i]! < 0 ? core.pFrom[i]! : undefined, 'projectile');
         c.emit({ type: 'projectile-hit', projectile: pr.kind, team: pr.team, x: pr.x, y: pr.y, z: pr.z, target: 'ship', targetId: 0, damage: dealt, crit: false });
         if (pr.area > 0) c.emit({ type: 'explosion', x: pr.x, z: pr.z, radius: pr.area, kind: 'medium', team: pr.team });
         pr.alive = false;
         continue;
       }
     }
-    // CAPTAINS: enemy shots also hit AI captains.
-    if (pr.team !== 'player' && s.captains.length > 0 && shotVsCaptains(c, pr)) continue;
+    // CAPTAINS: enemy shots also hit AI captains (a hostile captain's shots — pFrom < 0 — never hit captains).
+    if (pr.team !== 'player' && s.captains.length > 0 && core.pFrom[i]! >= 0 && shotVsCaptains(c, pr)) continue;
 
     if (pr.age >= pr.ttl) { expire(c, pr, i, traits); continue; }
     if ((traits & K_ISLAND) && core.onLand(c, pr.x, pr.z)) {
@@ -90,6 +91,18 @@ function hitShips(c: CoreSim, pr: ProjectileState, i: number, px: number, pz: nu
     if (pr.hits.length > 0 && pr.hits.includes(t.id)) continue;
     if (pr.area > 0) { detonate(c, pr, i, pr.x, pr.z); pr.alive = false; return true; }
     if (onHit(c, pr, i, t)) return true;
+  }
+  // Rivals: the player's own shots (not the captains') hit AI captains too.
+  if (core.pFrom[i]! >= 0 && c.state.captains.length > 0) {
+    const k = captainInPath(c, pr, px, pz);
+    if (k) {
+      if (pr.area > 0) { detonate(c, pr, i, pr.x, pr.z); pr.alive = false; return true; }
+      const dealt = playerHitCaptain(c, k, pr.damage);
+      c.emit({ type: 'projectile-hit', projectile: pr.kind, team: pr.team, x: pr.x, y: pr.y, z: pr.z, target: 'ship', targetId: k.id, damage: dealt, crit: pr.crit });
+      if (pr.pierce > 0 && !(core.pFlags[i]! & PF_HOOK)) { pr.pierce--; pr.hits.push(k.id); return false; }
+      pr.alive = false;
+      return true;
+    }
   }
   return false;
 }
@@ -253,6 +266,7 @@ export function explode(
       const f = 1 - 0.5 * Math.min(1, edge / Math.max(1, radius));
       c.hitTarget(t, damage * f, weapon, crit, knockback, x, z, status, statusTime, statusMag, false);
     }
+    playerBlastCaptains(c, x, z, radius, damage); // rivals
     return;
   }
   blastCaptains(c, x, z, radius, damage); // CAPTAINS

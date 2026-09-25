@@ -10,6 +10,7 @@ import { CAPTAIN } from '../content/captains';
 import type { CaptainState } from '../types';
 import type { Target } from './context';
 import { broadsideRange } from './captains-guns';
+import { isHostile } from './captains-rival';
 import { captainSlot } from './captains-runtime';
 import { acquirable, type CoreSim } from './core-runtime';
 
@@ -37,18 +38,25 @@ export function steerCaptain(c: CoreSim, k: CaptainState): void {
     if (k.hp > k.maxHp * CAPTAIN.recoverAbove || ai.retreatT > CAPTAIN.retreatMax) ai.mode = MODE_ESCORT;
   }
 
-  // Target: re-evaluated every ~1.2 s or when lost; only fights near the player count.
+  // Target: re-evaluated every ~1.2 s or when lost; only fights near the player count. A hostile rival hunts the player.
+  const hostile = isHostile(k) && p.alive;
   ai.tgtT = (ai.tgtT ?? 0) - dt;
-  let t: Target | null = ai.tgt ? c.findTarget(ai.tgt) ?? null : null;
-  if (t && (!acquirable(t) || Math.hypot(t.x - p.x, t.z - p.z) > CAPTAIN.engageRadius + 60 + t.radius)) t = null;
-  if (ai.mode !== MODE_RETREAT && (!t || ai.tgtT <= 0)) {
-    t = pickTarget(c, k);
-    ai.tgtT = 1.1 + c.random() * 0.4;
+  let t: { x: number; z: number; radius: number } | null = null;
+  if (hostile) ai.tgt = 0;
+  else {
+    let e: Target | null = ai.tgt ? c.findTarget(ai.tgt) ?? null : null;
+    if (e && (!acquirable(e) || Math.hypot(e.x - p.x, e.z - p.z) > CAPTAIN.engageRadius + 60 + e.radius)) e = null;
+    if (ai.mode !== MODE_RETREAT && (!e || ai.tgtT <= 0)) {
+      e = pickTarget(c, k);
+      ai.tgtT = 1.1 + c.random() * 0.4;
+    }
+    ai.tgt = e ? e.id : 0;
+    t = e;
   }
-  ai.tgt = t ? t.id : 0;
+  if (hostile && ai.mode !== MODE_RETREAT) t = p;
 
   let desired: number, speed: number;
-  if (dP > CAPTAIN.leash && ai.mode !== MODE_RETREAT) {
+  if (dP > CAPTAIN.leash && ai.mode !== MODE_RETREAT && !hostile) {
     ai.mode = MODE_RECALL;
     desired = headingTo(p.x - k.x, p.z - k.z);
     speed = vmax * CAPTAIN.catchUp;
@@ -149,7 +157,7 @@ function separate(c: CoreSim, k: CaptainState, desired: number): number {
     const d = Math.sqrt(d2), w = (min - d) / min;
     sx += (dx / d) * w; sz += (dz / d) * w;
   };
-  if (p.alive) push(p.x, p.z, (k.length + p.length) * 0.5 + 28);
+  if (p.alive) push(p.x, p.z, (k.length + p.length) * 0.5 + (isHostile(k) ? 12 : 28));
   for (const o of s.captains) if (o !== k && o.alive) push(o.x, o.z, (k.length + o.length) * 0.5 + 22);
   for (const e of s.enemies) if (e.life === 'alive' && e.hidden < 1) push(e.x, e.z, k.beam * 0.5 + e.radius + 10);
   if (sx === 0 && sz === 0) return desired;
