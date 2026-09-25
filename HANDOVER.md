@@ -1,8 +1,147 @@
 # We Are On The Cruise — handover
 
-Updated 2026-09-24. Checkout: `/Users/amir/Projects/WeAreOnTheCruise`. Remote: https://github.com/TheDudeCommits/WeAreOnTheCruise. Active branch: `claude/naval-survivor-overhaul`, branched from `codex/cinematic-anime-overhaul` at `9fce64e`. Vercel builds a preview for every pushed branch (project `we-are-on-the-cruise`).
+Updated 2026-09-25. Checkout: `/Users/amir/Projects/WeAreOnTheCruise`. Remote: https://github.com/TheDudeCommits/WeAreOnTheCruise. Active branch: `claude/naval-survivor-overhaul`, branched from `codex/cinematic-anime-overhaul` at `9fce64e`. Vercel builds a preview for every pushed branch (project `we-are-on-the-cruise`).
 
-## September 24 — v2 naval survivor overhaul, integrated (read first)
+## September 25 — gauntlet rounds 1–2, new production at cruise.dude.work (read first)
+
+**Owner asks** (2026-09-24):
+- faster battles;
+- more enemy variety;
+- more big-world events;
+- speed upgrades;
+- AI bots playing as other players when no live players are online;
+- no darkening behind the upgrade cards;
+- "run a gauntlet loop and keep iterating";
+- deploy to a NEW Vercel production (keep the old one unchanged) at cruise.dude.work.
+
+**Process.** The gauntlet loop is described in `docs/gauntlet/README.md`:
+1. `scripts/gauntlet/evidence.mjs` captures shots and `report.json`;
+2. critiques per domain;
+3. `PLAN.md`;
+4. a contract commit;
+5. parallel worktree agents (`scripts/gauntlet/worktrees.sh <round> <names>`);
+6. lead integration;
+7. QA and deploy.
+
+Round docs live in `docs/gauntlet/round-1/` (critiques, `ROUND.md`) and `docs/gauntlet/round-2/PLAN.md`.
+
+### Round 1 (merged)
+
+**PACE: faster pace and speed upgrades.**
+- Ships: +17% speed, +35% acceleration, +12% turning.
+- Horde: 76 ships from 12:00.
+- XP: first level at about 16 s, early level gaps about 18 s, late gaps about 50 s.
+- Magnet: 140 m.
+- Speed upgrades: Clipper Rigging, Racing Keel, Momentum and Trade Winds; in the harbor, Copper Sheathing, Storm Sails and Rudder Chains.
+
+**FOES: enemy variety.**
+- Seven new classes: signal cutter, ironclad, harpooner, bomb ketch, smoke runner, lantern wisp and drowned galleon.
+- Eight elite affixes and named bounty captains.
+
+**EVENTS: world events.**
+- Eight set pieces: Kraken, Rogue Wave, Maelstrom, Blockade, Ghost Fleet, Eruption, Sunken Treasure and Bounty Contract.
+- A tracker HUD.
+- Points of interest: trade-wind lanes, lighthouse beacons and salvage.
+
+**CAPTAINS: AI captains.**
+- Default 3, settable 0–4. They split the fleet's attention and appear in a roster, nameplates, a kill feed and callouts.
+- `src/runtime/presence.ts`: an AI presence now; the interface for a real online mode is documented there.
+- Real online play needs a realtime server. That is not built: it's an owner decision, since it is a paid service.
+
+**Level-up screen:** no shade at all.
+
+### Round 2 (merged)
+
+**SEA & LIGHT.**
+- Foam is aware of coverage.
+- Night bioluminescence appears only in fresh foam.
+- Enemies get faction rim lights and stern lanterns.
+- New dusk grade; the Sovereign's contrast is fixed.
+
+**IMPACT.**
+- A smoke governor.
+- The Full Broadside is a set piece: FOV kick, heel, smoke wall, gold hits and hit-stop.
+- Framing by hull size: the hero is at most 18% of the frame height.
+- Boss framing, and a `cinematicCamera` option.
+- SDF telegraphs with colour-blind palettes.
+- Damage-number declutter.
+
+**FLOW.**
+- HUD safe zones and marker merging.
+- A first-voyage coach.
+- Readouts: wind, in-irons, boost charges, Momentum.
+- Harbor pane tabs.
+- Settings in four tabs: colour-blind palette, HUD scale, key remapping, hold/toggle.
+- A victory-lap guard.
+
+**REPLAY.**
+- Per-sea balance: with 3 captains, deaths run Sunward 25%, Stormwrack 42%, Gloam 50%, and bosses take 52–79 s.
+- An explicit doubloon economy: about 430 per win, and about 22–32 runs to buy the whole harbor.
+- 26 quests (titles, boons, pennants).
+- Heat 1–8 per sea.
+- A daily voyage.
+- The logbook.
+- Endless milestones.
+
+**AUDIO.**
+- Combat-heat music, with per-sea tracks for Stormwrack and the Gloam.
+- One cue per volley.
+- Reserved alert voices.
+- 56 new cues.
+- 29 crew barks (Higgsfield TTS, 5.9 credits).
+
+**PERF.**
+- Harbor warm-up, so shader programs stay flat during runs.
+- Fleet culling and detail tiers; tree LODs.
+- Shadow proxies.
+- Sunlion goes from 36 materials to 6.
+- Deferred boss loads.
+- Every evidence shot is ≤2.5M triangles (max 2.38M) and ≤200 draw calls.
+
+### Lead integration notes
+
+**Contracts:**
+- `focusOf`/`friendlies` targeting in `sim/targeting.ts`.
+- `EnemyState.hidden`, `affixes` and `title`.
+- `RunState.captains` and `worldEvent`.
+- `acquirable()`: smoke hides a ship from auto-aim only.
+- Captain damage goes through `captains-damage.hurtCaptain`.
+- The Momentum flag skips captains' kills.
+- The contact shove cap.
+- Impact frames only for set pieces, with a 1.2 s cooldown.
+- The decal grid is 16×16.
+
+**Balance tools:**
+- `npx tsx scripts/balance-sim.ts --seeds 3 --minutes 18 --proxy off --captains 3`, with `[--heat N] [--tune JSON]`.
+- `scripts/economy-model.ts`.
+
+**QA bridge:**
+- `__CRUISE__`: `profiler`, `sceneStats`, `ocean`, `fx`, `camera` and `captains`.
+- `debug.*`: `event`, `sinkBosses`, `sinkCaptain`, `teleport`, `resetCooldowns` and `chargeUltimate`.
+
+### Production (v2)
+
+- **Project:** a new Vercel project, `cruise-dude-work`, with the domain `cruise.dude.work`. The domain `dude.work` is on Vercel DNS.
+- **Deploy:** `scripts/deploy-prod.sh` exports HEAD cleanly and runs `vercel deploy --prod`. Verify via the Vercel API.
+- **Previews:** the old `we-are-on-the-cruise` project keeps building previews per branch. Its production is untouched.
+
+### Open items
+
+- **Owner decisions:**
+  - Repaint the One Piece marks on the kept hero sails?
+  - Rename the title?
+  - Add a realtime server for real online captains?
+- **Measurements:**
+  - Take an idle-machine GPU timing (`scripts/perf/gpu-timing.mjs`) and verify the 2-minute ≤33 ms session.
+  - 5 of 24 Gloam balance runs time out (low-level Dawn Ram against the Sovereign).
+- **Contract wishes from round 2:**
+  - SimEvents to replace AUDIO's state diffs (mark, tether, wisp latch, galleon phases, shield break, kraken grab, wave hit).
+  - A `projectile-hit` weapon/manual flag.
+  - Projectile owner ids.
+  - Show captain titles and pennants in the run HUD and on the hero.
+  - A Seawarden cannon LOD for the victory lap.
+
+## September 24 — v2 naval survivor overhaul, integrated
 
 The game is rebuilt as a naval survivor-like on an original world, following the user's five decisions:
 1. an original world, keeping the six hero ships;
