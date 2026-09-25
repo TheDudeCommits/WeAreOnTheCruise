@@ -18,9 +18,13 @@ export interface RunMods {
   enemySpeed: number;
   /** Boss hull multiplier (on top of DIRECTOR.bossHpScale). */
   bossHp: number;
-  /** Elite chance multiplier and extra elites allowed at once. */
+  /** Elite chance multiplier, extra elites allowed at once, and elite hull multiplier. */
   eliteChance: number;
   extraElites: number;
+  eliteHp: number;
+  /** Most rewards an elite chest / a boss or captain's chest holds (0 = the usual roll). */
+  eliteChestCap: number;
+  bossChestCap: number;
   /** Multiplier on the seconds between set pieces (< 1 = more often). */
   eventGap: number;
   /** Seconds the first bounty captain arrives early / extra bounty captains per run (0 = FOES's schedule only). */
@@ -50,7 +54,7 @@ export function baseRunMods(seaId: RunState['seaId']): RunMods {
   return {
     heat: 0, daily: '',
     enemyHp: sea.enemyHp, enemyDamage: sea.enemyDamage, enemySpeed: 1, bossHp: sea.bossHp,
-    eliteChance: 1, extraElites: 0, eventGap: 1, bountyCaptains: 0, drops: 1, healing: 1, reward: 1,
+    eliteChance: 1, extraElites: 0, eliteHp: 1, eliteChestCap: 0, bossChestCap: 0, eventGap: 1, bountyCaptains: 0, drops: 1, healing: 1, reward: 1,
     playerDamage: 0, playerHull: 0, playerSpeed: 0, xp: 1,
   };
 }
@@ -74,6 +78,9 @@ export function applyEffect(mods: RunMods, fx: Readonly<HeatEffect>): void {
   if (fx.bossHp) mods.bossHp *= fx.bossHp;
   if (fx.eliteChance) mods.eliteChance *= fx.eliteChance;
   if (fx.extraElites) mods.extraElites += fx.extraElites;
+  if (fx.eliteHp) mods.eliteHp *= fx.eliteHp;
+  if (fx.eliteChestCap) mods.eliteChestCap = mods.eliteChestCap ? Math.min(mods.eliteChestCap, fx.eliteChestCap) : fx.eliteChestCap;
+  if (fx.bossChestCap) mods.bossChestCap = mods.bossChestCap ? Math.min(mods.bossChestCap, fx.bossChestCap) : fx.bossChestCap;
   if (fx.eventGap) mods.eventGap *= fx.eventGap;
   if (fx.bountyCaptains) mods.bountyCaptains += fx.bountyCaptains;
   if (fx.drops) mods.drops *= fx.drops;

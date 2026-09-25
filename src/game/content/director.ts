@@ -64,6 +64,10 @@ export interface HeatEffect {
   bossHp?: number;
   eliteChance?: number;
   extraElites?: number;
+  eliteHp?: number;
+  /** Caps on chest rewards (the lowest cap in force wins). */
+  eliteChestCap?: number;
+  bossChestCap?: number;
   eventGap?: number;
   bountyCaptains?: number;
   drops?: number;
@@ -95,21 +99,23 @@ export const SEA_BALANCE: Readonly<Record<SeaId, { enemyHp: number; enemyDamage:
  * Heat 1–8 (REPLAY): a per-sea difficulty ladder. Heat N+1 opens by winning at heat N on that sea (heat 1 opens on
  * every sea with the first victory). Every level adds hpPerLevel enemy hull and damagePerLevel enemy damage, and each
  * level brings one named rule; all rules up to the chosen level apply. Doubloons and bounty pay × (1 + reward × heat).
+ * Rules that add ships which carry chests (elites, bounty captains) also thin those chests, or the extra loot would
+ * make the higher level easier than the one below it (measured: heat 4 was safer than heat 2 before the caps).
  */
 export const HEAT = {
   max: 8,
   reward: 0.25,
-  hpPerLevel: 0.06,
-  damagePerLevel: 0.04,
+  hpPerLevel: 0.05,
+  damagePerLevel: 0.03,
   rules: [
-    { level: 1, name: 'Hardened Hulls', text: 'Enemy hulls +20%.', effect: { enemyHp: 1.2 } },
-    { level: 2, name: 'Keen Gunners', text: 'Enemy fire hits 15% harder.', effect: { enemyDamage: 1.15 } },
-    { level: 3, name: 'Elite Muster', text: 'Elites sail 60% more often, one more at a time.', effect: { eliteChance: 1.6, extraElites: 1 } },
-    { level: 4, name: 'Following Wind', text: 'Enemy ships sail 8% faster.', effect: { enemySpeed: 1.08 } },
+    { level: 1, name: 'Hardened Hulls', text: 'Enemy hulls +10%.', effect: { enemyHp: 1.1 } },
+    { level: 2, name: 'Keen Gunners', text: 'Enemy fire hits 10% harder.', effect: { enemyDamage: 1.1 } },
+    { level: 3, name: 'Elite Muster', text: 'Elites sail 50% more often, one more at a time, with 30% more hull; their chests hold one reward.', effect: { eliteChance: 1.5, extraElites: 1, eliteHp: 1.3, eliteChestCap: 1 } },
+    { level: 4, name: 'Following Wind', text: 'Enemy ships sail 7% faster.', effect: { enemySpeed: 1.07 } },
     { level: 5, name: 'Restless Sea', text: 'Set pieces come 30% sooner.', effect: { eventGap: 0.7 } },
-    { level: 6, name: 'Wanted Men', text: 'Two more bounty captains hunt you each voyage.', effect: { bountyCaptains: 2 } },
+    { level: 6, name: 'Wanted Men', text: "Two more bounty captains hunt you; captain's and boss chests hold two rewards.", effect: { bountyCaptains: 2, bossChestCap: 2 } },
     { level: 7, name: 'Lean Holds', text: 'Ordinary kills drop 30% fewer repairs and doubloons; heals mend 25% less.', effect: { drops: 0.7, healing: 0.75 } },
-    { level: 8, name: "Admiralty's Wrath", text: 'Bosses +25% hull; enemy hulls +15% and fire +10% on top.', effect: { bossHp: 1.25, enemyHp: 1.15, enemyDamage: 1.1 } },
+    { level: 8, name: "Admiralty's Wrath", text: 'Bosses +20% hull; enemy hulls +10% and fire +10% on top.', effect: { bossHp: 1.2, enemyHp: 1.1, enemyDamage: 1.1 } },
   ] as readonly HeatRule[],
 };
 

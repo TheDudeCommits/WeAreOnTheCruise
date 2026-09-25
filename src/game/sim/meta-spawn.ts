@@ -21,7 +21,7 @@ export function spawnScaled(c: SimContext, id: EnemyId, x: number, z: number, op
   const e = c.spawnEnemy(id, x, z, { elite: !!opts.elite, heading: opts.heading });
   if (!e) return null;
   const def = c.content.enemies[id];
-  const hp = def.hp * enemyHpScale(c) * (opts.elite ? DIRECTOR.eliteHp : 1) * (opts.hpMul ?? 1);
+  const hp = def.hp * enemyHpScale(c) * (opts.elite ? DIRECTOR.eliteHp * runMods(c.state).eliteHp : 1) * (opts.hpMul ?? 1);
   e.hp = hp;
   e.maxHp = hp;
   if (e.elite) rollAffixes(c, e);

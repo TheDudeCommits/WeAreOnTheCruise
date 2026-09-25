@@ -322,13 +322,16 @@ function openQueuedChest(c: SimContext): void {
 }
 
 function chestCount(c: SimContext, tier: number): number {
-  if (tier >= 2) return CHESTS.bossCount;
+  const mods = runMods(c.state);
+  if (tier >= 2) return mods.bossChestCap > 0 ? Math.min(CHESTS.bossCount, mods.bossChestCap) : CHESTS.bossCount;
   const luck = Math.max(0, c.state.player.stats.luck);
   const shift = luck * CHESTS.eliteLuckShift;
   const w = [Math.max(5, CHESTS.eliteCounts[0]! - shift), CHESTS.eliteCounts[1]! + shift * 0.6, CHESTS.eliteCounts[2]! + shift * 0.4];
   let r = c.random() * (w[0]! + w[1]! + w[2]!);
-  for (let i = 0; i < 3; i++) { r -= w[i]!; if (r <= 0) return i + 1; }
-  return 1;
+  let n = 1;
+  for (let i = 0; i < 3; i++) { r -= w[i]!; if (r <= 0) { n = i + 1; break; } }
+  // REPLAY heat: Elite Muster thins elite chests (the roll still happens, so the random stream is unchanged).
+  return mods.eliteChestCap > 0 ? Math.min(n, mods.eliteChestCap) : n;
 }
 
 function rollChest(c: SimContext, tier: number): CardOffer[] {
