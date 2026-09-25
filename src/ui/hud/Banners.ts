@@ -37,6 +37,9 @@ export class Banners {
   private readonly cutKind: TextCell;
   private readonly cutIcon: HTMLElement;
   private readonly toasts: HTMLElement;
+  /** Last time each keyed toast showed (repeats inside their cooldown are dropped). */
+  private readonly toastAt = new Map<string, number>();
+  get toastsEl(): HTMLElement { return this.toasts; }
   private stampPriority = 0;
   private stampUntil = 0;
   private now = 0;
@@ -95,6 +98,7 @@ export class Banners {
   reset(): void {
     this.warn.hide(); this.event.hide(); this.stamp.hide(); this.cutin.hide();
     this.toasts.replaceChildren();
+    this.toastAt.clear();
     this.stampPriority = 0;
     this.pending = null;
     this.suppressed = false;
@@ -164,10 +168,16 @@ export class Banners {
     ], big ? 1500 : 1100);
   }
 
-  toast(text: string, g: GlyphId, tone: Tone = 'white', src: string | null = null): void {
+  /** A small toast above the loadout. With a `key`, the same toast is not repeated within `cooldown` seconds. */
+  toast(text: string, g: GlyphId, tone: Tone = 'white', src: string | null = null, key = '', cooldown = 0): void {
+    if (key) {
+      const last = this.toastAt.get(key);
+      if (last !== undefined && this.now - last < cooldown) return;
+      this.toastAt.set(key, this.now);
+    }
     const t = h('div', `cr-toast is-${tone}`, src ? icon(src, g, 'cr-toast__icon') : glyph(g), h('span', '', text));
-    this.toasts.prepend(t);
-    while (this.toasts.childElementCount > 4) this.toasts.lastElementChild!.remove();
+    this.toasts.append(t);
+    while (this.toasts.childElementCount > 3) this.toasts.firstElementChild!.remove();
     play(t, [
       { opacity: 0, transform: 'translateX(40px)' },
       { opacity: 1, transform: 'translateX(0)', offset: 0.1 },

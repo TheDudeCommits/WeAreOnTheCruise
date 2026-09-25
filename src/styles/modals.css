@@ -33,7 +33,7 @@
 }
 .cr-cardbtn-wrap:focus .cr-card__key .cr-key { background: var(--gold); }
 .cr-cards__row.has-pick .cr-cardbtn-wrap:not(.is-picked) { filter: brightness(.5); }
-.cr-fork { display: flex; flex-direction: column; align-items: center; gap: calc(40 * var(--u)); padding: calc(10 * var(--u)) calc(14 * var(--u)) calc(14 * var(--u)); border-radius: calc(22 * var(--u)); background: rgba(88, 180, 255, .1); border: calc(3 * var(--u)) dashed rgba(88, 180, 255, .55); }
+.cr-fork { display: flex; flex-direction: column; align-items: center; gap: calc(22 * var(--u)); padding: calc(10 * var(--u)) calc(14 * var(--u)) calc(14 * var(--u)); border-radius: calc(22 * var(--u)); background: rgba(88, 180, 255, .1); border: calc(3 * var(--u)) dashed rgba(88, 180, 255, .55); }
 .cr-fork__head { display: flex; align-items: center; gap: calc(10 * var(--u)); font: 400 var(--fs-24)/1 var(--f-comic); letter-spacing: .06em; text-transform: uppercase; color: var(--white); -webkit-text-stroke: var(--stroke-s) var(--ink); paint-order: stroke fill; }
 .cr-fork__head small { font: 900 var(--fs-12)/1 var(--f-ui); letter-spacing: .2em; color: #9fd0ff; -webkit-text-stroke: 0; }
 .cr-fork__head .cr-glyph { width: calc(22 * var(--u)); height: calc(22 * var(--u)); color: #9fd0ff; }
@@ -61,7 +61,7 @@
 .cr-chest__rays { position: absolute; left: 50%; top: calc(250 * var(--u)); width: calc(1200 * var(--u)); height: calc(1200 * var(--u)); translate: -50% -50%; scale: .2; background: repeating-conic-gradient(rgba(255, 213, 74, .42) 0 6deg, transparent 6deg 16deg); -webkit-mask: radial-gradient(circle, #000 10%, transparent 60%); mask: radial-gradient(circle, #000 10%, transparent 60%); opacity: 0; transition: opacity .5s, scale .6s var(--ease-out); pointer-events: none; }
 .cr-chest.is-open .cr-chest__rays { opacity: 1; scale: 1; animation: cr-rot 40s linear infinite; }
 .cr-chest__title { position: relative; font: 400 var(--fs-96)/1 var(--f-brush); text-transform: uppercase; color: var(--gold); -webkit-text-stroke: var(--stroke-xl) var(--ink); paint-order: stroke fill; text-shadow: 0 calc(8 * var(--u)) 0 var(--gold-3), 0 calc(13 * var(--u)) 0 var(--ink); transform: rotate(-3deg); animation: cr-sub-in .5s var(--ease-pop) both; }
-.cr-chestbox { position: relative; width: calc(200 * var(--u)); height: calc(170 * var(--u)); margin-top: calc(30 * var(--u)); }
+.cr-chestbox { position: relative; width: calc(172 * var(--u)); height: calc(146 * var(--u)); margin-top: calc(18 * var(--u)); }
 .cr-chestbox.is-shake { animation: cr-chest-shake .75s ease-in-out both; }
 @keyframes cr-chest-shake { 0% { transform: scale(.3) translateY(calc(80 * var(--u))); } 25% { transform: scale(1.05); } 35% { transform: rotate(-6deg); } 45% { transform: rotate(6deg); } 55% { transform: rotate(-8deg) scale(1.04); } 65% { transform: rotate(8deg) scale(1.06); } 80% { transform: rotate(0) scale(1.1); } 100% { transform: none; } }
 .cr-chestbox__glow { position: absolute; left: 50%; top: 40%; width: 10%; height: 10%; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle, #fffbe0, rgba(255, 213, 74, .8) 40%, transparent 70%); opacity: 0; transition: all .4s var(--ease-out); }
@@ -70,7 +70,7 @@
 .cr-chestbox__lock { position: absolute; left: 50%; top: calc(-6 * var(--u)); transform: translateX(-50%); width: calc(34 * var(--u)); height: calc(40 * var(--u)); border-radius: calc(6 * var(--u)); background: linear-gradient(180deg, #ffe27a, #d99a1a); border: calc(4 * var(--u)) solid var(--ink); }
 .cr-chestbox__lid { position: absolute; left: 0; right: 0; top: 0; height: 48%; border-radius: calc(60 * var(--u)) calc(60 * var(--u)) calc(8 * var(--u)) calc(8 * var(--u)); border: calc(5 * var(--u)) solid var(--ink); background: linear-gradient(90deg, transparent 12%, #e0a52a 12% 17%, transparent 17% 83%, #e0a52a 83% 88%, transparent 88%), linear-gradient(180deg, #c06a22, #7a3c12); transform-origin: 50% 100%; transition: transform .35s var(--ease-pop); z-index: 1; }
 .cr-chest.is-open .cr-chestbox__lid { transform: translateY(calc(-22 * var(--u))) rotate(-16deg); }
-.cr-chest__rewards { position: relative; display: flex; gap: calc(18 * var(--u)); min-height: calc(250 * var(--u)); }
+.cr-chest__rewards { position: relative; display: flex; align-items: stretch; gap: calc(18 * var(--u)); min-height: calc(236 * var(--u)); }
 .cr-chest__rewards .cr-card.is-hidden { visibility: hidden; }
 .cr-chest__prompt { display: flex; align-items: center; gap: calc(12 * var(--u)); font: 400 var(--fs-32)/1 var(--f-comic); letter-spacing: .1em; text-transform: uppercase; color: var(--white); -webkit-text-stroke: var(--stroke-m) var(--ink); paint-order: stroke fill; opacity: 0; transition: opacity .3s; }
 .cr-chest__prompt.is-on { opacity: 1; animation: cr-blink 1.4s ease-in-out infinite; }
@@ -137,3 +137,45 @@
 .cr-toggle:focus, .cr-range:focus { box-shadow: 0 0 0 calc(3 * var(--u)) var(--white); }
 .cr-settings__foot { display: flex; align-items: center; gap: calc(22 * var(--u)); margin-top: calc(6 * var(--u)); }
 .cr-settings__done { margin-left: auto; min-height: calc(54 * var(--u)); }
+
+/* ── Coach explainer on the card screen (first branch pair / first OVERDRIVE): readable paper, no shade ── */
+.cr-cards__tip { position: relative; display: flex; align-items: center; align-self: center; gap: calc(12 * var(--u)); max-width: calc(430 * var(--u)); margin-left: calc(14 * var(--u)); padding: calc(10 * var(--u)) calc(20 * var(--u)) calc(11 * var(--u)) calc(12 * var(--u)); border-radius: calc(12 * var(--u)); background: var(--paper); color: var(--paper-ink); box-shadow: 0 0 0 calc(3 * var(--u)) var(--ink), 0 calc(6 * var(--u)) 0 rgba(4, 8, 22, .55); transform: rotate(-1deg); }
+.cr-cards__tipbody { display: flex; flex-direction: column; gap: calc(3 * var(--u)); }
+.cr-cards__tiptitle { font: 400 var(--fs-24)/1 var(--f-comic); letter-spacing: .05em; text-transform: uppercase; color: var(--ink); }
+.cr-cards__tiptext { font: 800 var(--fs-16)/1.3 var(--f-ui); color: var(--paper-ink); }
+/* On the chest reveal it hangs beside the chest instead of pushing the rewards down. */
+.cr-chest .cr-cards__tip { position: absolute; left: calc(50% + 140 * var(--u)); top: calc(150 * var(--u)); width: calc(380 * var(--u)); margin: 0; }
+
+/* Short viewports (720p): a branch fork makes the card column taller; tighten it so the title clears the top HUD and
+   the footer clears the skill bar. */
+@media (max-height: 780px) {
+  .cr-levelup { gap: calc(20 * var(--u)); margin-top: calc(-24 * var(--u)); }
+  .cr-levelup__title { font-size: calc(82 * var(--u)); }
+  .cr-levelup__foot { margin-top: calc(8 * var(--u)); }
+}
+
+/* ── Settings round 2: tabs, hints, key remapping ── */
+.cr-settings__card { width: calc(840 * var(--u)); max-height: calc(100vh - 40 * var(--u)); }
+.cr-settings__tabs { display: flex; align-items: center; gap: calc(6 * var(--u)); }
+.cr-settings__tab { display: inline-flex; align-items: center; gap: calc(8 * var(--u)); padding: calc(7 * var(--u)) calc(16 * var(--u)); border-radius: 999px; background: rgba(255, 255, 255, .07); border: calc(2 * var(--u)) solid transparent; color: #b8c3e3; font: 400 var(--fs-20)/1 var(--f-comic); letter-spacing: .06em; text-transform: uppercase; pointer-events: auto; transition: transform .14s var(--ease-out); }
+.cr-settings__tab .cr-glyph { width: calc(20 * var(--u)); height: calc(20 * var(--u)); }
+.cr-settings__tab.is-active { background: linear-gradient(180deg, #ffe066, #ffb020); color: var(--ink); }
+.cr-settings__tab:hover, .cr-settings__tab:focus { border-color: var(--white); transform: scale(1.05); }
+.cr-settings__rows { max-height: calc(100vh - 290 * var(--u)); min-height: calc(300 * var(--u)); padding: calc(2 * var(--u)) calc(6 * var(--u)) calc(8 * var(--u)) 0; }
+.cr-settings__section { display: grid; gap: calc(6 * var(--u)); }
+.cr-setting__hint { display: block; margin-top: calc(3 * var(--u)); max-width: calc(430 * var(--u)); font: 700 var(--fs-12)/1.25 var(--f-ui); letter-spacing: 0; text-transform: none; color: #9fb0da; }
+.cr-keys { display: grid; gap: calc(5 * var(--u)); }
+.cr-keys__row { display: grid; grid-template-columns: 1fr calc(140 * var(--u)) calc(140 * var(--u)); align-items: center; gap: calc(10 * var(--u)); padding: calc(5 * var(--u)) calc(12 * var(--u)); border-radius: calc(10 * var(--u)); background: rgba(255, 255, 255, .05); }
+.cr-keys__row:focus-within { background: rgba(255, 207, 51, .16); box-shadow: inset 0 0 0 calc(2 * var(--u)) rgba(255, 207, 51, .6); }
+.cr-keys__action { font: 400 var(--fs-20)/1.05 var(--f-comic); letter-spacing: .05em; text-transform: uppercase; }
+.cr-keys__action small { margin-left: calc(8 * var(--u)); font: 800 var(--fs-12)/1 var(--f-ui); letter-spacing: .04em; text-transform: none; color: #9fb0da; }
+.cr-keys__slot { height: calc(36 * var(--u)); border-radius: calc(8 * var(--u)); background: linear-gradient(#ffffff, #d9deea); color: var(--ink); font: 400 var(--fs-18)/1 var(--f-comic); letter-spacing: .05em; border: calc(2 * var(--u)) solid var(--ink); box-shadow: 0 calc(3 * var(--u)) 0 var(--ink); text-align: center; pointer-events: auto; transition: transform .12s var(--ease-out); }
+.cr-keys__slot.is-empty { background: rgba(255, 255, 255, .06); color: #9fb0da; border-style: dashed; border-color: rgba(255, 255, 255, .3); box-shadow: none; }
+.cr-keys__slot.is-clash { background: #ffb0a6; }
+.cr-keys__slot.is-capturing { background: linear-gradient(180deg, #ffe066, #ffb020); animation: cr-blink 1s ease-in-out infinite; }
+.cr-keys__slot:hover, .cr-keys__slot:focus { transform: scale(1.05); box-shadow: 0 0 0 calc(3 * var(--u)) var(--white), 0 calc(3 * var(--u)) 0 var(--ink); }
+.cr-settings__keyfoot { display: flex; flex-wrap: wrap; align-items: center; gap: calc(8 * var(--u)) calc(16 * var(--u)); margin-top: calc(8 * var(--u)); }
+.cr-settings__reset { min-height: calc(46 * var(--u)); padding: 0 calc(22 * var(--u)); }
+.cr-settings__reset .cr-btn__label { font-size: var(--fs-20); }
+.cr-settings__notice { flex: 1; min-width: calc(200 * var(--u)); font: 800 var(--fs-14)/1.3 var(--f-ui); color: var(--gold); }
+.cr-settings__keynote { flex-basis: 100%; font: 700 var(--fs-12)/1.3 var(--f-ui); color: #9fb0da; }

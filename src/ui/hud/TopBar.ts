@@ -11,16 +11,18 @@ export class TopBar {
   private readonly xpFill: StyleCell;
   private readonly xpFillEl: HTMLElement;
   private readonly xpBar: HTMLElement;
-  private readonly badge: HTMLElement;
+  readonly badge: HTMLElement;
+  readonly plate: HTMLElement;
   private readonly level: TextCell;
   private readonly timer: TextCell;
-  private readonly timerEl: HTMLElement;
+  readonly timerEl: HTMLElement;
   private readonly kills: TextCell;
   private readonly killsEl: HTMLElement;
   private readonly doubloons: TextCell;
   private readonly doubloonsEl: HTMLElement;
   private readonly bounty: TextCell;
-  private readonly eta: HTMLElement;
+  /** Next-boss countdown pill; the HUD mounts it in the top-centre stack (above the boss bar and tracker). */
+  readonly eta: HTMLElement;
   private readonly etaText: TextCell;
   private readonly etaName: TextCell;
   private readonly etaIcon: HTMLElement;
@@ -52,7 +54,8 @@ export class TopBar {
     const etaName = h('span', '');
     this.etaIcon = h('span', 'cr-eta__icon', glyph('skull'));
     this.eta = h('div', 'cr-eta', this.etaIcon, etaName, etaText);
-    this.el = h('div', 'cr-top', this.xpBar, this.badge, this.timerEl, plate, this.eta);
+    this.plate = plate;
+    this.el = h('div', 'cr-top', this.xpBar, this.badge, this.timerEl, plate);
     this.xpFill = new StyleCell(this.xpFillEl, 'transform');
     this.level = new TextCell(lv);
     this.timer = new TextCell(time);

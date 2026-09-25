@@ -1,7 +1,9 @@
 /**
- * In-run HUD. Built once; update() only writes values that changed. Widgets: top bar (XP/level/timer/stats),
- * boss bar, banners (boss warning, director events, stamps, skill cut-ins, toasts), ship ring, skill bar,
- * loadout, minimap, offscreen markers and screen feedback.
+ * In-run HUD. Built once; update() only writes values that changed. Widgets: top bar (XP/level/timer/stats), the
+ * top-centre stack (boss ETA · boss bar · world-event tracker), banners (boss warning, director events, stamps, skill
+ * cut-ins, toasts), ship ring, skill bar, loadout, minimap + captains roster, offscreen markers, nameplates and screen
+ * feedback. Every world-anchored element (markers, nameplates) keeps out of the fixed widgets through SafeZone.
+ * Settings.hudScale (0.8–1.2) scales the whole HUD through --hud-scale.
  */
 import { CONTENT } from '../../game/content';
 import type { RunState, SimEvent } from '../../game/types';
@@ -21,6 +23,9 @@ import { SkillBar } from './SkillBar';
 import { TopBar } from './TopBar';
 import { EventTracker } from './EventTracker';
 import { Roster } from './Roster';
+import { SafeZone } from './SafeZone';
+import { controls } from '../../input/Input';
+import { Coach, type HintId } from './Coach';
 
 export class Hud {
   readonly el: HTMLElement;
@@ -31,10 +36,14 @@ export class Hud {
   private readonly skills = new SkillBar();
   private readonly loadout = new Loadout();
   private readonly minimap = new Minimap();
-  private readonly markers = new Markers();
+  /** Where markers and nameplates may go (viewport minus the fixed widgets). */
+  readonly zone = new SafeZone();
+  private readonly markers = new Markers(this.zone);
   private readonly roster = new Roster();
   private readonly tracker = new EventTracker();
   readonly feedback = new Feedback();
+  /** First-voyage coach (prompts above the skill bar; card-screen explainers through Ui). */
+  readonly coach: Coach;
   private readonly basis = new ScreenBasis();
   private readonly fps: TextCell;
   private readonly fpsEl: HTMLElement;
@@ -42,31 +51,38 @@ export class Hud {
   private lastFps = -1;
   private ended = false;
   private seed = '';
+  private scale = 1;
   width = 1600;
   height = 900;
 
-  constructor() {
+  constructor(opts: { hintSeen(id: HintId): void }) {
+    this.coach = new Coach(opts.hintSeen);
     const fps = h('span', 'cr-fps');
     this.fpsEl = fps;
     this.fps = new TextCell(fps);
+    const stack = h('div', 'cr-hud__tc', this.top.eta, this.boss.el, this.tracker.el);
+    const column = h('div', 'cr-hud__tr', this.minimap.el, fps, this.roster.el);
     this.el = h('div', 'cr-hud',
       this.feedback.el,
       this.markers.el,
       this.top.el,
-      this.boss.el,
-      this.tracker.el,
-      h('div', 'cr-hud__tr', this.minimap.el, fps, this.roster.el),
+      stack,
+      column,
       this.banners.el,
+      this.coach.el,
       this.ring.el,
       this.skills.el,
       this.loadout.el,
     );
+    this.zone.track(this.coach.el, this.top.badge, this.top.plate, this.top.timerEl, stack, column, this.ring.el, this.ring.statusesEl, this.skills.el, this.loadout.el, this.banners.toastsEl);
     // Kept laid out (visibility) rather than display:none so the first sailing frame does not pay for the
     // HUD's first style/layout pass.
     this.el.classList.add('is-off');
   }
 
   show(): void { this.el.classList.remove('is-off'); }
+  /** Tab: captains roster compact ⇄ collapsed. */
+  toggleRoster(): void { this.roster.toggle(); }
   hide(): void { this.el.classList.add('is-off'); }
   dispose(): void { this.minimap.dispose(); }
 
@@ -74,17 +90,32 @@ export class Hud {
   reset(): void {
     this.top.reset(); this.boss.reset(); this.banners.reset(); this.ring.reset(); this.skills.reset();
     this.loadout.reset(); this.minimap.reset(); this.markers.reset(); this.feedback.reset();
-    this.roster.reset(); this.tracker.reset();
+    this.roster.reset(); this.tracker.reset(); this.coach.reset();
     this.ended = false;
+    // Toggle-mode AUTO latches do not carry over into a new voyage.
+    controls.latched.broadside = false; controls.latched.brace = false;
   }
 
   /** A modal (cards, chest, pause) covers the centre: hold stamps until it closes. */
   setModal(open: boolean): void { this.banners.setSuppressed(open); }
 
-  resize(w: number, h: number): void { this.width = w; this.height = h; this.markers.width = w; this.markers.height = h; }
+  /** The run is over / on its victory lap: cards picked by the guard stay quiet (no loadout toasts). */
+  over = false;
+
+  resize(w: number, h: number): void { this.width = w; this.height = h; this.zone.resize(w, h, this.scale); }
+
+  /** Settings.hudScale, clamped to 0.8–1.2. */
+  private setScale(v: number | undefined): void {
+    const s = Math.max(0.8, Math.min(1.2, Number.isFinite(v) ? v! : 1));
+    if (Math.abs(s - this.scale) < 1e-3) return;
+    this.scale = s;
+    this.el.style.setProperty('--hud-scale', s.toFixed(3));
+    this.zone.resize(this.width, this.height, s);
+  }
 
   update(f: UiFrame, run: Readonly<RunState>): void {
     if (run.seed !== this.seed) { this.seed = run.seed; this.reset(); this.el.style.setProperty('--accent', hex(CONTENT.ships[run.shipId].accent)); }
+    this.setScale(f.settings.hudScale);
     const p = run.player;
     const ship = CONTENT.ships[run.shipId];
     const prof = (window as unknown as { __CRUISE_UI_PROFILE__?: Record<string, number> }).__CRUISE_UI_PROFILE__;
@@ -92,20 +123,23 @@ export class Hud {
     const mark = prof ? (k: string) => { const n = performance.now(); prof[k] = (prof[k] ?? 0) + n - t; prof[`${k}_max`] = Math.max(prof[`${k}_max`] ?? 0, n - t); t = n; } : null;
     // Read phase first: project() reads layout (RendererHost.getViewport), so no DOM writes before it.
     this.basis.update(f, p.x, p.z);
+    if (this.roster.changed) { this.roster.changed = false; this.zone.invalidate(); }
+    this.zone.measure(this.el);
     this.markers.measure(f, run, this.basis);
-    this.roster.measure(f, run); mark?.('measure');
+    this.roster.measure(f, run, this.zone, this.basis, this.markers.plateSpots, this.markers.plateSpotCount); mark?.('measure');
     // Write phase.
     this.banners.tick(f.time);
     this.top.update(run, f.time); mark?.('top');
     this.boss.update(run, f.dt); mark?.('boss');
-    this.ring.update(p, ship); mark?.('ring');
+    this.ring.update(run, ship); mark?.('ring');
     this.skills.update(p, ship); mark?.('skills');
     this.loadout.update(p); mark?.('loadout');
-    this.minimap.update(run, this.basis, f.dt, f.world); mark?.('minimap');
+    this.minimap.update(run, this.basis, f.dt, f.world, f.settings.colorBlind); mark?.('minimap');
     this.markers.apply(); mark?.('markers');
     this.feedback.update(p); mark?.('feedback');
     this.roster.update(run, f); this.tracker.update(run, f); mark?.('roster');
-    if (this.skills.ultJustReady) this.banners.toast(`${ULTIMATES[ship.ultimate].name} ready — press R`, ULTIMATES[ship.ultimate].glyph, 'gold', iconPath(ship.ultimate));
+    this.coach.update(f, run, this.over); mark?.('coach');
+    if (this.skills.ultJustReady) this.banners.toast(`${ULTIMATES[ship.ultimate].name} ready — press R`, ULTIMATES[ship.ultimate].glyph, 'gold', iconPath(ship.ultimate), 'ult-ready', 60);
     this.feedback.reduce = !!(f.settings as { reduceFlashing?: boolean }).reduceFlashing;
     // FPS readout.
     this.fpsEl.hidden = !f.settings.showFps;
@@ -165,21 +199,24 @@ export class Hud {
         break;
       }
       case 'director-event':
+        // A world event's opening banner repeats what its tracker already shows: the tracker announces it.
+        if (run.worldEvent && run.worldEvent.name === e.name) { this.zone.invalidate(); break; }
         this.banners.directorEvent(e.name, e.text);
         break;
       case 'tier-up':
-        this.banners.showStamp(`Tier ${ROMAN[e.tier] ?? e.tier}`, 'Your ship grows!', 'gold', 2, 1500);
+        if (!this.over) this.banners.showStamp(`Tier ${ROMAN[e.tier] ?? e.tier}`, 'Your ship grows!', 'gold', 2, 1500);
         break;
       case 'weapon-changed': {
         this.loadout.pop(e.weapon);
         const def = CONTENT.weapons[e.weapon];
+        if (this.over) break;
         if (e.isNew) this.banners.toast(`New weapon · ${def.name}`, WEAPON_GLYPH[e.weapon], 'gold', iconPath(e.weapon));
         else if (e.overdrive) this.banners.toast(`Overdrive · ${def.overdrive.name}`, 'star', 'gold', iconPath(e.weapon));
         break;
       }
       case 'passive-changed':
         this.loadout.pop(e.passive);
-        if (e.isNew) this.banners.toast(`New passive · ${CONTENT.passives[e.passive].name}`, PASSIVE_GLYPH[e.passive], 'white', iconPath(e.passive));
+        if (e.isNew && !this.over) this.banners.toast(`New passive · ${CONTENT.passives[e.passive].name}`, PASSIVE_GLYPH[e.passive], 'white', iconPath(e.passive));
         break;
       case 'pickup-collected':
         if (e.kind === 'repair') this.banners.toast('Hull repaired +25%', 'plus', 'teal', iconPath('repair'));

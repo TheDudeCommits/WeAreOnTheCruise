@@ -32,3 +32,11 @@ export const ROMAN = ['0', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX
 export function fmtPct(v: number): string {
   return `${Math.round(v * 100)}%`;
 }
+
+/**
+ * Speed readout in knots on the game's scale (ships are sized and paced for play, not to scale): m/s × 1.944 read as
+ * 50-60 kn, so the HUD and the harbor divide by three — a fast hull tops out around 20 kn, like a real clipper.
+ */
+export function knots(metresPerSecond: number): number {
+  return Math.round((Math.abs(metresPerSecond) * 1.944) / 3);
+}

@@ -1,15 +1,16 @@
 /**
- * World-event tracker (EVENTS-owned): the set piece running now, from `run.worldEvent` — name, objective line,
- * progress (a count, dig seconds, or the clock for survival pieces) and time left — plus its outcome flourish
- * (gold stamp on success, red on failure) from the 'world-event' success|fail phases. Sits compactly under the boss
- * bar (and slides below it while a boss bar shows). Built once; per-frame work only touches cached cells.
+ * World-event tracker (EVENTS built it; FLOW owns the HUD now): the set piece running now, from `run.worldEvent` —
+ * name, objective line, progress (a count, dig seconds, or the clock for survival pieces) and time left — plus its
+ * outcome flourish (gold stamp on success, red on failure) from the 'world-event' success|fail phases. It lives in the
+ * HUD's top-centre stack (boss ETA · boss bar · tracker), so it can never sit on the boss bar; while a boss bar shows
+ * it drops to a compact one-line form. Built once; per-frame work only touches cached cells.
  */
 import type { RunState, WorldEventState } from '../../game/types';
 import type { UiFrame } from '../contracts';
 import { ClassCell, StyleCell, TextCell, h, play } from '../core/dom';
 import { glyph, type GlyphId } from '../core/icons';
 
-const GLYPH: Readonly<Record<string, GlyphId>> = {
+export const EVENT_GLYPH: Readonly<Record<string, GlyphId>> = {
   'kraken-rising': 'dive',
   'rogue-wave': 'wave',
   maelstrom: 'vortex',
@@ -129,7 +130,7 @@ export class EventTracker {
     this.lastDist = -1;
     this.dist.set('');
     this.el.dataset.event = ev.id;
-    this.icon.replaceChildren(glyph(GLYPH[ev.id] ?? 'flare'));
+    this.icon.replaceChildren(glyph(EVENT_GLYPH[ev.id] ?? 'flare'));
     this.name.set(ev.name);
     this.goal.set(ev.text);
     this.stamp.set('');
@@ -139,8 +140,8 @@ export class EventTracker {
     this.bar.style.setProperty('--seg', String(hasGoal && !SECONDS.has(ev.id) ? Math.min(16, ev.goal!) : 1));
     this.on.set(true);
     play(this.el, [
-      { opacity: 0, transform: 'translateX(-50%) translateY(-18px) scale(1.12)' },
-      { opacity: 1, transform: 'translateX(-50%) translateY(0) scale(1)' },
+      { opacity: 0, transform: 'translateY(-18px) scale(1.12)' },
+      { opacity: 1, transform: 'translateY(0) scale(1)' },
     ], { duration: 380, easing: 'cubic-bezier(.2,1.3,.3,1)' });
   }
 
@@ -187,16 +188,16 @@ export class EventTracker {
     this.stamp.set(success ? WIN[id] ?? 'Complete!' : LOSE[id] ?? 'Failed');
     play(this.el, success
       ? [
-        { transform: 'translateX(-50%) scale(1)', filter: 'brightness(1)' },
-        { transform: 'translateX(-50%) scale(1.08)', filter: 'brightness(1.8)', offset: 0.25 },
-        { transform: 'translateX(-50%) scale(1)', filter: 'brightness(1)' },
+        { transform: 'scale(1)', filter: 'brightness(1)' },
+        { transform: 'scale(1.08)', filter: 'brightness(1.8)', offset: 0.25 },
+        { transform: 'scale(1)', filter: 'brightness(1)' },
       ]
       : [
-        { transform: 'translateX(-50%)' },
-        { transform: 'translateX(calc(-50% - 10px))', offset: 0.2 },
-        { transform: 'translateX(calc(-50% + 8px))', offset: 0.4 },
-        { transform: 'translateX(calc(-50% - 5px))', offset: 0.6 },
-        { transform: 'translateX(-50%)' },
+        { transform: 'translateX(0)' },
+        { transform: 'translateX(-10px)', offset: 0.2 },
+        { transform: 'translateX(8px)', offset: 0.4 },
+        { transform: 'translateX(-5px)', offset: 0.6 },
+        { transform: 'translateX(0)' },
       ], { duration: success ? 620 : 480, easing: 'ease-out' });
   }
 }

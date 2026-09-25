@@ -188,6 +188,10 @@ export class GameApp {
       onPurchaseUpgrade: (id: MetaUpgradeId) => { if (purchaseUpgrade(this.profile, id)) saveProfile(this.profile); },
       onUnlockShip: (id) => { if (unlockShip(this.profile, id)) { this.selectedShip = id; saveProfile(this.profile); } },
       onSettingsChange: (settings) => { this.settings = settings; saveSettings(settings); this.audio.setSettings(settings); },
+      onHintSeen: (id) => { // FLOW: first-voyage coach hints (MetaProfile.seenHints)
+        const seen = (this.profile.seenHints ??= []);
+        if (!seen.includes(id)) { seen.push(id); saveProfile(this.profile); }
+      },
     };
   }
 

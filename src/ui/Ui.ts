@@ -7,6 +7,7 @@
  */
 import type { AppScreen } from '../render/frame';
 import type { RunState, Settings } from '../game/types';
+import { SCRATCH } from '../game/sim/meta-runtime';
 import type { UiCallbacks, UiFrame, UiSystem } from './contracts';
 import { h } from './core/dom';
 import { ensureGlyphSprite, prefetchIcons } from './core/icons';
@@ -15,12 +16,18 @@ import { PadReader, type PadIntent } from './core/nav';
 import { Hud } from './hud/Hud';
 import { CardsModal } from './modals/CardsModal';
 import { PauseMenu } from './modals/PauseMenu';
-import { SettingsPanel } from './modals/SettingsPanel';
+import { SettingsPanel, type SettingsTab } from './modals/SettingsPanel';
 import { HarborScreen } from './screens/HarborScreen';
 import { ResultsScreen } from './screens/ResultsScreen';
 import { TitleScreen } from './screens/TitleScreen';
+import { mergeRestored, readRestorable, type Restorable } from './core/restore';
 
 const LEAVE_MS = 320;
+
+/** The run has ended, or the final flagship is sinking (director victory lap: `scratch.victoryAt` is armed). */
+export function runIsOver(run: Readonly<RunState>): boolean {
+  return run.status === 'victory' || run.status === 'dead' || (run.director.scratch[SCRATCH.victoryAt] ?? 0) > 0;
+}
 
 export class Ui implements UiSystem {
   private root!: HTMLElement;
@@ -47,6 +54,11 @@ export class Ui implements UiSystem {
   private perfAvg = 0;
   private perfMax = 0;
   private readonly spikes: { ms: number; screen: string; status: string; events: string }[] = [];
+  /** Seed of the run whose `run-ended` event has been seen (cleared when an endless voyage sails on). */
+  private endedSeed = '';
+  private lapPickAt = -1;
+  /** Round-2 fields read from the raw saves at mount (see core/restore.ts); applied on the first frame. */
+  private restored: Restorable | null = null;
 
   get blockingInput(): boolean {
     return this.mounted && (this.pause.open || this.settings.open || this.cards.open);
@@ -59,15 +71,18 @@ export class Ui implements UiSystem {
     this.title = new TitleScreen(() => this.goHarbor());
     this.harbor = new HarborScreen({ cb: callbacks, openSettings: () => this.openSettings() });
     this.results = new ResultsScreen(callbacks);
-    this.hud = new Hud();
+    this.restored = readRestorable();
+    this.hud = new Hud({ hintSeen: (id) => this.cb.onHintSeen(id) });
+    this.hud.coach.restore(this.restored.hints);
     this.cards = new CardsModal({
       choose: (i) => this.cb.onChooseCard(i),
       reroll: () => this.cb.onReroll(),
       banish: (i) => this.cb.onBanish(i),
+      tip: (offers) => (this.frame ? this.hud.coach.cardTip(this.frame, offers) : null),
     });
     this.pause = new PauseMenu({
       resume: () => this.setPaused(false),
-      openSettings: () => this.openSettings(),
+      openSettings: (tab) => this.openSettings(tab),
       retire: () => { this.setPaused(false); this.cb.onRetire(); },
     });
     this.settings = new SettingsPanel((s) => { this.settingsValue = s; this.cb.onSettingsChange(s); });
@@ -99,6 +114,7 @@ export class Ui implements UiSystem {
       spikes: () => this.spikes.slice(),
       screen: () => this.screen,
       blocking: () => this.blockingInput,
+      coach: () => ({ showing: this.hud.coach.showing, log: this.hud.coach.log.slice() }),
     };
     this.mounted = true;
   }
@@ -133,8 +149,11 @@ export class Ui implements UiSystem {
     const t0 = performance.now();
     this.frame = f;
     this.settingsValue = f.settings;
+    if (this.restored) this.applyRestored(f);
     const calm = !!(f.settings as { reduceFlashing?: boolean }).reduceFlashing;
     if (calm !== this.layer.classList.contains('is-calm')) this.layer.classList.toggle('is-calm', calm);
+    const cb = f.settings.colorBlind ?? 'off';
+    if (cb !== (this.layer.dataset.cb ?? 'off')) { if (cb === 'off') delete this.layer.dataset.cb; else this.layer.dataset.cb = cb; }
     this.pollPad(f.dt);
     switch (this.screen) {
       case 'harbor': this.harbor.update(f); break;
@@ -152,15 +171,32 @@ export class Ui implements UiSystem {
     }
   }
 
+  /** Hands back round-2 fields the loaders dropped (once): seen hints into the profile, settings into Settings. */
+  private applyRestored(f: UiFrame): void {
+    const r = this.restored!;
+    this.restored = null;
+    for (const id of r.hints) if (!f.profile.seenHints?.includes(id)) this.cb.onHintSeen(id);
+    const next = mergeRestored(f.settings, r);
+    if (next) { this.settingsValue = next; this.cb.onSettingsChange(next); }
+  }
+
   private updateRun(f: UiFrame): void {
     const run = f.run;
     this.run = run;
     if (!run) return;
-    this.hud.setModal(run.status === 'levelup' || run.status === 'chest' || this.pause.open);
+    // Victory-lap guard: no card screen once the run is over or its final flagship is going down. A late offer
+    // (XP gems magnet in during the lap) is resolved here with the first card, so the results are never held back.
+    for (let i = 0; i < f.events.length; i++) if (f.events[i]!.type === 'run-ended') this.endedSeed = run.seed;
+    if (this.endedSeed === run.seed && run.endless && run.status === 'running') this.endedSeed = '';
+    const over = this.endedSeed === run.seed || runIsOver(run);
+    const cardsUp = run.status === 'levelup' || run.status === 'chest';
+    if (over && cardsUp && run.offers && f.time - this.lapPickAt > 0.05) { this.lapPickAt = f.time; this.cb.onChooseCard(0); }
+    this.hud.setModal((cardsUp && !over) || this.pause.open);
+    this.hud.over = over;
     this.hud.update(f, run);
     const prof = (window as unknown as { __CRUISE_UI_PROFILE__?: Record<string, number> }).__CRUISE_UI_PROFILE__;
     const c0 = prof ? performance.now() : 0;
-    this.cards.update(f);
+    this.cards.update(f, over);
     if (prof) { const d = performance.now() - c0; prof.cards = (prof.cards ?? 0) + d; prof.cards_max = Math.max(prof.cards_max ?? 0, d); }
     // The app can pause on its own (tab hidden): surface the pause menu so the player can resume.
     if (run.status === 'paused' && !this.pause.open) this.setPaused(true);
@@ -202,13 +238,13 @@ export class Ui implements UiSystem {
     }
   }
 
-  private openSettings(): void {
+  private openSettings(tab?: SettingsTab): void {
     const s = this.settingsValue ?? this.frame?.settings;
     if (!s) return;
     this.settings.show(s, () => {
       if (this.screen === 'run' && this.pause.open) this.pause.refocus();
       else if (this.screen === 'harbor') this.harbor.refocus();
-    });
+    }, tab);
   }
 
   // ── Input routing ──
@@ -241,6 +277,7 @@ export class Ui implements UiSystem {
       if (this.pause.open) handled = this.pause.onKey(e);
       else if ((e.code === 'Escape' || e.code === 'KeyP') && !e.repeat && this.canPause()) { this.setPaused(true); handled = true; }
       else if (this.cards.open) handled = this.cards.onKey(e);
+      else if (e.code === 'Tab') { if (!e.repeat) this.hud.toggleRoster(); handled = true; }
     } else if (this.screen === 'title') handled = this.title.onKey(e);
     else if (this.screen === 'harbor') handled = this.harbor.onKey(e);
     else if (this.screen === 'results') handled = this.results.onKey(e);

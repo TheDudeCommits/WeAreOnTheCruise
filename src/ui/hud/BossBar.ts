@@ -68,7 +68,7 @@ export class BossBar {
       this.shown = this.lagV = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
       this.lastQ = this.lastLagQ = this.lastPct = -1;
       this.on.set(true);
-      play(this.el, [{ opacity: 0, transform: 'translateX(-50%) translateY(-30px) scale(1.2)' }, { opacity: 1, transform: 'translateX(-50%) translateY(0) scale(1)' }], { duration: 420, easing: 'cubic-bezier(.2,1.3,.3,1)' });
+      play(this.el, [{ opacity: 0, transform: 'translateY(-30px) scale(1.2)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], { duration: 420, easing: 'cubic-bezier(.2,1.3,.3,1)' });
     }
     if (boss.phase !== this.phaseIndex) {
       this.phaseIndex = boss.phase;
@@ -91,9 +91,9 @@ export class BossBar {
 
   phaseFlash(): void {
     play(this.el, [
-      { filter: 'brightness(1)', transform: 'translateX(-50%) scale(1)' },
-      { filter: 'brightness(2.4)', transform: 'translateX(-50%) scale(1.06)', offset: 0.2 },
-      { filter: 'brightness(1)', transform: 'translateX(-50%) scale(1)' },
+      { filter: 'brightness(1)', transform: 'scale(1)' },
+      { filter: 'brightness(2.4)', transform: 'scale(1.06)', offset: 0.2 },
+      { filter: 'brightness(1)', transform: 'scale(1)' },
     ], { duration: 700, easing: 'ease-out' });
   }
 
