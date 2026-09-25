@@ -272,10 +272,10 @@
 .cr-seacard__facts { display: flex; gap: calc(16 * var(--u)); }
 .cr-seacard__fact { display: inline-flex; align-items: center; gap: calc(6 * var(--u)); font: 800 var(--fs-13)/1 var(--f-ui); color: #bcd3ff; letter-spacing: .04em; }
 .cr-seacard__fact .cr-glyph { width: calc(16 * var(--u)); height: calc(16 * var(--u)); color: var(--cyan); }
-.cr-seacard__bosses { display: flex; flex-wrap: wrap; gap: calc(6 * var(--u)); margin-top: auto; }
-.cr-seacard__boss { display: inline-flex; align-items: center; gap: calc(5 * var(--u)); padding: calc(4 * var(--u)) calc(10 * var(--u)); border-radius: 999px; background: rgba(255, 74, 61, .16); border: calc(2 * var(--u)) solid rgba(255, 120, 110, .45); font: 800 var(--fs-12)/1 var(--f-ui); color: #ffd3cd; }
-.cr-seacard__boss b { font: 400 var(--fs-16)/1 var(--f-comic); color: var(--white); letter-spacing: .05em; }
-.cr-seacard__boss .cr-glyph { width: calc(15 * var(--u)); height: calc(15 * var(--u)); color: var(--red); }
+.cr-seacard__bosses { display: flex; flex-wrap: wrap; gap: calc(4 * var(--u)); margin-top: auto; }
+.cr-seacard__boss { display: inline-flex; align-items: center; gap: calc(3 * var(--u)); padding: calc(3 * var(--u)) calc(7 * var(--u)); border-radius: 999px; background: rgba(255, 74, 61, .16); border: calc(2 * var(--u)) solid rgba(255, 120, 110, .45); font: 800 calc(11 * var(--u))/1 var(--f-ui); color: #ffd3cd; }
+.cr-seacard__boss b { font: 400 calc(14 * var(--u))/1 var(--f-comic); color: var(--white); letter-spacing: .04em; }
+.cr-seacard__boss .cr-glyph { width: calc(13 * var(--u)); height: calc(13 * var(--u)); color: var(--red); }
 /* Locked seas: the lock and its condition sit on the art column, so the description stays readable. */
 .cr-seacard__lock { position: absolute; left: 0; top: 0; bottom: 0; width: calc(210 * var(--u)); display: none; flex-direction: column; align-items: center; justify-content: center; gap: calc(8 * var(--u)); padding: calc(12 * var(--u)); background: rgba(6, 10, 26, .74); font: 400 var(--fs-18)/1.1 var(--f-comic); letter-spacing: .05em; text-transform: uppercase; text-align: center; }
 .cr-seacard__lock .cr-glyph { width: calc(36 * var(--u)); height: calc(36 * var(--u)); color: var(--gold); }

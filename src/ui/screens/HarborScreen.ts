@@ -200,9 +200,16 @@ export class HarborScreen {
       for (let i = 0; i < 3; i++) skulls.append(glyph('skull', i <= diff ? 'is-on' : ''));
       skulls.append(h('span', 'cr-seacard__difflabel', SEA_DIFF_LABEL[diff]!));
       const bosses = h('span', 'cr-seacard__bosses');
+      // Five fights fit on two lines: short names ("Warden"), rematches marked "II" (full name on hover).
+      const seen = new Map<string, number>();
       for (const b of sea.bosses) {
         const def = CONTENT.bosses[b.boss];
-        bosses.append(h('span', 'cr-seacard__boss', glyph(BOSS_GLYPH[b.boss]), h('b', '', fmtClock(b.at)), def.name.replace(/^The /, '')));
+        const n = (seen.get(b.boss) ?? 0) + 1;
+        seen.set(b.boss, n);
+        const short = def.name.replace(/^The /, '').split(' ').pop()! + (n > 1 ? ' II' : '');
+        const chip = h('span', 'cr-seacard__boss', glyph(BOSS_GLYPH[b.boss]), h('b', '', fmtClock(b.at)), short);
+        chip.title = n > 1 ? `${def.name}, a tougher rematch` : def.name;
+        bosses.append(chip);
       }
       const weather = [...new Set(sea.weather.map((w) => WEATHER_LABEL[w.weather] ?? w.weather))].join(' · ');
       const lock = h('span', 'cr-seacard__locktext');
