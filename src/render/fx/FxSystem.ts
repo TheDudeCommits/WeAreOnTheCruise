@@ -85,7 +85,7 @@ export class FxSystem implements RenderSystem {
   private rateCel = 0;
   private rateGlow = 0;
   private pressure = 1;
-  /** Smoke rules: keeps smoke under ~6% of the screen (see SmokeGovernor). */
+  /** Smoke rules: keeps smoke under ~4.5% of the screen (see SmokeGovernor). */
   readonly smoke = new SmokeGovernor();
   private readonly guardTmp = new THREE.Vector3();
   readonly stats: FxStats = {

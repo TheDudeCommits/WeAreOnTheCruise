@@ -423,8 +423,13 @@ export class WakeSystem {
         if (!f.contains(h.x, h.z, h.radius + 10)) break;
         const env = smooth(0, 0.6, h.age) * (1 - smooth(h.ttl - 0.8, h.ttl, h.age));
         const r = Math.max(6, h.radius);
-        f.transientBatch.push(f.relX(h.x), f.relZ(h.z), 1, 0, r, r, SHAPE_WHIRL, this.time * 1.6 + h.id, 3, (0.8 + r * 0.03) * env, 2.6, 0, 1, 1, env, env);
-        f.persistentBatch.push(f.relX(h.x), f.relZ(h.z), 1, 0, r * 0.75, r * 0.75, SHAPE_BLOB, 1, 0.6, 0.2, 0, 0, 0, 0, 0.45 * env, 0.8 * env);
+        // Round 3 (owner: the vortex under the ship was "visually obstructing"): narrow foam streaks (p4 = 1), a
+        // shallower bowl and light foam/aeration. The ★ Maelstrom follows the hull (endless ttl): fainter still, and no
+        // persistent foam (it laid a foam carpet under and behind the ship; it was a 0.45 disc of 72 m).
+        const follows = h.ttl > 1e6;
+        const depth = Math.min(0.8 + r * 0.03, follows ? 1.2 : 1.8) * env;
+        f.transientBatch.push(f.relX(h.x), f.relZ(h.z), 1, 0, r, r, SHAPE_WHIRL, this.time * 1.6 + h.id, 3, depth, 2.6, 1, 1, 1, (follows ? 0.1 : 0.3) * env, (follows ? 0.1 : 0.3) * env);
+        if (!follows) f.persistentBatch.push(f.relX(h.x), f.relZ(h.z), 1, 0, r * 0.4, r * 0.4, SHAPE_BLOB, 1, 0.6, 0.2, 0, 0, 0, 0, 0.15 * env, 0.3 * env);
         break;
       }
       case 'wave-front': {

@@ -99,10 +99,10 @@ void fxSprite() {
     float aspect = projectionMatrix[1][1] / max(projectionMatrix[0][0], 1e-4);
     float rp = 0.45 * size * projectionMatrix[1][1] / pw;  // solid radius in NDC-y units
     float frac = 0.785 * rp * rp / aspect;                   // screen fraction of the puff disc
-    // 1) coverage governor: when smoke covers more than ~6% of the screen, older and bigger puffs erode first
+    // 1) coverage governor: when smoke covers more than ~4.5% of the screen, older and bigger puffs erode first
     float thin = uSmokeThin * smoke * (0.3 + 0.7 * t) * (0.6 + 0.4 * smoothstep(0.004, 0.03, frac));
-    // 2) no single puff covers more than ~3% of the screen
-    float cap = smoke * smoothstep(0.02, 0.06, frac) * 0.8;
+    // 2) no single puff covers more than ~2% of the screen (round 3: was ~3%)
+    float cap = smoke * smoothstep(0.015, 0.045, frac) * 0.85;
     vOccl = max(thin, cap);
     // 3) protected hulls: puffs in front of the hero or a boss break into wisps (never an opaque cover)
     if (occluder > 0.0) {

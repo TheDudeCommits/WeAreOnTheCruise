@@ -242,20 +242,43 @@ void main() {
     paint = c1 * alpha;
     add = c2 * vColor2.a * (ring * 1.2 + wash * 0.25) * fade;
   } else if (shape == 6) {
+    // Whirl: p1 = spin rate, p2 = arm count. The unused add slot (vColor2.a) is "thin" (round 3): 0 = broad solid foam
+    // arms and a dark eye (sinking / breach spirals); 1 = thin broken foam streaks of a fixed width in metres along the
+    // same spiral, fading out toward a clear eye and the rim (whirlpool hazards, the maelstrom), so a hull sitting in
+    // one always reads on top of it.
     if (r > 1.0) discard;
     float ang = atan(uv.y, uv.x);
     float arms = max(vP.y, 2.0);
     float spin = uRealTime * vP.x;
-    float sp = sin(ang * arms + log(r + 0.04) * 7.0 + spin + seed);
+    float phase = ang * arms + log(r + 0.04) * 7.0 + spin + seed;
     float n = fxNoise(vec2(ang * 2.0 + seed, r * 6.0 - spin * 0.2));
-    float foamM = sp - 0.35 + (n - 0.5) * 0.7 - smoothstep(0.7, 1.0, r) * 1.2 - t * t * 1.5;
-    float w = max(fwidth(foamM), 1e-4);
-    float foam = smoothstep(-w, w, foamM);
-    float dark = (1.0 - smoothstep(0.0, 0.55, r)) * 0.55 * (1.0 - t);
-    float lace = band(foamM, 0.06, w) * 0.6;
-    alpha = max(foam * 0.92, dark) * vColor.a;
-    paint = mix(c2 * dark, c1, foam) * vColor.a + c1 * lace * 0.2;
-    alpha = max(alpha, lace * 0.4);
+    if (vColor2.a > 0.5) {
+      // distance (m) from the arm crest line: phase offset / |grad phase| (uv units) × half size
+      float g = sqrt(arms * arms / max(r * r, 1e-4) + 49.0 / ((r + 0.04) * (r + 0.04)));
+      float ph1 = (fract((phase - 1.5707963) / 6.2831853 + 0.5) - 0.5) * 6.2831853;
+      float ph2 = (fract((phase - 1.5707963 + 1.3) / 6.2831853 + 0.5) - 0.5) * 6.2831853;
+      float hw = clamp(vHalf.x * 0.02, 0.8, 2.2);
+      float d1 = abs(ph1) / g * vHalf.x + (n - 0.5) * hw * 0.9;
+      float d2 = abs(ph2) / g * vHalf.x + (n - 0.5) * hw * 0.6;
+      float daa = max(fwidth(d1), 1e-3);
+      float s1 = 1.0 - smoothstep(hw - daa, hw + daa, d1);
+      float s2 = (1.0 - smoothstep(hw * 0.45 - daa, hw * 0.45 + daa, d2)) * 0.55;
+      float dash = 1.0 - smoothstep(0.58, 0.72, fxNoise(vec2(ang * 3.0 + seed * 1.3, r * 9.0 - spin * 0.35)));
+      float envR = smoothstep(0.12, 0.36, r) * (1.0 - smoothstep(0.7, 1.0, r)) * (1.0 - t * t);
+      float foam = max(s1, s2) * dash * envR;
+      alpha = foam * vColor.a;
+      paint = c1 * alpha;
+    } else {
+      float sp = sin(phase);
+      float foamM = sp - 0.35 + (n - 0.5) * 0.7 - smoothstep(0.7, 1.0, r) * 1.2 - t * t * 1.5;
+      float w = max(fwidth(foamM), 1e-4);
+      float foam = smoothstep(-w, w, foamM);
+      float dark = (1.0 - smoothstep(0.0, 0.55, r)) * 0.55 * (1.0 - t);
+      float lace = band(foamM, 0.06, w) * 0.6;
+      alpha = max(foam * 0.92, dark) * vColor.a;
+      paint = mix(c2 * dark, c1, foam) * vColor.a + c1 * lace * 0.2;
+      alpha = max(alpha, lace * 0.4);
+    }
   } else if (shape == 7) {
     float g = max(0.0, 1.0 - r);
     float flick = 0.85 + 0.15 * sin(uRealTime * vP.x + seed);

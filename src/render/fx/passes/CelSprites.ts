@@ -153,7 +153,9 @@ void main() {
   float w = max(fwidth(m), 1e-4);
   if (m < -w * 0.5) discard;
   float alpha = smoothstep(-w * 0.5, w * 0.5, m);
-  float inkW = min(w * 2.5, 0.2);
+  // round 3: dark smoke (DarkSmoke, WreckSmoke, fireballs cooled into smoke) gets a thinner, softer line
+  bool softInk = (shape == 0 && (p == 1 || p == 11)) || (heatMode == 2 && heat <= 0.0);
+  float inkW = softInk ? min(w * 1.5, 0.12) : min(w * 2.5, 0.2);
   float inkMask = 1.0 - smoothstep(inkW - w * 0.5, inkW + w * 0.5, m);
 
   vec3 col;

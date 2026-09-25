@@ -2,9 +2,9 @@
  * Smoke coverage governor (round 2 smoke rules). Every third frame it estimates how much of the screen live smoke
  * covers: it replays the cel ring's analytic motion on the CPU for smoke puffs only (inked puffs with a smoke palette
  * and cooling fireballs), projects each solid disc and rasterises it into a 96×54 grid. While the estimate, with the
- * current thinning applied, is above ~6% of the screen, `thin` rises; the cel shader turns it into extra erosion
+ * current thinning applied, is above ~4.5% of the screen, `thin` rises; the cel shader turns it into extra erosion
  * (older and bigger puffs go first), so the fight stays readable through any amount of gunfire. It relaxes again
- * once smoke is back under ~4.5%.
+ * once smoke is back under ~3.4% (round 3: targets were 6% / 4.5%).
  *
  * The erosion model mirrors CelSprites/SPRITE_VERTEX_GLSL: solid radius ≈ 0.45 × size, and a puff eroded by `e`
  * keeps about (1 − 2.4 e²) of its radius. Allocation-free; about 0.05 ms per run on a busy frame.
@@ -16,7 +16,7 @@ import { SPRITE_STRIDE } from './core/SpritePass';
 const GW = 96;
 const GH = 54;
 /** Screen fraction smoke may cover before the governor thins it. */
-export const SMOKE_COVERAGE_TARGET = 0.06;
+export const SMOKE_COVERAGE_TARGET = 0.045;
 /** Cel palettes treated as smoke: Gunsmoke 0, DarkSmoke 1, Dust 4, Steam 5, WreckSmoke 11. */
 const SMOKE_PALS = (1 << 0) | (1 << 1) | (1 << 4) | (1 << 5) | (1 << 11);
 
@@ -117,7 +117,7 @@ export class SmokeGovernor {
       const frac = 0.785 * rx * ry;
       const erode = d[o + 23]!;
       const ageE = Math.min(1, Math.max(0, (t - erode) / Math.max(1e-3, 1 - erode)));
-      const cap = smooth(0.02, 0.06, frac) * 0.8;
+      const cap = smooth(0.015, 0.045, frac) * 0.85;
       const eRaw = Math.max(ageE, cap);
       const eThin = Math.max(eRaw, thin * (0.3 + 0.7 * t) * (0.6 + 0.4 * smooth(0.004, 0.03, frac)));
       const kRaw = Math.max(0, 1 - 2.4 * eRaw * eRaw);
