@@ -254,6 +254,19 @@ async function shot(name, opts = {}) {
       if (r.width < 2 || r.height < 2) continue;
       const text = (el.textContent || el.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim().slice(0, 40);
       const rect = [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)];
+      // Rows scrolled out of view inside a scroll panel are not clipped or covered: skip anything outside its
+      // nearest scrolling ancestor's visible box.
+      let sc = el.parentElement, scrolledOut = false;
+      while (sc && sc !== document.body) {
+        const o = getComputedStyle(sc).overflowY;
+        if ((o === 'auto' || o === 'scroll') && sc.scrollHeight > sc.clientHeight + 1) {
+          const b = sc.getBoundingClientRect();
+          scrolledOut = r.bottom <= b.top + 2 || r.top >= b.bottom - 2 || r.top < b.top - 1 || r.bottom > b.bottom + 1;
+          break;
+        }
+        sc = sc.parentElement;
+      }
+      if (scrolledOut) continue;
       if (r.bottom > vh + 1 || r.right > vw + 1 || r.top < -1 || r.left < -1) { clipped.push({ text, rect }); continue; }
       const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
       if (top && top !== el && !el.contains(top) && !top.contains(el)) covered.push({ text, rect, by: `${top.tagName.toLowerCase()}.${String(top.className).split(' ')[0]}` });
