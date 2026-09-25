@@ -3,8 +3,8 @@
  * idle time between harbor frames (loaders/idle.ts), so input and the harbor's own frames are never blocked:
  *
  *  1. Enemy models: every manifest hull, prop and dressed look the fleet requested at start-up.
- *  2. Captain hulls: the hero ships AI captains may sail — the five the selected ship leaves free first, then the
- *     selected one — each baked in idle slices into the session cache the run reads.
+ *  2. Captain hulls: the five hero ships AI captains may sail (never the player's own while others are free; none
+ *     when captains are off), each baked in idle slices into the session cache the run reads.
  *  3. Bosses: the boss GLBs and the Tidewyrm head (no longer loaded at boot), then one prepared visual per boss, so a
  *     boss spawn is a re-parent instead of a 30 ms build.
  *  4. Programs: the scene (one top-level group per idle slice) and the prepared bosses, compiled for the colour pass
@@ -18,6 +18,7 @@
 import * as THREE from 'three';
 import { SHIPS } from '../../game/content';
 import { CAPTAIN_SHIPS } from '../../game/content/captains';
+import { captainSetting } from '../../game/sim/captains-runtime';
 import type { GameApp } from '../../runtime/GameApp';
 import { idleSlice, sleep } from '../loaders/idle';
 import { heroTemplateListeners } from '../loaders/SketchfabShipAssets';
@@ -72,8 +73,10 @@ export async function warmup(app: GameApp): Promise<void> {
   await sleep(500);
   await phase('fleet-models', () => app.ships.fleet.ready());
   await phase('captain-hulls', async () => {
-    const selected = app.selectedShip;
-    const order = [...CAPTAIN_SHIPS.filter((id) => id !== selected), selected];
+    // Captains never sail the player's ship while others are free (5 free ships, at most 4 captains), and a
+    // captain-less setting needs no hulls. Each bake downloads that hero's GLBs, so only the candidates are baked.
+    if (captainSetting(app.settings) === 0) return;
+    const order = CAPTAIN_SHIPS.filter((id) => id !== app.selectedShip);
     for (const id of order) {
       const ship = SHIPS[id];
       await idleSlice();
