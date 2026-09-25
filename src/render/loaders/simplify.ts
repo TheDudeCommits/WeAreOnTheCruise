@@ -84,11 +84,15 @@ export function* clusterPositions(src: PositionMesh, cell: number): Generator<vo
   return { pos: P, idx: Uint32Array.from(out) };
 }
 
-/** Geometry (position + index) for a clustered caster. */
+/**
+ * Geometry for a clustered caster. It carries normals too: three keys programs on the presence of a normal attribute,
+ * and with normals the proxy shares the depth program every other caster already compiled.
+ */
 export function casterGeometry(m: PositionMesh): THREE.BufferGeometry {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(m.pos, 3));
   g.setIndex(new THREE.BufferAttribute(m.idx, 1));
+  g.computeVertexNormals();
   g.computeBoundingSphere();
   g.computeBoundingBox();
   return g;

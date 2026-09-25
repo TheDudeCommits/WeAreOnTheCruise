@@ -229,6 +229,22 @@ export class EnemyFleet {
     this.bubble.renderOrder = 5;
     markNoInk(this.bubble);
     this.group.add(this.bubble);
+    // PERF warm-up: the tintable fleet material is also drawn instanced by modules that build their meshes lazily
+    // (escort skiffs on their first launch). A hidden inked instanced mesh keeps its colour and ink-prepass programs
+    // in every precompile (both instance-colour variants), so a first launch mid-run compiles nothing.
+    const warmGeo = new THREE.BufferGeometry();
+    warmGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0.01, 0, 0, 0, 0.01, 0], 3));
+    warmGeo.setAttribute('normal', new THREE.Float32BufferAttribute([0, 1, 0, 0, 1, 0, 0, 1, 0], 3));
+    warmGeo.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 0, 1], 2));
+    warmGeo.setAttribute('color', new THREE.Float32BufferAttribute([1, 1, 1, 1, 1, 1, 1, 1, 1], 3));
+    this.ownedGeometries.push(warmGeo);
+    const warm = new THREE.InstancedMesh(warmGeo, this.fleetMaterial, 1);
+    warm.name = 'enemy:warmup:fleet-material';
+    warm.count = 0;
+    warm.visible = false;
+    warm.frustumCulled = false;
+    markInk(warm);
+    this.group.add(warm);
   }
 
   /** Builds every procedural class up front (a few ms each) so first spawns never hitch; starts manifest loads. */
