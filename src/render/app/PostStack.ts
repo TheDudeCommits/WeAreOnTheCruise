@@ -297,9 +297,14 @@ export class PostStack implements PostServices {
 
   // ───────────── PostServices ─────────────
 
+  /**
+   * Impact frame: always a full two-tone frame (never a partial blend, which read as a pale wash). `strength` picks
+   * the length and tone only: ≥ 0.75 → two frames (inverted, then ink-on-paper), weaker → one inverted frame. With
+   * reduceFlashing on there are no impact frames at all.
+   */
   impactFrame(strength = 1): void {
-    if (this.impactCooldown > 0 || strength <= 0) return;
-    this.impactStrength = THREE.MathUtils.clamp(strength, 0, 1) * (this.screenFx > 0.05 ? 1 : 0.4);
+    if (this.impactCooldown > 0 || strength <= 0 || this.screenFx <= 0.05) return;
+    this.impactStrength = THREE.MathUtils.clamp(strength, 0, 1);
     this.impactFrames = strength >= 0.75 ? 2 : 1;
     this.impactCooldown = 0.45;
     this.impactSeed = (this.impactSeed + 17.31) % 1000;
@@ -659,7 +664,8 @@ export class PostStack implements PostServices {
     (u.uSpeed!.value as THREE.Vector4).set(speed, Math.floor(this.time * 30), 0.5, 0.5);
     if (this.impactFrames > 0) {
       const invert = this.impactFrames === 2 || (this.impactFrames === 1 && this.impactStrength < 0.75) ? 1 : 0;
-      (u.uImpact!.value as THREE.Vector4).set(this.impactStrength, invert, 0.46, this.impactSeed);
+      // Full strength: the two tones replace the frame for its one or two frames.
+      (u.uImpact!.value as THREE.Vector4).set(1, invert, 0.46, this.impactSeed);
     } else {
       (u.uImpact!.value as THREE.Vector4).set(0, 0, 0.46, 0);
     }
