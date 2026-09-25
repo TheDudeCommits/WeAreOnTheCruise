@@ -23,7 +23,7 @@ import { fleetAtlas } from '../atlas';
 import { GeoBuilder } from '../geometry/GeoBuilder';
 import { PALETTE } from '../geometry/parts';
 import { cloneMaterial, glowMaterial, partMaterial } from '../materials';
-import { viewCamera } from '../../app/RendererHost';
+import { activeHost, viewCamera } from '../../app/RendererHost';
 import { FOE_LOOKS, foeLookKeys, type FoeLook } from './foeLooks';
 import { buildFort, buildShip, shipSpec, type BuiltShip, type ProcKey } from './procShips';
 
@@ -80,6 +80,7 @@ const CAPACITY = 96;
  * are a few pixels there. `EnemyFleet.stats` reports the split.
  */
 const CULL_MARGIN = 12;
+/** Default detail distance (the high tier's `fleetDetail`; the active quality tier overrides it). */
 export const FAR_DETAIL = 180;
 const frustum = new THREE.Frustum();
 const projScreen = new THREE.Matrix4();
@@ -506,6 +507,7 @@ export class EnemyFleet {
     const camera = viewCamera();
     if (camera) frustum.setFromProjectionMatrix(projScreen.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
     const cx = camera?.position.x ?? 0, cy = camera?.position.y ?? 0, cz = camera?.position.z ?? 0;
+    const detail = activeHost()?.quality.fleetDetail ?? FAR_DETAIL;
     const stats = this.stats;
     stats.near = 0; stats.far = 0; stats.culled = 0;
     this.eliteCount = 0;
@@ -617,7 +619,7 @@ export class EnemyFleet {
         sphere.radius = Math.max(visual.length, visual.height) * scale * 0.62 + CULL_MARGIN;
         if (!frustum.intersectsSphere(sphere)) { stats.culled++; continue; }
       }
-      const far = camera ? Math.hypot(e.x - cx, y - cy, e.z - cz) > FAR_DETAIL + visual.length * scale * 0.5 : false;
+      const far = camera ? Math.hypot(e.x - cx, y - cy, e.z - cz) > detail + visual.length * scale * 0.5 : false;
       if (far) stats.far++; else stats.near++;
       visual.count++;
       if (visual.split) {

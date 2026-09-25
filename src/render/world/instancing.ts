@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import type { PropPlacement } from '../../world/plan';
 import type { FlagInstance } from './kit';
-import { makeShadowProxy } from '../app/RendererHost';
+import { activeHost, makeShadowProxy } from '../app/RendererHost';
 import { propLowGeometries, propVariants, variantFor } from './vegetation';
 
 const q = new THREE.Quaternion();
@@ -18,10 +18,14 @@ const mat = new THREE.Matrix4();
 const tint = new THREE.Color();
 
 /**
- * PERF: trees beyond this distance from the focus draw their low-detail geometry (about a third of the triangles).
- * Shadows come from shadow-only low-detail proxies that share each tier's instance buffer; detailed trees never cast.
+ * PERF: trees beyond this distance from the focus draw their low-detail geometry (about a third of the triangles);
+ * the active quality tier's `propDetail` overrides it. Shadows come from one shadow-only low-detail proxy per variant;
+ * detailed trees never cast.
  */
 export const PROP_NEAR = 300;
+
+/** Tree detail distance for the active quality tier. */
+export function propDetailDistance(): number { return activeHost()?.quality.propDetail ?? PROP_NEAR; }
 
 interface PropSlot {
   near: THREE.InstancedMesh;
@@ -87,7 +91,8 @@ export class PropInstancer {
   rebuild(lists: readonly (readonly PropPlacement[])[], fx = 0, fz = 0): number {
     const all = propVariants();
     const nearCounts = new Array<number>(all.length).fill(0), farCounts = new Array<number>(all.length).fill(0);
-    const near2 = PROP_NEAR * PROP_NEAR;
+    const nearDistance = propDetailDistance();
+    const near2 = nearDistance * nearDistance;
     const isNear = (p: PropPlacement) => (p.x - fx) * (p.x - fx) + (p.z - fz) * (p.z - fz) < near2;
     for (const list of lists) for (const p of list) (isNear(p) ? nearCounts : farCounts)[variantFor(p.kind, p.variant)]!++;
     for (let v = 0; v < all.length; v++) {
