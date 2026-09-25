@@ -23,6 +23,12 @@ import { HullSampler } from '../hero/HullSampler';
 import { FlashDriver, cloneMaterial, glowMaterial, partMaterial } from '../materials';
 import { buildShip, shipSpec } from './procShips';
 import { SerpentBody, TIDEWYRM_LOOK, serpentHead, type SerpentPose } from './Serpents';
+import { idleSlice } from '../../loaders/idle';
+import { warmObjects } from '../../app/warmup';
+
+/** PERF: boss GLBs load in idle time this long after start-up (the first boss sails in at 5:00). */
+const DEFERRED_LOAD_MS = 20000;
+const BOSS_IDS = Object.keys(BOSSES) as BossId[];
 
 type AnchorSet = Record<ShipAnchor, THREE.Vector3>;
 
@@ -73,6 +79,10 @@ export class Bosses {
   private readonly serpentMaterial: THREE.Material;
   private readonly events: ShipGrowthEvent[] = [];
   private readonly pose: SerpentPose = { id: 0, x: 0, z: 0, heading: 0, speed: 0, submerged: 0, rear: 0, sink: 0, flash: 0 };
+  /** PERF: boss visuals built ahead of their spawn (warm-up), adopted by the first boss of that kind. */
+  private readonly spare = new Map<BossId, BossVisual>();
+  private loading: Promise<void> | null = null;
+  private deferTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private readonly assets: FleetAssets | null, private readonly fleetMaterial: THREE.Material) {
     this.group.name = 'bosses';
@@ -81,17 +91,87 @@ export class Bosses {
     this.serpentMaterial = partMaterial('ships:tidewyrm', { side: THREE.DoubleSide, rim: 0.5 });
   }
 
-  /** Warm the manifest models so a boss never pops in procedural first. */
+  /**
+   * PERF: boss GLBs (about 6 MB) used to load at boot, competing with the hero model. They now load in idle time
+   * DEFERRED_LOAD_MS after start-up — or sooner, from the harbor warm-up (`warm()`) or when a boss spawns first.
+   */
   preload(): void {
-    if (!this.assets) return;
-    for (const def of Object.values(BOSSES)) void this.assets.request(def.modelKey);
-    void this.assets.request('tidewyrm-head');
+    if (!this.assets || this.loading || this.deferTimer) return;
+    // Load, then prepare one visual per boss in idle time — a quiet stretch (the title, the harbor or the opening
+    // minute) long before the first boss sails in at 5:00.
+    this.deferTimer = setTimeout(() => {
+      this.deferTimer = null;
+      void idleSlice(4000).then(() => this.loadModels()).then(() => this.prepareSpares());
+    }, DEFERRED_LOAD_MS);
+  }
+
+  /** PERF QA: CPU cost of the last build per boss (ms) and whether a prepared visual is waiting. */
+  readonly buildStats: Record<string, { ms: number; source: string }> = {};
+
+  /**
+   * Builds (in idle time, one boss per idle period) a prepared visual for every boss that has none yet, then — unless
+   * the harbor warm-up does it (`warm: false`) — compiles and uploads them so their first frame on screen is cheap.
+   */
+  async prepareSpares(warm = true): Promise<void> {
+    const fresh: BossVisual[] = [];
+    for (const id of BOSS_IDS) {
+      await idleSlice(1000);
+      const v = this.spare.get(id);
+      if (v && v.source === 'manifest') continue;
+      if (v) this.destroy(v);
+      if ([...this.visuals.values()].some((x) => x.defId === id)) continue; // that boss is already afloat
+      const built = this.build(id, 0, 0);
+      this.spare.set(id, built);
+      fresh.push(built);
+    }
+    if (!warm || !fresh.length) return;
+    const holder = new THREE.Group();
+    for (const v of fresh) { holder.add(v.root); if (v.serpent) holder.add(v.serpent.mesh); if (v.head) holder.add(v.head); }
+    try {
+      await warmObjects(holder);
+    } finally {
+      // Only detach what is still parked here (a boss may have spawned and adopted its visual meanwhile).
+      for (const child of [...holder.children]) holder.remove(child);
+    }
+  }
+
+  /** Starts (once) every boss model load; resolves when all have settled. */
+  loadModels(): Promise<void> {
+    if (!this.assets) return Promise.resolve();
+    if (this.deferTimer) { clearTimeout(this.deferTimer); this.deferTimer = null; }
+    const assets = this.assets;
+    this.loading ??= Promise.all([...BOSS_IDS.map((id) => BOSSES[id].modelKey), 'tidewyrm-head'].map((k) => assets.request(k))).then(() => undefined);
+    return this.loading;
+  }
+
+  /**
+   * PERF warm-up: loads the boss models, then builds one visual per boss offscreen (hull halves split, plates and
+   * rails measured on the hull) so a spawn costs a re-parent instead of a 30 ms build. Returns a group holding every
+   * prepared visual for program compilation; call `releaseWarmupRoot()` afterwards.
+   */
+  async warm(): Promise<THREE.Group> {
+    await this.loadModels();
+    await this.prepareSpares(false);
+    const holder = new THREE.Group();
+    holder.name = 'bosses-warmup';
+    for (const v of this.spare.values()) {
+      holder.add(v.root);
+      if (v.serpent) holder.add(v.serpent.mesh);
+      if (v.head) holder.add(v.head);
+    }
+    return holder;
+  }
+
+  /** Detaches the prepared visuals from a `warm()` group (they stay parked until their boss spawns). */
+  releaseWarmupRoot(holder: THREE.Group): void {
+    for (const child of [...holder.children]) holder.remove(child);
   }
 
   update(dt: number, time: number, bosses: readonly BossState[], ocean: OceanServices): void {
     this.frame++;
     for (const b of bosses) {
       if (b.life === 'dead') continue;
+      if (!this.loading) void this.loadModels();
       let v = this.visuals.get(b.id);
       // Upgrade a procedural stand-in once its manifest model has finished loading.
       if (v && v.source === 'procedural' && this.assets && this.assets.get(b.defId === 'tidewyrm' ? 'tidewyrm-head' : BOSSES[b.defId].modelKey)) {
@@ -110,20 +190,44 @@ export class Bosses {
   drainEvents(out: ShipGrowthEvent[]): void { for (const e of this.events) out.push(e); this.events.length = 0; }
 
   private create(b: BossState): BossVisual {
-    const def = BOSSES[b.defId];
+    // A prepared visual (warm-up) of the right source is adopted as is; otherwise build now.
+    const spare = this.spare.get(b.defId);
+    const wanted = this.assets?.get(b.defId === 'tidewyrm' ? 'tidewyrm-head' : BOSSES[b.defId].modelKey) ? 'manifest' : 'procedural';
+    let v: BossVisual;
+    if (spare && spare.source === wanted) {
+      this.spare.delete(b.defId);
+      v = spare;
+      v.id = b.id;
+      v.seen = this.frame;
+    } else v = this.build(b.defId, b.id, b.phase);
+    this.group.add(v.root);
+    if (v.serpent) this.group.add(v.serpent.mesh);
+    if (v.head) this.group.add(v.head);
+    return v;
+  }
+
+  /** Builds a boss visual (not attached to the scene). */
+  private build(defId: BossId, id: number, phase: number): BossVisual {
+    const t0 = performance.now();
+    const v = this.buildVisual(defId, id, phase);
+    this.buildStats[defId] = { ms: +(performance.now() - t0).toFixed(1), source: v.source };
+    return v;
+  }
+
+  private buildVisual(defId: BossId, id: number, phase: number): BossVisual {
+    const def = BOSSES[defId];
     const root = new THREE.Group();
-    root.name = `boss:${b.defId}`;
+    root.name = `boss:${defId}`;
     root.rotation.order = 'YXZ';
     const fore = new THREE.Group(), aft = new THREE.Group();
     root.add(fore, aft);
     const v: BossVisual = {
-      id: b.id, defId: b.defId, root, fore, aft, length: def.length, height: 30, pivotY: 4, anchors: defaultAnchors(def.length),
-      materials: [], flash: new FlashDriver([]), heave: 0, pitch: 0, roll: 0, phase: b.phase, seen: this.frame, plates: [], platesOff: b.phase >= 1,
+      id, defId, root, fore, aft, length: def.length, height: 30, pivotY: 4, anchors: defaultAnchors(def.length),
+      materials: [], flash: new FlashDriver([]), heave: 0, pitch: 0, roll: 0, phase, seen: this.frame, plates: [], platesOff: phase >= 1,
       seams: null, judgment: null, fires: null, serpent: null, head: null, headScale: 1, source: 'procedural', matrix: new THREE.Matrix4(), owned: [],
     };
-    if (b.defId === 'tidewyrm') this.buildSerpent(v);
+    if (defId === 'tidewyrm') this.buildSerpent(v);
     else this.buildShipBoss(v, def.modelKey);
-    this.group.add(root);
     markInk(root);
     return v;
   }
@@ -280,7 +384,6 @@ export class Bosses {
   private buildSerpent(v: BossVisual): void {
     v.serpent = new SerpentBody(TIDEWYRM_LOOK, this.serpentMaterial);
     v.materials.push(this.serpentMaterial);
-    this.group.add(v.serpent.mesh);
     const headModel: FleetModel | null = this.assets?.get('tidewyrm-head') ?? null;
     if (headModel && headModel.parts.length) {
       v.source = 'manifest';
@@ -309,7 +412,6 @@ export class Bosses {
       v.headScale = TIDEWYRM_LOOK.radius * 1.15;
       v.head = head;
     }
-    this.group.add(v.head);
     markInk(v.head);
     v.height = 40;
     v.flash = new FlashDriver(v.materials);
@@ -448,16 +550,19 @@ export class Bosses {
   }
 
   private destroy(v: BossVisual): void {
-    this.group.remove(v.root);
-    if (v.serpent) { this.group.remove(v.serpent.mesh); v.serpent.dispose(); }
-    if (v.head) this.group.remove(v.head);
+    v.root.removeFromParent();
+    if (v.serpent) { v.serpent.mesh.removeFromParent(); v.serpent.dispose(); }
+    if (v.head) v.head.removeFromParent();
     for (const g of v.owned) g.dispose();
     for (const m of v.materials) if (m !== this.serpentMaterial) m.dispose();
   }
 
   dispose(): void {
+    if (this.deferTimer) clearTimeout(this.deferTimer);
     for (const v of this.visuals.values()) this.destroy(v);
     this.visuals.clear();
+    for (const v of this.spare.values()) this.destroy(v);
+    this.spare.clear();
     this.plateMaterial.dispose(); this.glow.dispose(); this.serpentMaterial.dispose();
   }
 }

@@ -38,8 +38,19 @@ export interface FleetModel {
   box: THREE.Box3;
 }
 
+let meshoptWorkers = false;
+/**
+ * PERF: decode EXT_meshopt_compression buffers in two workers instead of on the main thread (GLTFLoader uses the
+ * decoder's async path when workers exist). Idempotent; a no-op outside browsers.
+ */
+export function enableMeshoptWorkers(): void {
+  if (meshoptWorkers || typeof Worker !== 'function' || typeof Blob !== 'function' || typeof URL?.createObjectURL !== 'function') return;
+  meshoptWorkers = true;
+  try { MeshoptDecoder.useWorkers(2); } catch { /* keep main-thread decoding */ }
+}
+
 export class FleetAssets {
-  private readonly loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  private readonly loader = (enableMeshoptWorkers(), new GLTFLoader().setMeshoptDecoder(MeshoptDecoder));
   private manifest: Record<string, FleetManifestEntry> = {};
   private readonly models = new Map<string, FleetModel>();
   private readonly pending = new Map<string, Promise<FleetModel | null>>();

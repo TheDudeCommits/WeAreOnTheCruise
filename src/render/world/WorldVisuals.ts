@@ -11,7 +11,7 @@ import { paletteForSea, type PaletteId } from '../../world/seas';
 import type { FrameContext, RenderHostHandles, RenderSystem } from '../frame';
 import { buildFeatureLodSteps, type FeatureLod } from './featureMesh';
 import { HorizonRing } from './horizon';
-import { FlagInstancer, PropInstancer } from './instancing';
+import { FlagInstancer, PropInstancer, propDetailDistance } from './instancing';
 import { createWorldMaterials, ink, setEmissive, type WorldMaterials } from './materials';
 
 /** Features are streamed inside this radius of the focus (fog hides the rest). */
@@ -87,6 +87,10 @@ export class WorldVisuals implements RenderSystem {
   private instancesDirty = false;
   private instanceTimer = 0;
   private propCount = 0;
+  /** Focus at the last prop rebuild (PERF: tree detail tiers are re-split after the focus moves). */
+  private propX = 0;
+  private propZ = 0;
+  private propDetail = 0;
   /** Per-frame build budget (ms); raised while nothing is on screen yet. */
   budgetMs = 3.5;
   /** Force a LOD for all features (lab); null = distance based. */
@@ -115,7 +119,9 @@ export class WorldVisuals implements RenderSystem {
     }
     this.processJobs();
     this.instanceTimer -= ctx.dt;
-    if (this.instancesDirty && this.instanceTimer <= 0) this.rebuildInstances();
+    const detail = propDetailDistance();
+    if (Math.hypot(fx - this.propX, fz - this.propZ) > detail * 0.25 || detail !== this.propDetail) this.instancesDirty = true;
+    if (this.instancesDirty && this.instanceTimer <= 0) this.rebuildInstances(fx, fz);
     this.animate(ctx);
   }
 
@@ -136,9 +142,11 @@ export class WorldVisuals implements RenderSystem {
     }
   }
 
-  private rebuildInstances(): void {
+  private rebuildInstances(fx: number, fz: number): void {
     this.instancesDirty = false;
     this.instanceTimer = 0.2;
+    this.propX = fx; this.propZ = fz;
+    this.propDetail = propDetailDistance();
     const props: FeatureLod['props'][] = [], flags: FeatureLod['flags'][] = [];
     for (const entry of this.entries.values()) {
       if (entry.shown < 0) continue;
@@ -146,7 +154,7 @@ export class WorldVisuals implements RenderSystem {
       props.push(lod.props);
       flags.push(lod.flags);
     }
-    this.propCount = this.props.rebuild(props);
+    this.propCount = this.props.rebuild(props, fx, fz);
     this.flags.rebuild(flags);
   }
 

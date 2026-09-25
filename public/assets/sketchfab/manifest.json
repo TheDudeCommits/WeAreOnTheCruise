@@ -17,7 +17,7 @@
         "slug": "by"
       },
       "sourceSha256": "af7e3015079edb527191827dc442a813bf58aa7fc0ac6dc97661466dd5c75486",
-      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression.",
+      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression. 2026-09-25: the low file (captain hull bake only) keeps 1×1 placeholder images; the loader uses the high textures.",
       "normalization": {
         "uid": "4b2cb678bf984c018dfa1936bd156c8d",
         "kind": "going-merry",
@@ -38,8 +38,8 @@
         {
           "detail": "low",
           "url": "/assets/sketchfab/going-merry-low.glb",
-          "bytes": 1184308,
-          "sha256": "f0a0b8bb8d75aece00f9f9e6a82716d2a56e35a641d6d1ccc94614a7e178b646",
+          "bytes": 252132,
+          "sha256": "53a2f1a5b9680b8c5a107e65aabca065f7fc251985d0821e77a2650e436752a4",
           "triangles": 16843,
           "draws": 4
         }
@@ -67,7 +67,7 @@
         "slug": "by"
       },
       "sourceSha256": "2b4e9779d82786ed90c6688c4255d1f60ecb78b2f54b47e9f10c6203241d1c17",
-      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression.",
+      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression. 2026-09-25 material re-bake (scripts/assets/atlas-hero.mjs): the 36 materials became 6 (31 textures copied texel for texel into one atlas with wrap-padded gutters, triangles split along the texture's repeat lines; 5 heavily repeating textures kept as they were); geometry and texels unchanged; the low file keeps 1×1 placeholder images and per-vertex atlas UVs for the captain hull bake.",
       "normalization": {
         "uid": "99986d1c93654c9d8889017435b5fe06",
         "kind": "thousand-sunny",
@@ -80,18 +80,18 @@
         {
           "detail": "high",
           "url": "/assets/sketchfab/thousand-sunny.glb",
-          "bytes": 891600,
-          "sha256": "b371752aab0aea952686f4bc872bfd5cad347075da4cfb594d230165dffc708f",
-          "triangles": 28064,
-          "draws": 36
+          "bytes": 1167484,
+          "sha256": "3212f10011db9c926824fef2056448f2166b2a609dcc3a9ef1bf5553aa80e679",
+          "triangles": 40874,
+          "draws": 6
         },
         {
           "detail": "low",
           "url": "/assets/sketchfab/thousand-sunny-low.glb",
-          "bytes": 680792,
-          "sha256": "6eacacac61d960091f5bb9d093295560204bea81cb700a03eacbc66bb8ecfb34",
+          "bytes": 304888,
+          "sha256": "5ae2272fc3201a50d282f74029b951193b3ae1e1f41e76ce18d06c6d9283b84b",
           "triangles": 14508,
-          "draws": 36
+          "draws": 6
         }
       ],
       "game": {
@@ -117,7 +117,7 @@
         "slug": "by"
       },
       "sourceSha256": "56aaf920808942a32a3b90193120fcfdf216c3dcef56955fcc313942ed81e4c2",
-      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression.",
+      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression. 2026-09-25: the low file (captain hull bake only) keeps 1×1 placeholder images; the loader uses the high textures.",
       "normalization": {
         "uid": "92898d5f63ad43589203d5a8dc14aa12",
         "kind": "navy-galleon",
@@ -138,8 +138,8 @@
         {
           "detail": "low",
           "url": "/assets/sketchfab/navy-galleon-low.glb",
-          "bytes": 4570344,
-          "sha256": "3fb6b305b12fcd729c9daec2f5222d34be5157a1973601a63c87433117ee94bc",
+          "bytes": 3084368,
+          "sha256": "152f70f2fac12d7962005ff86461a9c65b753e291638608dae15d1df2baaf25f",
           "triangles": 157613,
           "draws": 7
         }
@@ -218,7 +218,7 @@
         "slug": "by"
       },
       "sourceSha256": "22f9c058a15a3a2e459546e7385b023996f153823d7fb706e68908bae1a5b8fe",
-      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression.",
+      "changes": "Uniform scale, rotation and waterline translation; preserved source meshes and UVs; material styling, mesh simplification, WebP textures and Meshopt compression. 2026-09-25: the low file (captain hull bake only) keeps 1×1 placeholder images; the loader uses the high textures.",
       "normalization": {
         "uid": "a7feb48976ce484aa4537e4c7124a9c4",
         "kind": "polar-tang",
@@ -239,8 +239,8 @@
         {
           "detail": "low",
           "url": "/assets/sketchfab/polar-tang-low.glb",
-          "bytes": 1290508,
-          "sha256": "c18c9ab7f590f168b00137f263e7132bab85fa33958490b2268960dcf8eee9b4",
+          "bytes": 196824,
+          "sha256": "a8a16af8b7c4a543a5e4ce64032376f37d907e663c5a4306160c7fe731836608",
           "triangles": 14162,
           "draws": 10
         }

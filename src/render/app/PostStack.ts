@@ -32,6 +32,19 @@ function fullscreenTriangle(): THREE.BufferGeometry {
   return geometry;
 }
 
+let warmTriangle: THREE.BufferGeometry | null = null;
+/** One tiny triangle (position, normal, uv, colour) shared by every warm-up dummy. */
+function warmGeometry(): THREE.BufferGeometry {
+  if (!warmTriangle) {
+    warmTriangle = new THREE.BufferGeometry();
+    warmTriangle.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0.01, 0, 0, 0, 0.01, 0], 3));
+    warmTriangle.setAttribute('normal', new THREE.Float32BufferAttribute([0, 1, 0, 0, 1, 0, 0, 1, 0], 3));
+    warmTriangle.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 0, 1], 2));
+    warmTriangle.setAttribute('color', new THREE.Float32BufferAttribute([1, 1, 1, 1, 1, 1, 1, 1, 1], 3));
+  }
+  return warmTriangle;
+}
+
 function passMaterial(name: string, fragmentShader: string, uniforms: Record<string, THREE.IUniform>): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     name, vertexShader: FULLSCREEN_VERTEX, fragmentShader, uniforms,
@@ -51,6 +64,35 @@ function hdrTarget(name: string, samples = 0, depth = false): THREE.WebGLRenderT
 }
 
 interface Timed { strength: number; time: number; duration: number }
+
+interface PassCount { triangles: number; calls: number }
+/** Last frame's triangles and draw calls per pass (PERF diagnostics; `colour` excludes the shadow map). */
+export interface PassStats { prepass: PassCount; shadow: PassCount; colour: PassCount; post: PassCount; total: PassCount }
+
+/** Ink occluders are opaque depth writers (mirrors npr/ink.ts): anything else is hidden in the prepass. */
+function isOpaqueDepthWriter(material: THREE.Material | THREE.Material[]): boolean {
+  const list = Array.isArray(material) ? material : [material];
+  for (const m of list) if (m.visible !== false && !m.transparent && m.depthWrite && m.colorWrite) return true;
+  return false;
+}
+
+const TEMP_INSTANCE_COLOR = new THREE.InstancedBufferAttribute(new Float32Array(3), 3);
+
+/**
+ * The ink marker `object` inherits from its ancestors, as the ink pass resolves it: 'skip' under an inkSkip subtree,
+ * null under noInk or with no marked ancestor.
+ */
+function inheritedInk(object: THREE.Object3D): InkMarker | null | 'skip' {
+  const chain: THREE.Object3D[] = [];
+  for (let p = object.parent; p; p = p.parent) chain.push(p);
+  let marker: InkMarker | null = null;
+  for (let i = chain.length - 1; i >= 0; i--) {
+    const ud = chain[i]!.userData;
+    if (ud.inkSkip === true) return 'skip';
+    marker = ud.noInk === true ? null : readInkMarker(chain[i]!) ?? marker;
+  }
+  return marker;
+}
 
 export class PostStack implements PostServices {
   readonly ink = new InkPass();
@@ -90,6 +132,13 @@ export class PostStack implements PostServices {
   private lightning = 0;
   private rain = 0;
   private windAngle = 0.3;
+  /** PERF diagnostics: main-thread cost of the last screen-change recompile (ms). */
+  lastRewarmMs = 0;
+  /** PERF diagnostics: last frame's triangles/draw calls per pass. */
+  readonly passStats: PassStats = {
+    prepass: { triangles: 0, calls: 0 }, shadow: { triangles: 0, calls: 0 }, colour: { triangles: 0, calls: 0 },
+    post: { triangles: 0, calls: 0 }, total: { triangles: 0, calls: 0 },
+  };
 
   constructor(protected readonly renderer: THREE.WebGLRenderer) {
     stacks.set(renderer, this);
@@ -118,6 +167,28 @@ export class PostStack implements PostServices {
       uRain: { value: new THREE.Vector4(0, 0.3, 1.6, 0) }, uDither: { value: 1 / 255 },
     });
     this.rebuildBloomTargets();
+    this.installPerfBridge();
+  }
+
+  /** window.__PERF__ base hooks (PERF QA): per-pass split, programs, GPU pass timing. warmup.ts adds more. */
+  private installPerfBridge(): void {
+    if (typeof window === 'undefined') return;
+    const w = window as unknown as { __PERF__?: Record<string, unknown> };
+    const bridge = w.__PERF__ ?? {};
+    const renderer = this.renderer;
+    Object.assign(bridge, {
+      passes: () => JSON.parse(JSON.stringify(this.passStats)) as PassStats,
+      programs: () => (renderer.info.programs ?? []).map((p) => p.name),
+      programCount: () => renderer.info.programs?.length ?? 0,
+      rewarmMs: () => +this.lastRewarmMs.toFixed(2),
+      ink: () => ({ inked: this.ink.lastInked, occluders: this.ink.lastOccluders }),
+      gpu: () => {
+        const host = hostFor(renderer);
+        return host ? { available: host.gpuTimerAvailable, perPass: host.gpuPassTiming, passes: host.gpuPasses(), frames: host.gpuSamples() } : null;
+      },
+      setGpuPassTiming: (on: boolean) => { const host = hostFor(renderer); if (host) host.gpuPassTiming = on; },
+    });
+    w.__PERF__ = bridge;
   }
 
   get tier(): QualityTier { return this.profile.tier; }
@@ -176,36 +247,64 @@ export class PostStack implements PostServices {
     const perspective = camera as THREE.PerspectiveCamera;
     if (this.ink.overlay.parent !== scene) scene.add(this.ink.overlay);
     if (!this.warmed) { this.warmed = true; this.warmupScene(scene, perspective); }
-    else if (this.rewarm) { this.rewarm = false; this.compileInto(scene, perspective, scene); }
+    else if (this.rewarm) {
+      this.rewarm = false;
+      const c0 = performance.now();
+      this.compileNew(scene, perspective);
+      this.lastRewarmMs = performance.now() - c0;
+    }
+    const info = renderer.info.render;
+    const host = hostFor(renderer);
+    const s = this.passStats;
+    const t0 = info.triangles, c0 = info.calls;
 
     // 1. Ink prepass.
+    host?.markGpu('prepass');
     this.ink.enabled = (this.overrides.ink ?? this.profile.ink) === true;
     this.ink.render(renderer, scene, perspective);
+    const t1 = info.triangles, c1 = info.calls;
 
-    // 2. Colour pass (HDR, MSAA). Shadow maps refresh here only.
+    // 2. Colour pass (HDR, MSAA). Shadow maps refresh here only (RendererHost times and proxies that render).
+    host?.markGpu('colour-setup');
+    if (host) { host.shadowStats.triangles = 0; host.shadowStats.calls = 0; }
     renderer.shadowMap.needsUpdate = true;
     renderer.setRenderTarget(this.colorTarget);
     renderer.render(scene, camera);
     renderer.shadowMap.needsUpdate = false;
+    const t2 = info.triangles, c2 = info.calls;
 
     // 3. Bloom.
+    host?.markGpu('bloom');
     const bloomOn = (this.overrides.bloom ?? true) && this.profile.bloomLevels > 0 && this.bloomDown.length > 0;
     const bloomTexture = bloomOn ? this.renderBloom() : this.black;
 
     // 4. Composite to the canvas.
+    host?.markGpu('composite');
     this.applyComposite(bloomTexture);
     this.quad.material = this.composite;
     renderer.setRenderTarget(null);
     renderer.render(this.quad, this.quadCamera);
+
+    const shadowT = host?.shadowStats.triangles ?? 0, shadowC = host?.shadowStats.calls ?? 0;
+    s.prepass.triangles = t1 - t0; s.prepass.calls = c1 - c0;
+    s.shadow.triangles = shadowT; s.shadow.calls = shadowC;
+    s.colour.triangles = t2 - t1 - shadowT; s.colour.calls = c2 - c1 - shadowC;
+    s.post.triangles = info.triangles - t2; s.post.calls = info.calls - c2;
+    s.total.triangles = info.triangles - t0; s.total.calls = info.calls - c0;
 
     if (this.impactFrames > 0) this.impactFrames--;
   }
 
   // ───────────── PostServices ─────────────
 
+  /**
+   * Impact frame: always a full two-tone frame (never a partial blend, which read as a pale wash). `strength` picks
+   * the length and tone only: ≥ 0.75 → two frames (inverted, then ink-on-paper), weaker → one inverted frame. With
+   * reduceFlashing on there are no impact frames at all.
+   */
   impactFrame(strength = 1): void {
-    if (this.impactCooldown > 0 || strength <= 0) return;
-    this.impactStrength = THREE.MathUtils.clamp(strength, 0, 1) * (this.screenFx > 0.05 ? 1 : 0.4);
+    if (this.impactCooldown > 0 || strength <= 0 || this.screenFx <= 0.05) return;
+    this.impactStrength = THREE.MathUtils.clamp(strength, 0, 1);
     this.impactFrames = strength >= 0.75 ? 2 : 1;
     this.impactCooldown = 0.45;
     this.impactSeed = (this.impactSeed + 17.31) % 1000;
@@ -258,6 +357,8 @@ export class PostStack implements PostServices {
     } finally {
       scene.remove(this.dummies);
     }
+    // Depth programs for every caster variant in the scene: drawn (as dummies) into this frame's shadow map.
+    void this.warmShadowVariants(scene);
     // Post materials.
     const previous = this.renderer.getRenderTarget();
     for (const material of [this.prefilter, this.down, this.up, this.composite]) {
@@ -268,26 +369,70 @@ export class PostStack implements PostServices {
     this.renderer.setRenderTarget(previous);
   }
 
-  private compileInto(scene: THREE.Scene, camera: THREE.Camera, root: THREE.Object3D): Set<THREE.Material> {
+  /**
+   * Screen-change recompile: only objects whose materials have never been compiled (the harbor warm-up covers the
+   * rest; a whole-scene compile is 30–120 ms of main thread). Each is compiled with its inherited ink marker, so the
+   * prepass variant is the one the ink pass will use. Many new objects fall back to one whole-scene pass.
+   */
+  private compileNew(scene: THREE.Scene, camera: THREE.Camera): void {
+    const properties = (this.renderer as unknown as { properties: { get(m: THREE.Material): { programs?: unknown } } }).properties;
+    const fresh: THREE.Object3D[] = [];
+    scene.traverse((o) => {
+      const r = o as THREE.Mesh & { isPoints?: boolean; isLine?: boolean; isSprite?: boolean };
+      if (!(r.isMesh || r.isPoints || r.isLine || r.isSprite) || !r.material) return;
+      const materials = Array.isArray(r.material) ? r.material : [r.material];
+      if (materials.some((m) => m && properties.get(m).programs === undefined)) fresh.push(o);
+    });
+    if (!fresh.length) return;
+    if (fresh.length > 40) { this.compileInto(scene, camera, scene); return; }
+    for (const o of fresh) this.compileInto(scene, camera, o, inheritedInk(o));
+  }
+
+  /**
+   * Compiles `root` for the colour pass and the ink prepass with the real targets bound. Instanced meshes that have no
+   * `instanceColor` yet are compiled both without and with one (three's program key depends on it and most pools
+   * create it lazily on their first setColorAt), so neither variant compiles mid-run.
+   */
+  private compileInto(scene: THREE.Scene, camera: THREE.Camera, root: THREE.Object3D, inherited: InkMarker | null | 'skip' = null): Set<THREE.Material> {
+    const all = this.compilePass(scene, camera, root, inherited);
+    const bare: THREE.InstancedMesh[] = [];
+    root.traverse((o) => { const im = o as THREE.InstancedMesh; if (im.isInstancedMesh && !im.instanceColor) bare.push(im); });
+    if (bare.length) {
+      for (const im of bare) im.instanceColor = TEMP_INSTANCE_COLOR;
+      try {
+        for (const m of this.compilePass(scene, camera, root, inherited)) all.add(m);
+      } finally {
+        for (const im of bare) if (im.instanceColor === TEMP_INSTANCE_COLOR) im.instanceColor = null;
+      }
+    }
+    return all;
+  }
+
+  private compilePass(scene: THREE.Scene, camera: THREE.Camera, root: THREE.Object3D, inherited: InkMarker | null | 'skip' = null): Set<THREE.Material> {
     const renderer = this.renderer;
     const previous = renderer.getRenderTarget();
     const all = new Set<THREE.Material>();
     try {
       renderer.setRenderTarget(this.colorTarget);
       for (const m of renderer.compile(root, camera, scene) as Set<THREE.Material>) all.add(m);
-      // Prepass variants: swap, compile, restore before anything else runs.
+      // Prepass variants (inked meshes and opaque occluders only, as the prepass itself draws them): swap, compile,
+      // restore before anything else runs.
       const swapped: [THREE.Mesh, THREE.Material | THREE.Material[]][] = [];
       const visit = (object: THREE.Object3D, inherited: InkMarker | null) => {
         if (object.userData.inkSkip === true) return;
         const marker = object.userData.noInk === true ? null : readInkMarker(object) ?? inherited;
         const mesh = object as THREE.Mesh;
         if (mesh.isMesh) {
-          const variant = marker ? this.ink.variantFor(mesh, marker) : this.ink.occluderMaterialFor(mesh);
-          if (variant) { swapped.push([mesh, mesh.material]); mesh.material = variant; }
+          let variant: THREE.Material | null = null;
+          if (marker) variant = this.ink.variantFor(mesh, marker);
+          else if (mesh.userData.inkOccluder !== false && isOpaqueDepthWriter(mesh.material)) variant = this.ink.occluderMaterialFor(mesh);
+          if (variant) swapped.push([mesh, mesh.material]);
+          if (variant) mesh.material = variant;
         }
-        for (const child of object.children) visit(child, marker);
+        const next = object.userData.noInk === true ? null : marker;
+        for (const child of object.children) visit(child, next);
       };
-      visit(root, null);
+      if (inherited !== 'skip') visit(root, inherited);
       if (swapped.length) {
         renderer.setRenderTarget(this.ink.target);
         try {
@@ -300,6 +445,68 @@ export class PostStack implements PostServices {
       renderer.setRenderTarget(previous);
     }
     return all;
+  }
+
+  /**
+   * PERF: compiles the depth programs the shadow map will need for the casters under `root` (plain, instanced with and
+   * without instance colours, alpha-tested, double- or single-sided). One tiny dummy per distinct variant is drawn into
+   * the next shadow-map update only (never into the colour or ink passes). Resolves after that update.
+   */
+  warmShadowVariants(root: THREE.Object3D): Promise<void> {
+    const host = hostFor(this.renderer);
+    if (!host || !this.renderer.shadowMap.enabled) return Promise.resolve();
+    const group = new THREE.Group();
+    group.name = 'perf-shadow-warmup';
+    const seen = new Set<string>();
+    const add = (source: THREE.Mesh, material: THREE.Material, instanced: boolean, colored: boolean) => {
+      const m = material as THREE.Material & { map?: THREE.Texture | null; alphaMap?: THREE.Texture | null };
+      const alpha = m.alphaTest > 0 && !!(m.map || m.alphaMap);
+      const morph = source.geometry.morphAttributes.position !== undefined;
+      if (morph || (source as THREE.SkinnedMesh).isSkinnedMesh || !m.visible) return;
+      const key = `${instanced ? (colored ? 'ic' : 'i') : 'm'}|${m.shadowSide ?? m.side}|${alpha ? 'a' : '-'}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      const geometry = warmGeometry();
+      const dummy = instanced ? new THREE.InstancedMesh(geometry, material, 1) : new THREE.Mesh(geometry, material);
+      if (instanced && colored) (dummy as THREE.InstancedMesh).instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(3), 3);
+      dummy.castShadow = true;
+      dummy.frustumCulled = false;
+      dummy.position.set(0, -5000, 0);
+      group.add(dummy);
+    };
+    root.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.castShadow || mesh.userData.warmDummy === true) return;
+      const instanced = (mesh as THREE.InstancedMesh).isInstancedMesh === true;
+      for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+        add(mesh, material, instanced, false);
+        if (instanced) add(mesh, material, true, true);
+      }
+    });
+    if (!group.children.length) return Promise.resolve();
+    group.traverse((o) => { o.userData.warmDummy = true; });
+    return host.warmShadows(group);
+  }
+
+  /** PERF: uploads one texture now (idle time) instead of on its first draw. */
+  uploadTexture(texture: THREE.Texture): void { this.renderer.initTexture(texture); }
+
+  /** PERF: uploads every texture used under `root` now (idle time) instead of on first draw. Returns the count. */
+  initTextures(root: THREE.Object3D, seen: Set<THREE.Texture> = new Set()): number {
+    let n = 0;
+    root.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+        for (const value of Object.values(material)) {
+          if (!(value instanceof THREE.Texture) || seen.has(value) || !value.image) continue;
+          seen.add(value);
+          this.renderer.initTexture(value);
+          n++;
+        }
+      }
+    });
+    return n;
   }
 
   private whenLinked(materials: Set<THREE.Material>): Promise<void> {
@@ -457,7 +664,8 @@ export class PostStack implements PostServices {
     (u.uSpeed!.value as THREE.Vector4).set(speed, Math.floor(this.time * 30), 0.5, 0.5);
     if (this.impactFrames > 0) {
       const invert = this.impactFrames === 2 || (this.impactFrames === 1 && this.impactStrength < 0.75) ? 1 : 0;
-      (u.uImpact!.value as THREE.Vector4).set(this.impactStrength, invert, 0.46, this.impactSeed);
+      // Full strength: the two tones replace the frame for its one or two frames.
+      (u.uImpact!.value as THREE.Vector4).set(1, invert, 0.46, this.impactSeed);
     } else {
       (u.uImpact!.value as THREE.Vector4).set(0, 0, 0.46, 0);
     }

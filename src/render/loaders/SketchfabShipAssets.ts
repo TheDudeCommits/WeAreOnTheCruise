@@ -14,6 +14,20 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import type { HeroModelKey } from '../../game/ids';
 import { toonifyObject } from '../materials/toon';
 import { cloneMaterial } from '../ships/materials';
+import { makeShadowProxy } from '../app/RendererHost';
+import { enableMeshoptWorkers } from './FleetAssets';
+import { runSliced } from './idle';
+import { casterGeometry, clusterPositions, mergePositions } from './simplify';
+
+/**
+ * PERF: heroes whose casting meshes exceed this many triangles cast through a clustered shadow-only proxy (cell =
+ * source length / 300, about 0.2 m in game — the shadow map's texel size): smooth hull surfaces keep their exact
+ * vertices, dense detail (cannon batteries, rope coils) collapses. Seawarden: ~250k casting triangles.
+ */
+const PROXY_MIN_TRIANGLES = 20000;
+const PROXY_CELL_FRACTION = 1 / 300;
+/** Proxies above this are re-clustered with a 25% coarser cell (at most 3 times; only the Seawarden needs it). */
+const PROXY_MAX_TRIANGLES = 60000;
 
 /** Provenance of the six downloaded hero models (kept for now; renamed in game). See ASSET-LICENSES.md. */
 export const HERO_MODEL_SOURCES: Readonly<Record<HeroModelKey, { uid: string; author: string; license: string }>> = {
@@ -39,6 +53,8 @@ export interface HeroTemplate {
   readonly scene: THREE.Group;
   readonly materials: readonly THREE.Material[];
   readonly triangles: number;
+  /** PERF: clustered shadow caster standing in for the casting meshes (null until built, or when not needed). */
+  shadowProxy?: { geometry: THREE.BufferGeometry; material: THREE.Material; triangles: number; source: number; ms: number } | null;
 }
 
 const PLACEHOLDER = new THREE.Texture();
@@ -58,14 +74,25 @@ const skipTextures = (parser: GLTFParser): GLTFLoaderPlugin => ({
   },
 } as GLTFLoaderPlugin);
 
+/**
+ * PERF hook: called once for every high-detail template that finishes loading (any SketchfabShipAssets instance), so
+ * the warm-up can compile its programs before the hero that uses it is first drawn.
+ */
+export const heroTemplateListeners = new Set<(template: HeroTemplate) => void>();
+
 export class SketchfabShipAssets {
-  private readonly loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  private readonly loader = (enableMeshoptWorkers(), new GLTFLoader().setMeshoptDecoder(MeshoptDecoder));
   private readonly lowLoader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).register(skipTextures);
   private readonly pending = new Map<string, Promise<HeroTemplate>>();
   private readonly templates = new Set<HeroTemplate>();
   private readonly textures = new Set<THREE.Texture>();
+  /** Live instances per template (roots from instantiate), so a proxy finished later can still be attached. */
+  private readonly instances = new Map<HeroTemplate, THREE.Group[]>();
   private disposed = false;
   readonly status = new Map<HeroModelKey, 'loading' | 'ready' | 'error'>();
+
+  /** `notify: false` keeps this loader's templates away from heroTemplateListeners (bake-only loaders). */
+  constructor(private readonly options: { notify?: boolean } = {}) {}
 
   /** Loads (once) and returns the toonified template for a hero model. */
   load(kind: HeroModelKey, detail: HeroDetail = 'high'): Promise<HeroTemplate> {
@@ -76,7 +103,10 @@ export class SketchfabShipAssets {
     const promise = (detail === 'high' ? this.loadHigh(kind) : this.loadLow(kind)).then((template) => {
       if (this.disposed) { this.release(template); return template; }
       this.templates.add(template);
-      if (detail === 'high') this.status.set(kind, 'ready');
+      if (detail === 'high') {
+        this.status.set(kind, 'ready');
+        if (this.options.notify !== false) for (const listener of heroTemplateListeners) { try { listener(template); } catch (error) { console.warn('[perf] template listener', error); } }
+      }
       return template;
     }).catch((error: unknown) => {
       this.pending.delete(key);
@@ -104,7 +134,53 @@ export class SketchfabShipAssets {
       const copy = (m: THREE.Material) => { let c = copies.get(m); if (!c) { c = cloneMaterial(m); copies.set(m, c); } return c; };
       object.material = Array.isArray(object.material) ? object.material.map(copy) : copy(object.material);
     });
+    if (template.detail === 'high') {
+      const list = this.instances.get(template) ?? [];
+      // Forget instances that were unmounted (the hero model switched).
+      this.instances.set(template, [...list.filter((r) => r.parent !== null), root]);
+      if (template.shadowProxy) attachShadowProxy(root, template);
+    }
     return { root, materials: [...copies.values()] };
+  }
+
+  /**
+   * PERF: builds the clustered shadow proxy of a high-detail template in idle slices, then attaches it to every live
+   * instance (the detailed casting meshes stop casting). Templates with few casting triangles keep their meshes.
+   */
+  private async buildShadowProxy(template: HeroTemplate): Promise<void> {
+    const casters: THREE.Mesh[] = [];
+    let triangles = 0;
+    template.scene.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.castShadow) return;
+      const m = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material) as THREE.MeshStandardMaterial;
+      // Alpha-tested or transparent parts keep casting themselves (a merged proxy would lose their cut-outs).
+      if (!m || m.transparent || m.alphaTest > 0) return;
+      const g = mesh.geometry as THREE.BufferGeometry;
+      triangles += (g.index ? g.index.count : g.attributes.position!.count) / 3;
+      casters.push(mesh);
+    });
+    if (triangles < PROXY_MIN_TRIANGLES || !casters.length) { template.shadowProxy = null; return; }
+    const t0 = performance.now();
+    let work = 0;
+    const timed = function* <T>(steps: Generator<void, T>): Generator<void, T> {
+      for (;;) { const a = performance.now(); const r = steps.next(); work += performance.now() - a; if (r.done) return r.value; yield; }
+    };
+    const merged = await runSliced(timed(mergePositions(casters, template.scene)));
+    let cell = HERO_SOURCE_LENGTH[template.kind] * PROXY_CELL_FRACTION;
+    let clustered = await runSliced(timed(clusterPositions(merged, cell)));
+    for (let i = 0; i < 3 && clustered.idx.length / 3 > PROXY_MAX_TRIANGLES; i++) {
+      cell *= 1.25;
+      clustered = await runSliced(timed(clusterPositions(merged, cell)));
+    }
+    if (this.disposed) return;
+    const material = (Array.isArray(casters[0]!.material) ? casters[0]!.material[0] : casters[0]!.material) as THREE.Material;
+    for (const mesh of casters) mesh.userData.perfShadowProxied = true;
+    template.shadowProxy = { geometry: casterGeometry(clustered), material, triangles: clustered.idx.length / 3, source: Math.round(triangles), ms: Math.round(work) };
+    void t0;
+    const live = (this.instances.get(template) ?? []).filter((r) => r.parent !== null);
+    this.instances.set(template, live);
+    for (const root of live) attachShadowProxy(root, template);
   }
 
   private async loadHigh(kind: HeroModelKey): Promise<HeroTemplate> {
@@ -172,12 +248,24 @@ export class SketchfabShipAssets {
     for (const [m, name] of names) m.userData.sourceName = name;
     // Source materials are replaced; their textures live on in the toon materials.
     for (const m of sources) if (!materials.has(m)) m.dispose();
-    return { kind, detail, scene, materials: [...materials], triangles: Math.round(triangles) };
+    const template: HeroTemplate = { kind, detail, scene, materials: [...materials], triangles: Math.round(triangles) };
+    if (detail === 'high' && this.options.notify !== false) {
+      void this.buildShadowProxy(template).catch((error: unknown) => { console.warn('[perf] hero shadow proxy failed', error); });
+    }
+    return template;
+  }
+
+  /** QA: shadow proxy stats per loaded high template. */
+  proxyStats(): Record<string, { triangles: number; source: number; ms: number } | null> {
+    const out: Record<string, { triangles: number; source: number; ms: number } | null> = {};
+    for (const t of this.templates) if (t.detail === 'high') out[t.kind] = t.shadowProxy ? { triangles: t.shadowProxy.triangles, source: t.shadowProxy.source, ms: t.shadowProxy.ms } : null;
+    return out;
   }
 
   private release(template: HeroTemplate): void {
     template.scene.traverse((object) => { if (object instanceof THREE.Mesh) object.geometry.dispose(); });
     for (const m of template.materials) m.dispose();
+    template.shadowProxy?.geometry.dispose();
   }
 
   dispose(): void {
@@ -186,6 +274,25 @@ export class SketchfabShipAssets {
     for (const texture of this.textures) texture.dispose();
     this.templates.clear(); this.textures.clear(); this.pending.clear();
   }
+}
+
+/**
+ * Adds the template's shadow proxy to an instance root (once) and stops the matching detailed meshes from casting.
+ * The clone keeps the template's traversal order and userData, so `perfShadowProxied` marks the right meshes.
+ */
+function attachShadowProxy(root: THREE.Group, template: HeroTemplate): void {
+  const proxy = template.shadowProxy;
+  if (!proxy || root.userData.perfShadowProxy) return;
+  const templateMeshes: THREE.Mesh[] = [], instanceMeshes: THREE.Mesh[] = [];
+  template.scene.traverse((o) => { if ((o as THREE.Mesh).isMesh) templateMeshes.push(o as THREE.Mesh); });
+  root.traverse((o) => { if ((o as THREE.Mesh).isMesh) instanceMeshes.push(o as THREE.Mesh); });
+  if (templateMeshes.length !== instanceMeshes.length) return;
+  for (let i = 0; i < templateMeshes.length; i++) if (templateMeshes[i]!.userData.perfShadowProxied) instanceMeshes[i]!.castShadow = false;
+  const mesh = new THREE.Mesh(proxy.geometry, proxy.material);
+  mesh.name = `hero-shadow-proxy:${template.kind}`;
+  makeShadowProxy(mesh);
+  root.add(mesh);
+  root.userData.perfShadowProxy = true;
 }
 
 // ───────────────────────── Source paint (Baratie / Moby) ─────────────────────────
