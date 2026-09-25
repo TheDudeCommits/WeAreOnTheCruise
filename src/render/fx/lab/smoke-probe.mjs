@@ -149,7 +149,7 @@ function measureFrame() {
     const step = 2;
     const diff = (a, b, o) => Math.abs(a[o] - b[o]) + Math.abs(a[o + 1] - b[o + 1]) + Math.abs(a[o + 2] - b[o + 2]) > 30;
     let n = 0, smokeN = 0, darkN = 0, hero = 0, heroCov = 0, boss = 0, bossCov = 0, numN = 0;
-    let heroTop = -1, heroBottom = -1;
+    let heroTop = -1, heroBottom = -1, heroSx = 0, heroSy = 0;
     const heroRows = new Uint16Array(H);
     for (let y = 0; y < H; y += step) {
       for (let x = 0; x < W; x += step) {
@@ -159,7 +159,7 @@ function measureFrame() {
         if (sm) smokeN++;
         if (Nn && diff(F, Nn, o)) numN++;
         if (diff(D, B, o)) darkN++;
-        if (diff(B, Hn, o)) { hero++; heroRows[y]++; if (sm) heroCov++; }
+        if (diff(B, Hn, o)) { hero++; heroRows[y]++; heroSx += x; heroSy += y; if (sm) heroCov++; }
         if (diff(B, Sn, o)) { boss++; if (sm) bossCov++; }
       }
     }
@@ -207,8 +207,10 @@ function measureFrame() {
       gov: fx ? { est: r4(fx.smokeCoverage), raw: r4(fx.smokeCoverageRaw), thin: r4(fx.smokeThin), live: fx.smokeLive, ms: +fx.smokeMs.toFixed(3) } : null,
       nums: fx && fx.numbersLegacy !== undefined ? { legacy: fx.numbersLegacy, spawned: fx.numbersSpawned, onScreen: fx.numbersShown } : null,
       t: s.time, enemies: s.enemies, bosses: s.bosses,
+      bossSep: (() => { const b = window.__CRUISE__.nearest(24).find((q) => q.boss); return b ? Math.round(Math.hypot(b.x - s.player.x, b.z - s.player.z)) : null; })(),
       smoke: r4(smokeN / n), dark: r4(darkN / n), numbers: r4(numN / n), numberCount,
-      heroOcc: hero > 0 ? r4(heroCov / hero) : null, heroArea: r4(hero / n), heroH: heroTop >= 0 ? r4((heroBottom - heroTop + 1) / H) : null, hullH,
+      heroOcc: hero > 0 ? r4(heroCov / hero) : null, heroArea: r4(hero / n),
+      heroAt: hero > 0 ? [r4(heroSx / hero / W), r4(heroSy / hero / H)] : null, heroH: heroTop >= 0 ? r4((heroBottom - heroTop + 1) / H) : null, hullH,
       bossOcc: boss > 20 ? r4(bossCov / boss) : null, bossArea: r4(boss / n),
       fov: +camera.fov.toFixed(2),
       camDist: +Math.hypot(camera.position.x - s.player.x, camera.position.z - s.player.z, camera.position.y).toFixed(1),

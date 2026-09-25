@@ -7,9 +7,10 @@
  *  - Hero size: distance = 118 → 172 m with the fight + (length − 40) × 1.8 + mast height, and never so close that the
  *    hull (bow to stern seen from astern, waterline to deck) is taller than 18% of the frame; capped a third of the
  *    way into the fog band so thick weather never swallows the ship.
- *  - Bosses: while a surfaced boss is within ~330 m the view looks 40% of the way to it, drops 4° of pitch and pulls to
- *    the closest distance that keeps the hero and the whole boss hull in frame (so the boss stays big). A boss that
- *    newly enters framing gets a 1.2 s arrival beat: 70% toward it, 2° lower, a slight pull-out, then it settles.
+ *  - Bosses: while a surfaced boss is within ~330 m the view looks 40–60% of the way to it, drops 4° of pitch and pulls
+ *    to the closest distance that keeps the hero in the HUD-safe centre and the whole boss hull in frame (so the boss
+ *    stays big). A boss that newly enters framing gets a 1.2 s arrival beat: 70% toward it, 2° lower, a slight
+ *    pull-out, then it settles.
  *  - settings.cinematicCamera (off by default): with fewer than ~8 enemies within 250 m the pitch eases to 33° and the
  *    view tilts up so the horizon, sky and islands sit along the top of the frame; back to 44° in a melee or a boss
  *    fight.
@@ -81,9 +82,9 @@ export class CameraDirector implements RenderSystem, CameraServices {
   private readonly bossPoint = new THREE.Vector2();
   private bossHeading = 0;
   private bossLength = 90;
-  /** Smoothed look weight toward the framed boss (0.4 base … 0.75). */
+  /** Smoothed look weight toward the framed boss (0.4 base … 0.6). */
   private bossWeight = 0.4;
-  /** Hero-size distance without the fight term (m): boss framing never comes closer than 60% of it. */
+  /** Hero-size distance without the fight term (m): boss framing never comes closer than half of it. */
   private heroBase = 180;
   /** Boss currently framed (−1 none) and the time left of its arrival beat. */
   private bossId = -1;
@@ -226,13 +227,13 @@ export class CameraDirector implements RenderSystem, CameraServices {
       const bx = this.bossPoint.x - focus.x, bz = this.bossPoint.y - focus.z;
       pitchOffset = (BOSS_PITCH - deg(2) * beat) * k;
       const pitchB = basePitch + pitchOffset;
-      // The boss is the centrepiece: the camera may come closer than the hero-size distance (the hero then takes up to
-      // about a third of the frame height) so the boss hull stays large; never beyond 460 m.
-      const nearest = Math.max(110, this.heroBase * 0.6 * this.zoom);
-      // Look weight: the 40% base, or up to 75% when that brings the camera closer to the boss with both hulls in frame.
+      // The boss is the centrepiece: the camera may come to half the hero-size distance (the hero's silhouette then
+      // takes up to about a third of the frame height) so the boss hull stays large; never beyond 460 m.
+      const nearest = Math.max(110, this.heroBase * 0.5 * this.zoom);
+      // Look weight: the 40% base, or up to 60% when that brings the camera closer to the boss with both hulls in frame.
       const cpB = Math.cos(pitchB), spB = Math.sin(pitchB), syB = Math.sin(this.yaw), cyB = Math.cos(this.yaw);
       let bestW = 0.4, bestD = Infinity;
-      for (let w = 0.4; w <= 0.751; w += 0.07) {
+      for (let w = 0.4; w <= 0.601; w += 0.05) {
         const lx = focus.x + bx * w, lz = focus.z + bz * w;
         const d = THREE.MathUtils.clamp(this.fitBoth(ctx, focus, lx, lz, pitchB), nearest, 460);
         const cx = lx + syB * cpB * d - this.bossPoint.x, cz = lz + cyB * cpB * d - this.bossPoint.y;
@@ -311,7 +312,8 @@ export class CameraDirector implements RenderSystem, CameraServices {
 
   /**
    * Closest camera distance (looking at (tx, tz) from the current yaw at `pitch`) that keeps the hero (bow, stern,
-   * mast top) inside 95% of the frame and the framed boss hull (bow, stern, a top point) inside 88%.
+   * mast top) inside the HUD-safe centre (76% × 72% of the half-frame) and the framed boss hull (bow, stern, a top
+   * point) inside 92% × 90%.
    */
   private fitBoth(ctx: FrameContext, focus: FrameContext['focus'], tx: number, tz: number, pitch: number): number {
     const p = this.fitPts;
@@ -338,12 +340,13 @@ export class CameraDirector implements RenderSystem, CameraServices {
     const aspect = ctx.viewport.width / Math.max(1, ctx.viewport.height);
     let d = 0;
     for (let i = 0; i < 6; i++) {
-      const m = i < 3 ? 0.95 : 0.88;
+      // the hero stays inside the HUD-safe centre (roster top right, gauges and skill bar along the bottom)
+      const mx = i < 3 ? 0.76 : 0.92, my = i < 3 ? 0.72 : 0.9;
       const qx = p[i * 3]! - tx, qy = p[i * 3 + 1]! - 2, qz = p[i * 3 + 2]! - tz;
       const x = qx * rx + qz * rz;
       const y = qx * ux + qy * uy + qz * uz;
       const depth = qx * fx + qy * fy + qz * fz;
-      d = Math.max(d, Math.abs(x) / (m * tanV * aspect) - depth, Math.abs(y) / (m * tanV) - depth);
+      d = Math.max(d, Math.abs(x) / (mx * tanV * aspect) - depth, Math.abs(y) / (my * tanV) - depth);
     }
     return d;
   }
