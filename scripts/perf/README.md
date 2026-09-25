@@ -10,6 +10,7 @@ and close their browser in `finally`.
 | `breakdown.mjs <base> <out.json> [--run ship:sea] [--late] [--boss id]` | One frame's draws attributed to (pass, object path, material): where the triangles go. |
 | `shots.mjs <base> <out>` | HUD-free title, harbor and run plates for before/after looks. |
 | `gpu-timing.mjs <base> <out>` | GPU time per pass with `EXT_disjoint_timer_query_webgl2` (method below). |
+| `load-bytes.mjs <base> <out.json>` | Time to ready and bytes per phase (boot, title, harbor, run) from every network response. |
 
 In-page hooks: `window.__PERF__` — `passes()` (last frame's triangles/draw calls per pass), `programCount()`,
 `programs()`, `rewarmMs()`, `ink()`, `gpu()`, `setGpuPassTiming(on)`; after the harbor warm-up also `warmup()`,
@@ -55,7 +56,19 @@ so KTX2 is not cheap in this pipeline today. What it would change, from every ru
 
 ## Load time and bytes
 
-See the round-2 PERF report for `report.json → load` and `→ transfer` before/after. Changes that affect them:
+`load-bytes.mjs` counts every response body per phase (the evidence report's `transfer` reads the browser's
+resource-timing buffer, which holds 250 entries by default, so its totals are truncated). Lead branch 009e8cc vs
+r2/perf merged, 2026-09-25, local preview, load average 5–7, Dawn Ram, two runs each:
+
+| Phase | Lead | r2/perf merged |
+|---|---|---|
+| boot → ready | 12.97 MB (GLB 11.72), ready 325–684 ms | 7.19 MB (GLB 5.93), ready 373–675 ms |
+| title (3 s) | 0.8–5.4 MB (audio) | 5.4 MB (audio) |
+| harbor (20 s) | 0.3–4.9 MB (audio) | 19.8–23.0 MB (GLB 19.5: bosses, captain candidates, unlocked heroes) |
+| first 45 s of the run | 15.9–16.1 MB (GLB 14.6: captain bakes) | 0.3–0.5 MB |
+| session total | 34.6–34.8 MB | 32.9–35.8 MB |
+
+Changes that affect them:
 boss GLBs (5.9 MB) no longer load at boot (idle time ~20 s later, or from the harbor warm-up); the hero `-low.glb`
 files, read only by the captain hull bake, dropped 3.4 MB of images the runtime never decoded; the Sunlion high GLB
 grew 276 KB with its atlas while its low file dropped 376 KB; meshopt decoding runs in two workers.
