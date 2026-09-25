@@ -107,6 +107,7 @@ Generated for this project with the owner's accounts and budget (Meshy ≤ 400 c
 
 - **3D models (Meshy image-to-3D):** `man-o-war`, `mortar-barge`, `dreadnought`, `sovereign`, `fort`, `tidewyrm-head`, `mortar`, `rocket-rack`, `swivel-gun`, `harpoon-gun`, `storm-rod`, `mine`, `lantern`, `powder-keg`, `iron-ram`. Concept images (Higgsfield Nano Banana Pro) are kept as small JPGs in `assets/concepts/`.
 - **UI icons:** 80 painted icons in `public/assets/icons/<id>.png` (256×256, transparent), sliced from five Higgsfield Nano Banana Pro 4×4 sheets (`assets/concepts/icon-sheet-*.jpg`) by `scripts/assets/icons/slice-icons.mjs`. Covers every WeaponId, PassiveId, SpecialId, UltimateId, MetaUpgradeId, PickupKind, elite affix (`affix-<id>`), the AI captain badge and broadside/brace/boost/heal/doubloon/bounty, plus spares (coins, chest-open, helm, anchor, lantern, admiralty-flag, cutlasses).
+- **Crew barks (audio):** 29 original lines voiced with Higgsfield speech presets (5.9 credits); job ids in [scripts/audio/generation-log.json](scripts/audio/generation-log.json) (ids only), masters in `scripts/audio/generated/barks/`.
 - **Emblems and procedural flags:** `scripts/assets/fleet/emblems/*.svg` (Admiralty wave-crest, Redtide cutlass-and-sun, Gloam sigil) drawn for this project; `flag`, `flag-redtide` and the skiff's added mast/sail are procedural geometry.
 - **Materials from the earlier pass (kept):** `public/assets/materials/limestone.png`, `painted-timber.png`, `cinematic-sky.png` (generated images, see git history; SHA-256 `dfe06806…`, `caa10fa3…`, `9ab3d6ac…`).
 
@@ -117,10 +118,11 @@ Generated for this project with the owner's accounts and budget (Meshy ≤ 400 c
 
 ## Music and sound
 
-Built by `scripts/audio/build.mjs`; the full per-source and per-file ledger (author, page, licence, changes, SHA-256 of every original and shipped file) is `public/audio/CREDITS.md`. Totals: 221 shipped files, 13.17 MB; 213 sources (212 CC0-1.0, 1 CC-BY-4.0). Licences are CC0 1.0 or CC BY only.
+Built by `scripts/audio/build.mjs`; the full per-source and per-file ledger (author, page, licence, changes, SHA-256 of every original and shipped file) is `public/audio/CREDITS.md`. Totals: 295 shipped files, 22.24 MB; 264 sources (233 CC0-1.0, 1 CC-BY-4.0, 29 Owner-generated, 1 CC-BY-3.0). Licences are CC0 1.0 or CC BY only.
 
 **Attribution required (CC BY):**
 - "Battle Horn" by Porphyr — https://freesound.org/people/Porphyr/sounds/188815/ — CC-BY-4.0. Trimmed, processed and re-encoded.
+- "Dark Descent" by Matthew Pablo (www.matthewpablo.com) — https://opengameart.org/content/dark-descent — CC-BY-3.0. Trimmed, processed and re-encoded.
 
 **Music:**
 - `title`: "Pirate's Orchestra [2:08]" by Dizzy Crow — https://opengameart.org/content/pirates-orchestra-208 — CC0-1.0
@@ -128,6 +130,12 @@ Built by `scripts/audio/build.mjs`; the full per-source and per-file ledger (aut
 - `run-calm`: "Trials of the Sea" by Crocdent — https://opengameart.org/content/trials-of-the-sea — CC0-1.0
 - `run-combat`: "Chest of Adventure" by Eldritch Grim — https://opengameart.org/content/chest-of-adventure — CC0-1.0
 - `run-horde`: "Battle Theme A" by cynicmusic — https://opengameart.org/content/battle-theme-a — CC0-1.0
+- `run-calm-storm`: "War on Water: Tracks (Chapter 2)" by yd — https://opengameart.org/content/war-on-water-tracks — CC0-1.0
+- `run-combat-storm`: "QaziJamJam (orchestral battle theme)" by Emma_MA — https://opengameart.org/content/qazijamjam-orchestral-battle-theme — CC0-1.0
+- `run-horde-storm`: "Determined Pursuit (epic orchestra loop)" by Emma_MA — https://opengameart.org/content/determined-pursuit-epic-orchestra-loop — CC0-1.0
+- `run-calm-gloam`: "Mysterious Ambience (song21)" by cynicmusic (pixelsphere.org) — https://opengameart.org/content/mysterious-ambience-song21 — CC0-1.0
+- `run-combat-gloam`: "Battle Theme B for RPG" by cynicmusic — https://opengameart.org/content/battle-theme-b-for-rpg — CC0-1.0
+- `run-horde-gloam`: "Dark Descent" by Matthew Pablo (www.matthewpablo.com) — https://opengameart.org/content/dark-descent — CC-BY-3.0
 - `boss`: "Boss Battle Music" by SubspaceAudio — https://opengameart.org/content/boss-battle-music — CC0-1.0
 - `boss-final`: "The Final Battle" by skrjablin — https://opengameart.org/content/the-final-battle — CC0-1.0
 

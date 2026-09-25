@@ -7,24 +7,27 @@ import { glyph, icon, type GlyphId } from '../core/icons';
 import { iconPath, PASSIVE_GLYPH, SPECIALS, ULTIMATES, WEAPON_GLYPH } from '../core/names';
 import { focusDefault, focusEl, keyDir, moveFocus, type PadIntent } from '../core/nav';
 import { keycap, padButton, prompt, type PadButton } from '../core/prompts';
+import { controls, type BindAction } from '../../input/Input';
 
 export interface PauseDeps {
   resume(): void;
-  openSettings(): void;
+  /** Opens Settings (on the Controls tab from the controls page). */
+  openSettings(tab?: 'controls'): void;
   retire(): void;
 }
 
 type View = 'menu' | 'controls' | 'confirm';
 
-const CONTROLS: readonly { glyph: GlyphId; action: string; keys: string[]; pad: PadButton | null; note?: string }[] = [
-  { glyph: 'sail', action: 'Sail gear up / down', keys: ['W', 'S'], pad: 'DPAD', note: 'Anchor · Half · Full — half sail turns tightest' },
-  { glyph: 'wheel', action: 'Rudder port / starboard', keys: ['A', 'D'], pad: 'LS' },
+/** The controls page: `actions` show the player's current keys (remappable in Settings → Controls). */
+const CONTROLS: readonly { glyph: GlyphId; action: string; keys: string[]; actions?: readonly BindAction[]; pad: PadButton | null; note?: string }[] = [
+  { glyph: 'sail', action: 'Sail gear up / down', keys: [], actions: ['gear-up', 'gear-down'], pad: 'DPAD', note: 'Anchor · Half · Full — half sail turns tightest' },
+  { glyph: 'wheel', action: 'Rudder port / starboard', keys: [], actions: ['port', 'starboard'], pad: 'LS' },
   { glyph: 'crosshair', action: 'Aim', keys: ['MOUSE'], pad: 'RS', note: 'Point at the water' },
-  { glyph: 'cannon', action: 'Full broadside', keys: ['LMB', 'Q'], pad: 'RT', note: 'Fires the side facing your aim' },
-  { glyph: 'burst', action: 'Special', keys: ['E'], pad: 'LB' },
-  { glyph: 'sun', action: 'Ultimate (when charged)', keys: ['R'], pad: 'RB' },
-  { glyph: 'speed', action: 'Boost', keys: ['SHIFT'], pad: 'B' },
-  { glyph: 'shield', action: 'Brace (early = Parry)', keys: ['SPACE'], pad: 'A' },
+  { glyph: 'cannon', action: 'Full broadside', keys: ['LMB'], actions: ['broadside'], pad: 'RT', note: 'Fires the side facing your aim' },
+  { glyph: 'burst', action: 'Special', keys: [], actions: ['special'], pad: 'LB' },
+  { glyph: 'sun', action: 'Ultimate (when charged)', keys: [], actions: ['ultimate'], pad: 'RB' },
+  { glyph: 'speed', action: 'Boost', keys: [], actions: ['boost'], pad: 'B' },
+  { glyph: 'shield', action: 'Brace (early = Parry)', keys: [], actions: ['brace'], pad: 'A' },
   { glyph: 'xp', action: 'Pick a card / reroll', keys: ['1–4', 'X'], pad: 'X' },
   { glyph: 'compass', action: 'Orbit / zoom camera', keys: ['RMB', 'WHEEL'], pad: null },
   { glyph: 'gear', action: 'Pause', keys: ['ESC', 'P'], pad: 'START' },
@@ -44,6 +47,8 @@ export class PauseMenu {
   private readonly facts: Record<'time' | 'level' | 'kills' | 'bounty' | 'doubloons', TextCell>;
   private readonly loadout: HTMLElement;
   private readonly skills: HTMLElement;
+  private readonly keyCells: { el: HTMLElement; c: (typeof CONTROLS)[number] }[] = [];
+  private keysVersion = -1;
 
   constructor(private readonly deps: PauseDeps) {
     const item = (g: GlyphId, label: string, fn: () => void) => {
@@ -63,7 +68,7 @@ export class PauseMenu {
     const table = h('div', 'cr-controls__table');
     for (const c of CONTROLS) {
       const keys = h('span', 'cr-controls__keys');
-      c.keys.forEach((k, i) => { if (i) keys.append(h('span', 'cr-prompt__or', '/')); keys.append(keycap(k)); });
+      this.keyCells.push({ el: keys, c });
       table.append(h('div', 'cr-controls__row',
         glyph(c.glyph, 'cr-controls__icon'),
         h('span', 'cr-controls__action', c.action, c.note ? h('small', '', c.note) : null),
@@ -71,10 +76,13 @@ export class PauseMenu {
         h('span', 'cr-controls__pad', c.pad ? padButton(c.pad) : null),
       ));
     }
+    this.fillKeys();
     const back = navButton('cr-btn is-ghost', prompt(['ESC'], 'B', ''), h('span', 'cr-btn__label', 'Back'));
     back.addEventListener('click', () => this.setView('menu'));
     back.dataset.navDefault = '';
-    this.controls = h('section', 'cr-controls cr-brushpanel', h('h3', 'cr-panel-title', glyph('compass'), 'Controls'), table, h('div', 'cr-controls__foot', back));
+    const remap = navButton('cr-btn is-ghost', glyph('wheel'), h('span', 'cr-btn__label', 'Change keys'));
+    remap.addEventListener('click', () => this.deps.openSettings('controls'));
+    this.controls = h('section', 'cr-controls cr-brushpanel', h('h3', 'cr-panel-title', glyph('compass'), 'Controls'), table, h('div', 'cr-controls__foot', remap, back));
 
     this.confirmNo = navButton('cr-btn is-primary', prompt(['ESC'], 'B', ''), h('span', 'cr-btn__label', 'Keep sailing'));
     this.confirmNo.dataset.navDefault = '';
@@ -125,7 +133,7 @@ export class PauseMenu {
   hide(): void { this.open = false; this.el.hidden = true; }
 
   /** Returns focus to the menu (after settings closes). */
-  refocus(): void { requestAnimationFrame(() => focusDefault(this.view === 'menu' ? this.menu : this.view === 'controls' ? this.controls : this.confirm)); }
+  refocus(): void { this.fillKeys(); requestAnimationFrame(() => focusDefault(this.view === 'menu' ? this.menu : this.view === 'controls' ? this.controls : this.confirm)); }
 
   private fill(run: Readonly<RunState>): void {
     const ship = CONTENT.ships[run.shipId];
@@ -156,7 +164,19 @@ export class PauseMenu {
     );
   }
 
+  /** Current keys on the controls page (bindings can change in Settings). */
+  private fillKeys(): void {
+    if (this.keysVersion === controls.version) return;
+    this.keysVersion = controls.version;
+    for (const { el, c } of this.keyCells) {
+      const labels = [...c.keys, ...(c.actions ?? []).map((a) => controls.labels(a)[0] ?? '—')];
+      el.replaceChildren();
+      labels.forEach((k, i) => { if (i) el.append(h('span', 'cr-prompt__or', '/')); el.append(keycap(k)); });
+    }
+  }
+
   private setView(view: View): void {
+    if (view === 'controls') this.fillKeys();
     this.view = view;
     this.controls.hidden = view !== 'controls';
     this.confirm.hidden = view !== 'confirm';

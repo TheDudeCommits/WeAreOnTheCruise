@@ -4,6 +4,8 @@ import { BOSS_IDS, type WeaponId } from '../../game/ids';
 import type { RunResult } from '../../game/types';
 import type { UiCallbacks, UiFrame } from '../contracts';
 import { WantedPoster } from '../components/WantedPoster';
+import { GoalsCard, goalsFor } from '../components/GoalsCard';
+import { ScrollFade } from '../core/scroll';
 import { h, navButton, play, TextCell } from '../core/dom';
 import { fmtClock, fmtCompact, fmtInt } from '../core/format';
 import { glyph, icon } from '../core/icons';
@@ -31,6 +33,10 @@ export class ResultsScreen {
   private readonly unlocks: HTMLElement;
   private readonly unlockBlock: HTMLElement;
   private readonly record: HTMLElement;
+  /** What to chase next (REPLAY's nextGoals), under the unlocks; hidden while there are none. */
+  private readonly goals = new GoalsCard(3, 'is-results');
+  /** The log scrolls on long voyages (buttons stay on screen); fades show there is more; ↑/↓ scroll it. */
+  private logScroll!: ScrollFade;
   private readonly again: HTMLButtonElement;
   private readonly harbor: HTMLButtonElement;
   private readonly endless: HTMLButtonElement;
@@ -66,7 +72,7 @@ export class ResultsScreen {
       h('div', 'cr-results__right',
         headline,
         line,
-        h('div', 'cr-log cr-brushpanel',
+        h('div', 'cr-log cr-brushpanel cr-scroll',
           h('div', 'cr-log__grid',
             row('clock', 'Time survived', time),
             row('xp', 'Level reached', level),
@@ -78,10 +84,12 @@ export class ResultsScreen {
           h('div', 'cr-log__block', h('div', 'cr-log__heading', glyph('crown'), 'Bosses'), this.bosses),
           h('div', 'cr-log__block', h('div', 'cr-log__heading', glyph('cannon'), 'Top guns'), this.guns),
           this.unlockBlock,
+          this.goals.el,
         ),
         h('div', 'cr-results__buttons', this.harbor, this.endless, this.again),
       ),
     );
+    this.logScroll = new ScrollFade(this.el.querySelector<HTMLElement>('.cr-log')!);
     this.headline = new TextCell(headline);
     this.line = new TextCell(line);
     this.rows = { time: new TextCell(time), level: new TextCell(level), kills: new TextCell(kills), elites: new TextCell(elites), doubloons: new TextCell(doubloons), damage: new TextCell(damage) };
@@ -173,11 +181,12 @@ export class ResultsScreen {
 
     this.unlocks.replaceChildren(...r.newUnlocks.map((u) => h('span', 'cr-unlock-chip', glyph(u.startsWith('New sea') ? 'map' : 'ship'), u)));
     this.unlockBlock.hidden = r.newUnlocks.length === 0;
+    this.goals.set(goalsFor(f.profile));
     this.el.classList.remove('is-enter');
     void this.el.offsetWidth;
     this.el.classList.add('is-enter');
     void f;
-    requestAnimationFrame(() => focusEl(this.again));
+    requestAnimationFrame(() => { focusEl(this.again); this.logScroll.el.scrollTop = 0; this.logScroll.refresh(); });
   }
 
   /** Any first input finishes the count-up; further input activates buttons. */
@@ -195,8 +204,14 @@ export class ResultsScreen {
       return true;
     }
     const dir = keyDir(e.code);
-    if (dir) { moveFocus(this.el, dir); return true; }
+    if (dir) { this.move(dir); return true; }
     return false;
+  }
+
+  /** Arrow / D-pad: move between the buttons; up and down scroll the log. */
+  private move(dir: 'up' | 'down' | 'left' | 'right'): void {
+    if (dir === 'up' || dir === 'down') { this.logScroll.nudge(dir === 'down' ? 1 : -1); return; }
+    moveFocus(this.el, dir);
   }
 
   onPad(intent: PadIntent): boolean {
@@ -207,7 +222,7 @@ export class ResultsScreen {
       if (a && this.el.contains(a)) a.click(); else this.again.click();
       return true;
     }
-    if (intent === 'up' || intent === 'down' || intent === 'left' || intent === 'right') { moveFocus(this.el, intent); return true; }
+    if (intent === 'up' || intent === 'down' || intent === 'left' || intent === 'right') { this.move(intent); return true; }
     return false;
   }
 }

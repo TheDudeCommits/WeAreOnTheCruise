@@ -339,11 +339,14 @@ function refresh(): void {
   bankPill.textContent = `decoded ${s.bank.decoded}/${s.bank.total} · ${(s.bank.bytes / 1048576).toFixed(2)} MB`;
   const m = engine.meter();
   if (m) {
-    meterText.textContent = `rms ${m.rmsDb} dBFS · peak ${m.peakDb}`;
+    meterText.textContent = `rms ${m.rmsDb} dBFS · peak ${m.peakDb} · K ${m.lufs} (music ${m.musicLufs}, sfx ${m.sfxLufs})`;
     meterBar.style.width = `${Math.max(0, Math.min(100, (m.peakDb + 60) / 60 * 100))}%`;
   }
   const mi = s.music;
-  musicInfo.textContent = mi ? `state ${mi.state}  (run: ${mi.runState})\ntrack ${mi.track ?? '—'} @ ${mi.position}s  level ${mi.level}\nintensity ${mi.intensity}  pending ${mi.pending ?? '—'}\nducks music ${s.ducks.music.toFixed(2)} sfx ${s.ducks.sfx.toFixed(2)}\n` +
+  const ht = mi?.heat;
+  musicInfo.textContent = mi ? `state ${mi.state}  (run: ${mi.runState})\ntrack ${mi.track ?? '—'} @ ${mi.position}s  level ${mi.level}\nheat ${mi.intensity}  pending ${mi.pending ?? '—'}\n` +
+    (ht ? `  kills ${ht.kills} (${ht.kpm}/min) · near ${ht.near} · fire ${ht.fire} · hurt ${ht.hurt} · event ${ht.event} · lull ${ht.lull}s\n` : '') +
+    `ducks music ${s.ducks.music.toFixed(2)} sfx ${s.ducks.sfx.toFixed(2)} · barks ${JSON.stringify(s.barks)}\n` +
     s.musicTransitions.slice(-5).map((t) => `  ${t.t}s ${t.from} → ${t.to}`).join('\n') : 'unlock to start the director';
   const rows = CATEGORY_IDS.filter((c) => c !== 'ambience').map((c) => h('tr', {}, h('td', {}, c), h('td', {}, String(s.voices[c] ?? 0)), h('td', {}, String(s.peakVoices[c] ?? 0))));
   voiceTable.replaceChildren(h('tr', {}, h('th', {}, 'category'), h('th', {}, 'voices'), h('th', {}, 'peak')), ...rows,

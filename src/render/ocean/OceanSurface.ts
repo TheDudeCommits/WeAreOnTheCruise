@@ -104,6 +104,8 @@ export class OceanSurface {
       uCapNorm: { value: 0.2 },
       uTransient: { value: field.transientTexture },
       uPersist: { value: field.persistentTexture },
+      uCoverage: { value: field.coverageTexture },
+      uStats: { value: new THREE.Vector4(0, 0, 150, 1) },
       uRtRect: { value: field.rect },
       uRtTexel: { value: 1 / field.resolution },
       uRtWorldTexel: { value: field.texel },
@@ -134,6 +136,7 @@ export class OceanSurface {
       uLookA: { value: new THREE.Vector4() },
       uLookB: { value: new THREE.Vector4() },
       uLookC: { value: new THREE.Vector4() },
+      uLookD: { value: new THREE.Vector4(0, 0.04, 280, 0) },
       uTime: { value: 0 },
       uShoreActive: { value: 0 },
       uDebug: { value: 0 },
@@ -240,6 +243,7 @@ export class OceanSurface {
     // Textures and interaction/shore state.
     u.uTransient!.value = field.transientTexture;
     u.uPersist!.value = field.persistentTexture;
+    u.uCoverage!.value = field.coverageTexture;
     u.uRtTexel!.value = 1 / field.resolution;
     u.uRtWorldTexel!.value = field.texel;
 
@@ -281,6 +285,7 @@ export class OceanSurface {
     (u.uLookB!.value as THREE.Vector4).set(look.capLo, look.capHi, look.reflectivity, look.sssStrength);
     const sunLevel = Math.min(1.2, Math.max(0.15, look.sunIntensity / 2.2));
     (u.uLookC!.value as THREE.Vector4).set(look.cloudPatch, look.night, look.flash, sunLevel);
+    (u.uLookD!.value as THREE.Vector4).set(look.duskWarm, look.pathSpread, look.glintReach, 0);
     u.uTime!.value = time % 3600;
     u.uShoreMax!.value = shore.maxDistance;
     u.uShoreActive!.value = shore.active ? 1 : 0;

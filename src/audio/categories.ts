@@ -19,19 +19,29 @@ export interface CategorySpec {
   density: number;
   /** Default stealing priority (cue priority overrides). */
   priority: number;
+  /**
+   * Reserved voices: exempt from the global voice ceiling, priority not scaled down by distance, and panned wide
+   * (off-screen threats read left/right). Only warnings the player must never miss belong here.
+   */
+  reserved?: boolean;
 }
 
 export const CATEGORIES: Readonly<Record<CategoryId, CategorySpec>> = {
   ui:        { cap: 4,  bus: 'ui',          spatial: false, ref: 1,   maxDistance: 1,    rolloff: 1,   density: 0.35, priority: 70 },
   stinger:   { cap: 3,  bus: 'music',       spatial: false, ref: 1,   maxDistance: 1,    rolloff: 1,   density: 0,    priority: 95 },
-  cannon:    { cap: 12, bus: 'worldDucked', spatial: true,  ref: 55,  maxDistance: 950,  rolloff: 0.9, density: 0.16, priority: 55 },
-  weapon:    { cap: 10, bus: 'worldDucked', spatial: true,  ref: 45,  maxDistance: 700,  rolloff: 1,   density: 0.2,  priority: 45 },
-  impact:    { cap: 16, bus: 'worldDucked', spatial: true,  ref: 35,  maxDistance: 520,  rolloff: 1,   density: 0.22, priority: 35 },
+  // Gunfire budget: one cue per volley (router.ts), so 8 voices cover both batteries, enemy fire and the tails.
+  cannon:    { cap: 8,  bus: 'worldDucked', spatial: true,  ref: 55,  maxDistance: 950,  rolloff: 0.9, density: 0.2,  priority: 55 },
+  weapon:    { cap: 8,  bus: 'worldDucked', spatial: true,  ref: 45,  maxDistance: 700,  rolloff: 1,   density: 0.22, priority: 45 },
+  impact:    { cap: 12, bus: 'worldDucked', spatial: true,  ref: 35,  maxDistance: 520,  rolloff: 1,   density: 0.25, priority: 35 },
   explosion: { cap: 8,  bus: 'world',       spatial: true,  ref: 70,  maxDistance: 1200, rolloff: 0.9, density: 0.3,  priority: 65 },
-  pickup:    { cap: 6,  bus: 'worldDucked', spatial: false, ref: 1,   maxDistance: 1,    rolloff: 1,   density: 0.45, priority: 30 },
+  pickup:    { cap: 4,  bus: 'worldDucked', spatial: false, ref: 1,   maxDistance: 1,    rolloff: 1,   density: 0.45, priority: 30 },
   player:    { cap: 6,  bus: 'world',       spatial: false, ref: 1,   maxDistance: 1,    rolloff: 1,   density: 0.2,  priority: 80 },
   boss:      { cap: 4,  bus: 'world',       spatial: true,  ref: 160, maxDistance: 2400, rolloff: 0.7, density: 0.1,  priority: 90 },
   world:     { cap: 8,  bus: 'world',       spatial: true,  ref: 80,  maxDistance: 1400, rolloff: 0.8, density: 0.15, priority: 40 },
+  // Telegraph warnings, incoming shells, boss horns, "Marked!": never stolen by gunfire, never culled by the ceiling.
+  alert:     { cap: 3,  bus: 'world',       spatial: true,  ref: 160, maxDistance: 2000, rolloff: 0.6, density: 0,    priority: 95, reserved: true },
+  // Crew barks: one voice at a time plus a spare for the tail; the bark queue (barks.ts) keeps them apart.
+  voice:     { cap: 2,  bus: 'ui',          spatial: false, ref: 1,   maxDistance: 1,    rolloff: 1,   density: 0,    priority: 85, reserved: true },
   ambience:  { cap: 12, bus: 'ambience',    spatial: false, ref: 40,  maxDistance: 320,  rolloff: 1,   density: 0,    priority: 20 },
 };
 

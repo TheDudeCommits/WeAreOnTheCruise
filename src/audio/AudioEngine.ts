@@ -11,6 +11,7 @@
 import type { RunState, Settings, SimEvent } from '../game/types';
 import type { AppScreen } from '../render/frame';
 import { AmbienceController, type OneShotCue } from './ambience';
+import { CrewBarks } from './barks';
 import { SampleBank, type LoadTier } from './bank';
 import { CATEGORIES, CATEGORY_IDS } from './categories';
 import type { AudioFrame, AudioSystem } from './contracts';
@@ -49,6 +50,8 @@ export interface AudioStatsSnapshot {
   musicTransitions: { t: number; from: MusicState; to: MusicState }[];
   loops: Record<string, number>;
   ducks: { music: number; sfx: number; ambience: number };
+  /** Crew barks spoken since the run started. */
+  barks: Record<string, number>;
 }
 
 export interface AudioLogEntry { t: number; cue: CueId; src: string; played: boolean; reason?: DropReason; gain?: number; d?: number; pan?: number }
@@ -63,6 +66,7 @@ export class AudioEngine implements AudioSystem {
   private director: MusicDirector | null = null;
   private ambience: AmbienceController | null = null;
   private readonly router: EventRouter;
+  private readonly barks: CrewBarks;
   private readonly ui: UiSounds;
   private readonly bank: SampleBank;
   private readonly baseUrl: string;
@@ -97,11 +101,17 @@ export class AudioEngine implements AudioSystem {
     this.baseUrl = options.baseUrl ?? '/audio/';
     this.bank = new SampleBank(this.baseUrl);
     for (const id of CATEGORY_IDS) this.peakVoices[id] = 0;
+    this.barks = new CrewBarks({
+      play: (cue, opts) => { this.noteSource = 'bark'; this.bySource.bark = (this.bySource.bark ?? 0) + 1; return this.play(cue, opts); },
+      duck: (spec) => this.duck(spec),
+      cueLength: (cue) => this.cueLength(cue),
+    });
     this.router = new EventRouter({
       play: (cue, opts) => this.play(cue, opts),
       duck: (spec) => this.duck(spec),
       cueLength: (cue) => this.cueLength(cue),
       note: (source) => { this.noteSource = source; this.bySource[source] = (this.bySource[source] ?? 0) + 1; },
+      moment: (kind) => { if (this.ctx) this.barks.moment(kind, this.ctx.currentTime, this.run); },
     });
     this.ui = new UiSounds((cue, gain) => { this.noteSource = 'ui'; this.play(cue, { gain }); });
     if (typeof window !== 'undefined' && typeof document !== 'undefined') {
@@ -172,13 +182,17 @@ export class AudioEngine implements AudioSystem {
     if (!this.isUnlocked || !this.ctx || !this.mixer) return;
     const now = this.ctx.currentTime;
     this.frameCounts.clear();
-    if (screenChanged && this.director && (frame.screen === 'harbor' || frame.screen === 'run')) this.director.warm(['run-calm', 'run-combat']);
+    if (screenChanged && this.director && frame.screen === 'harbor') this.director.warm(['run-calm', 'run-combat']);
+    if (screenChanged && this.director && frame.screen === 'run' && frame.run) { this.director.warmSea(frame.run.seaId); this.warmedLate = false; }
+    if (screenChanged && frame.screen === 'run') this.barks.resetRun();
     if (screenChanged && frame.screen === 'run' && frame.run && frame.run.time > 690) this.warmedFinal = false;
     this.mixer.update(now);
     this.mixer.setPauseMode(this.pauseMode(frame));
     if (frame.run?.status === 'paused' && frame.screen === 'run') this.mixer.duck({ target: 'music', depth: -6, hold: 0.2, attack: 0.15, release: 0.5 }, now);
     this.router.route(now, frame.screen, frame.run, frame.events, this.listener);
     this.director?.update({ now, dt: frame.dt, screen: frame.screen, run: frame.run, events: frame.events });
+    if (frame.screen === 'run') this.barks.update(now, frame.run, this.director?.runLayer ?? null);
+    this.ambience?.setHullLoops(this.router.watch.ropeLevel, this.router.watch.wispLevel);
     this.ambience?.update(now, frame.dt, frame.screen, frame.run, this.listener);
     if (this.pool) {
       const active = this.pool.activeAll(now, this.activeScratch);
@@ -186,7 +200,7 @@ export class AudioEngine implements AudioSystem {
     }
     // Stream the late-run tracks ahead of need (boss music must be ready at the 10 s boss warning).
     if (this.director && frame.screen === 'run' && frame.run) {
-      if (frame.run.time > 20 && !this.warmedLate) { this.warmedLate = true; this.director.warm(['run-horde', 'boss']); }
+      if (frame.run.time > 20 && !this.warmedLate) { this.warmedLate = true; this.director.warmSea(frame.run.seaId, ['horde']); this.director.warm(['boss']); }
       if (frame.run.time > 690 && !this.warmedFinal) { this.warmedFinal = true; this.director.warm(['boss-final']); }
     }
   }
@@ -235,15 +249,21 @@ export class AudioEngine implements AudioSystem {
   /** Post-limiter analyser (null before unlock). */
   tap(): AnalyserNode | null { return this.mixer?.tap() ?? null; }
 
-  /** Instantaneous output level (dBFS) from the post-limiter tap. */
-  meter(): { rmsDb: number; peakDb: number } | null {
+  /**
+   * Instantaneous output level from the post-ceiling tap: RMS and peak (dBFS), plus short-term K-weighted levels
+   * (LUFS-like) of the output and of the music and SFX buses (the loudness QA averages these over a phase).
+   */
+  meter(): { rmsDb: number; peakDb: number; lufs: number; musicLufs: number; sfxLufs: number } | null {
     const a = this.tap();
-    if (!a) return null;
+    if (!a || !this.mixer) return null;
     const buf = this.meterBuf && this.meterBuf.length === a.fftSize ? this.meterBuf : (this.meterBuf = new Float32Array(a.fftSize));
     a.getFloatTimeDomainData(buf);
     let sum = 0, peak = 0;
     for (let i = 0; i < buf.length; i++) { const v = buf[i]!; sum += v * v; const m = Math.abs(v); if (m > peak) peak = m; }
-    return { rmsDb: +(10 * Math.log10(sum / buf.length + 1e-12)).toFixed(1), peakDb: +(20 * Math.log10(peak + 1e-9)).toFixed(1) };
+    return {
+      rmsDb: +(10 * Math.log10(sum / buf.length + 1e-12)).toFixed(1), peakDb: +(20 * Math.log10(peak + 1e-9)).toFixed(1),
+      lufs: +this.mixer.kLevel('master').toFixed(1), musicLufs: +this.mixer.kLevel('music').toFixed(1), sfxLufs: +this.mixer.kLevel('sfx').toFixed(1),
+    };
   }
 
   stats(): AudioStatsSnapshot {
@@ -265,6 +285,7 @@ export class AudioEngine implements AudioSystem {
       musicTransitions: this.director ? [...this.director.transitions] : [],
       loops: { ...(this.ambience?.levels ?? {}) },
       ducks: { ...(this.mixer?.duckLevels ?? { music: 1, sfx: 1, ambience: 1 }) },
+      barks: { ...this.barks.spoken },
     };
   }
 
@@ -297,7 +318,7 @@ export class AudioEngine implements AudioSystem {
           this.manifest = m;
           for (const [id, def] of Object.entries(m.cues)) {
             const tier: LoadTier = def.category === 'ui' || MENU_TIER_CUES.has(id) ? 'menu' : 'run';
-            for (const f of def.files) this.bank.register(f, tier);
+            for (const f of def.files) this.bank.register(f, tier, def.rate);
           }
           const missing = CUE_IDS.filter((id) => !m.cues[id]);
           if (missing.length) console.warn('[audio] manifest lacks cues', missing);
@@ -318,6 +339,8 @@ export class AudioEngine implements AudioSystem {
 
   private applySettings(s: Settings): void {
     this.mixer?.setVolumes(s.masterVolume, s.musicVolume, s.sfxVolume, s.muted);
+    // Crew barks follow an optional `barks` setting (contract request: Settings.barks?: boolean, default on).
+    this.barks.setEnabled((s as Settings & { barks?: boolean }).barks !== false);
   }
 
   private pauseMode(frame: AudioFrame): PauseMode {
@@ -382,7 +405,8 @@ export class AudioEngine implements AudioSystem {
       const count = this.frameCounts.get(cue) ?? 0;
       if (def.maxPerFrame && count >= def.maxPerFrame) return this.drop(cue, 'frame');
     }
-    const cat = CATEGORIES[def.category];
+    const catId = opts.category ?? def.category;
+    const cat = CATEGORIES[catId];
     let gain = def.gain * (opts.gain ?? 1);
     let pan = 0, cutoff = 20000, spatialGain = 1;
     let distance: number | undefined;
@@ -391,17 +415,20 @@ export class AudioEngine implements AudioSystem {
       distance = Math.round(s.distance);
       if (s.gain < 0.004) return this.drop(cue, 'distance', 0, distance);
       spatialGain = s.gain; pan = s.pan; cutoff = s.cutoff;
+      // Reserved (alert) cues: off-screen threats pan wide so the player hears which side they come from.
+      if (cat.reserved && s.distance > 60) pan = Math.max(-0.97, Math.min(0.97, pan * 1.15));
       gain *= s.gain;
     }
     gain *= dbToGain((Math.random() * 2 - 1) * (def.gainJitter ?? 1));
-    gain /= Math.sqrt(1 + cat.density * pool.active(def.category, now));
+    gain /= Math.sqrt(1 + cat.density * pool.active(catId, now));
     const semis = (opts.pitch ?? 0) + (Math.random() * 2 - 1) * (def.pitch ?? 0);
     const rate = Math.pow(2, semis / 12);
     const file = this.pickFile(cue, def, opts.variant);
     const buffer = this.bank.get(file);
     if (!buffer) return this.drop(cue, 'not-ready', gain, distance);
-    const priority = ((def.priority ?? cat.priority) + (opts.priority ?? 0)) * (0.45 + 0.55 * spatialGain);
-    const ok = pool.play(buffer, def.category, { cue, when, gain, rate, pan, cutoff, priority });
+    const base = (opts.category ? cat.priority : def.priority ?? cat.priority) + (opts.priority ?? 0);
+    const priority = cat.reserved ? base : base * (0.45 + 0.55 * spatialGain);
+    const ok = pool.play(buffer, catId, { cue, when, gain, rate, pan, cutoff, priority });
     if (!ok) return this.drop(cue, pool.lastDrop ?? 'cap', gain, distance);
     this.lastPlayed.set(cue, when);
     this.frameCounts.set(cue, (this.frameCounts.get(cue) ?? 0) + 1);

@@ -1,6 +1,8 @@
 /**
  * Sample bank (AUDIO-owned): fetches encoded files early (no AudioContext needed, nothing plays) and decodes
  * them after unlock, in tier order (menu first). Music is streamed by media elements and never decoded here.
+ * Files registered with a `rate` (speech, long beds) decode at that sample rate through an OfflineAudioContext
+ * (AudioBuffers play in any context), which cuts their decoded size: 22.05 kHz barks take 46% of 48 kHz.
  */
 
 export type LoadTier = 'menu' | 'run';
@@ -11,6 +13,8 @@ interface Entry {
   file: string;
   url: string;
   tier: LoadTier;
+  /** Decode sample rate (undefined: the context's rate). */
+  rate?: number;
   state: State;
   bytes: ArrayBuffer | null;
   buffer: AudioBuffer | null;
@@ -33,10 +37,23 @@ export class SampleBank {
 
   constructor(private readonly baseUrl: string) {}
 
-  register(file: string, tier: LoadTier): void {
+  register(file: string, tier: LoadTier, rate?: number): void {
     const existing = this.entries.get(file);
     if (existing) { if (tier === 'menu') existing.tier = 'menu'; return; }
-    this.entries.set(file, { file, url: this.baseUrl + file, tier, state: 'idle', bytes: null, buffer: null });
+    this.entries.set(file, { file, url: this.baseUrl + file, tier, rate, state: 'idle', bytes: null, buffer: null });
+  }
+
+  private readonly decoders = new Map<number, BaseAudioContext>();
+
+  /** A decode-only context at `rate` (never rendered), or the main context when that is unavailable. */
+  private decoder(rate: number | undefined, ctx: BaseAudioContext): BaseAudioContext {
+    if (!rate || rate >= ctx.sampleRate || typeof OfflineAudioContext === 'undefined') return ctx;
+    let d = this.decoders.get(rate);
+    if (!d) {
+      try { d = new OfflineAudioContext(1, 1, rate); } catch { return ctx; }
+      this.decoders.set(rate, d);
+    }
+    return d;
   }
 
   /** Starts downloading every registered file of a tier. Safe before unlock (nothing is played). */
@@ -127,7 +144,7 @@ export class SampleBank {
       const bytes = e.bytes;
       if (!bytes) { e.state = 'failed'; continue; }
       this.activeDecodes++;
-      ctx.decodeAudioData(bytes)
+      this.decoder(e.rate, ctx).decodeAudioData(bytes)
         .then((buffer) => { if (this.disposed) return; e.buffer = buffer; e.bytes = null; e.state = 'ready'; })
         .catch((err: unknown) => { e.state = 'failed'; console.warn('[audio] decode failed', e.url, err); })
         .finally(() => { this.activeDecodes--; this.notify(); this.pumpDecode(); });

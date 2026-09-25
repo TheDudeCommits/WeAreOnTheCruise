@@ -2286,7 +2286,8 @@
   "page": "https://opengameart.org/content/determined-pursuit-epic-orchestra-loop",
   "license": "CC0-1.0",
   "download": "https://opengameart.org/sites/default/files/determined_pursuit_loop.wav",
-  "host": "opengameart.org"
+  "host": "opengameart.org",
+  "licenseChecked": "2026-09-24: page licence field 'CC0'"
  },
  "oga-boss-battle-music": {
   "title": "Boss Battle Music",
@@ -2371,5 +2372,479 @@
   "download": "https://cdn.freesound.org/previews/412/412308_7707368-hq.ogg",
   "host": "freesound (HQ preview)",
   "duration": 297.804
+ },
+ "oga-war-on-water-tracks": {
+  "title": "War on Water: Tracks (Chapter 2)",
+  "author": "yd",
+  "page": "https://opengameart.org/content/war-on-water-tracks",
+  "license": "CC0-1.0",
+  "download": "https://opengameart.org/sites/default/files/wowchapter2.ogg",
+  "host": "opengameart.org",
+  "licenseChecked": "2026-09-24: page licence field 'CC0'"
+ },
+ "oga-qazijamjam-orchestral-battle-theme": {
+  "title": "QaziJamJam (orchestral battle theme)",
+  "author": "Emma_MA",
+  "page": "https://opengameart.org/content/qazijamjam-orchestral-battle-theme",
+  "license": "CC0-1.0",
+  "download": "https://opengameart.org/sites/default/files/QaziJamJam.wav",
+  "host": "opengameart.org",
+  "licenseChecked": "2026-09-24: page licence field 'CC0'"
+ },
+ "oga-mysterious-ambience-song21": {
+  "title": "Mysterious Ambience (song21)",
+  "author": "cynicmusic (pixelsphere.org)",
+  "page": "https://opengameart.org/content/mysterious-ambience-song21",
+  "license": "CC0-1.0",
+  "download": "https://opengameart.org/sites/default/files/song21_0.mp3",
+  "host": "opengameart.org",
+  "licenseChecked": "2026-09-24: page offers CC-BY 3.0 / CC-BY-SA 3.0 / GPL 3.0 / CC0; used under CC0"
+ },
+ "oga-battle-theme-b-for-rpg": {
+  "title": "Battle Theme B for RPG",
+  "author": "cynicmusic",
+  "page": "https://opengameart.org/content/battle-theme-b-for-rpg",
+  "license": "CC0-1.0",
+  "download": "https://opengameart.org/sites/default/files/battleThemeB.mp3",
+  "host": "opengameart.org",
+  "licenseChecked": "2026-09-24: page licence field 'CC0'"
+ },
+ "oga-dark-descent": {
+  "title": "Dark Descent",
+  "author": "Matthew Pablo (www.matthewpablo.com)",
+  "page": "https://opengameart.org/content/dark-descent",
+  "license": "CC-BY-3.0",
+  "download": "https://opengameart.org/sites/default/files/Dark%20Descent_0.mp3",
+  "host": "opengameart.org",
+  "licenseChecked": "2026-09-24: page licence field 'CC-BY 3.0' (attribution in CREDITS.md)"
+ },
+ "kenney-music-jingles-jingles_STEEL08": {
+  "title": "Music Jingles: jingles_STEEL08",
+  "author": "Kenney (kenney.nl)",
+  "page": "https://kenney.nl/assets/music-jingles",
+  "license": "CC0-1.0",
+  "zip": "https://kenney.nl/media/pages/assets/music-jingles/f37e530b9e-1677590399/kenney_music-jingles.zip",
+  "member": "Audio/Steel jingles/jingles_STEEL08.ogg",
+  "host": "kenney.nl"
+ },
+ "kenney-music-jingles-jingles_STEEL11": {
+  "title": "Music Jingles: jingles_STEEL11",
+  "author": "Kenney (kenney.nl)",
+  "page": "https://kenney.nl/assets/music-jingles",
+  "license": "CC0-1.0",
+  "zip": "https://kenney.nl/media/pages/assets/music-jingles/f37e530b9e-1677590399/kenney_music-jingles.zip",
+  "member": "Audio/Steel jingles/jingles_STEEL11.ogg",
+  "host": "kenney.nl"
+ },
+ "fs-71778": {
+  "title": "Steam Whistle.mp3",
+  "author": "Bidone",
+  "page": "https://freesound.org/people/Bidone/sounds/71778/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/71/71778_706955-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 3.20107,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-664929": {
+  "title": "rope leathery creaking.wav",
+  "author": "vestibule-door",
+  "page": "https://freesound.org/people/vestibule-door/sounds/664929/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/664/664929_14100561-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 5.44229,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-559079": {
+  "title": "Foley_Leather_Stress_Mono.wav",
+  "author": "Nox_Sound",
+  "page": "https://freesound.org/people/Nox_Sound/sounds/559079/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/559/559079_9250976-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 19.5254,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-540266": {
+  "title": "cut rope.wav",
+  "author": "zepurple",
+  "page": "https://freesound.org/people/zepurple/sounds/540266/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/540/540266_11242864-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 0.888229,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-529925": {
+  "title": "Whip Crack.m4a",
+  "author": "SciFiSounds",
+  "page": "https://freesound.org/people/SciFiSounds/sounds/529925/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/529/529925_11751070-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 0.534059,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-348766": {
+  "title": "ROAD FLARE.wav",
+  "author": "frankelmedico",
+  "page": "https://freesound.org/people/frankelmedico/sounds/348766/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/348/348766_299928-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 11.6406,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-140711": {
+  "title": "Firecracker",
+  "author": "j1987",
+  "page": "https://freesound.org/people/j1987/sounds/140711/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/140/140711_367313-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 1.05252,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-807221": {
+  "title": "Mysterious_Weird_Wind_Drone_Cave_Whistle_Darkness_Ghost_Haunted_Spirit_24bit_48k_2ch_8s",
+  "author": "BlueShrimp-",
+  "page": "https://freesound.org/people/BlueShrimp-/sounds/807221/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/807/807221_13037035-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 8.511,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-752478": {
+  "title": "HF Sound 016 - Ghostly Harmonics",
+  "author": "xperseai",
+  "page": "https://freesound.org/people/xperseai/sounds/752478/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/752/752478_2093688-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 18.0812,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-221528": {
+  "title": "Glass Break",
+  "author": "unfa",
+  "page": "https://freesound.org/people/unfa/sounds/221528/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/221/221528_1038806-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 1.90508,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-202093": {
+  "title": "Bottle Shattering.wav",
+  "author": "spookymodem",
+  "page": "https://freesound.org/people/spookymodem/sounds/202093/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/202/202093_3756348-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 1.53463,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-360942": {
+  "title": "splat.ogg",
+  "author": "gprosser",
+  "page": "https://freesound.org/people/gprosser/sounds/360942/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/360/360942_5406151-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 0.770839,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-445118": {
+  "title": "Cartoon - Splat!",
+  "author": "Breviceps",
+  "page": "https://freesound.org/people/Breviceps/sounds/445118/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/445/445118_9159316-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 0.785646,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-447929": {
+  "title": "Step on a slug (Splat!) 1",
+  "author": "Breviceps",
+  "page": "https://freesound.org/people/Breviceps/sounds/447929/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/447/447929_9159316-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 1.35014,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "fs-234782": {
+  "title": "Steam/hiss",
+  "author": "wubitog",
+  "page": "https://freesound.org/people/wubitog/sounds/234782/",
+  "license": "CC0-1.0",
+  "download": "https://cdn.freesound.org/previews/234/234782_3501487-hq.ogg",
+  "host": "freesound (HQ preview)",
+  "duration": 1.47447,
+  "licenseChecked": "2026-09-25: Freesound page licence link publicdomain/zero/1.0"
+ },
+ "gen-crew-fire-2": {
+  "title": "Crew bark: “Fire as she bears!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-fire-2.ogg",
+  "host": "generated",
+  "job": "cf6fa204-6897-4a6f-8548-0a43029cbbf2"
+ },
+ "gen-crew-fire-1": {
+  "title": "Crew bark: “Fire!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-fire-1.ogg",
+  "host": "generated",
+  "job": "ce670840-bd43-49a8-8a86-c294603d02ea"
+ },
+ "gen-crew-fire-3": {
+  "title": "Crew bark: “Give 'em a broadside!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-fire-3.ogg",
+  "host": "generated",
+  "job": "1c83cc11-43a5-4b59-ab92-3a12f81a397d"
+ },
+ "gen-crew-brace-1": {
+  "title": "Crew bark: “Brace! Brace!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-brace-1.ogg",
+  "host": "generated",
+  "job": "c6830236-444d-4f63-8246-959938087987"
+ },
+ "gen-crew-brace-2": {
+  "title": "Crew bark: “Hold fast, lads!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-brace-2.ogg",
+  "host": "generated",
+  "job": "3c055a27-d9d3-4561-b502-4e0a5d3519ee"
+ },
+ "gen-crew-boss": {
+  "title": "Crew bark: “Boss off the bow! Stand to your guns!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-boss.ogg",
+  "host": "generated",
+  "job": "6297fddd-3678-4153-bcd5-43d107ae8d09"
+ },
+ "gen-crew-sink-1": {
+  "title": "Crew bark: “She's going down!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-sink-1.ogg",
+  "host": "generated",
+  "job": "97891c63-48b3-41a4-b364-8453f640c54e"
+ },
+ "gen-crew-sink-2": {
+  "title": "Crew bark: “Down she goes!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-sink-2.ogg",
+  "host": "generated",
+  "job": "07b04120-c1a9-49dd-a56f-11b050d50ffc"
+ },
+ "gen-crew-level": {
+  "title": "Crew bark: “Level up, captain!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-level.ogg",
+  "host": "generated",
+  "job": "61c1ec85-2177-42d4-af43-3f6d1834171b"
+ },
+ "gen-crew-water-1": {
+  "title": "Crew bark: “We're taking water!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-water-1.ogg",
+  "host": "generated",
+  "job": "4049ddd0-8131-453b-8c54-4b17195fa5e6"
+ },
+ "gen-crew-water-2": {
+  "title": "Crew bark: “Hull's breached! Patch her up!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-water-2.ogg",
+  "host": "generated",
+  "job": "9c0c6b74-9c02-4122-906e-499927a1d55b"
+ },
+ "gen-crew-harpoon": {
+  "title": "Crew bark: “Harpoon on the hull! Boost to snap the line!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-harpoon.ogg",
+  "host": "generated",
+  "job": "b908c7c4-3c78-4fc2-b754-53d686d8e0c2"
+ },
+ "gen-crew-kraken": {
+  "title": "Crew bark: “Kraken! All hands!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-kraken.ogg",
+  "host": "generated",
+  "job": "53929989-2a0f-4fb1-87cd-39f5f58752d7"
+ },
+ "gen-crew-grab": {
+  "title": "Crew bark: “It's got us! Boost free!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-grab.ogg",
+  "host": "generated",
+  "job": "7812269d-2300-4253-851b-a0855551af02"
+ },
+ "gen-crew-whirlpool": {
+  "title": "Crew bark: “Whirlpool off the bow!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-whirlpool.ogg",
+  "host": "generated",
+  "job": "649542af-831e-4298-947e-777f6432bd2d"
+ },
+ "gen-crew-blockade": {
+  "title": "Crew bark: “Blockade ahead! Run out the guns!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-blockade.ogg",
+  "host": "generated",
+  "job": "239f2886-2f64-4836-b6b3-ce5cf3a20165"
+ },
+ "gen-crew-victory": {
+  "title": "Crew bark: “Victory! The sea is ours!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-victory.ogg",
+  "host": "generated",
+  "job": "09f54f90-b188-4cb5-88f0-2920af982f3f"
+ },
+ "gen-crew-guns": {
+  "title": "Crew bark: “Man the guns!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Barrett)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-guns.ogg",
+  "host": "generated",
+  "job": "498a95bd-c811-49ab-bd8b-00c2b0ec552b"
+ },
+ "gen-crew-marked": {
+  "title": "Crew bark: “They've marked us! Here they come!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-marked.ogg",
+  "host": "generated",
+  "job": "5e836a14-becd-488a-94f4-a94ee9db0d9a"
+ },
+ "gen-crew-wisps": {
+  "title": "Crew bark: “Wisps on the hull! Brace to shake 'em off!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-wisps.ogg",
+  "host": "generated",
+  "job": "d37cc442-2c5c-43a7-94bf-0eb314232c66"
+ },
+ "gen-crew-wave": {
+  "title": "Crew bark: “Rogue wave! Boost through it!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-wave.ogg",
+  "host": "generated",
+  "job": "e72af7f5-0978-48eb-b273-516bcb380cb6"
+ },
+ "gen-crew-ghosts": {
+  "title": "Crew bark: “Ghost ships rising!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-ghosts.ogg",
+  "host": "generated",
+  "job": "01543c86-1596-44f7-b504-d8b7c101d0fb"
+ },
+ "gen-crew-eruption": {
+  "title": "Crew bark: “Eruption! Watch the sky!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-eruption.ogg",
+  "host": "generated",
+  "job": "672e43fe-a89a-424b-9dc8-eee3fd882d8b"
+ },
+ "gen-crew-treasure": {
+  "title": "Crew bark: “Treasure ho!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-treasure.ogg",
+  "host": "generated",
+  "job": "24d94ee0-b751-4801-9484-250afa38e6e8"
+ },
+ "gen-crew-rising": {
+  "title": "Crew bark: “Something's rising below us!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-rising.ogg",
+  "host": "generated",
+  "job": "717ae16f-3f68-451c-8355-b106557bef49"
+ },
+ "gen-crew-captain-down": {
+  "title": "Crew bark: “Captain down! Cover them!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-captain-down.ogg",
+  "host": "generated",
+  "job": "6646c83f-d77d-4cf9-8a65-ea6a383961b0"
+ },
+ "gen-crew-rider": {
+  "title": "Crew bark: “Wave rider! Ha ha!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-rider.ogg",
+  "host": "generated",
+  "job": "f1edca87-d262-4312-a010-713f0b6d03cd"
+ },
+ "gen-crew-beacon": {
+  "title": "Crew bark: “The lighthouse blesses us, captain!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-beacon.ogg",
+  "host": "generated",
+  "job": "a6e4ab03-000e-48f7-9edc-72975c8f58c0"
+ },
+ "gen-crew-elite": {
+  "title": "Crew bark: “Elite sighted! Mind her guns!”",
+  "author": "Generated for this project (Higgsfield Seed Audio 1.0, preset voice Callan)",
+  "page": "scripts/audio/generation-log.json",
+  "license": "Owner-generated",
+  "local": "scripts/audio/generated/barks/crew-elite.ogg",
+  "host": "generated",
+  "job": "ebbdbc19-49f5-4adb-ac1e-9e950b6e5b14"
  }
 }

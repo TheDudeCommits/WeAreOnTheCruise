@@ -284,7 +284,8 @@
   mask: radial-gradient(circle, #000 25%, transparent 68%);
   animation: cr-spin 9s linear infinite;
 }
-.cr-card.is-compact { width: calc(200 * var(--u)); min-height: 0; height: calc(250 * var(--u)); padding-top: calc(34 * var(--u)); }
+/* Chest rewards: compact, but they grow with their text (the row stretches every card to the tallest). */
+.cr-card.is-compact { width: calc(206 * var(--u)); min-height: calc(236 * var(--u)); height: auto; padding-top: calc(34 * var(--u)); }
 .cr-card.is-compact .cr-card__medal { width: calc(84 * var(--u)); height: calc(84 * var(--u)); }
 .cr-card.is-compact .cr-card__icon { width: calc(66 * var(--u)); height: calc(66 * var(--u)); }
 .cr-card.is-compact .cr-card__title { font-size: var(--fs-24); }

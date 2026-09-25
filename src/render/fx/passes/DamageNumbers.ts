@@ -2,6 +2,9 @@
  * Damage numbers in WebGL: a glyph atlas generated at load (bold italic digits with a navy ink stroke, fill in
  * R and stroke in G) drawn as screen-space instanced quads anchored to world points (one draw call).
  * Rapid hits on the same target merge into one rolling number; crits are bigger, golden and punch in.
+ * Declutter (round 2): a number stays hidden while its (merged) total is under the caller's `minShow` (3% of the
+ * target's hull) unless it is a crit or a killing blow, and ordinary hits within 12 m of a young number merge into it
+ * (a skiff pack shows one rolling total, not a row of 8s).
  */
 import * as THREE from 'three';
 import { OUTPUT_GLSL, type FxSharedUniforms } from '../core/glsl';
@@ -116,7 +119,14 @@ void main() {
 }
 `;
 
-interface NumberRecord { target: number; value: number; crit: boolean; x: number; y: number; z: number; age: number; life: number; color: number; merged: number }
+interface NumberRecord {
+  target: number; value: number; crit: boolean; x: number; y: number; z: number; age: number; life: number; color: number; merged: number;
+  /** Declutter: hidden until `value` reaches `minShow` (or a crit / kill joins). */
+  hidden: boolean; minShow: number;
+}
+
+/** Ordinary hits this close (m) to a young number merge into it, whatever ship they hit. */
+const AREA_MERGE = 12;
 
 const MAX_RECORDS = 160;
 const MAX_DIGITS = 7;
@@ -130,9 +140,11 @@ export class DamageNumbers {
   private readonly digits = new Int8Array(MAX_DIGITS);
   private readonly color = new THREE.Color();
   enabled = true;
+  /** QA counters: numbers the pre-round-2 rule would have spawned (one per target per 0.32 s) vs numbers shown now. */
+  readonly counts = { legacy: 0, shown: 0 };
 
   constructor(shared: FxSharedUniforms) {
-    for (let i = 0; i < MAX_RECORDS; i++) this.records.push({ target: -1, value: 0, crit: false, x: 0, y: 0, z: 0, age: 1e9, life: 1, color: 0xffffff, merged: 0 });
+    for (let i = 0; i < MAX_RECORDS; i++) this.records.push({ target: -1, value: 0, crit: false, x: 0, y: 0, z: 0, age: 1e9, life: 1, color: 0xffffff, merged: 0, hidden: false, minShow: 0 });
     this.pool = new InstancePool(12, 0, MAX_RECORDS * (MAX_DIGITS + 1));
     const g = new THREE.InstancedBufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], 3));
@@ -167,23 +179,44 @@ export class DamageNumbers {
     this.mesh.renderOrder = 100;
   }
 
-  /** Adds damage to a target; merges with its live number while it is young. */
-  add(target: number, amount: number, crit: boolean, x: number, y: number, z: number, hex: number): void {
+  /**
+   * Adds damage to a target; merges with its live number while it is young (same target, or any ordinary hit within
+   * 12 m). `minShow`: the number stays hidden until its total reaches it; `force` (crit, killing blow) shows it now.
+   */
+  add(target: number, amount: number, crit: boolean, x: number, y: number, z: number, hex: number, minShow = 0, force = false): void {
     if (!this.enabled || amount <= 0) return;
     let free: NumberRecord | null = null;
     let oldest: NumberRecord | null = null;
+    let near: NumberRecord | null = null;
+    let nearD = AREA_MERGE * AREA_MERGE;
     for (const r of this.records) {
       if (r.target === target && r.crit === crit && r.age < 0.32 && r.color === hex && target >= 0) {
         r.value += amount; r.age = Math.min(r.age, 0.05); r.merged++; r.x = x; r.y = y; r.z = z;
+        if (r.hidden && (force || r.value >= r.minShow)) { r.hidden = false; this.counts.shown++; }
         return;
+      }
+      if (!crit && !r.crit && target >= 0 && r.target >= 0 && r.color === hex && r.age < 0.32) {
+        const d = (r.x - x) * (r.x - x) + (r.z - z) * (r.z - z);
+        if (d < nearD) { nearD = d; near = r; }
       }
       if (r.age >= r.life) { if (!free) free = r; }
       else if (!oldest || r.age > oldest.age) oldest = r;
+    }
+    // the old rule spawned a number whenever this target had no young one
+    this.counts.legacy++;
+    if (near) {
+      // area merge: the pack's number rolls up in place (its anchor stays put)
+      near.value += amount; near.age = Math.min(near.age, 0.05); near.merged++;
+      near.minShow = Math.min(near.minShow, minShow);
+      if (near.hidden && (force || near.value >= near.minShow)) { near.hidden = false; this.counts.shown++; }
+      return;
     }
     const r = free ?? oldest;
     if (!r) return;
     r.target = target; r.value = amount; r.crit = crit; r.x = x; r.y = y; r.z = z; r.age = 0;
     r.life = crit ? 1.15 : 0.85; r.color = hex; r.merged = 0;
+    r.minShow = minShow; r.hidden = !force && !crit && amount < minShow;
+    if (!r.hidden) this.counts.shown++;
   }
 
   update(dt: number, clock: number, glyphPx: number): void {
@@ -194,7 +227,7 @@ export class DamageNumbers {
     for (const r of this.records) {
       if (r.age >= r.life) continue;
       r.age += dt;
-      if (r.age >= r.life) continue;
+      if (r.age >= r.life || r.hidden) continue;
       let v = Math.min(9999999, Math.max(1, Math.round(r.value)));
       let n = 0;
       while (v > 0 && n < MAX_DIGITS) { this.digits[n++] = v % 10; v = (v / 10) | 0; }
@@ -214,7 +247,10 @@ export class DamageNumbers {
     this.geometry.instanceCount = this.pool.flush();
   }
 
-  clear(): void { for (const r of this.records) r.age = 1e9; }
+  clear(): void { for (const r of this.records) { r.age = 1e9; r.hidden = false; } }
+
+  /** Numbers on screen now (visible records) — QA. */
+  visibleCount(): number { let n = 0; for (const r of this.records) if (r.age < r.life && !r.hidden) n++; return n; }
 
   dispose(): void {
     this.geometry.dispose();

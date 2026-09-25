@@ -24,4 +24,15 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #06283f; }
 .cr-ui.is-calm .cr-eta.is-urgent, .cr-ui.is-calm .cr-warn__icon .cr-glyph, .cr-ui.is-calm .cr-shipring.is-low .cr-ring__hull,
 .cr-ui.is-calm .cr-boss.is-enraged .cr-boss__fill, .cr-ui.is-calm .cr-title__press, .cr-ui.is-calm .cr-chest__prompt.is-on,
 .cr-ui.is-calm .cr-skill.is-r.is-ready .cr-skill__disc, .cr-ui.is-calm .cr-marker[data-kind='boss'] .cr-marker__icon,
-.cr-ui.is-calm .cr-warn__stripes, .cr-ui.is-calm .cr-cutin__lines { animation: none !important; }
+.cr-ui.is-calm .cr-warn__stripes, .cr-ui.is-calm .cr-cutin__lines, .cr-ui.is-calm .cr-markchip__body,
+.cr-ui.is-calm .cr-marker[data-kind='bounty'] .cr-marker__icon, .cr-ui.is-calm .cr-marker[data-kind='signal'] .cr-marker__icon { animation: none !important; }
+
+/* Settings.colorBlind: the HUD's danger / health pair moves off red-green (deutan, protan: magenta vs blue) or off
+   blue-yellow (tritan: the cyan family turns pink). IMPACT recolours the telegraphs from the same setting. */
+.cr-ui[data-cb='deutan'], .cr-ui[data-cb='protan'] { --red: #ff4fd8; --red-2: #b0169a; --green: #4fb3ff; --green-2: #1f6fd1; }
+.cr-ui[data-cb='deutan'] .cr-shipring.is-mid .cr-ring__hull, .cr-ui[data-cb='protan'] .cr-shipring.is-mid .cr-ring__hull { stroke: #ffe066; }
+.cr-ui[data-cb='tritan'] { --cyan: #ff7ad9; --cyan-2: #d13fae; --teal: #ff9ec9; }
+.cr-ui[data-cb='deutan'] .cr-vignette, .cr-ui[data-cb='protan'] .cr-vignette { background: radial-gradient(ellipse at center, transparent 42%, rgba(176, 22, 154, .42) 72%, rgba(120, 8, 110, .82)); }
+.cr-ui[data-cb='deutan'] .cr-vignette__beat, .cr-ui[data-cb='protan'] .cr-vignette__beat { background: radial-gradient(ellipse at center, transparent 50%, rgba(255, 79, 216, .55)); }
+.cr-ui[data-cb='deutan'] .cr-hitflash, .cr-ui[data-cb='protan'] .cr-hitflash { background: radial-gradient(ellipse at center, transparent 55%, rgba(255, 79, 216, .7)); }
+.cr-ui[data-cb='deutan'] .cr-dir__wedge, .cr-ui[data-cb='protan'] .cr-dir__wedge { background: linear-gradient(0deg, rgba(255, 79, 216, .98), rgba(255, 150, 230, .85)); }

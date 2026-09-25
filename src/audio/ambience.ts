@@ -1,8 +1,10 @@
 /**
  * Continuous loops driven by RunState (AUDIO-owned): ocean bed, bow-wash tied to ship speed, wind tied to
  * sea.windStrength, rain tied to sea.rain, harbour bed in menus, and positional fire / whirlpool loops that
- * follow the nearest burning ships and whirlpools. Also schedules sparse one-shots (gulls, hull creaks,
- * distant thunder) so the sea never sounds like a steady hiss.
+ * follow the nearest burning ships and whirlpools. Round 2: the Maelstrom's drone (from its nearest edge), the surf
+ * roar of an approaching rogue wave (from the nearest point of its front), and two loops on the player's own hull set
+ * by the router's state diffs (watch.ts): the harpoon line creaking and wisps draining the hull.
+ * Also schedules sparse one-shots (gulls, hull creaks, distant thunder) so the sea never sounds like a steady hiss.
  */
 import type { RunState } from '../game/types';
 import type { AppScreen } from '../render/frame';
@@ -10,7 +12,8 @@ import { distanceGain, smoothstep, type ListenerFrame } from './spatial';
 import type { PlayOptions } from './types';
 
 export type BedId = 'amb-ocean' | 'amb-bow-wash' | 'amb-wind' | 'amb-rain' | 'amb-harbor';
-export type SpotId = 'amb-fire' | 'amb-whirlpool';
+export type SpotId = 'amb-fire' | 'amb-whirlpool' | 'amb-maelstrom' | 'amb-surf';
+export type HullLoopId = 'amb-rope' | 'amb-wisp';
 export type OneShotCue = 'gull' | 'hull-creak' | 'thunder-far';
 
 export interface AmbienceHooks {
@@ -97,15 +100,21 @@ class LoopVoice {
 interface SpotSource { key: number; x: number; z: number; weight: number }
 
 const BEDS: readonly BedId[] = ['amb-ocean', 'amb-bow-wash', 'amb-wind', 'amb-rain', 'amb-harbor'];
-const SPOT_SLOTS: Record<SpotId, number> = { 'amb-fire': 3, 'amb-whirlpool': 2 };
+const SPOT_IDS: readonly SpotId[] = ['amb-fire', 'amb-whirlpool', 'amb-maelstrom', 'amb-surf'];
+const SPOT_SLOTS: Record<SpotId, number> = { 'amb-fire': 3, 'amb-whirlpool': 2, 'amb-maelstrom': 1, 'amb-surf': 2 };
 const SPOT_RANGE: Record<SpotId, { ref: number; max: number }> = {
   'amb-fire': { ref: 30, max: 260 },
   'amb-whirlpool': { ref: 45, max: 320 },
+  'amb-maelstrom': { ref: 90, max: 650 },
+  'amb-surf': { ref: 70, max: 480 },
 };
+const HULL_LOOPS: readonly HullLoopId[] = ['amb-rope', 'amb-wisp'];
 
 export class AmbienceController {
   private readonly beds = new Map<BedId, LoopVoice>();
   private readonly spots: Record<SpotId, LoopVoice[]>;
+  private readonly hull = new Map<HullLoopId, LoopVoice>();
+  private readonly hullTarget: Record<HullLoopId, number> = { 'amb-rope': 0, 'amb-wisp': 0 };
   private readonly spotScratch: SpotSource[] = [];
   private readonly spotPool: SpotSource[] = [];
   private spotUsed = 0;
@@ -118,10 +127,9 @@ export class AmbienceController {
 
   constructor(ctx: AudioContext, out: AudioNode, private readonly hooks: AmbienceHooks) {
     for (const id of BEDS) this.beds.set(id, new LoopVoice(ctx, out, false));
-    this.spots = {
-      'amb-fire': Array.from({ length: SPOT_SLOTS['amb-fire'] }, () => new LoopVoice(ctx, out, true)),
-      'amb-whirlpool': Array.from({ length: SPOT_SLOTS['amb-whirlpool'] }, () => new LoopVoice(ctx, out, true)),
-    };
+    const slots = (id: SpotId): LoopVoice[] => Array.from({ length: SPOT_SLOTS[id] }, () => new LoopVoice(ctx, out, true));
+    this.spots = { 'amb-fire': slots('amb-fire'), 'amb-whirlpool': slots('amb-whirlpool'), 'amb-maelstrom': slots('amb-maelstrom'), 'amb-surf': slots('amb-surf') };
+    for (const id of HULL_LOOPS) this.hull.set(id, new LoopVoice(ctx, out, false));
   }
 
   update(now: number, dt: number, screen: AppScreen, run: Readonly<RunState> | null, l: ListenerFrame): void {
@@ -131,9 +139,10 @@ export class AmbienceController {
     const targets: Record<BedId, number> = { 'amb-ocean': 0, 'amb-bow-wash': 0, 'amb-wind': 0, 'amb-rain': 0, 'amb-harbor': 0 };
     let washRate = 1, windCutoff = 2500;
     if (menu) {
-      targets['amb-ocean'] = 0.4;
-      targets['amb-harbor'] = screen === 'harbor' ? 0.85 : 0.55;
-      targets['amb-wind'] = 0.12;
+      // Menus: the music leads; the harbour bed sits under it.
+      targets['amb-ocean'] = 0.32;
+      targets['amb-harbor'] = screen === 'harbor' ? 0.6 : 0.42;
+      targets['amb-wind'] = 0.1;
     } else if (screen === 'results') {
       targets['amb-ocean'] = 0.35;
     } else if (inRun && run) {
@@ -171,14 +180,34 @@ export class AmbienceController {
       this.levels[id] = +target.toFixed(3);
     }
 
-    this.updateSpots('amb-fire', now, inRun ? run : null, l);
-    this.updateSpots('amb-whirlpool', now, inRun ? run : null, l);
+    for (const id of SPOT_IDS) this.updateSpots(id, now, inRun ? run : null, l);
+
+    const running = inRun && run?.status === 'running';
+    for (const id of HULL_LOOPS) {
+      const v = this.hull.get(id)!;
+      const target = running ? this.hullTarget[id] * this.hooks.cueGain(id) : 0;
+      if (!v.started) {
+        if (target <= 0) continue;
+        const buf = this.hooks.buffer(id);
+        if (!buf) continue;
+        v.start(buf, Math.random());
+      }
+      v.set(target, now, target > v.level ? 0.12 : 0.35);
+      this.levels[id] = +target.toFixed(3);
+    }
+  }
+
+  /** Loops on the player's hull (0..1): the harpoon line and the wisps draining it (watch.ts sets them each frame). */
+  setHullLoops(rope: number, wisp: number): void {
+    this.hullTarget['amb-rope'] = rope * 0.7;
+    this.hullTarget['amb-wisp'] = wisp * 0.65;
   }
 
   /** Stops every loop (e.g. when the audio engine is disposed). */
   dispose(): void {
     for (const v of this.beds.values()) v.dispose();
     for (const list of Object.values(this.spots)) for (const v of list) v.dispose();
+    for (const v of this.hull.values()) v.dispose();
   }
 
   private scheduleOneShots(run: Readonly<RunState>, l: ListenerFrame): void {
@@ -221,8 +250,27 @@ export class AmbienceController {
         if (burning) this.consider(out, e.id, e.x, e.z, 1, l, ref, range);
       }
       for (const h of run.hazards) if (h.alive && (h.kind === 'fire-patch' || h.kind === 'burning-wreck')) this.consider(out, -h.id, h.x, h.z, h.kind === 'burning-wreck' ? 1.1 : 0.8, l, ref, range);
-    } else {
+    } else if (kind === 'amb-whirlpool') {
       for (const h of run.hazards) if (h.alive && h.kind === 'whirlpool') this.consider(out, -h.id, h.x, h.z, 1, l, ref, range);
+    } else if (kind === 'amb-maelstrom') {
+      // Heard from its nearest edge (inside it, all around the ship); swells in and out with the vortex.
+      for (const h of run.hazards) {
+        if (!h.alive || h.kind !== 'maelstrom') continue;
+        const dx = l.x - h.x, dz = l.z - h.z, d = Math.hypot(dx, dz) || 1;
+        const k = Math.min(d, h.radius * 0.75) / d;
+        const env = Math.max(0, Math.min(1, h.age / 3, (h.ttl - h.age) / 3));
+        this.consider(out, -h.id, h.x + dx * k, h.z + dz * k, 1.2 * env, l, ref, range);
+      }
+    } else {
+      // A rogue wave's face: the nearest point along its crest, rising as it builds.
+      for (const h of run.hazards) {
+        if (!h.alive || h.kind !== 'rogue-wave') continue;
+        const sp = Math.hypot(h.vx, h.vz) || 1;
+        const px = h.vz / sp, pz = -h.vx / sp;
+        const lat = Math.max(-h.radius, Math.min(h.radius, (l.x - h.x) * px + (l.z - h.z) * pz));
+        const rise = Math.min(1, h.age / 2.5);
+        this.consider(out, -h.id, h.x + px * lat, h.z + pz * lat, 1.3 * rise, l, ref, range);
+      }
     }
     out.sort((a, b) => b.weight - a.weight);
     return out;

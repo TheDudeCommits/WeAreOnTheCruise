@@ -35,6 +35,8 @@ import { Sakuga } from './Sakuga';
 import { StateFx } from './StateFx';
 import { WorldEventFx } from './WorldEventFx';
 import { FoeFx } from './FoeFx';
+import { SmokeGovernor } from './SmokeGovernor';
+import { INK_HEX, telegraphPalette } from './core/palette';
 
 const QUALITY_SCALE: Record<QualityTier, number> = { low: 0.5, medium: 0.75, high: 1, ultra: 1.2 };
 
@@ -45,6 +47,16 @@ export interface FxStats {
   updateMs: number; updateAvgMs: number; updateMaxMs: number;
   /** Load-shedding multiplier (1 = full detail). */
   pressure: number;
+  /** Smoke rules: estimated screen coverage with / without the governor's thinning, the thinning, live puffs. */
+  smokeCoverage: number; smokeCoverageRaw: number; smokeThin: number; smokeLive: number; smokeMs: number;
+  /** Full Broadside set piece: manual volleys, balls tracked, balls landed on hulls, hit-stops. */
+  volley: { volleys: number; tracked: number; hits: number; hitStops: number };
+  /** Screen juice forwarded to the post stack: impact-frame requests so far and the last one's strength. */
+  impacts: number; lastImpact: number;
+  /** Damage numbers on screen now (after the declutter). */
+  numbersShown: number;
+  /** Totals since load: numbers the pre-round-2 rule would have spawned vs numbers shown (declutter ratio). */
+  numbersLegacy: number; numbersSpawned: number;
 }
 
 export class FxSystem implements RenderSystem {
@@ -73,9 +85,15 @@ export class FxSystem implements RenderSystem {
   private rateCel = 0;
   private rateGlow = 0;
   private pressure = 1;
+  /** Smoke rules: keeps smoke under ~6% of the screen (see SmokeGovernor). */
+  readonly smoke = new SmokeGovernor();
+  private readonly guardTmp = new THREE.Vector3();
   readonly stats: FxStats = {
     cel: 0, glow: 0, heads: 0, trails: 0, beams: 0, decals: 0, debris: 0, numbers: 0, clock: 0, spawned: 0,
     updateMs: 0, updateAvgMs: 0, updateMaxMs: 0, pressure: 1,
+    smokeCoverage: 0, smokeCoverageRaw: 0, smokeThin: 0, smokeLive: 0, smokeMs: 0,
+    volley: { volleys: 0, tracked: 0, hits: 0, hitStops: 0 },
+    impacts: 0, lastImpact: 0, numbersShown: 0, numbersLegacy: 0, numbersSpawned: 0,
   };
 
   constructor() {
@@ -95,12 +113,14 @@ export class FxSystem implements RenderSystem {
     this.kit = {
       cel, glow, heads, trails, beams, ropes, decals, debris, props, numbers, walls, juice: this.juice, flotsam: new Flotsam(),
       water: new WaterSampler(), ocean: null, ships: null, camX: 0, camY: 100, camZ: 0, focusX: 0, focusZ: 0, windX: 0, windZ: 0, clock: 0, q: 1, spawned: 0,
+      tele: telegraphPalette('off'),
     };
     this.sakuga = new Sakuga(this.kit);
     this.worldEvents = new WorldEventFx(this.kit, this.sakuga);
     this.foes = new FoeFx(this.kit, this.sakuga);
     this.events = new EventFx(this.kit, this.sakuga);
     this.state = new StateFx(this.kit, this.sakuga, this.events);
+    this.stats.volley = this.events.volleyStats;
     debris.splash = (x, z, size) => this.sakuga.plop(x, z, size);
     this.group.name = 'fx';
     this.group.add(decals.mesh, cel.mesh, heads.mesh, trails.mesh, glow.mesh, beams.mesh, ropes.mesh, walls.mesh, debris.mesh, props.group, numbers.mesh, this.worldEvents.group);
@@ -112,6 +132,8 @@ export class FxSystem implements RenderSystem {
     host.scene.add(this.group);
     // QA handle (dev builds only): FX counters and timings for scripts/perf probes.
     if (import.meta.env.DEV) (globalThis as { __CRUISE_FX__?: FxSystem }).__CRUISE_FX__ = this;
+    // Counters only (every build): smoke coverage and FX timings for the evidence probes.
+    (globalThis as { __CRUISE_FX_STATS__?: FxStats }).__CRUISE_FX_STATS__ = this.stats;
   }
 
   update(ctx: FrameContext): void {
@@ -156,6 +178,9 @@ export class FxSystem implements RenderSystem {
     k.debris.beginFrame();
     k.decals.setWaves(ctx.time, ctx.sea.waveScale);
     k.numbers.enabled = ctx.settings.damageNumbers;
+    // Telegraph colours + hatch for the colour-vision setting (FLOW adds the option to the settings UI).
+    k.tele = telegraphPalette(ctx.settings.colorBlind);
+    k.decals.setTelegraphStyle(k.tele.hatch, INK_HEX);
 
     this.events.tick(dt);
     if (run) {
@@ -178,9 +203,19 @@ export class FxSystem implements RenderSystem {
     k.walls.endFrame();
     k.debris.endFrame();
     this.juice.flush(ctx.services, ctx.dt);
+    if (this.juice.last.impact > 0) { this.stats.impacts++; this.stats.lastImpact = this.juice.last.impact; }
+    this.stats.numbersShown = k.numbers.visibleCount();
+    this.stats.numbersLegacy = k.numbers.counts.legacy;
+    this.stats.numbersSpawned = k.numbers.counts.shown;
     this.updatePressure(ctx.dt);
+    // Smoke rules: coverage governor (thinning is applied by the cel shader next frame) and hull guards.
+    if (this.camera && run) this.smoke.update(k.cel.pool, this.clock, this.camera, ctx.dt);
+    this.shared.uSmokeThin.value = run ? this.smoke.thin : 0;
+    this.updateGuards(ctx);
 
     const st = this.stats;
+    st.smokeCoverage = this.smoke.coverage; st.smokeCoverageRaw = this.smoke.coverageRaw; st.smokeThin = this.smoke.thin;
+    st.smokeLive = this.smoke.live; st.smokeMs = this.smoke.ms;
     st.clock = this.clock; st.spawned = k.spawned;
     st.cel = k.cel.pool.immediateCount; st.glow = k.glow.pool.immediateCount; st.heads = k.heads.pool.immediateCount;
     st.trails = k.trails.pool.immediateCount; st.beams = k.beams.pool.immediateCount; st.decals = k.decals.pool.immediateCount;
@@ -207,6 +242,41 @@ export class FxSystem implements RenderSystem {
     const target = Math.max(0.3, Math.min(1, celOk, glowOk));
     this.pressure += (target - this.pressure) * (target < this.pressure ? 0.5 : 0.05);
     this.stats.pressure = this.pressure;
+  }
+
+  /**
+   * Hulls smoke may never cover opaquely (the cel shader erodes puffs in front of them into wisps): the hero, sized by
+   * its measured mast height, then up to three surfaced bosses, nearest first.
+   */
+  private updateGuards(ctx: FrameContext): void {
+    const g = this.shared.uGuards.value;
+    for (let i = 0; i < g.length; i++) g[i]!.set(0, 0, 0, 0);
+    const run = ctx.run;
+    if (!run) return;
+    const p = run.player;
+    const water = this.kit.water;
+    if (p.alive) {
+      const wy = water.height(p.x, p.z);
+      let h = p.length * 0.6;
+      if (ctx.services.ships.anchor(0, 'mast', this.guardTmp)) h = Math.max(6, this.guardTmp.y - wy);
+      g[0]!.set(p.x, wy + h * 0.35, p.z, Math.max(p.length * 0.5, h * 0.5) * 1.05);
+    }
+    let n = 1;
+    let last = -1;
+    while (n < g.length) {
+      // selection by distance without sorting: take the nearest boss farther than the previous pick
+      let best = -1, bestD = Infinity;
+      for (let i = 0; i < run.bosses.length; i++) {
+        const b = run.bosses[i]!;
+        if (b.life !== 'alive' || b.submerged > 0.7) continue;
+        const d = Math.hypot(b.x - p.x, b.z - p.z) + i * 1e-6;
+        if (d < bestD && d > last) { bestD = d; best = i; }
+      }
+      if (best < 0) break;
+      const b = run.bosses[best]!;
+      g[n++]!.set(b.x, water.height(b.x, b.z) + b.length * 0.1, b.z, b.length * 0.5);
+      last = bestD;
+    }
   }
 
   private updateUniforms(ctx: FrameContext): void {
@@ -249,6 +319,7 @@ export class FxSystem implements RenderSystem {
     this.state.reset();
     this.worldEvents.reset();
     this.foes.reset();
+    this.smoke.reset();
   }
 
   dispose(): void {

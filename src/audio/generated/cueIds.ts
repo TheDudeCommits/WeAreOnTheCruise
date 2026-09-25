@@ -3,21 +3,28 @@ export const CUE_IDS = [
   'ui-hover', 'ui-click', 'ui-back', 'ui-confirm', 'ui-error', 'ui-open', 'ui-close', 'ui-tick', 'ui-transition',
   'card-hover', 'card-select', 'reroll', 'weapon-new', 'weapon-upgrade', 'overdrive', 'passive-upgrade',
   'skill-ready', 'ultimate-ready', 'level-up', 'set-sail', 'stinger-victory', 'stinger-defeat',
-  'stinger-boss-defeated', 'cannon-near', 'cannon-far', 'broadside-ripple', 'heavy-shot', 'bow-chaser', 'swivel-shot',
-  'mortar-launch', 'chain-rattle', 'mortar-whistle', 'rocket-launch', 'harpoon-throw', 'harpoon-hit', 'lightning-zap',
-  'lance', 'mine-drop', 'barrel-drop', 'fuse', 'flare', 'water-bolt', 'whirlpool-cast', 'reload', 'hit-wood',
-  'hit-wood-light', 'hit-wood-heavy', 'splinters', 'sail-rip', 'hit-metal', 'hit-flesh', 'hit-rock', 'splash-small',
-  'splash-large', 'crit', 'ram-crash', 'collide-ship', 'explosion-small', 'explosion-large', 'explosion-powder',
-  'explosion-water', 'shockwave', 'fire-burst', 'wave-roar', 'thunder-near', 'fire-ignite', 'thunder-far',
-  'ship-break', 'ship-sink', 'hull-creak', 'gull', 'ship-bell', 'alarm-bell', 'warning', 'player-hit', 'brace',
-  'brace-hit', 'parry', 'boost', 'heal', 'shield-up', 'dash-whoosh', 'dive', 'crew-cheer', 'ultimate-sting',
-  'war-horn', 'boss-horn', 'serpent-roar', 'elite-spawn', 'metal-groan', 'coin-copper', 'coin-silver', 'coin-gold',
-  'doubloon', 'chest-open', 'compass', 'treasure-sparkle', 'repair', 'amb-ocean', 'amb-bow-wash', 'amb-wind',
-  'amb-rain', 'amb-fire', 'amb-whirlpool', 'amb-harbor',
+  'stinger-boss-defeated', 'cannon-near', 'volley-small', 'volley-mid', 'volley-big', 'volley-full', 'cannon-far',
+  'broadside-ripple', 'heavy-shot', 'bow-chaser', 'swivel-shot', 'swivel-burst', 'mortar-launch', 'chain-rattle',
+  'mortar-whistle', 'rocket-launch', 'rocket-salvo', 'harpoon-throw', 'harpoon-hit', 'lightning-zap', 'lance',
+  'mine-drop', 'barrel-drop', 'fuse', 'flare', 'water-bolt', 'whirlpool-cast', 'reload', 'hit-wood', 'hit-wood-light',
+  'hit-wood-heavy', 'splinters', 'sail-rip', 'hit-metal', 'hit-flesh', 'hit-rock', 'splash-small', 'splash-large',
+  'crit', 'ram-crash', 'collide-ship', 'explosion-small', 'explosion-large', 'explosion-powder', 'explosion-water',
+  'shockwave', 'fire-burst', 'wave-roar', 'thunder-near', 'fire-ignite', 'thunder-far', 'ship-break', 'ship-sink',
+  'hull-creak', 'gull', 'ship-bell', 'alarm-bell', 'warning', 'player-hit', 'brace', 'brace-hit', 'parry', 'boost',
+  'heal', 'shield-up', 'dash-whoosh', 'dive', 'crew-cheer', 'ultimate-sting', 'war-horn', 'boss-horn', 'serpent-roar',
+  'elite-spawn', 'metal-groan', 'coin-copper', 'coin-silver', 'coin-gold', 'doubloon', 'chest-open', 'compass',
+  'treasure-sparkle', 'repair', 'marked', 'flare-pop', 'flare-hang', 'steam-whistle', 'rope-snap', 'wisp-latch',
+  'wisp-burst', 'galleon-rise', 'galleon-breach', 'shield-shatter', 'vamp-siphon', 'smoke-pot', 'kraken-squeeze',
+  'ink-splash', 'lava-launch', 'coin-shower', 'salvage-haul', 'beacon-bell', 'wind-gust', 'momentum-swell',
+  'momentum-luff', 'boost-light', 'bark-fire', 'bark-brace', 'bark-boss', 'bark-sink', 'bark-level', 'bark-water',
+  'bark-harpoon', 'bark-kraken', 'bark-grab', 'bark-whirlpool', 'bark-blockade', 'bark-victory', 'bark-guns',
+  'bark-marked', 'bark-wisps', 'bark-wave', 'bark-ghosts', 'bark-eruption', 'bark-treasure', 'bark-rising',
+  'bark-captain-down', 'bark-rider', 'bark-beacon', 'bark-elite', 'amb-ocean', 'amb-bow-wash', 'amb-wind', 'amb-rain',
+  'amb-fire', 'amb-whirlpool', 'amb-harbor', 'amb-rope', 'amb-wisp', 'amb-maelstrom', 'amb-surf',
 ] as const;
 
 export type CueId = (typeof CUE_IDS)[number];
 
-export const MUSIC_KEYS = ['title', 'harbor', 'run-calm', 'run-combat', 'run-horde', 'boss', 'boss-final'] as const;
+export const MUSIC_KEYS = ['title', 'harbor', 'run-calm', 'run-combat', 'run-horde', 'run-calm-storm', 'run-combat-storm', 'run-horde-storm', 'run-calm-gloam', 'run-combat-gloam', 'run-horde-gloam', 'boss', 'boss-final'] as const;
 
 export type MusicKey = (typeof MUSIC_KEYS)[number];

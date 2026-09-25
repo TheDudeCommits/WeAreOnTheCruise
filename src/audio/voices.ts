@@ -95,7 +95,7 @@ export class VoicePool {
     const now = this.ctx.currentTime;
     const list = this.voices[category];
     this.lastDrop = null;
-    if (this.total(now) >= MAX_VOICES && p.priority < 60) { this.drops['global-cap']++; this.lastDrop = 'global-cap'; return false; }
+    if (!CATEGORIES[category].reserved && this.total(now) >= MAX_VOICES && p.priority < 60) { this.drops['global-cap']++; this.lastDrop = 'global-cap'; return false; }
     let voice: Voice | null = null;
     for (const v of list) if (!v.busy(now)) { voice = v; break; }
     if (!voice) {

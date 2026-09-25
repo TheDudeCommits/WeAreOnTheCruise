@@ -91,6 +91,8 @@ export const OCEAN_FRAGMENT = /* glsl */ `
 precision highp float;
 ${COMMON}
 uniform sampler2D uPersist;
+uniform sampler2D uCoverage;     // visible-foam coverage of the field (R = all, G = persistent), mipmapped
+uniform vec4 uStats;             // QA stats view: centre.xz, radius (m), rim-brightness reference
 uniform float uRtTexel;          // 1 / resolution
 uniform float uRtWorldTexel;     // metres per texel
 uniform sampler2D uShore;
@@ -118,6 +120,7 @@ uniform vec3 uBiolum;
 uniform vec4 uLookA;             // glint, sheen, spec power, detail strength
 uniform vec4 uLookB;             // cap lo, cap hi, reflectivity, sss strength
 uniform vec4 uLookC;             // cloud patch, night, flash, sun level
+uniform vec4 uLookD;             // dusk warmth, glitter path spread (σ²), glint fade distance (m), 0
 uniform float uAmpSum;
 uniform float uCapNorm;          // sum of q*k*A: max horizontal compression (normalises the Jacobian)
 uniform float uTime;             // wrapped render clock (surf animation)
@@ -185,10 +188,13 @@ void main() {
   vec4 tr = vec4(0.0);
   vec4 pr = vec4(0.0);
   float lift = 0.0;
+  float crowd = 0.0;
   if (rtEdge > 0.0) {
     vec4 trRaw = texture(uTransient, vRtUv);
     pr = texture(uPersist, vRtUv) * rtEdge;
     tr = trRaw * rtEdge;
+    // Neighbourhood foam coverage (~12-24 m, smoothed over time): high = a pile-up, drawn as turquoise + lace.
+    crowd = textureLod(uCoverage, vRtUv, 1.0).b * rtEdge;
     float h0 = trRaw.r - trRaw.g;
     lift = h0 * rtEdge;
     if (pix < 4.0) {
@@ -297,6 +303,9 @@ void main() {
   float F = min(0.02 + 0.98 * fx2 * fx2 * fx, 0.58);
   vec3 refl = mix(uHorizon, uSky, smoothstep(0.0, 0.45, Rr.y));
   refl = mix(refl, uSky, 0.3);
+  // Dusk seen from the steep tactical pitch: the water reflects the zenith, the darkest and most violet part of the
+  // evening sky (the round-1 magenta sheet). Tint it from the warm horizon and haze instead.
+  refl = mix(refl, mix(uHorizon, uFogColor, 0.35), uLookD.x * smoothstep(0.3, 0.75, V.y) * 0.6);
   refl *= 1.0 + (vCloud - 0.5) * uLookC.x * 1.4;
   refl += vec3(0.85, 0.9, 1.0) * uLookC.z * 0.9;
   col = mix(col, refl, clamp(F * uLookB.z * (1.0 - shallowAmt * 0.35), 0.0, 1.0));
@@ -317,6 +326,7 @@ void main() {
   float ridgeDist = abs(ridgeS) / max(-ridgeC, 1e-5);
   float ridgeW = 0.32 + 0.45 * uWind.z + 1.4 * uWind.w;
   float ridge = (1.0 - smoothstep(ridgeW * 0.45, ridgeW + pix * 1.2, ridgeDist)) * step(ridgeC, 0.0);
+  // At night only the tallest crests break (height-keyed), as thin moonlit strokes (see xC).
   float crestGate = smoothstep(uLookB.x, uLookB.y, clamp(hN, 0.0, 1.2) * 0.85 + compress * 0.45);
   float lineCap = ridge * crestGate * (1.0 - smoothstep(0.7, 2.2, pix));
   // Storms add broad breaking patches on compressed crests, streaked along the wind.
@@ -338,15 +348,22 @@ void main() {
   float surf = smoothstep(0.7, 0.9, surfPhase) * (1.0 - smoothstep(3.0, 34.0, shoreD)) * smoothstep(0.32, 0.6, fE.b + 0.08);
   float covS = max(coast, surf * 0.9) * shoreValid;
   float covE = max(covI, covS);
+  // Saturation: where the neighbourhood is mostly foam, the white collapses onto the lace network (the ridges of
+  // the Worley network) and the holes fill with bright turquoise aeration. A pile-up reads as churned water with
+  // lace on top, never a flat white slab with dot holes.
+  float sat = smoothstep(0.3, 0.62, crowd);
+  float covW = min(covE, mix(1.6, 0.3, sat));
   // Offset keeps zero coverage strictly foam-free (blob maxima never pop up as dots).
   // Large-scale patch noise varies lace density so the 26 m shape tile never reads as a repeating pattern.
-  float xI = covE * 1.12 - (1.0 - fE.r) - 0.07 + (vCloud - 0.5) * 0.22 * smoothstep(0.1, 0.4, covE);
-  float xC = covC - 0.45 + (fL.r - 0.5) * 0.3;
+  float xI = covW * 1.12 - (1.0 - fE.r) - 0.07 + (vCloud - 0.5) * 0.22 * smoothstep(0.1, 0.4, covW);
+  // By day the crest foam is broken up by the foam network; at night the network's round holes read as leopard
+  // spots on dark water, so crests become clean wind-aligned strokes (segment breakup only).
+  float xC = covC - 0.45 + (fL.r - 0.5) * 0.3 * (1.0 - uLookC.y);
   // Sharp, fwidth-antialiased shapes up close; at distance (sub-pixel shapes) converge to the expected foam
   // fraction for the coverage instead of widening the threshold (which would invent foam from nothing).
   float aaI = fwidth(xI) * 0.85 + 0.015;
   float aaC = fwidth(xC) * 0.85 + 0.015;
-  float solidI = mix(smoothstep(-aaI, aaI, xI), clamp(covE * 1.15 - 0.12, 0.0, 1.0), farBlur) * smoothstep(0.0, 0.07, covE);
+  float solidI = mix(smoothstep(-aaI, aaI, xI), clamp(covW * 1.15 - 0.12, 0.0, 1.0), farBlur) * smoothstep(0.0, 0.07, covE);
   float solidC = mix(smoothstep(-aaC, aaC, xC), clamp(covC * 0.9 - 0.2, 0.0, 1.0), farBlur) * smoothstep(0.02, 0.12, covC);
   float edgeI = max(smoothstep(-0.15 - aaI, -0.15 + aaI, xI) - solidI, 0.0) * smoothstep(0.08, 0.3, covE) * (1.0 - farBlur);
   float edgeC = max(smoothstep(-0.12 - aaC, -0.12 + aaC, xC) - solidC, 0.0) * smoothstep(0.2, 0.5, covC) * (1.0 - farBlur);
@@ -358,47 +375,81 @@ void main() {
   // Two-tone cel foam: faces turned away from the sun (wave backs, the shadow side of the bow wave) take the
   // blue-grey shadow tone, which gives raised foam its volume.
   float foamLitK = smoothstep(-0.2, -0.08, dot(Nm, L) - L.y);
-  vec3 foamLit = mix(uFoamShadow * 1.18, uFoamColor * mix(vec3(1.0), uSunColor, 0.22), foamLitK) * mix(0.55, 1.0, uLookC.w);
+  // Moonlit foam stays dim: at night a wake is a soft grey-blue trace, not a milky band (the glow marks fresh water).
+  vec3 foamLit = mix(uFoamShadow * 1.18, uFoamColor * mix(vec3(1.0), uSunColor, 0.22), foamLitK) * mix(0.55, 1.0, uLookC.w) * mix(1.0, 0.6, uLookC.y);
+  // Aerated churn under a pile-up's lace: turquoise, lighter than the body, darker than foam.
+  vec3 churn = mix(uSSS, uShallow, 0.45) * (0.5 + 0.5 * uLookC.w);
+  col = mix(col, churn, sat * smoothstep(0.15, 0.45, covI) * 0.62);
   col = mix(col, uFoamShadow * mix(0.6, 1.0, uLookC.w), foamEdge * 0.8);
   col = mix(col, foamLit, max(foamSolid, lace));
 
-  // ── Sun glints (HDR, bloom-ready) and the broad sun/moon path ──
+  // ── Sun glitter path, glints (HDR, bloom-ready) and the broad sun/moon path ──
+  // The path is the water whose waves can tilt far enough to mirror the sun into the eye (half-vector tilt within
+  // the slope spread; wider at dusk so a low sun still draws a road at the tactical pitch). Glints live only inside
+  // it: they cluster into a glittering road toward the sun instead of sparkling over the whole sea.
+  vec3 Hs = normalize(L + V);
+  float path = exp(-(1.0 - Hs.y) / max(uLookD.y, 1e-3)) * sunUp;
   float rl = max(dot(R, L), 0.0);
   float spec = pow(rl, Peff);
   float aaS = fwidth(spec) + 0.05;
   // Toksvig energy term: where filtered ripples widen the lobe, glints dim instead of flooding the far field.
   float toksvig = (1.0 + Peff) / (1.0 + P);
-  float glint = smoothstep(0.55 - aaS, 0.55 + aaS, spec) * toksvig * (1.0 - smoothstep(0.6, 2.2, pix));
+  // Fade with distance (sub-pixel glints crawl) and at a steep pitch (top-down sparkle reads as noise).
+  float gFade = (1.0 - smoothstep(uLookD.z * 0.45, uLookD.z, dist)) * (1.0 - smoothstep(0.6, 2.2, pix))
+    * mix(1.0, 0.4, smoothstep(0.62, 0.92, V.y));
+  float glint = smoothstep(0.55 - aaS, 0.55 + aaS, spec) * toksvig * gFade * smoothstep(0.12, 0.55, path);
   // Broad sun path by day; at night a narrower moon path broken up by the ripples.
   float sheen = pow(max(dot(Rr, L), 0.0), 36.0);
   if (uLookC.y > 0.01) {
     float sheenNight = pow(max(dot(R, L), 0.0), 140.0) * 1.6 + pow(max(dot(Rr, L), 0.0), 60.0) * 0.25;
     sheen = mix(sheen, sheenNight, uLookC.y);
   }
+  // At dusk the road itself glows warm, so a low sun lays a golden path even when no facet mirrors it exactly.
+  sheen = max(sheen, path * uLookD.x * 0.3);
   sheen *= uLookA.y;
   // Sheen is tinted toward the horizon so a warm sun does not turn blue water lavender; glints stay sun-coloured.
   vec3 sheenCol = mix(uSunColor, uHorizon * 1.15, 0.45);
   col += (uSunColor * glint * uLookA.x + sheenCol * sheen) * sunUp * (1.0 - foamSolid * 0.85);
 
-  // ── Night: bioluminescent wake and crests ──
-  // The glow lives where the water was just stirred and the foam is thin (wake lines, lace, edges, the transient
-  // layer); saturated foam fields (a melee's pile-up) only glimmer, so a crowd never turns the sea into a lit carpet.
-  float freshSolid = solidI * (1.0 - smoothstep(0.35, 0.9, covE));
-  col += uBiolum * (freshSolid * 1.5 + solidI * 0.22 + lace * 1.1 + max(edgeI, 0.0) * 0.8 + tr.a * 0.45 + solidC * 0.25) * 1.35;
+  // ── Night: bioluminescence only where the water was just stirred ──
+  // Keyed on fresh foam (persistent B decays in under a second) and the transient layer (bow waves, Kelvin arms,
+  // impact rings): fresh wake lines and impacts glow, a melee's old pile-up and the crests never do. Crowded water
+  // glows less again, and the peak stays well under the enemy faction rim (materials/celMaterial.ts).
+  float fresh = smoothstep(0.08, 0.45, max(pr.b, tr.b));
+  float glowShape = max(max(solidI, lace), max(edgeI, 0.0) * 0.8);
+  float glow = (glowShape * fresh * 0.9 + tr.a * 0.22) * (1.0 - 0.6 * sat);
+  col += uBiolum * glow;
 
   // ── Aerial perspective (matches the linear scene fog written by the sky) ──
   float fogF = smoothstep(uFog.x, uFog.y, vViewDepth);
   col = mix(col, uFogColor, fogF);
 
+  float alpha = 1.0;
   if (uDebug > 0.5) {
     if (uDebug < 1.5) col = vec3(tr.r, tr.g, tr.b);
-    else if (uDebug < 2.5) col = vec3(pr.r, pr.g, 0.0);
+    else if (uDebug < 2.5) col = vec3(pr.r, pr.g, pr.b);
     else if (uDebug < 3.5) col = vec3(shoreD / uShoreMax);
     else if (uDebug < 4.5) col = vec3(solidI, solidC, lace);
     else if (uDebug < 5.5) col = vec3(glint * toksvig, sheen, max(edgeI, 0.0));
-    else col = vec3(covI, covS, covC);
+    else if (uDebug < 6.5) col = vec3(covI, covS, covC);
+    else if (uDebug < 7.5) col = vec3(crowd, sat, glow);
+    else {
+      // QA stats views (OceanSystem.screenStats), A = 1 inside the stats disc, 0.5 outside (0 = not water).
+      //   8: R = visible white foam, G = crest foam, B = glow relative to the rim reference;
+      //   9: R = sun/moon highlights (glints + sheen) relative to the rim reference, G = glints alone.
+      float foamVis = clamp(max(foamSolid, lace) + foamEdge * 0.35, 0.0, 1.0);
+      float glowL = dot(uBiolum * glow, vec3(0.2126, 0.7152, 0.0722));
+      vec3 hl = (uSunColor * glint * uLookA.x + sheenCol * sheen) * sunUp * (1.0 - foamSolid * 0.85);
+      float hlL = dot(hl, vec3(0.2126, 0.7152, 0.0722));
+      float glL = dot(uSunColor * glint * uLookA.x * sunUp, vec3(0.2126, 0.7152, 0.0722));
+      if (uDebug < 8.5) col = vec3(foamVis, solidC, clamp(glowL / max(uStats.w, 1e-3), 0.0, 1.0));
+      else col = vec3(clamp(hlL / max(uStats.w, 1e-3), 0.0, 1.0), clamp(glL / max(uStats.w, 1e-3), 0.0, 1.0), 0.0);
+      alpha = distance(vWorld.xz, uStats.xy) < uStats.z ? 1.0 : 0.5;
+      gl_FragColor = vec4(col, alpha);
+      return;
+    }
   }
-  gl_FragColor = vec4(col, 1.0);
+  gl_FragColor = vec4(col, alpha);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }

@@ -49,6 +49,28 @@
   --f-ui: 'Nunito', 'Segoe UI', system-ui, sans-serif;
   --f-sym: 'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols 2', sans-serif;
 
+  --ease-pop: cubic-bezier(.2, 1.4, .35, 1);
+  --ease-out: cubic-bezier(.2, .9, .2, 1);
+
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--white);
+  font-family: var(--f-ui);
+  font-size: var(--fs-16);
+  font-weight: 700;
+  line-height: 1.25;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Size tokens follow --u. The in-run HUD re-derives them under Settings.hudScale (--hud-scale, 0.8–1.2). */
+.cr-hud { --u: calc(clamp(0.72px, min(100vw / 1600, 100vh / 900), 1.7px) * var(--hud-scale, 1)); }
+.cr-ui, .cr-hud {
   --fs-12: max(11px, calc(12 * var(--u)));
   --fs-13: max(11.5px, calc(13 * var(--u)));
   --fs-14: max(12px, calc(14 * var(--u)));
@@ -68,23 +90,6 @@
   --stroke-m: calc(5 * var(--u));
   --stroke-l: calc(8 * var(--u));
   --stroke-xl: calc(12 * var(--u));
-  --ease-pop: cubic-bezier(.2, 1.4, .35, 1);
-  --ease-out: cubic-bezier(.2, .9, .2, 1);
-
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  overflow: hidden;
-  pointer-events: none;
-  color: var(--white);
-  font-family: var(--f-ui);
-  font-size: var(--fs-16);
-  font-weight: 700;
-  line-height: 1.25;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 
 :where(.cr-ui) *, :where(.cr-ui) *::before, :where(.cr-ui) *::after { box-sizing: border-box; }

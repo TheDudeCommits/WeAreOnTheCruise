@@ -1,4 +1,5 @@
 /** Ship stat bars derived from the content table (normalised against the whole fleet, never hand-typed). */
+import { knots } from '../core/format';
 import { CONTENT } from '../../game/content';
 import { SHIP_IDS } from '../../game/ids';
 import type { ShipDef } from '../../game/types';
@@ -9,7 +10,7 @@ export interface ShipStatDef { key: string; label: string; glyph: GlyphId; get(s
 export const SHIP_STATS: readonly ShipStatDef[] = [
   { key: 'hull', label: 'Hull', glyph: 'shield', get: (s) => s.hp, fmt: (v) => `${v}` },
   { key: 'armor', label: 'Armour', glyph: 'anchor', get: (s) => s.armor, fmt: (v) => `${v}` },
-  { key: 'speed', label: 'Speed', glyph: 'sail', get: (s) => s.maxSpeed, fmt: (v) => `${Math.round(v * 1.944)} kn` },
+  { key: 'speed', label: 'Speed', glyph: 'sail', get: (s) => s.maxSpeed, fmt: (v) => `${knots(v)} kn` },
   { key: 'turn', label: 'Turning', glyph: 'wheel', get: (s) => s.turnRate, fmt: (v) => `${Math.round((v * 180) / Math.PI)}°/s` },
   { key: 'guns', label: 'Broadside', glyph: 'cannon', get: (s) => s.broadsideGuns, fmt: (v) => `${v} guns` },
 ];

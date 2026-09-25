@@ -22,10 +22,36 @@ import { FOG_LOOK, NIGHT_FOG_LOOK, STORM_LOOK, createLook, lerpLook, lookForHour
 import { RainField } from './rain';
 
 const UP = new THREE.Vector3(0, 1, 0);
+/** Enemy albedo lift at full night: +0.3 EV. */
+const NIGHT_LIFT = Math.pow(2, 0.3);
+/** Shadow-fit probe points in NDC, x/y pairs (screen corners + a point above centre). */
+const SHADOW_CORNERS = [-1, -1, 1, -1, 1, 1, -1, 1, 0, 0.35] as const;
 
 function smoothstep(a: number, b: number, x: number): number {
   const t = THREE.MathUtils.clamp((x - a) / (b - a), 0, 1);
   return t * t * (3 - 2 * t);
+}
+
+const LANTERN_COLOR = new THREE.Color(0xffa860);
+const GOLDEN_FILL = new THREE.Color().setRGB(1.0, 0.7, 0.42, THREE.LinearSRGBColorSpace);
+/** Reach of the focus fill (m). */
+export const HERO_FILL_DISTANCE = 60;
+/** Peak dusk fill intensity (tuned with output/r2-sealight/hero-exposure.ts: hero ≥ 0.9 of noon over 17.6–19.9 h). */
+const DUSK_FILL = 9.0;
+
+/**
+ * Warm fill light around the focus (the hero's own lanterns): golden while the sun sets (it keeps the hero near its
+ * noon exposure through golden hour and dusk instead of sinking into a purple silhouette), lantern orange at night.
+ * Writes the colour, returns the intensity.
+ */
+export function heroFill(hour: number, night: number, fog: number, out: THREE.Color): number {
+  const h = ((hour % 24) + 24) % 24;
+  // Rises through golden hour, peaks in blue hour (sun down, night not yet full), hands over to the night lantern.
+  const dusk = h >= 12 ? smoothstep(17.0, 19.4, h) * (1 - smoothstep(20.0, 21.0, h)) : 0;
+  const nightK = night * (1 - fog * 0.3);
+  const duskK = dusk;
+  out.copy(GOLDEN_FILL).lerp(LANTERN_COLOR, nightK / Math.max(1e-4, nightK + duskK));
+  return Math.max(5.5 * nightK, DUSK_FILL * duskK);
 }
 
 /** 0 = day, 1 = full night, from the hour. */
@@ -174,6 +200,9 @@ export class SkySystem implements RenderSystem {
     cs.z = 1 / 1500;
     cs.w = 0.5 * (1 - night) * (1 - fogAmount) * (1 - storm * 0.85);
     u.uCruiseCloudCover.value = THREE.MathUtils.clamp(0.26 + breezy * 0.16 + storm * 0.3, 0, 0.9);
+    // Faction light (materials/faction.ts): enemy rims and the albedo lift come up at night, in storms and in fog.
+    const factionRim = Math.max(night, storm * 0.85, fogAmount * 0.7);
+    u.uCruiseFactionRim.value.set(factionRim, 1 + (NIGHT_LIFT - 1) * Math.max(night, storm * 0.7), 0.6, 0);
 
     // ── Lights ──
     const focusX = ctx.focus.x, focusZ = ctx.focus.z;
@@ -182,10 +211,9 @@ export class SkySystem implements RenderSystem {
     this.hemi.color.copy(look.zenith).lerp(this.tmpColor.setRGB(1, 1, 1), 0.55);
     this.hemi.groundColor.copy(look.shadow);
     this.hemi.intensity = 0.9 + 0.3 * (1 - night);
-    // A subtle warm pool around the focus at night (ship lanterns); SHIPS adds the emissive lanterns themselves.
-    const lanternOn = night * (1 - fogAmount * 0.3);
-    this.lantern.intensity = 5.5 * lanternOn;
-    this.lantern.distance = 60;
+    // A warm pool around the focus: golden fill through dusk, ship lanterns at night (SHIPS adds the emissive lanterns).
+    this.lantern.intensity = heroFill(hour, night, fogAmount, this.lantern.color);
+    this.lantern.distance = HERO_FILL_DISTANCE;
     this.lantern.visible = true;
     this.lantern.position.set(focusX, 22, focusZ);
     this.fitShadow(focusX, focusZ);
@@ -283,9 +311,8 @@ export class SkySystem implements RenderSystem {
     const reach = this.profile.shadowReach;
     const pts = this.footprint;
     let n = 0;
-    const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1], [0, 0.35]] as const;
-    for (const [x, y] of corners) {
-      this.ndc.set(x, y, 0.5).unproject(cam);
+    for (let c = 0; c < SHADOW_CORNERS.length; c += 2) {
+      this.ndc.set(SHADOW_CORNERS[c]!, SHADOW_CORNERS[c + 1]!, 0.5).unproject(cam);
       const dir = this.ndc.sub(cam.position).normalize();
       let t = reach * 2;
       if (dir.y < -1e-4) t = Math.min(t, -cam.position.y / dir.y);

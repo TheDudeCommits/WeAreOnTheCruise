@@ -69,10 +69,7 @@
 .cr-stat.is-bounty small { font: 900 var(--fs-12)/1 var(--f-ui); letter-spacing: .16em; text-transform: uppercase; color: #ffb0a6; }
 
 .cr-eta {
-  position: absolute;
-  left: 50%;
-  top: calc(80 * var(--u));
-  transform: translateX(-50%);
+  position: relative;
   display: none;
   align-items: center;
   gap: calc(8 * var(--u));
@@ -90,10 +87,12 @@
 .cr-eta b { font: 400 var(--fs-24)/1 var(--f-comic); color: var(--white); font-variant-numeric: tabular-nums; }
 .cr-eta__icon .cr-glyph { width: calc(20 * var(--u)); height: calc(20 * var(--u)); color: var(--red); }
 .cr-eta.is-urgent { animation: cr-urgent .6s ease-in-out infinite; }
-@keyframes cr-urgent { 50% { background: rgba(160, 20, 20, .9); transform: translateX(-50%) scale(1.06); } }
+@keyframes cr-urgent { 50% { background: rgba(160, 20, 20, .9); transform: scale(1.06); } }
 
 /* ── Boss bar ── */
-.cr-boss { position: absolute; left: 50%; top: calc(82 * var(--u)); transform: translateX(-50%); width: calc(660 * var(--u)); display: none; align-items: center; gap: calc(12 * var(--u)); z-index: 2; }
+/* Top-centre stack: boss ETA pill · boss bar · world-event tracker (flex column, so they can never overlap). */
+.cr-hud__tc { position: absolute; left: 50%; top: calc(80 * var(--u)); transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: calc(8 * var(--u)); z-index: 2; }
+.cr-boss { position: relative; width: calc(660 * var(--u)); display: none; align-items: center; gap: calc(12 * var(--u)); }
 .cr-boss.is-on { display: flex; }
 .cr-boss__emblem { flex: none; display: grid; place-items: center; width: calc(66 * var(--u)); height: calc(66 * var(--u)); border-radius: 50%; background: radial-gradient(circle at 40% 35%, #ff6a5a, #9c1512 70%); border: calc(4 * var(--u)) solid var(--ink); box-shadow: 0 0 0 calc(3 * var(--u)) #ffb0a6, 0 calc(4 * var(--u)) 0 var(--ink); color: var(--white); }
 .cr-boss__emblem .cr-glyph { width: calc(38 * var(--u)); height: calc(38 * var(--u)); }
@@ -141,6 +140,20 @@
 .cr-marker[data-kind='boss'] { --mk: #ff4a3d; }
 .cr-marker[data-kind='boss'] .cr-marker__icon { color: var(--white); width: calc(48 * var(--u)); height: calc(48 * var(--u)); left: calc(-24 * var(--u)); top: calc(-24 * var(--u)); animation: cr-mk-pulse 1s ease-in-out infinite; }
 .cr-marker[data-kind='elite'] { --mk: var(--gold); }
+.cr-marker__count { position: absolute; left: calc(12 * var(--u)); top: calc(-30 * var(--u)); padding: calc(2 * var(--u)) calc(6 * var(--u)); border-radius: 999px; background: var(--ink); border: calc(2 * var(--u)) solid var(--mk, var(--gold)); font: 400 var(--fs-14)/1 var(--f-comic); letter-spacing: .04em; color: var(--mk, var(--gold)); white-space: nowrap; }
+.cr-marker__count:empty { display: none; }
+.cr-marker[data-kind='event'] { --mk: var(--ev, var(--gold)); }
+.cr-marker[data-kind='event'] .cr-marker__icon { width: calc(46 * var(--u)); height: calc(46 * var(--u)); left: calc(-23 * var(--u)); top: calc(-23 * var(--u)); border-radius: calc(12 * var(--u)); transform: rotate(45deg); }
+.cr-marker[data-kind='event'] .cr-marker__icon .cr-glyph { transform: rotate(-45deg); }
+.cr-marker[data-event='kraken-rising'] { --ev: #c07bff; }
+.cr-marker[data-event='rogue-wave'] { --ev: #5fd8ff; }
+.cr-marker[data-event='maelstrom'] { --ev: #3ff5d0; }
+.cr-marker[data-event='admiralty-blockade'] { --ev: #ffcf33; }
+.cr-marker[data-event='ghost-fleet'] { --ev: #7ff5dc; }
+.cr-marker[data-event='volcanic-eruption'] { --ev: #ff8a1c; }
+.cr-marker[data-event='sunken-treasure'] { --ev: #ffd84a; }
+.cr-marker[data-event='bounty-contract'] { --ev: #ff6a5a; }
+.cr-marker[data-event='treasure-convoy'] { --ev: #ffc93a; }
 .cr-marker[data-kind='chest'] { --mk: #ffb35a; }
 @keyframes cr-mk-pulse { 50% { transform: scale(1.14); } }
 
@@ -172,7 +185,7 @@
 .cr-warn__sub { display: flex; justify-content: center; gap: calc(18 * var(--u)); padding: 0 0 calc(10 * var(--u)); background: rgba(60, 2, 6, .92); font: 900 italic var(--fs-16)/1 var(--f-ui); letter-spacing: .06em; color: #ffd3cd; }
 .cr-warn__eta { font-style: normal; color: var(--gold); text-transform: uppercase; letter-spacing: .14em; }
 
-.cr-event { position: absolute; left: calc(-20 * var(--u)); top: calc(136 * var(--u)); display: flex; align-items: center; gap: calc(14 * var(--u)); padding: calc(12 * var(--u)) calc(44 * var(--u)) calc(12 * var(--u)) calc(52 * var(--u)); isolation: isolate; max-width: calc(620 * var(--u)); }
+.cr-event { position: absolute; left: calc(-20 * var(--u)); top: calc(136 * var(--u)); display: flex; align-items: center; gap: calc(14 * var(--u)); padding: calc(12 * var(--u)) calc(44 * var(--u)) calc(12 * var(--u)) calc(52 * var(--u)); isolation: isolate; max-width: calc(540 * var(--u)); }
 .cr-event::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(8, 12, 30, .95), rgba(22, 32, 74, .92)); -webkit-mask: url('/ui/brush-stroke.svg') center / 100% 100% no-repeat; mask: url('/ui/brush-stroke.svg') center / 100% 100% no-repeat; }
 .cr-event__flag { display: grid; place-items: center; width: calc(52 * var(--u)); height: calc(52 * var(--u)); border-radius: 50%; background: var(--orange); border: calc(3 * var(--u)) solid var(--ink); color: var(--ink); transform: skewX(8deg); }
 .cr-event__flag .cr-glyph { width: calc(32 * var(--u)); height: calc(32 * var(--u)); }
@@ -204,7 +217,8 @@
 .cr-cutin.is-big .cr-cutin__name { font-size: var(--fs-80); color: var(--gold); }
 .cr-cutin.is-big .cr-cutin__icon { width: calc(100 * var(--u)); height: calc(100 * var(--u)); }
 
-.cr-toasts { position: absolute; right: calc(24 * var(--u)); top: calc(356 * var(--u)); display: flex; flex-direction: column; align-items: flex-end; gap: calc(8 * var(--u)); }
+.cr-toasts { position: absolute; right: calc(20 * var(--u)); bottom: calc(166 * var(--u)); display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; gap: calc(6 * var(--u)); }
+.cr-toasts:empty { display: none; }
 .cr-toast { display: inline-flex; align-items: center; gap: calc(10 * var(--u)); padding: calc(8 * var(--u)) calc(16 * var(--u)) calc(8 * var(--u)) calc(10 * var(--u)); border-radius: calc(10 * var(--u)); background: rgba(8, 12, 30, .86); border-left: calc(5 * var(--u)) solid var(--white); font: 800 var(--fs-16)/1.1 var(--f-ui); color: var(--white); box-shadow: 0 calc(4 * var(--u)) 0 rgba(4, 8, 22, .5); white-space: nowrap; }
 .cr-toast .cr-glyph { width: calc(24 * var(--u)); height: calc(24 * var(--u)); }
 .cr-toast.is-gold { border-color: var(--gold); }
@@ -317,3 +331,45 @@
 .cr-slot.is-max .cr-slot__frame { box-shadow: 0 0 0 calc(2 * var(--u)) var(--cyan); }
 .cr-slot.is-empty .cr-slot__frame { background: rgba(255, 255, 255, .04); border-style: dashed; border-color: rgba(255, 255, 255, .25); box-shadow: none; }
 .cr-slot.is-empty .cr-slot__icon, .cr-slot.is-empty .cr-slot__pips, .cr-slot.is-empty .cr-slot__badge { display: none; }
+
+/* ── First-voyage coach: a paper tip above the skill bar (one at a time; ticks green when done) ── */
+.cr-coach { position: absolute; left: 50%; bottom: calc(160 * var(--u)); transform: translateX(-50%); display: none; align-items: center; gap: calc(12 * var(--u)); width: max-content; max-width: calc(600 * var(--u)); padding: calc(11 * var(--u)) calc(20 * var(--u)) calc(13 * var(--u)) calc(12 * var(--u)); border-radius: calc(12 * var(--u)); background: var(--paper); color: var(--paper-ink); box-shadow: 0 0 0 calc(3 * var(--u)) var(--ink), 0 calc(6 * var(--u)) 0 rgba(4, 8, 22, .55); z-index: 4; }
+.cr-coach.is-on { display: flex; }
+.cr-coach__tag, .cr-cards__tiptag { position: absolute; left: calc(-10 * var(--u)); top: calc(-14 * var(--u)); padding: calc(3 * var(--u)) calc(9 * var(--u)); border-radius: calc(4 * var(--u)); background: var(--gold); border: calc(2.5 * var(--u)) solid var(--ink); font: 400 var(--fs-14)/1 var(--f-comic); letter-spacing: .12em; text-transform: uppercase; color: var(--ink); transform: rotate(-7deg); }
+.cr-coach__icon, .cr-cards__tipicon { flex: none; display: grid; place-items: center; width: calc(46 * var(--u)); height: calc(46 * var(--u)); border-radius: 50%; background: radial-gradient(circle at 40% 35%, #33458a, #121a42 72%); border: calc(3 * var(--u)) solid var(--ink); color: var(--gold); }
+.cr-coach__icon .cr-glyph, .cr-cards__tipicon .cr-glyph { width: calc(26 * var(--u)); height: calc(26 * var(--u)); }
+.cr-coach__body { display: flex; flex-direction: column; gap: calc(4 * var(--u)); min-width: 0; }
+.cr-coach__head { display: flex; align-items: center; gap: calc(10 * var(--u)); }
+.cr-coach__keys, .cr-coach__kb, .cr-coach__pad { display: inline-flex; align-items: center; gap: calc(3 * var(--u)); }
+.cr-ui:not(.is-pad) .cr-coach__pad { display: none; }
+.cr-ui.is-pad .cr-coach__kb { display: none; }
+.cr-coach__title { font: 400 var(--fs-24)/1 var(--f-comic); letter-spacing: .05em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+.cr-coach__text { font: 800 var(--fs-14)/1.3 var(--f-ui); color: var(--paper-ink); max-width: calc(500 * var(--u)); }
+.cr-coach__timer { position: absolute; left: calc(14 * var(--u)); right: calc(14 * var(--u)); bottom: calc(5 * var(--u)); height: calc(3 * var(--u)); border-radius: 2px; background: rgba(58, 34, 15, .35); transform-origin: left; }
+.cr-coach.is-done { background: #dff7d2; }
+.cr-coach.is-done .cr-coach__icon { background: radial-gradient(circle at 40% 35%, #7fe08a, #23a843 72%); color: var(--white); }
+.cr-coach.is-done .cr-coach__timer { opacity: 0; }
+
+/* ── Wind arrow on the minimap rim (points where the wind blows) ── */
+.cr-minimap__windhead { fill: #bff4ff; stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; paint-order: stroke fill; }
+.cr-minimap__windtail { fill: none; stroke: rgba(191, 244, 255, .85); stroke-width: 2.4; stroke-linecap: round; }
+.cr-minimap__wind.is-irons .cr-minimap__windhead { fill: #ff8f84; }
+.cr-minimap__wind.is-irons .cr-minimap__windtail { stroke: rgba(255, 143, 132, .9); }
+
+/* ── Ship ring round 2: in-irons warning, boost charge pips, AUTO badges (toggle mode) ── */
+.cr-ring__irons { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: calc(-10 * var(--u)); display: none; align-items: center; gap: calc(5 * var(--u)); padding: calc(3 * var(--u)) calc(11 * var(--u)) calc(3 * var(--u)) calc(7 * var(--u)); border-radius: 999px; background: #7a1010; border: calc(2 * var(--u)) solid var(--ink); color: #ffd3cd; font: 900 var(--fs-12)/1 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; box-shadow: 0 0 calc(12 * var(--u)) rgba(255, 70, 50, .7); z-index: 2; }
+.cr-ring__irons .cr-glyph { width: calc(16 * var(--u)); height: calc(16 * var(--u)); color: #ff8f84; }
+.cr-shipring.is-irons .cr-ring__irons { display: inline-flex; animation: cr-irons 1.1s ease-in-out infinite; }
+.cr-shipring.is-irons .cr-ring__speed { color: #ff8f84; }
+@keyframes cr-irons { 50% { scale: 1.08; } }
+.cr-ui.is-calm .cr-shipring.is-irons .cr-ring__irons { animation: none; }
+.cr-mini { position: relative; }
+.cr-mini__kb { display: inline-flex; }
+.cr-mini__charges { position: absolute; left: calc(70 * var(--u)); top: calc(46 * var(--u)); display: flex; gap: calc(3 * var(--u)); }
+.cr-mini__charges i { width: calc(10 * var(--u)); height: calc(6 * var(--u)); border-radius: 2px; background: rgba(255, 255, 255, .2); border: 1px solid var(--ink); }
+.cr-mini__charges i.is-on { background: var(--cyan); box-shadow: 0 0 calc(5 * var(--u)) rgba(63, 224, 255, .8); }
+.cr-mini__auto, .cr-skill__auto { position: absolute; left: 50%; top: calc(-9 * var(--u)); transform: translateX(-50%); display: none; padding: calc(1 * var(--u)) calc(6 * var(--u)); border-radius: 999px; background: var(--gold); border: calc(2 * var(--u)) solid var(--ink); color: var(--ink); font: 400 var(--fs-12)/1 var(--f-comic); letter-spacing: .1em; text-transform: uppercase; z-index: 4; }
+.cr-mini.is-auto .cr-mini__auto, .cr-skill.is-auto .cr-skill__auto { display: block; }
+.cr-mini__auto { top: auto; bottom: calc(-7 * var(--u)); }
+.cr-mini__disc { overflow: visible; }
+.cr-mini__sweep { overflow: hidden; }

@@ -5,7 +5,7 @@
  * renders with its plain toon look.
  */
 import * as THREE from 'three';
-import { createToonMaterial, type ToonOptions } from '../materials/toon';
+import { createToonMaterial, isCelMaterial, type ToonOptions } from '../materials/toon';
 
 type Shader = Parameters<THREE.Material['onBeforeCompile']>[0];
 
@@ -81,4 +81,36 @@ export class FlashDriver {
     flashScratch.set(color).multiplyScalar(a * 0.62);
     for (const e of this.entries) e.material.emissive!.copy(e.base).add(flashScratch);
   }
+}
+
+/** Material look for a boss hull: cel levels applied to its (per-boss) cloned materials. */
+export interface BossLook { delight: number; saturation: number; gain: number; contrast: number; rim: number }
+
+/**
+ * Boss looks (SEA & LIGHT, round 2). The Sovereign's Meshy albedo is white hull, navy bands and gold filigree, but the
+ * default delight (0.3, meant for baked-light downloads) lifted its darks until the flagship read pale and ghostly next
+ * to the crisp hero. No delight, deeper darks, richer navy and gold, whites held under the bloom threshold.
+ */
+export const BOSS_LOOKS: Readonly<Record<string, BossLook>> = {
+  sovereign: { delight: 0, saturation: 1.3, gain: 0.94, contrast: 1.35, rim: 0.45 },
+};
+
+/**
+ * Applies BOSS_LOOKS to a boss root named `boss:<id>` (Bosses.ts) once; returns true when a look was applied.
+ * Only CelMaterials are touched, and Bosses gives every boss its own material clones, so nothing else changes.
+ */
+export function applyBossLook(root: THREE.Object3D): boolean {
+  const id = root.name.startsWith('boss:') ? root.name.slice(5) : '';
+  const look = BOSS_LOOKS[id];
+  if (!look) return false;
+  root.traverse((object) => {
+    const mesh = object as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+      if (!isCelMaterial(m) || m.emissiveIntensity > 1.2) continue; // glow parts keep their look
+      m.setLevels(look.delight, look.saturation, look.gain, look.contrast);
+      m.rim = look.rim;
+    }
+  });
+  return true;
 }

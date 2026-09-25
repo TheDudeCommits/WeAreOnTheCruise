@@ -6,9 +6,9 @@
 import { CONTENT } from '../../game/content';
 import type { ProjectileKind } from '../../game/ids';
 import { rangeMul } from '../../game/sim/stats';
-import type { BossState, EnemyState, HazardState, PickupState, RunState } from '../../game/types';
+import type { BossState, CaptainState, EnemyState, HazardState, PickupState, RunState } from '../../game/types';
 import type { FrameContext } from '../frame';
-import { CelPal, DANGER_DEEP_HEX, DANGER_HEX, GlowPal, INK_HEX, Lin, PLAYER_MARK_HEX } from './core/palette';
+import { CelPal, GlowPal, INK_HEX, Lin } from './core/palette';
 import { hash01, rand, range, spread } from './core/rand';
 import { Mode } from './core/SpritePass';
 import type { EventFx } from './EventFx';
@@ -70,6 +70,10 @@ const KIND_BY_INDEX = Object.keys(KINDS) as ProjectileKind[];
 const SLOT_CAP = 2048;
 const GHOST_CAP = 384;
 const HAZ_CAP = 512;
+/** Battle-damage smoke starts below this hull fraction (deck fire below 30%). */
+const DAMAGE_SMOKE_HP = 0.5;
+/** Damaged ships that may smoke at the full rate at once; beyond that they share the rate. */
+const DAMAGE_SMOKE_SHIPS = 5;
 
 const PICKUP_HEX: Record<PickupState['kind'], number> = {
   'xp-copper': 0xe0874a, 'xp-silver': 0xe6eef6, 'xp-gold': 0xffc93a, doubloon: 0xffd24a, repair: 0xffffff,
@@ -108,6 +112,8 @@ export class StateFx {
   private prevAir = 0;
   private prevSub = 0;
   private emitPlayer = 0;
+  /** Smoke rules: this frame's damage-smoke rate multiplier for ordinary ships (shared between smokers). */
+  private smokeShare = 1;
 
   private readonly waterY = (x: number, z: number): number => this.fx.wy(x, z);
 
@@ -125,8 +131,16 @@ export class StateFx {
     this.hazards(ctx, run, dt);
     this.pickups(run);
     this.telegraphs(run);
+    // Smoke rules: damage smoke shares a budget, so a horde of damaged ships never blankets the sea.
+    let smokers = 0;
+    const fx0 = this.k.focusX, fz0 = this.k.focusZ;
+    for (const e of run.enemies) {
+      if (e.life === 'alive' && e.hidden < 1 && e.defId !== 'kraken-arm' && e.hp < e.maxHp * DAMAGE_SMOKE_HP && (e.x - fx0) ** 2 + (e.z - fz0) ** 2 < 480 * 480) smokers++;
+    }
+    this.smokeShare = Math.min(1, DAMAGE_SMOKE_SHIPS / Math.max(1, smokers));
     for (const e of run.enemies) if (e.hidden < 1 && e.defId !== 'kraken-arm') this.ship(e, dt, false);
     for (const b of run.bosses) this.ship(b, dt, true);
+    for (const c of run.captains) if (c.alive) this.captain(c, dt);
     this.player(run, dt);
     this.tethers(run);
     this.aim(ctx, run);
@@ -178,7 +192,11 @@ export class StateFx {
       const p = list[i]!;
       if (this.slotAlive[i] && (!p.alive || p.id !== this.slotId[i])) this.ghost(i);
       if (!p.alive) { this.slotAlive[i] = 0; continue; }
-      if (this.slotId[i] !== p.id) this.emitAcc[i] = rand();
+      if (this.slotId[i] !== p.id) {
+        this.emitAcc[i] = rand();
+        // Full Broadside: balls fired inside the manual volley window get the set-piece hits (EventFx).
+        if (p.team === 'player' && p.weapon === 'broadside' && this.events.manualVolleyOpen()) this.events.trackVolleyBall(i, p.id);
+      }
       const vis = KINDS[p.kind];
       const lin = KIND_LIN.get(p.kind)!;
       let y = p.y;
@@ -454,7 +472,7 @@ export class StateFx {
       }
       case 'lightning-strike': {
         const t = Math.min(1, h.age / Math.max(0.05, h.ttl));
-        k.decals.imm(Decal.Circle, h.x, h.z, h.radius, h.radius, 0, t, 0, 0x8fdcff, 1, 0x103a66, 0, 0.5);
+        k.decals.telegraph(Decal.TeleCircle, h.x, this.flatHeight(h.x, h.z, h.radius), h.z, h.radius, t, 0, 0x8fdcff);
         if (rand() < dt * 14) {
           const a = rand() * TAU;
           fx.sparks(h.x + Math.cos(a) * h.radius * 0.5, wy + 0.5, h.z + Math.sin(a) * h.radius * 0.5, 2, 10, GlowPal.Lightning, 0, 1, 0, 0.5, 0.25);
@@ -578,17 +596,19 @@ export class StateFx {
 
   private telegraphs(run: Readonly<RunState>): void {
     const d = this.k.decals;
+    const pal = this.k.tele;
     for (const t of run.telegraphs) {
       if (!t.alive) continue;
       const prog = Math.min(1, t.time / Math.max(0.01, t.duration));
       const enemy = t.team === 'enemy';
-      const c1 = enemy ? DANGER_HEX : PLAYER_MARK_HEX;
-      const c2 = enemy ? DANGER_DEEP_HEX : 0x5a4210;
+      const c1 = enemy ? pal.danger : pal.mark;
+      const c2 = enemy ? pal.deep : pal.markDeep;
       switch (t.shape) {
-        case 'circle': d.imm(Decal.Circle, t.x, t.z, t.radius, t.radius, 0, prog, 0, c1, 1, c2, 0, 0.5); break;
+        // circles and rings: flat SDF discs just above the local wave maximum (never warped by rough water)
+        case 'circle': d.telegraph(Decal.TeleCircle, t.x, this.flatHeight(t.x, t.z, t.radius), t.z, t.radius, prog, 0, c1); break;
         case 'ring': {
           const inner = t.length > 0 && t.length < t.radius ? t.length / t.radius : 0.62;
-          d.imm(Decal.Ring, t.x, t.z, t.radius, t.radius, 0, prog, inner, c1, 1, c2, 0, 0.5);
+          d.telegraph(Decal.TeleRing, t.x, this.flatHeight(t.x, t.z, t.radius), t.z, t.radius, prog, inner, c1);
           break;
         }
         case 'line': {
@@ -608,6 +628,18 @@ export class StateFx {
         }
       }
     }
+  }
+
+  /** Height just above the local wave maximum over a disc (centre + two rings of samples) for flat telegraphs. */
+  private flatHeight(x: number, z: number, r: number): number {
+    const w = this.k.water;
+    let h = w.height(x, z);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * TAU;
+      const ca = Math.cos(a), sa = Math.sin(a);
+      h = Math.max(h, w.height(x + ca * r * 0.55, z + sa * r * 0.55), w.height(x + (ca * 0.924 - sa * 0.383) * r, z + (sa * 0.924 + ca * 0.383) * r));
+    }
+    return h + 0.45 + 0.25 * w.strength;
   }
 
   // ───────────── ships: statuses and sinking ─────────────
@@ -632,8 +664,8 @@ export class StateFx {
           this.loopFlame(s.x + fxv * along, deck, s.z + fzv * along, L * 0.06, L * 0.17 * (1 - t * 1.4), s.id, j, CelPal.Fire);
         }
       }
-      if (t < 0.85 && rand() < dt * (boss ? 10 : 5) * k.q) {
-        fx.smoke(s.x + spread(L * 0.2), wy + L * 0.12, s.z + spread(L * 0.2), 1, L * 0.14, L * 0.42, CelPal.WreckSmoke, 3.2, 0, 6, 0, 1, 5, 1, 0, 0.45);
+      if (t < 0.85 && rand() < dt * (boss ? 6 : 3) * k.q) {
+        fx.smoke(s.x + spread(L * 0.2), wy + L * 0.12, s.z + spread(L * 0.2), 1, L * 0.1, L * 0.26, CelPal.WreckSmoke, 3.2, 0, 6, 0, 1, 5, 1, 0, 0.45);
       }
       if (rand() < dt * 1.5 * k.q) fx.planks(s.x + spread(L * 0.3), wy + 0.5, s.z + spread(L * 0.3), 1, 2, 2, 1, 2.6, 0.3);
       k.ocean?.stampFoam(s.x, s.z, L * 0.5, 0.3);
@@ -641,27 +673,7 @@ export class StateFx {
       return;
     }
     if (s.life !== 'alive') return;
-    // battle damage: smoke plumes below 55% hull, deck fire below 30% (T3 / T11)
-    const frac = s.hp / Math.max(1, s.maxHp);
-    if (frac < 0.55) {
-      const dx = s.x - k.focusX, dz = s.z - k.focusZ;
-      if (dx * dx + dz * dz < 480 * 480) {
-        const deck = wy + Math.max(2.5, L * 0.1);
-        const rate = (boss ? 7 : 2.4) * (1.4 - frac * 1.6) * k.q;
-        if (rand() < dt * rate) {
-          const along = (hash01(s.id, 800 + ((k.clock * 3) | 0) % 5) - 0.5) * L * 0.5;
-          fx.smoke(s.x + fxv * along, deck + 1, s.z + fzv * along, 1, L * 0.07, L * (boss ? 0.28 : 0.34), frac < 0.3 ? CelPal.DarkSmoke : CelPal.Gunsmoke,
-            3.4, 0, 4, 0, 1, 5.5, 1, 0, 0.45);
-        }
-        if (frac < 0.3) {
-          const fires = boss ? 4 : 2;
-          for (let j = 0; j < fires; j++) {
-            const along = (hash01(s.id, j + 900) - 0.5) * L * 0.55;
-            this.loopFlame(s.x + fxv * along, deck, s.z + fzv * along, L * 0.03, L * (boss ? 0.09 : 0.13), s.id, j + 30, CelPal.Fire);
-          }
-        }
-      }
-    }
+    this.damage(s.id, s.x, s.z, s.heading, L, s.hp / Math.max(1, s.maxHp), wy, dt, boss, boss ? 1 : this.smokeShare);
     if (boss) this.bossWater(s as Readonly<BossState>, wy, dt);
     const statuses = s.statuses;
     for (let i = 0; i < statuses.length; i++) {
@@ -701,6 +713,49 @@ export class StateFx {
         case 'hooked': break; // ropes come from the 'harpoon' tether table (tethers())
         default: break;
       }
+    }
+  }
+
+  /**
+   * Battle damage (T3 / T11) under the smoke rules: thin rising plumes below 50% hull (dark below 30%) and deck fire
+   * below 30%. `share` < 1 when many ships smoke at once. Also drives AI captains (negative ids).
+   */
+  private damage(id: number, x: number, z: number, heading: number, L: number, frac: number, wy: number, dt: number, big: boolean, share: number): void {
+    if (frac >= DAMAGE_SMOKE_HP) return;
+    const k = this.k;
+    const dx = x - k.focusX, dz = z - k.focusZ;
+    if (dx * dx + dz * dz > 480 * 480) return;
+    const fxv = -Math.sin(heading), fzv = -Math.cos(heading);
+    const deck = wy + Math.max(2.5, L * 0.1);
+    const severity = 1.3 - frac * 1.6;
+    if (rand() < dt * (big ? 3.5 : 1.6) * severity * share * k.q) {
+      const along = (hash01(id, 800 + ((k.clock * 3) | 0) % 5) - 0.5) * L * 0.5;
+      this.fx.smoke(x + fxv * along, deck + 1, z + fzv * along, 1, L * 0.05, L * (big ? 0.16 : 0.22), frac < 0.3 ? CelPal.DarkSmoke : CelPal.Gunsmoke,
+        3.4, 0, 4, 0, 1, 6, 1, 0, 0.45);
+    }
+    if (frac < 0.3) {
+      const fires = big ? 4 : 2;
+      for (let j = 0; j < fires; j++) {
+        const along = (hash01(id, j + 900) - 0.5) * L * 0.55;
+        this.loopFlame(x + fxv * along, deck, z + fzv * along, L * 0.03, L * (big ? 0.09 : 0.13), id, j + 30, CelPal.Fire);
+      }
+    }
+  }
+
+  /** AI captains (negative ids, ShipFrames.findCaptain): the same damage smoke and deck fire as the fleet, and burning. */
+  private captain(c: Readonly<CaptainState>, dt: number): void {
+    const wy = this.fx.wy(c.x, c.z);
+    this.damage(c.id, c.x, c.z, c.heading, c.length, c.hp / Math.max(1, c.maxHp), wy, dt, false, 1);
+    for (let i = 0; i < c.statuses.length; i++) {
+      const st = c.statuses[i]!;
+      if (st.kind !== 'burning' || st.time <= 0) continue;
+      const deck = wy + Math.max(2.5, c.length * 0.1);
+      const fxv = -Math.sin(c.heading), fzv = -Math.cos(c.heading);
+      for (let j = 0; j < 3; j++) {
+        const along = (hash01(c.id, j + 600) - 0.5) * c.length * 0.5;
+        this.loopFlame(c.x + fxv * along, deck, c.z + fzv * along, c.length * 0.05, c.length * 0.14, c.id, j + 10, CelPal.Fire);
+      }
+      if (rand() < dt * 3 * this.k.q) this.fx.smoke(c.x, deck + 2, c.z, 1, 2, 6, CelPal.DarkSmoke, 2, 0, 3, 0, 1, 3, 1, 0, 0.4);
     }
   }
 
@@ -813,7 +868,7 @@ export class StateFx {
       if (this.prevAir <= 0.01 && this.events.launchAge > 0.4) {
         fx.cloudRing(p.x, wy + 4, p.z, f.fx, f.fz, L * 0.45, 22);
         fx.waterSplash(p.x, p.z, 2);
-        k.juice.speedLines(0.9, 1.0);
+        k.juice.speedLines(0.75, 0.8);
       }
     } else if (this.prevAir > 0.01) {
       // landing
@@ -825,7 +880,8 @@ export class StateFx {
       k.ocean?.stampRing(p.x, p.z, L * 0.8, 1);
       k.ocean?.stampDisplace(p.x, p.z, L * 0.6, -2);
       k.juice.shake(0.7, 0.45);
-      k.juice.impactFrame(0.5);
+      // Lionburst landing: one crisp impact (PostStack: 2 two-tone frames, silhouettes kept) — never a pale wash.
+      k.juice.impactFrame(0.8);
       k.juice.slowMo(0.45, 0.18);
     }
     this.prevAir = air;
@@ -898,32 +954,33 @@ export class StateFx {
     if (!p.alive || run.status !== 'running') return;
     const d = this.k.decals;
     const ready = p.skills.broadside.cooldown <= 0 ? 1 : 0.25;
-    d.imm(Decal.Reticle, ctx.aim.x, ctx.aim.z, 5, 5, this.k.clock * 0.4, ready, 0, PLAYER_MARK_HEX, 1, INK_HEX, 0, 0.5);
+    const MARK = this.k.tele.mark, MARK_DEEP = this.k.tele.markDeep;
+    d.imm(Decal.Reticle, ctx.aim.x, ctx.aim.z, 5, 5, this.k.clock * 0.4, ready, 0, MARK, 1, INK_HEX, 0, 0.5);
     const sx = Math.cos(p.heading), sz = -Math.sin(p.heading);
     const side = (ctx.aim.x - p.x) * sx + (ctx.aim.z - p.z) * sz >= 0 ? 1 : -1;
     const angle = p.heading + (side > 0 ? Math.PI / 2 : -Math.PI / 2);
     let level = 1;
     for (let i = 0; i < p.weapons.length; i++) if (p.weapons[i]!.id === 'broadside') level = p.weapons[i]!.level;
     const range = CONTENT.weapons.broadside.levels[Math.max(0, Math.min(5, level - 1))]!.range * rangeMul(p.stats);
-    d.imm(Decal.Wedge, p.x, p.z, range, range, angle, ready, (40 * Math.PI) / 180, PLAYER_MARK_HEX, 1, INK_HEX, 0, 0.5);
+    d.imm(Decal.Wedge, p.x, p.z, range, range, angle, ready, (40 * Math.PI) / 180, MARK, 1, INK_HEX, 0, 0.5);
     // aimed special/ultimate target previews while ready (quiet: outline only)
     const ship = CONTENT.ships[run.shipId];
     let ax = ctx.aim.x - p.x, az = ctx.aim.z - p.z;
     const al = Math.hypot(ax, az) || 1; ax /= al; az /= al;
     const aimAngle = Math.atan2(ax, az);
     if (p.skills.special.cooldown <= 0) {
-      if (ship.special === 'signal-flare') d.imm(Decal.Circle, ctx.aim.x, ctx.aim.z, 30, 30, 0, 0, 0, PLAYER_MARK_HEX, 0.45, 0x5a4210, 0, 0.5);
+      if (ship.special === 'signal-flare') d.imm(Decal.Circle, ctx.aim.x, ctx.aim.z, 30, 30, 0, 0, 0, MARK, 0.45, MARK_DEEP, 0, 0.5);
       else if (ship.special === 'lionburst') {
         const len = Math.max(70, Math.min(180, al)); // CORE: Lionburst dash 70–180 m toward the aim point
         const start = p.length * 0.6;
         if (len > start + 10) {
-          d.imm(Decal.Line, p.x + ax * (start + len) * 0.5, p.z + az * (start + len) * 0.5, 2, (len - start) * 0.5, aimAngle, 0, 0, PLAYER_MARK_HEX, 0.28, 0x5a4210, 0, 0.5);
-          d.imm(Decal.Reticle, p.x + ax * len, p.z + az * len, 8, 8, this.k.clock * -0.6, 0.35, 0, PLAYER_MARK_HEX, 0.6, INK_HEX, 0, 0.5);
+          d.imm(Decal.Line, p.x + ax * (start + len) * 0.5, p.z + az * (start + len) * 0.5, 2, (len - start) * 0.5, aimAngle, 0, 0, MARK, 0.28, MARK_DEEP, 0, 0.5);
+          d.imm(Decal.Reticle, p.x + ax * len, p.z + az * len, 8, 8, this.k.clock * -0.6, 0.35, 0, MARK, 0.6, INK_HEX, 0, 0.5);
         }
       }
     }
     if (p.skills.ultimate.charge >= 1 && ship.ultimate === 'admirals-judgment') {
-      d.imm(Decal.Line, p.x + ax * 160, p.z + az * 160, 14, 160, aimAngle, 0, 0, PLAYER_MARK_HEX, 0.3, 0x5a4210, 0, 0.5);
+      d.imm(Decal.Line, p.x + ax * 160, p.z + az * 160, 14, 160, aimAngle, 0, 0, MARK, 0.3, MARK_DEEP, 0, 0.5);
     }
   }
 }

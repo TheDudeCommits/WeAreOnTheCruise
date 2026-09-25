@@ -36,6 +36,7 @@ const FONTS = [
 ];
 
 const LIC = {
+  'CC-BY-3.0': { label: 'CC BY 3.0', url: 'https://creativecommons.org/licenses/by/3.0/' },
   'CC-BY-4.0': { label: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' },
   'CC-BY-SA-4.0': { label: 'CC BY-SA 4.0', url: 'https://creativecommons.org/licenses/by-sa/4.0/' },
   'CC0-1.0': { label: 'CC0 1.0', url: 'https://creativecommons.org/publicdomain/zero/1.0/' },
@@ -116,6 +117,10 @@ const allIcons = Object.values(icons.sheets).flat().filter(Boolean);
 const sheetWords = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
 const sheetCount = Object.keys(icons.sheets).length;
 L.push(`- **UI icons:** ${allIcons.length} painted icons in \`public/assets/icons/<id>.png\` (256×256, transparent), sliced from ${sheetWords[sheetCount] ?? sheetCount} Higgsfield Nano Banana Pro 4×4 sheets (\`assets/concepts/icon-sheet-*.jpg\`) by \`scripts/assets/icons/slice-icons.mjs\`. Covers every WeaponId, PassiveId, SpecialId, UltimateId, MetaUpgradeId, PickupKind, elite affix (\`affix-<id>\`), the AI captain badge and broadside/brace/boost/heal/doubloon/bounty, plus spares (coins, chest-open, helm, anchor, lantern, admiralty-flag, cutlasses).`);
+const barkLog = JSON.parse(fs.readFileSync(path.join(repo, 'scripts/audio/generation-log.json'), 'utf8'));
+const barkLines = Array.isArray(barkLog.lines) ? barkLog.lines.length : 0;
+const barkCredits = Number(barkLog.credits?.spent ?? barkLog.credits) || 0;
+L.push(`- **Crew barks (audio):** ${barkLines || 'original'} original lines voiced with Higgsfield speech presets${barkCredits ? ` (${barkCredits.toFixed(1)} credits)` : ''}; job ids in [scripts/audio/generation-log.json](scripts/audio/generation-log.json) (ids only), masters in \`scripts/audio/generated/barks/\`.`);
 L.push('- **Emblems and procedural flags:** `scripts/assets/fleet/emblems/*.svg` (Admiralty wave-crest, Redtide cutlass-and-sun, Gloam sigil) drawn for this project; `flag`, `flag-redtide` and the skiff\'s added mast/sail are procedural geometry.');
 L.push('- **Materials from the earlier pass (kept):** `public/assets/materials/limestone.png`, `painted-timber.png`, `cinematic-sky.png` (generated images, see git history; SHA-256 `dfe06806…`, `caa10fa3…`, `9ab3d6ac…`).');
 L.push('');
@@ -180,7 +185,7 @@ const meshyKeys = Object.entries(fleet).filter(([, m]) => m.source.kind === 'mes
 H.push(`<p>The Man-o\'-War, Mortar Barge, Cliff Battery, the Iron Warden, the Sovereign, the Tidewyrm\'s head and the weapon-mount props (${meshyKeys.filter((k) => fleet[k].role === 'prop').join(', ')}) were generated for the project with <a href="https://www.meshy.ai/">Meshy</a> from concept art made with Higgsfield. The UI icons were painted with Higgsfield (Nano Banana Pro) and cut out with the project's own tooling. The faction emblems (Admiralty wave-crest, Redtide cutlass-and-sun, Gloam sigil) and the flags are original to this game.</p>`);
 H.push('<h2>Music and sound</h2><section id="audio-credits"><div class="grid">');
 for (const m of music) { const lic = LIC[m.license] ?? LIC['CC-BY-4.0']; H.push(art(esc(m.title), `Music by ${esc(m.author)}`, `<a href="${m.url}">Source</a> · <a href="${lic.url}">${lic.label}</a>`, '')); }
-for (const a of audioBy) H.push(art(esc(a.title), `Sound by ${esc(a.author)}`, `<a href="${a.url}">Source</a> · <a href="${(LIC[a.license] ?? LIC['CC-BY-4.0']).url}">${(LIC[a.license] ?? LIC['CC-BY-4.0']).label}</a>`, 'Trimmed, processed and re-encoded.'));
+for (const a of audioBy.filter((x) => !music.some((m) => m.url === x.url))) H.push(art(esc(a.title), `Sound by ${esc(a.author)}`, `<a href="${a.url}">Source</a> · <a href="${(LIC[a.license] ?? LIC['CC-BY-4.0']).url}">${(LIC[a.license] ?? LIC['CC-BY-4.0']).label}</a>`, 'Trimmed, processed and re-encoded.'));
 H.push('</div>');
 H.push(`<p>Sound effects are CC0 works from <a href="https://freesound.org/">Freesound</a>, <a href="https://kenney.nl/assets/category:Audio">Kenney</a> and <a href="https://opengameart.org/">OpenGameArt</a>, trimmed, layered and re-encoded for the game. With thanks to ${audioAuthors.map(esc).join(', ')}.</p>`);
 H.push('<p class="note">Per-file sources, licences and changes: <a href="/audio/CREDITS.md">audio ledger</a>.</p></section>');
