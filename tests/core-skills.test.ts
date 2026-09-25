@@ -59,7 +59,7 @@ describe('CORE specials (E)', () => {
     const ev = run(sim, 1 / 60);
     expect(used(ev, 'second-wind')).toBe(true);
     expect(p.hp / p.maxHp).toBeCloseTo(0.7, 1);
-    expect(p.shield).toBeGreaterThan(p.maxHp * 0.4);
+    expect(p.shield).toBeGreaterThan(p.maxHp * 0.25);
     expect(sim.hasStatus(p, 'shielded')).toBe(true);
     const hp = p.hp;
     sim.damagePlayer(40);

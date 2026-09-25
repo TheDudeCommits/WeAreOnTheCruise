@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CONTENT } from '../src/game/content';
 import { DIRECTOR } from '../src/game/content/director';
 import type { EnemyId, SeaId } from '../src/game/ids';
 import { defaultProfile } from '../src/game/meta/save';
@@ -63,10 +64,11 @@ describe('director', () => {
     expect(spawnedIds(run(sim, 90))).toContain('wraith');
   });
 
-  it('warns 10 s before a boss and spawns it on schedule with scaled HP', () => {
+  it('warns before a boss and spawns it on the run clock with scaled HP', () => {
     const sim = makeSim('boss-sched');
-    sim.debug.setTime(288);
-    const evs = run(sim, 14);
+    const first = sim.content.seas['sunward-shallows'].bosses[0]!;
+    sim.debug.setTime(first.at - DIRECTOR.warningLead - 5);
+    const evs = run(sim, DIRECTOR.warningLead + 7);
     const warn = evs.find((e) => e.type === 'boss-warning');
     expect(warn && warn.type === 'boss-warning' && warn.boss).toBe('iron-warden');
     const spawned = evs.find((e) => e.type === 'boss-spawned');
@@ -75,6 +77,38 @@ describe('director', () => {
     expect(b.maxHp).toBeCloseTo(sim.content.bosses['iron-warden'].hp * DIRECTOR.bossHpScale(1, 0, 'iron-warden'));
     expect(sim.state.director.activeBoss).toBe('iron-warden');
     expect(sim.state.director.nextBossIndex).toBe(1);
+  });
+
+  it('keeps every sea on a run-clock boss schedule: earlier and more often, the Sovereign last at the run length', () => {
+    for (const sea of Object.values(CONTENT.seas)) {
+      const times = sea.bosses.map((b) => b.at);
+      expect(times).toEqual([...times].sort((a, b) => a - b));
+      expect(sea.bosses.length).toBeGreaterThanOrEqual(5);
+      expect(sea.bosses[0]!.at).toBeLessThanOrEqual(180);
+      const last = sea.bosses[sea.bosses.length - 1]!;
+      expect(last).toMatchObject({ boss: 'sovereign', at: sea.duration });
+      // Rematches of an earlier boss are tougher; the final boss appears once.
+      sea.bosses.forEach((b, i) => {
+        if (sea.bosses.slice(0, i).some((x) => x.boss === b.boss)) expect(b.hpMul ?? 1).toBeGreaterThan(1);
+      });
+      expect(sea.bosses.filter((b) => b.boss === 'sovereign').length).toBe(1);
+    }
+  });
+
+  it('a rematch arrives on time even while the earlier boss is still afloat, with its extra hull', () => {
+    const sim = makeSim('boss-rematch');
+    const sea = sim.content.seas['sunward-shallows'];
+    const idx = sea.bosses.findIndex((b, i) => sea.bosses.slice(0, i).some((x) => x.boss === b.boss));
+    const entry = sea.bosses[idx]!;
+    sim.debug.setTime(entry.at - 40);
+    sim.state.director.nextBossIndex = idx;
+    spawnBossAhead(sim, 'tidewyrm', 0); // an overdue fight still on the water
+    run(sim, 41);
+    const rematch = sim.state.bosses.find((b) => b.defId === entry.boss && b.life === 'alive')!;
+    expect(rematch).toBeDefined();
+    expect(sim.state.bosses.filter((b) => b.life === 'alive').length).toBe(2);
+    expect(rematch.maxHp).toBeCloseTo(sim.content.bosses[entry.boss].hp * DIRECTOR.bossHpScale(1, 0, entry.boss) * entry.hpMul!);
+    expect(sim.state.director.nextBossIndex).toBe(idx + 1);
   });
 
   it('stages set pieces with director-event banners', () => {
@@ -227,5 +261,19 @@ describe('bosses', () => {
     expect(evs.some((e) => e.type === 'run-ended' && e.outcome === 'victory')).toBe(true);
     expect(sim.state.status).toBe('victory');
     expect(sim.result()?.outcome).toBe('victory');
+  });
+
+  it('sinking the final boss wins even while a late rematch is still afloat (it strikes its colours too)', () => {
+    const sim = makeSim('boss-final-overlap');
+    run(sim, 1 / 30);
+    spawnBossAhead(sim, 'tidewyrm', 0, 2);
+    spawnBossAhead(sim, 'sovereign', 0);
+    const [rematch, flagship] = sim.state.bosses as [BossState, BossState];
+    sim.state.director.nextBossIndex = sim.content.seas['sunward-shallows'].bosses.length;
+    sim.damageTarget(flagship, 1e7, { pierceArmor: true });
+    expect(rematch.life).not.toBe('alive');
+    const evs = run(sim, 5);
+    expect(evs.some((e) => e.type === 'run-ended' && e.outcome === 'victory')).toBe(true);
+    expect(sim.state.status).toBe('victory');
   });
 });

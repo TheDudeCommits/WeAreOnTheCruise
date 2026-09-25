@@ -4,7 +4,8 @@
  * A bot captain sails real Sim runs: it keeps the enemy mass (or the boss) on a beam at gun range, dodges
  * telegraphed circles/lines and rams, braces before hits, boosts out of danger, fires the manual broadside, uses
  * special/ultimate, collects treasure and picks cards by a heuristic. It prints level, kills, live enemies and hull
- * at 1/5/10/12/15 min, death times and boss kill times, then per-sea summaries against the targets.
+ * at 1/5/10/12/15 min, death times and boss kill times (one column per slot of the sea's boss schedule, rematches
+ * included), then per-sea summaries against the targets.
  *
  * Options:
  *   --seeds N            seeds per ship×sea (default 4)
@@ -242,7 +243,9 @@ export class Bot {
       if (side) { sim.setInput({ aimX: side.x, aimZ: side.z }); sim.press('broadside'); this.stats.volleys++; }
     }
     if (sk.special.cooldown <= 0 && (near >= 5 || bossD < 160 || hpFrac < 0.4)) {
-      if (cw > 0) sim.setInput({ aimX: p.x + cx / cw * 3, aimZ: p.z + cz / cw * 3 });
+      // A hurt captain leaps Lionburst AWAY from the fleet (an escape), not into it.
+      const escape = hpFrac < 0.4 && sim.content.ships[p.shipId].special === 'lionburst' ? -1 : 1;
+      if (cw > 0) sim.setInput({ aimX: p.x + (cx / cw) * 3 * escape, aimZ: p.z + (cz / cw) * 3 * escape });
       sim.press('special'); this.stats.specials++;
     }
     if (sk.ultimate.charge >= 1 && (near >= 8 || bossD < 200)) { sim.press('ultimate'); this.stats.ultimates++; }
@@ -411,7 +414,10 @@ interface RunReport {
   died: number | null;
   revives: number;
   checkpoints: Checkpoint[];
-  bosses: { boss: BossId; spawned: number; killed: number | null }[];
+  /** Bosses in order of arrival (slot i = the i-th entry of the sea's schedule): entity id, spawn and sink times. */
+  bosses: { boss: BossId; id: number; spawned: number; killed: number | null }[];
+  /** Most bosses afloat at once. */
+  maxBosses: number;
   maxAlive12: number;
   doubloons: number;
   bounty: number;
@@ -529,7 +535,7 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
   const ledger = new IncomeLedger();
   const checkpoints: Checkpoint[] = [];
   const bosses: RunReport['bosses'] = [];
-  let died: number | null = null, revives = 0, maxAlive12 = 0, next = 0;
+  let died: number | null = null, revives = 0, maxAlive12 = 0, maxBosses = 0, next = 0;
   let firstHit: number | null = null, firstNear: number | null = null, idle = 0, xpDropped = 0;
   const levelTimes: number[] = [];
   const sourceKind = new Map<number, string>();
@@ -580,8 +586,8 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
         addSource(e.projectile, unsourced);
         unsourced = 0;
       }
-      if (e.type === 'boss-spawned') { bosses.push({ boss: e.boss, spawned: sim.state.time, killed: null }); sourceKind.set(e.id, `boss:${e.boss}`); }
-      else if (e.type === 'boss-defeated') { const b = bosses.find((x) => x.boss === e.boss && x.killed === null); if (b) b.killed = sim.state.time; }
+      if (e.type === 'boss-spawned') { bosses.push({ boss: e.boss, id: e.id, spawned: sim.state.time, killed: null }); sourceKind.set(e.id, `boss:${e.boss}`); }
+      else if (e.type === 'boss-defeated') { const b = bosses.find((x) => x.id === e.id && x.killed === null); if (b) b.killed = sim.state.time; }
       else if (e.type === 'weapon-changed' && e.isNew) bot.onWeaponAcquired(e.weapon, sim.state.time);
       else if (e.type === 'player-died') { if (e.reviving) revives++; else died = sim.state.time; }
       if (VERBOSE && (e.type === 'director-event' || e.type === 'boss-spawned' || e.type === 'boss-defeated' || e.type === 'boss-phase' || e.type === 'player-died')) {
@@ -597,6 +603,11 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
       if (firstNear === null && nearest <= 150) firstNear = sim.state.time;
       if (sim.state.time > 10 && nearest > 200 && p.alive) idle += sim.state.time - prevTime;
       prevTime = sim.state.time;
+    }
+    {
+      let afloat = 0;
+      for (const b of sim.state.bosses) if (b.life === 'alive') afloat++;
+      if (afloat > maxBosses) maxBosses = afloat;
     }
     const minute = sim.state.time / 60;
     if (minute >= 11 && minute <= 13) maxAlive12 = Math.max(maxAlive12, sim.state.enemies.filter((e) => e.life === 'alive').length);
@@ -615,7 +626,7 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
   return {
     ship, sea, seed,
     outcome: s.status === 'victory' ? 'victory' : s.status === 'dead' ? 'dead' : 'timeout',
-    endTime: s.time, died, revives, checkpoints, bosses, maxAlive12,
+    endTime: s.time, died, revives, checkpoints, bosses, maxBosses, maxAlive12,
     doubloons: s.stats.doubloons, bounty: s.stats.bounty,
     loadout: [...s.player.weapons.map((w) => `${w.id}:${w.level}${w.branch ?? ''}${w.overdrive ? '*' : ''}`), ...s.player.passives.map((x) => `${x.id}:${x.rank}`)],
     proxied: [...bot.proxied],
@@ -662,9 +673,10 @@ function printRun(r: RunReport): void {
   const K = (m: number) => cp(r, m)?.kills ?? '—';
   const A = (m: number) => cp(r, m)?.alive ?? '—';
   const H = (m: number) => { const c = cp(r, m); return c ? Math.round(c.hp * 100) : '—'; };
-  const boss = (id: BossId) => { const b = r.bosses.find((x) => x.boss === id); return b ? (b.killed !== null ? `${Math.round(b.killed - b.spawned)}` : 'alive') : '—'; };
+  const boss = (i: number) => { const b = r.bosses[i]; return b ? (b.killed !== null ? `${Math.round(b.killed - b.spawned)}` : 'alive') : '—'; };
+  const slots = CONTENT.seas[r.sea].bosses.map((_, i) => pad(boss(i), 5)).join(' ');
   console.log(
-    `${r.sea.padEnd(17)} ${r.ship.padEnd(16)} ${r.seed.padEnd(5)} ${L(1)} ${L(3)} ${L(5)} ${L(10)} ${L(15)} | ${String(`${K(5)}/${K(10)}/${K(15)}`).padEnd(15)} | ${String(`${A(5)}/${A(10)}/${r.maxAlive12}/${A(15)}`).padEnd(19)} | ${String(`${H(5)}/${H(10)}/${H(15)}`).padEnd(13)} | ${fmtTime(r.died).padEnd(6)} | ${pad(boss('iron-warden'), 6)} ${pad(boss('tidewyrm'), 8)} ${pad(boss('sovereign'), 9)}      | ${pad(r.doubloons, 4)} | ${r.outcome}${r.revives ? ` (+${r.revives} revive)` : ''}`
+    `${r.sea.padEnd(17)} ${r.ship.padEnd(16)} ${r.seed.padEnd(5)} ${L(1)} ${L(3)} ${L(5)} ${L(10)} ${L(15)} | ${String(`${K(5)}/${K(10)}/${K(15)}`).padEnd(15)} | ${String(`${A(5)}/${A(10)}/${r.maxAlive12}/${A(15)}`).padEnd(19)} | ${String(`${H(5)}/${H(10)}/${H(15)}`).padEnd(13)} | ${fmtTime(r.died).padEnd(6)} | ${slots}${r.maxBosses > 1 ? ` (${r.maxBosses} at once)` : ''} | ${pad(r.doubloons, 4)} | ${r.outcome}${r.revives ? ` (+${r.revives} revive)` : ''}`
     + (CAPTAINS ? ` | capK ${cp(r, 5)?.capKills ?? '—'}/${cp(r, 10)?.capKills ?? '—'}/${cp(r, 15)?.capKills ?? '—'} sunk ${r.captains.sinkings} focus ${Math.round(r.captains.playerShare * 100)}% capL ${r.captains.levels.join(',')} taken ${r.captains.taken}` : ''),
   );
   console.log(
@@ -681,22 +693,25 @@ function printRun(r: RunReport): void {
 const INCOME_KEYS = ['wages', 'kill', 'elite', 'boss', 'event', 'chest', 'victory', 'card', 'other'] as const;
 
 function printSummary(reports: readonly RunReport[], seas: readonly SeaId[]): void {
-  console.log('\nSummary per sea (targets: first hit 5–8 s, first level ≤ 20 s, level gaps 15–25 s early (0–3 min) / 40–60 s late (10–15 min), L 25–35 @15; alive 60–90 @12; bosses 45–120 s; deaths: some on Sunward, more on Stormwrack/Gloam)');
+  console.log('\nSummary per sea (targets, DIFFICULTY round 3: deaths Sunward 35–50%, Stormwrack 50–65%, Gloam 60–75%; mean hull of the ships still afloat ≤ ~75% @5 and ≤ ~65% @10; every boss 45–120 s; L 11–13 @5 (fast level-ups: first level ≤ 20 s, gaps 15–25 s early / 40–60 s late), L 25–35 @15; first hit 5–8 s; alive 60–90 @12)');
   for (const sea of seas) {
     const rs = reports.filter((r) => r.sea === sea);
     if (rs.length === 0) continue;
     const lv = (m: number) => mean(rs.map((r) => cp(r, m)?.level).filter((v): v is number => v !== undefined));
     const deaths = rs.filter((r) => r.died !== null);
-    const bossStat = (id: BossId) => {
-      const times = rs.map((r) => r.bosses.find((b) => b.boss === id)).filter((b) => b && b.killed !== null).map((b) => b!.killed! - b!.spawned);
-      const met = rs.filter((r) => r.bosses.some((b) => b.boss === id)).length;
+    const bossStat = (i: number) => {
+      const times = rs.map((r) => r.bosses[i]).filter((b) => b && b.killed !== null).map((b) => b!.killed! - b!.spawned);
+      const met = rs.filter((r) => r.bosses[i]).length;
       return met ? `${times.length}/${met} killed, ${times.length ? `${Math.round(Math.min(...times))}–${Math.round(Math.max(...times))} s (avg ${Math.round(mean(times))})` : '—'}` : 'not reached';
     };
-    console.log(`${sea}: L@5 ${f1(lv(5))} · L@10 ${f1(lv(10))} · L@15 ${f1(lv(15))} · alive@12 max ${f1(mean(rs.map((r) => r.maxAlive12)))} · deaths ${deaths.length}/${rs.length}${deaths.length ? ` (avg ${fmtTime(mean(deaths.map((r) => r.died!)))})` : ''} · ◈ avg ${Math.round(mean(rs.map((r) => r.doubloons)))} · victories ${rs.filter((r) => r.outcome === 'victory').length}`);
+    const hull = (m: number) => mean(rs.map((r) => cp(r, m)?.hp).filter((v): v is number => v !== undefined && v > 0)) * 100;
+    const low = (m: number) => rs.filter((r) => { const c = cp(r, m); return c !== undefined && c.hp > 0 && c.hp < 0.5; }).length;
+    console.log(`${sea}: L@5 ${f1(lv(5))} · L@10 ${f1(lv(10))} · L@15 ${f1(lv(15))} · alive@12 max ${f1(mean(rs.map((r) => r.maxAlive12)))} · deaths ${deaths.length}/${rs.length} = ${Math.round((100 * deaths.length) / rs.length)}%${deaths.length ? ` (avg ${fmtTime(mean(deaths.map((r) => r.died!)))})` : ''} · hull@5/10/15 ${f0(hull(5))}/${f0(hull(10))}/${f0(hull(15))}% (below half ${low(5)}/${low(10)}/${low(15)}) · ◈ avg ${Math.round(mean(rs.map((r) => r.doubloons)))} · victories ${rs.filter((r) => r.outcome === 'victory').length}`);
     const kl = (m: number) => mean(rs.map((r) => cp(r, m)?.kills).filter((v): v is number => v !== undefined));
     const ck = (m: number) => mean(rs.map((r) => cp(r, m)?.capKills).filter((v): v is number => v !== undefined));
     console.log(`   player kills @5/10/15 ${f1(kl(5))}/${f1(kl(10))}/${f1(kl(15))}` + (CAPTAINS ? ` · captain kills @5/10/15 ${f1(ck(5))}/${f1(ck(10))}/${f1(ck(15))} · player kill share @15 ${Math.round((100 * kl(15)) / Math.max(1, kl(15) + ck(15)))}% · captain sinkings avg ${f1(mean(rs.map((r) => r.captains.sinkings)))} · fleet attention on player ${Math.round(100 * mean(rs.map((r) => r.captains.playerShare)))}%` : ''));
-    console.log(`   Iron Warden ${bossStat('iron-warden')} · Tidewyrm ${bossStat('tidewyrm')} · Sovereign ${bossStat('sovereign')}`);
+    const schedule = CONTENT.seas[sea].bosses;
+    console.log(`   bosses: ${schedule.map((b, i) => `${CONTENT.bosses[b.boss].name.replace(/^The /, '')}${b.hpMul ? ` ×${b.hpMul}` : ''} @${fmtTime(b.at)} ${bossStat(i)}`).join(' · ')} · two afloat at once in ${rs.filter((r) => r.maxBosses > 1).length}/${rs.length} runs`);
     const m = (f: (r: RunReport) => number) => f1(mean(rs.map(f).filter((v) => Number.isFinite(v))));
     console.log(`   pace: first hit ${m((r) => r.firstHit ?? NaN)} s · first near ${m((r) => r.firstNear ?? NaN)} s · first level ${m((r) => r.levelTimes[0] ?? NaN)} s · gap early ${m((r) => levelGap(r.levelTimes, ...EARLY))} s · late ${m((r) => levelGap(r.levelTimes, ...LATE))} s · idle ${m((r) => r.idle)} s · xp collected ${m((r) => (100 * r.xpCollected) / Math.max(1, r.xpDropped))}% · kills@15 ${m((r) => cp(r, 15)?.kills ?? NaN)}`);
     const wins = rs.filter((r) => r.outcome === 'victory');
@@ -746,7 +761,7 @@ async function main(): Promise<void> {
   let reports: RunReport[] = [];
   if (!child) {
     console.log(`balance-sim: seeds=${SEEDS} ships=${SHIPS.join(',')} seas=${SEAS.join(',')} minutes=${MINUTES} proxy=${PROXY} meta=${META} captains=${CAPTAINS} heat=${HEAT_LEVEL}${TUNE ? ` tune=${TUNE}` : ''}`);
-    console.log('sea               ship             seed  L@1 L@3 L@5 L@10 L@15 | kills@5/10/15   | alive@5/10/12max/15 | hp%@5/10/15   | died   | warden tidewyrm sovereign (s)  | ◈    | outcome');
+    console.log('sea               ship             seed  L@1 L@3 L@5 L@10 L@15 | kills@5/10/15   | alive@5/10/12max/15 | hp%@5/10/15   | died   | boss fights (s), schedule order | ◈    | outcome');
   }
   if (!child && JOBS > 1 && SEAS.length * SHIPS.length > 1) reports = await runParallel();
   else {

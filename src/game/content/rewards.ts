@@ -24,8 +24,11 @@ export const ENTRY_WEIGHTS = { level: 10, branch: 13, overdrive: 18 };
 export const OVERDRIVE_MIN_LEVEL = 10;
 /** Luck needed for a 4th card. */
 export const LUCK_FOURTH_CARD = 3;
-/** Every crew patches its hull a little: base regen (fraction of max hull per second) added to every ship. */
-export const BASE_REGEN = 0.001;
+/**
+ * Every crew patches its hull a little: base regen (fraction of max hull per second) added to every ship.
+ * DIFFICULTY round 3: 0.001 → 0.0003 (6% → 1.8% of the hull a minute; free healing had erased the fleet's fire).
+ */
+export const BASE_REGEN = 0.0003;
 /** Heal card strength (fraction of max hull). */
 export const HEAL_CARD = 0.3;
 /** Doubloon card: base + per minute. */
@@ -57,7 +60,8 @@ export const CHIPS: readonly ChipDef[] = [
   { stat: 'critDamage', name: 'Sharpened Shot', amounts: [0.1, 0.18, 0.28, 0.4] },
   { stat: 'pickupRadius', name: 'Long Hooks', amounts: [0.1, 0.18, 0.28, 0.4] },
   { stat: 'xpGain', name: "Ship's Log", amounts: [0.04, 0.07, 0.1, 0.15] },
-  { stat: 'regen', name: 'Caulking Crew', amounts: [0.001, 0.0018, 0.0028, 0.004] },
+  // DIFFICULTY round 3: regen chips halved (were 0.001 / 0.0018 / 0.0028 / 0.004).
+  { stat: 'regen', name: 'Caulking Crew', amounts: [0.0005, 0.0008, 0.0012, 0.0018] },
   { stat: 'projectileSpeed', name: 'Rifled Barrels', amounts: [0.06, 0.1, 0.15, 0.22] },
   { stat: 'skillCooldown', name: "Bosun's Whistle", amounts: [0.05, 0.08, 0.12, 0.18] },
   { stat: 'duration', name: 'Slow Match', amounts: [0.05, 0.08, 0.12, 0.18] },
@@ -79,15 +83,21 @@ export const CHESTS = {
 /** XP coin tiers (pickup kinds). A drop worth v XP spills into gold/silver/copper pieces. */
 export const COIN_TIERS = { gold: 25, silver: 5, maxPieces: 5 };
 
-/** Rare drops on a normal kill (chance scales with the enemy's size: × (1 + xp × sizeScale)); luck adds 6% each. */
+/**
+ * Rare drops on a normal kill (chance scales with the enemy's size: × (1 + xp × sizeScale)); luck adds 6% each.
+ * DIFFICULTY round 3: repair crates were the biggest free heal (≈ 140% of the hull a run on Sunward, balance-sim),
+ * so repair 0.012 → 0.006, eliteRepair 0.35 → 0.2 and the boss repair 0.5 → 0.3 (five bosses a run now).
+ */
 export const RARE_DROPS = {
-  repair: 0.012,
+  repair: 0.006,
   compass: 0.002,
   powderKeg: 0.0025,
   sizeScale: 0.06,
   luckScale: 0.06,
   /** Elites always drop a chest; this adds a repair chance on top. */
-  eliteRepair: 0.35,
+  eliteRepair: 0.2,
+  /** Repair chance when a (non-final) boss sinks, besides its chest. */
+  bossRepair: 0.3,
 };
 
 /** Pickup effects. */
@@ -125,6 +135,8 @@ export const BOUNTY = {
  * banks ≈ 425–460 ◈ (plunder ≈ 45%, chest purses ≈ 20%, victory purse ≈ 20%, wages ≈ 7%), a lost run ≈ 130–190 ◈.
  * Quests pay ≈ 5,000 ◈ more over a career. Career model (scripts/economy-model.ts): the whole harbor (19,220 ◈) takes
  * ≈ 32 voyages at heat 0, ≈ 26 for a captain who climbs a heat level every two wins, ≈ 22 for a very fast climber.
+ * DIFFICULTY round 3 (five bosses, harder seas; 24 seeds × 2 ships): a victory banks ≈ 530–610 ◈ (the extra boss
+ * holds and chests), a lost run ≈ 150–200 ◈, ≈ 220–370 ◈ a voyage on average (was ≈ 275–385) as fewer runs win.
  */
 export const ECONOMY = {
   /** Wages paid at every full minute survived (purse). */

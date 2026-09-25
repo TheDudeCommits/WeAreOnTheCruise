@@ -3,13 +3,14 @@ import type { BossDef } from '../types';
 
 /**
  * Bosses (META). `hp` is the Sunward (difficulty 1) value; the director multiplies it by
- * `DIRECTOR.bossHpScale` for the sea's difficulty and endless loops. Attack names in `phases` are the
+ * `DIRECTOR.bossHpScale` for the sea's difficulty and endless loops (and a schedule entry's `hpMul` for rematches).
+ * DIFFICULTY round 3: the Iron Warden's xp 150 → 90 (it now sinks around 4:00, and its chest already pays). Attack names in `phases` are the
  * strings emitted in 'boss-attack' events (FX/audio key off them) and are implemented in src/game/sim/bosses.ts.
  */
 export const BOSSES: Readonly<Record<BossId, BossDef>> = {
   'iron-warden': {
     id: 'iron-warden', name: 'The Iron Warden', title: "Commodore Vane's Dreadnought", modelKey: 'dreadnought',
-    length: 90, radius: 30, hp: 3800, armor: 3, speed: 8.5, turnRate: 0.35, mass: 6000, contactDamage: 18, xp: 150, doubloons: 60,
+    length: 90, radius: 30, hp: 3800, armor: 3, speed: 8.5, turnRate: 0.35, mass: 6000, contactDamage: 18, xp: 90, doubloons: 60,
     phases: [
       { hpFraction: 1, name: 'Line of Battle', attacks: ['broadside-volley', 'mortar-barrage', 'summon-cutters'] },
       { hpFraction: 0.5, name: 'Plates Off', attacks: ['broadside-volley', 'mortar-barrage', 'ram-charge'] },

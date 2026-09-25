@@ -2,18 +2,33 @@ import type { MetaUpgradeId, SeaId } from '../ids';
 import type { MetaUpgradeDef, SeaDef, Stats } from '../types';
 import { sentence, statsText } from './text';
 
+/**
+ * Boss schedule, the same on every sea (DIFFICULTY round 3, owner: bosses are time-based and should come earlier and
+ * more often). Strictly on the run clock: the Iron Warden at 3:00, the Tidewyrm at 6:00, tougher rematches of both at
+ * 8:30 and 11:00, and the Sovereign at 15:00 (the last entry is the final boss; sinking it wins the run). A boss that
+ * is still afloat does not hold the next one back. Rematch hull (`hpMul`) is tuned with scripts/balance-sim.ts so
+ * every fight lasts ~45–120 s against the build a decent captain has by then.
+ */
+const BOSS_SCHEDULE: SeaDef['bosses'] = [
+  { at: 180, boss: 'iron-warden' },
+  { at: 360, boss: 'tidewyrm' },
+  { at: 510, boss: 'iron-warden', hpMul: 3.2 },
+  { at: 660, boss: 'tidewyrm', hpMul: 2.3 },
+  { at: 900, boss: 'sovereign' },
+];
+
 export const SEAS: Readonly<Record<SeaId, SeaDef>> = {
   'sunward-shallows': {
     id: 'sunward-shallows', name: 'Sunward Shallows',
     description: 'Turquoise shallows and lazy islands. The Admiralty patrols them all the same.',
-    duration: 900, bosses: [{ at: 300, boss: 'iron-warden' }, { at: 600, boss: 'tidewyrm' }, { at: 900, boss: 'sovereign' }],
+    duration: 900, bosses: BOSS_SCHEDULE,
     startHour: 7, hoursPerRun: 14, weather: [{ at: 0, weather: 'clear' }, { at: 420, weather: 'breezy' }, { at: 780, weather: 'clear' }],
     enemyFactions: ['admiralty', 'corsair', 'deep'], difficulty: 1, unlock: { kind: 'start' },
   },
   'stormwrack-reach': {
     id: 'stormwrack-reach', name: 'Stormwrack Reach',
     description: 'Rogue waves, lightning and a sky the colour of gunmetal.',
-    duration: 900, bosses: [{ at: 300, boss: 'iron-warden' }, { at: 600, boss: 'tidewyrm' }, { at: 900, boss: 'sovereign' }],
+    duration: 900, bosses: BOSS_SCHEDULE,
     startHour: 15, hoursPerRun: 8, weather: [{ at: 0, weather: 'breezy' }, { at: 210, weather: 'storm' }, { at: 480, weather: 'breezy' }, { at: 630, weather: 'storm' }],
     enemyFactions: ['admiralty', 'corsair', 'deep'], difficulty: 1.4,
     unlock: { kind: 'achievement', achievement: 'survive-10', text: 'Survive 10:00 on any sea' },
@@ -21,7 +36,7 @@ export const SEAS: Readonly<Record<SeaId, SeaDef>> = {
   'the-gloam': {
     id: 'the-gloam', name: 'The Gloam',
     description: 'Fog, moonlight and ships that should have sunk long ago.',
-    duration: 900, bosses: [{ at: 300, boss: 'iron-warden' }, { at: 600, boss: 'tidewyrm' }, { at: 900, boss: 'sovereign' }],
+    duration: 900, bosses: BOSS_SCHEDULE,
     startHour: 20, hoursPerRun: 8, weather: [{ at: 0, weather: 'fog' }, { at: 360, weather: 'clear' }, { at: 600, weather: 'fog' }],
     enemyFactions: ['wraith', 'corsair', 'admiralty', 'deep'], difficulty: 1.55,
     unlock: { kind: 'achievement', achievement: 'win-run', text: 'Win a run (defeat the Sovereign)' },

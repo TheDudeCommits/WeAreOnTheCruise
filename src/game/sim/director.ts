@@ -7,7 +7,9 @@
  *   for, so big ships are not starved by cheap draws.
  * - Groups: skiff packs fan out (flank offsets), frigates sail line abreast behind a leader, one elite roll per group.
  * - Set pieces ('director-event'): Ambush Ring, Fire Ship Rush, Mortar Line, Treasure Convoy, Storm Front, Fog Bank.
- * - Bosses: 'boss-warning' 10 s ahead, spawn ahead of the player, HP scaled by sea difficulty (and endless loops).
+ * - Bosses: strictly on the run clock (SeaDef.bosses: 3:00, 6:00, rematches at 8:30 and 11:00, the final boss at 15:00);
+ *   'boss-warning' DIRECTOR.warningLead ahead, spawn ahead of the player, HP scaled by sea difficulty, the entry's
+ *   rematch hpMul and endless loops. A boss still afloat does not hold the next one back.
  * - Forts on island shores, straggler recycling, far-coin merging, minute wages + survival bounty, victory lap.
  */
 import { DESPAWN_RADIUS, SOFT_ENEMY_CAP, SPAWN_RING_MAX, SPAWN_RING_MIN } from '../constants';
@@ -89,17 +91,18 @@ function bossSchedule(c: SimContext, sea: SeaDef): void {
       c.emit({ type: 'boss-warning', boss: next.boss, eta: Math.max(0, next.at - s.time) });
     }
     if (s.time >= next.at) {
-      spawnBossAhead(c, next.boss, 0);
+      spawnBossAhead(c, next.boss, 0, next.hpMul ?? 1);
       d.nextBossIndex++;
       d.bossWarning = null;
     }
     return;
   }
-  if (!s.endless || sea.bosses.length === 0) return;
+  const roster = endlessRoster(sea);
+  if (!s.endless || roster.length === 0) return;
   // Endless: bosses keep coming, tougher each loop.
   if (!sc[SCRATCH.endlessNext]) sc[SCRATCH.endlessNext] = s.time + DIRECTOR.endlessBossGap;
   const count = sc[SCRATCH.endlessCount] ?? 0;
-  const boss = sea.bosses[count % sea.bosses.length]!.boss;
+  const boss = roster[count % roster.length]!;
   const at = sc[SCRATCH.endlessNext]!;
   if (!d.bossWarning && s.time >= at - DIRECTOR.warningLead) {
     d.bossWarning = boss;
@@ -107,15 +110,33 @@ function bossSchedule(c: SimContext, sea: SeaDef): void {
     c.emit({ type: 'boss-warning', boss, eta: Math.max(0, at - s.time) });
   }
   if (s.time >= at) {
-    spawnBossAhead(c, boss, 1 + Math.floor(count / sea.bosses.length));
+    spawnBossAhead(c, boss, 1 + Math.floor(count / roster.length));
     sc[SCRATCH.endlessCount] = count + 1;
     sc[SCRATCH.endlessNext] = s.time + DIRECTOR.endlessBossGap;
     d.bossWarning = null;
   }
 }
 
-/** Spawns a boss ~330 m ahead of the player's course in open water; HP scaled by sea difficulty and loop. */
-export function spawnBossAhead(c: SimContext, id: BossId, loop: number): void {
+const ROSTERS = new Map<SeaDef, readonly BossId[]>();
+
+/**
+ * The bosses endless mode cycles through after the victory: each boss of the sea's schedule once per loop, in order
+ * of first arrival (the run's own rematches are not repeated; the loop scaling makes every pass tougher anyway).
+ */
+export function endlessRoster(sea: SeaDef): readonly BossId[] {
+  let roster = ROSTERS.get(sea);
+  if (!roster) {
+    roster = [...new Set(sea.bosses.map((b) => b.boss))];
+    ROSTERS.set(sea, roster);
+  }
+  return roster;
+}
+
+/**
+ * Spawns a boss ~330 m ahead of the player's course in open water; HP scaled by sea difficulty, endless loop and the
+ * schedule entry's `hpMul` (rematches).
+ */
+export function spawnBossAhead(c: SimContext, id: BossId, loop: number, hpMul = 1): void {
   const s = c.state, p = s.player;
   const def = c.content.bosses[id];
   const sea = c.content.seas[s.seaId];
@@ -128,7 +149,7 @@ export function spawnBossAhead(c: SimContext, id: BossId, loop: number): void {
     if (c.world.isWater(px, pz, def.radius + 25)) { x = px; z = pz; break; }
   }
   const b = c.spawnBoss(id, x, z, headingTo(p.x - x, p.z - z));
-  const hp = def.hp * DIRECTOR.bossHpScale(sea.difficulty, loop, id) * runMods(s).bossHp;
+  const hp = def.hp * DIRECTOR.bossHpScale(sea.difficulty, loop, id) * hpMul * runMods(s).bossHp;
   b.hp = hp;
   b.maxHp = hp;
   s.director.activeBoss = id;
@@ -150,6 +171,9 @@ export function beginVictoryLap(c: SimContext, delay = 3.5): void {
   s.director.scratch[SCRATCH.victoryAt] = s.time + delay;
   s.player.invulnerable = Math.max(s.player.invulnerable, delay + 2);
   for (const e of s.enemies) if (e.life === 'alive') { e.hp = 0; e.life = 'sinking'; }
+  // A rematch boss still afloat strikes its colours with the fleet (no second reward: the victory purse covers it).
+  for (const b of s.bosses) if (b.life === 'alive') { b.hp = 0; b.life = 'sinking'; }
+  s.director.activeBoss = null;
   for (const t of s.telegraphs) if (t.team === 'enemy') t.alive = false;
   for (const k of s.pickups) if (k.alive) k.magnet = true;
   c.emit({ type: 'director-event', name: 'Victory', text: 'The flagship is going down. The Brightwater is yours!' });
@@ -218,7 +242,7 @@ function spawnWaves(c: SimContext, sea: SeaDef, minute: number): void {
   d.budget -= cost;
   sc[SCRATCH.nextEntry] = -1;
   const mods = runMods(s);
-  const elite = elites < DIRECTOR.maxElites + mods.extraElites && c.random() < DIRECTOR.eliteChance(minute) * mods.eliteChance;
+  const elite = elites < DIRECTOR.maxElites(minute) + mods.extraElites && c.random() < DIRECTOR.eliteChance(minute) * mods.eliteChance;
   spawnGroup(c, entry.enemy, size, elite);
 }
 

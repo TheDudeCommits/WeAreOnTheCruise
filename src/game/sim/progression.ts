@@ -17,7 +17,7 @@ import { META_UPGRADE_IDS, PASSIVE_IDS, WEAPON_IDS, type PassiveId, type StatKey
 import type { PickupKind } from '../ids';
 import type { BossState, CardOffer, EnemyState, PickupState } from '../types';
 import type { SimContext } from './context';
-import { beginVictoryLap } from './director';
+import { beginVictoryLap, endlessRoster } from './director';
 import {
   CHIPS, branchCard, chipCard, chipId, doubloonCard, healCard, newWeaponCard, overdriveCard, passiveCard, rollRarity, weaponLevelCard,
 } from './meta-cards';
@@ -429,7 +429,7 @@ export function onEnemyKilled(c: SimContext, e: EnemyState): void {
   const convoy = e.ai.convoy === 1;
   // Harder seas field more ships, not more experience: XP per ship falls with the sea's difficulty.
   const density = Math.pow(c.content.seas[s.seaId].difficulty, DIRECTOR.xpDifficultyExp);
-  const xp = (def.xp * (e.elite ? DIRECTOR.eliteXp : 1) * (convoy ? 0.5 : 1)) / density;
+  const xp = (def.xp * (e.elite ? DIRECTOR.eliteXp : 1) * (convoy ? 0.5 : 1) * DIRECTOR.xpScale(s.time / 60)) / density;
   spillCoins(c, e.x, e.z, xp, e.radius);
   const luck = Math.max(0, p.stats.luck);
   const perShip = DIRECTOR.dropScale(s.time / 60) * runMods(s).drops;
@@ -462,8 +462,10 @@ export function onBossKilled(c: SimContext, b: BossState): void {
   for (const o of s.bosses) if (o !== b && o.life === 'alive') { others = true; d.activeBoss = o.defId; break; }
   if (!others) d.activeBoss = null;
 
+  // The last scheduled boss is the final one: sinking it wins the run even if a late rematch is still afloat (the
+  // victory lap sinks it too); with bosses on the run clock an overdue fight can overlap the finale.
   const finalBoss = sea.bosses[sea.bosses.length - 1]?.boss;
-  const isFinal = !s.endless && b.defId === finalBoss && d.nextBossIndex >= sea.bosses.length && !others;
+  const isFinal = !s.endless && b.defId === finalBoss && d.nextBossIndex >= sea.bosses.length;
   if (isFinal) {
     // The run ends shortly: bank everything directly instead of dropping it on the water (the hold is plunder).
     s.stats.doubloons += Math.round((def.doubloons * ECONOMY.plunder + ECONOMY.victoryBonus) * doubloonMul(p.stats));
@@ -477,7 +479,7 @@ export function onBossKilled(c: SimContext, b: BossState): void {
   c.spawnPickup('chest', b.x, b.z, 2);
   const pieces = 6;
   for (let k = 0; k < pieces; k++) scatter(c, 'doubloon', b.x, b.z, Math.max(1, Math.round(def.doubloons / pieces)), b.radius * 1.4);
-  if (c.random() < 0.5) scatter(c, 'repair', b.x, b.z, 1, b.radius);
+  if (c.random() < RARE_DROPS.bossRepair) scatter(c, 'repair', b.x, b.z, 1, b.radius);
 }
 
 /**
@@ -488,7 +490,7 @@ function endlessMilestone(c: SimContext, b: BossState): void {
   const s = c.state, sc = s.director.scratch;
   const n = (sc[MILESTONES] ?? 0) + 1;
   sc[MILESTONES] = n;
-  const loop = Math.floor((n - 1) / Math.max(1, c.content.seas[s.seaId].bosses.length));
+  const loop = Math.floor((n - 1) / Math.max(1, endlessRoster(c.content.seas[s.seaId]).length));
   const purse = Math.round(ECONOMY.endlessMilestone * (loop + 1) * doubloonMul(s.player.stats));
   const bounty = Math.round(ECONOMY.endlessMilestoneBounty * (loop + 1) * s.director.heat);
   s.stats.doubloons += purse;

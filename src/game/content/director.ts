@@ -49,8 +49,11 @@ export const SPAWN_BANDS: readonly SpawnBand[] = [
  * Per-boss HP multipliers on top of content/bosses.ts (see DIRECTOR.bossHpScale). PACE round 1 set 2.1 / 2.4 / 1.8;
  * REPLAY round 2 eased the Tidewyrm and the Sovereign (2.25 / 1.6): the flagship had become a DPS wall that
  * lower-level Dawn Rams sailed around for minutes, and the fights now land in 45–120 s on every sea.
+ * DIFFICULTY round 3 (bosses at 3:00 / 6:00 / 15:00 with rematches, content/world.ts): 2.1 / 2.25 / 1.6 → 1.3 / 1.25 / 3
+ * — the Warden and the Tidewyrm meet a smaller ship two and four minutes earlier; the Sovereign meets the builds that
+ * survived a harder run (they sank a 1.6 flagship in ~20 s). Fights still average 50–105 s (balance-sim).
  */
-export const BOSS_HP_MUL: Readonly<Record<BossId, number>> = { 'iron-warden': 2.1, tidewyrm: 2.25, sovereign: 1.6 };
+export const BOSS_HP_MUL: Readonly<Record<BossId, number>> = { 'iron-warden': 1.3, tidewyrm: 1.25, sovereign: 3 };
 
 /**
  * What one heat rule or daily-voyage rule changes (REPLAY). Multipliers (enemyHp, enemyDamage, enemySpeed, bossHp,
@@ -86,13 +89,16 @@ export interface HeatRule { level: number; name: string; text: string; effect: H
  * rows set what it cannot: with AI captains sailing (the default), Stormwrack's storms were easier to survive than
  * the Gloam's night broadsides by far more than their difficulties say. Tuned with
  * `npx tsx scripts/balance-sim.ts --seeds 8 --minutes 18 --proxy off --captains 3` (and checked with --captains 0).
+ * DIFFICULTY round 3 (the shared curves got much steeper): Sunward hull 1 → 1.1 and fire 1.26 → 1.12, Stormwrack fire
+ * 1.3 → 0.98 and bosses 0.85 → 0.8, the Gloam fire 1.12 → 1 and bosses 0.65 → 0.6. Measured with 24 seeds × 2 ships:
+ * deaths 44% / 60% / 71% (targets 35–50 / 50–65 / 60–75).
  */
 export const SEA_BALANCE: Readonly<Record<SeaId, { enemyHp: number; enemyDamage: number; bossHp: number }>> = {
   // Round 1 with 3 captains: 1/16 deaths here, 2/16 on Stormwrack, 9/16 in the Gloam (8 seeds × 2 ships).
-  'sunward-shallows': { enemyHp: 1, enemyDamage: 1.26, bossHp: 1 },
-  'stormwrack-reach': { enemyHp: 1, enemyDamage: 1.3, bossHp: 0.85 },
+  'sunward-shallows': { enemyHp: 1.1, enemyDamage: 1.12, bossHp: 1 },
+  'stormwrack-reach': { enemyHp: 1, enemyDamage: 0.98, bossHp: 0.8 },
   // The Gloam's deaths came from long boss fights at night, not from its fleet: bosses lighter, fleet a little harder.
-  'the-gloam': { enemyHp: 1, enemyDamage: 1.12, bossHp: 0.65 },
+  'the-gloam': { enemyHp: 1, enemyDamage: 1, bossHp: 0.6 },
 };
 
 /**
@@ -141,6 +147,11 @@ export const DIRECTOR = {
    */
   xpDifficultyExp: 0.2,
   /**
+   * Experience per ordinary kill over the run (DIFFICULTY round 3): full value for the first minutes (the quick
+   * level-ups stay), then gently less, so a build that already erases the horde does not snowball ever faster.
+   */
+  xpScale: (minute: number): number => 1 / (1 + 0.025 * Math.max(0, minute - 1.5)),
+  /**
    * Live-enemy floor: below it the director spawns immediately without spending budget. PACE: a pack of skiffs is
    * on its way from the first second (7 at 0:00; first contact ~6–8 s), then 30 at 5:00, 60 at 10:00 and 76 from
    * ~12:00, held even against a fast killer (see debt), so the sea is never empty (was min(78, 3 + 3.2m + 0.22m²)).
@@ -159,31 +170,45 @@ export const DIRECTOR = {
    * must not triple the healing or the doubloon income (elites, bosses, convoys and wages are unaffected).
    */
   dropScale: (minute: number): number => 1 / (1 + 0.3 * Math.max(0, minute - 1)),
-  /** Probability that a spawned enemy is elite. */
-  eliteChance: (minute: number): number => (minute < 1.5 ? 0 : Math.min(0.07, 0.006 + 0.0038 * minute)),
-  maxElites: 3,
+  /**
+   * Probability that a spawned enemy is elite, and elites afloat at once. DIFFICULTY round 3: more elites later
+   * (was min(0.07, 0.006 + 0.0038m), cap 3; now 10% from ~19 min, 4 from 6:00, 5 from 12:00). Not more than this:
+   * every elite carries a chest, and a round with 14% elites snowballed the player's build past the fleet.
+   */
+  eliteChance: (minute: number): number => (minute < 1.5 ? 0 : Math.min(0.1, 0.006 + 0.005 * minute)),
+  maxElites: (minute: number): number => 3 + Math.floor(minute / 6),
   /** Heat: difficulty × time curve. Drives enemy HP, damage and speed. */
   heat: (minute: number, difficulty: number): number => difficulty * (1 + 0.08 * minute + 0.003 * minute * minute),
   /**
    * Enemy HP multiplier: grows with time; sea difficulty counts at half strength (harder seas also bring more
-   * ships, more fire and nastier weather, so HP does not need to carry all of it).
+   * ships, more fire and nastier weather, so HP does not need to carry all of it). DIFFICULTY round 3: was
+   * 1 + 0.13m + 0.006m² (×1.8 at 5:00, ×2.9 at 10:00, ×4.3 at 15:00); now ×2.1 / ×3.7 / ×5.7, so ships live long
+   * enough to shoot back at a level-20 build and the kill rate (and the XP it pays) no longer runs away.
    */
-  hpScale: (minute: number, difficulty: number): number => (1 + 0.13 * minute + 0.006 * minute * minute) * (1 + (difficulty - 1) * 0.35),
-  /** Enemy damage multiplier (time and difficulty), capped. */
+  hpScale: (minute: number, difficulty: number): number => (1 + 0.18 * minute + 0.009 * minute * minute) * (1 + (difficulty - 1) * 0.35),
+  /**
+   * Enemy damage multiplier (time and difficulty), capped. DIFFICULTY round 3: was min(2.6, 1 + 0.045m + 0.0035m²)
+   * (×1.31 at 5:00, ×1.8 at 10:00); now ×1.6 / ×2.2, capped at 2.9 from ~16 min. A flatter, earlier curve: a
+   * steeper one piled every death into a 6–9 min wall.
+   */
   damageScale: (minute: number, difficulty: number): number =>
-    Math.min(2.6, (1 + 0.045 * minute + 0.0035 * minute * minute) * (1 + (difficulty - 1) * 0.2)),
+    Math.min(2.9, (1 + 0.12 * minute) * (1 + (difficulty - 1) * 0.2)),
   /**
    * Green crews: early enemy gunnery is forgiving and hardens over the first minutes (multipliers on lead, spread
-   * and reload time), so the opening is about learning to sail, not about dodging perfect volleys.
+   * and reload time), so the opening is about learning to sail, not about dodging perfect volleys. DIFFICULTY
+   * round 3: the grace is milder (0.4 lead / ×1.4 spread / ×1.3 reload at 0:00, were 0.3 / 1.5 / 1.4) and over by
+   * 5:00 (was 10:00).
    */
-  graceLead: (minute: number): number => 0.3 + 0.7 * Math.min(1, minute / 10),
-  graceSpread: (minute: number): number => 1.5 - 0.5 * Math.min(1, minute / 10),
-  graceReload: (minute: number): number => 1.4 - 0.4 * Math.min(1, minute / 10),
+  graceLead: (minute: number): number => 0.4 + 0.6 * Math.min(1, minute / 5),
+  graceSpread: (minute: number): number => 1.4 - 0.4 * Math.min(1, minute / 5),
+  graceReload: (minute: number): number => 1.3 - 0.3 * Math.min(1, minute / 5),
   /**
    * Fire control: the whole enemy fleet shares a budget of volleys per second (tokens). The horde can be huge
    * for spectacle while incoming fire stays a designed curve. Bosses are exempt (their attacks are telegraphed).
+   * The budget binds from ~5:00 on Sunward and ~2:00 in the Gloam (the bank sits near empty), so this is the dial
+   * for mid/late incoming fire. DIFFICULTY round 3: 0.1 + 0.03m → 0.2 + 0.032m (+56% at 5:00, +38% at 10:00).
    */
-  fireRate: (minute: number): number => 0.1 + 0.03 * minute,
+  fireRate: (minute: number): number => 0.2 + 0.032 * minute,
   /** Fire-control rate multiplier from sea difficulty. */
   fireDifficultyExp: 0.3,
   fireBank: 3,
@@ -198,13 +223,17 @@ export const DIRECTOR = {
   eliteHp: 3.5,
   eliteDamage: 1.25,
   eliteXp: 4,
-  /** Budget and floor multipliers while a boss is alive (focus on the fight). */
-  bossBudgetMul: 0.35,
-  bossFloorMul: 0.3,
+  /**
+   * Budget and floor multipliers while a boss is alive. DIFFICULTY round 3: a boss fight is no breather any more
+   * (was 0.35 / 0.3 for 60 s, full again after 120 s; now 0.6 / 0.55 for 20 s, full after 40 s): the fleet keeps
+   * pressing while the boss telegraphs.
+   */
+  bossBudgetMul: 0.6,
+  bossFloorMul: 0.55,
   /** Seconds of calm at the start of a boss fight; spawns ramp back to normal over the same span after it. */
-  bossCalm: 60,
-  /** Budget/floor multiplier during the boss warning countdown (was 0.5: the sea no longer empties before a boss). */
-  warningBudgetMul: 0.8,
+  bossCalm: 20,
+  /** Budget/floor multiplier during the boss warning countdown (was 0.5, then 0.8; round 3: the fleet keeps coming). */
+  warningBudgetMul: 1,
   /** Seconds of boss warning before the spawn (was 10). */
   warningLead: 7,
   /** Forts: seconds between placement attempts, max alive, search ring (m). */
