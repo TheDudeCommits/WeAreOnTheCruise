@@ -31,6 +31,9 @@ export interface CruiseBridge {
   metrics(): unknown;
   /** Ocean QA stats (SEA & LIGHT): foam coverage near the focus and the water shader's screen shares. */
   ocean(radius?: number): unknown;
+  /** FX counters (IMPACT: smoke governor, numbers) and the camera's framing state. */
+  fx(): unknown;
+  camera(): unknown;
   /** Visible meshes/triangles per top-level scene group (instancing counted; frustum culling not applied). */
   sceneStats(): Record<string, { meshes: number; tris: number; shadowTris: number }>;
   /** AI captains (CAPTAINS): state, the fleet's attention split, and the baked hull stats. */
@@ -110,6 +113,8 @@ export function installDebugBridge(app: GameApp): void {
     pause: (paused) => sim()?.setPaused(paused),
     advance: (seconds) => { const frames = Math.round(seconds * 60); for (let i = 0; i < frames; i++) app.tick(1 / 60); },
     metrics: () => app.host.getMetrics(),
+    fx: () => (window as unknown as { __CRUISE_FX_STATS__?: unknown }).__CRUISE_FX_STATS__ ?? null,
+    camera: () => (window as unknown as { __CRUISE_CAMERA__?: unknown }).__CRUISE_CAMERA__ ?? null,
     ocean: (radius = 150) => {
       const o = (window as unknown as { __OCEAN__?: { foamCoverageStats?: (r: number) => unknown; screenStats?: (r: number, rim: number) => unknown } }).__OCEAN__;
       return { foam: o?.foamCoverageStats?.(radius) ?? null, screen: o?.screenStats?.(radius, 1) ?? null };
