@@ -2,6 +2,32 @@
 
 Updated 2026-09-25. Checkout: `/Users/amir/Projects/WeAreOnTheCruise`. Remote: https://github.com/TheDudeCommits/WeAreOnTheCruise. Active branch: `claude/naval-survivor-overhaul`, branched from `codex/cinematic-anime-overhaul` at `9fce64e`. Vercel builds a preview for every pushed branch (project `we-are-on-the-cruise`).
 
+## September 26 — owner feedback round 3: close camera, rival captains, harder seas (read first)
+
+Owner feedback after the round-2 deploy, all shipped to https://cruise.dude.work (`scripts/deploy-prod.sh`):
+- **Camera back to the up-close v2 framing** (`src/render/camera/CameraDirector.ts`): 118 → 172 m with the fight
+  (fleet / 80) + (length − 40) × 0.7 (~132 m for Sunlion; round 2 had pushed it to ~257 m). Boss framing pulls out at
+  most ×1.15 and keeps the hero near the centre. Don't zoom the run camera out again.
+- **Level-up cards**: every new hand starts undimmed (`has-pick` was never cleared after the first pick).
+- **AI captains are rivals** (`src/game/sim/captains-rival.ts`, tuning `CAPTAIN.rival`): a hand-aimed Full Broadside
+  (`PF_AIMED`) or a ram hurts any captain (×0.4); stray auto-fire/splash only hits hostile ones. 10% of its hull →
+  hostile for 20 s (refreshed by hits): it hunts the player, turns broadside + bow chaser on it (team-'enemy' shots
+  at 0.6×, never hitting captains), and the player's auto-aim takes it. Opportunists turn on a holed player; a sunk
+  rival may come back for revenge (50%, 12 s). Sinking one: XP, doubloons, 30% of its bounty, a chest (≤ 1 / 150 s).
+  HUD: HOSTILE tag, red nameplate/row/minimap arrow, taunts, one-time "Rival captains" tip. Captains are softer
+  (hpMul 0.9, less regen) so their bars visibly drop. QA: `__CRUISE__.debug.provokeCaptain()`, `captains()` shows
+  grudge/taken; tests in `tests/rival-captains.test.ts`.
+- **Subtler VFX** (render only): the evolved Storm Rod's Thunderhead (the "black clouds") → pale translucent haze
+  (`Glow.Haze`); the evolved Maelstrom Charm's spiral ("tide under the ship") → thin faint streaks, no foam carpet;
+  all dark smoke is grey, smaller, rarer; smoke-runner screens are soft haze. The Thunderhead's opacity is one
+  number (0.4) in `StateFx.ts` if the owner wants it stronger.
+- **Harder, bosses earlier** (content/director.ts, world.ts): bosses on the run clock at 3:00 Iron Warden, 6:00
+  Tidewyrm, 8:30 Warden II (×3.2), 11:00 Tidewyrm II (×2.3), 15:00 Sovereign (final; wins even with a rematch
+  afloat). Steeper enemy HP/damage/fire-rate scaling, more elites later, boss fights keep the fleet pressing (budget
+  0.6, calm 20 s), less free healing, Second Wind 30 s / shield 0.3. Balance bot with 3 rival captains: deaths
+  Sunward ~46%, Stormwrack ~58%, Gloam ~63–73%; boss fights avg 45–115 s.
+- Known: a WebGL "texture format / sampler type" warning at load predates this round (also on the old build).
+
 ## September 25 — gauntlet rounds 1–2, new production at cruise.dude.work (read first)
 
 **Owner asks** (2026-09-24):
