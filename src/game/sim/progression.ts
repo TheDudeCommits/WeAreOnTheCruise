@@ -26,6 +26,7 @@ import { TAU } from './meta-steer';
 import { STAT_KEYS, addStats, doubloonMul, emptyStats, xpMul } from './stats';
 import { onAffixDeath } from './affixes';
 import { gainMomentum } from './player';
+import { MILESTONES, runMods } from './run-mods';
 
 const CHIP_KEY = Object.fromEntries(STAT_KEYS.map((k) => [k, `${CHIP_PREFIX}${k}`])) as Record<StatKey, string>;
 
@@ -50,6 +51,13 @@ export function recomputeStats(c: SimContext): void {
   const sc = c.state.director.scratch;
   for (const key of STAT_KEYS) { const v = sc[CHIP_KEY[key]]; if (v) stats[key] += v; }
   stats.regen += BASE_REGEN;
+  // REPLAY run modifiers: daily-rule bonuses add; the heat/daily reward and XP rules multiply what the ship earns.
+  const mods = runMods(c.state);
+  stats.damage += mods.playerDamage;
+  stats.maxHp += mods.playerHull;
+  stats.speed += mods.playerSpeed;
+  if (mods.reward !== 1) stats.doubloonGain = (1 + stats.doubloonGain) * mods.reward - 1;
+  if (mods.xp !== 1) stats.xpGain = (1 + stats.xpGain) * mods.xp - 1;
   p.stats = stats;
   const oldMax = p.maxHp;
   p.maxHp = c.content.ships[p.shipId].hp * (1 + stats.maxHp);
@@ -149,7 +157,8 @@ export function createOffers(c: SimContext, avoid?: ReadonlySet<string>): CardOf
     chips.push({ key: id, weight: soft(id, 1), cards: [], chip });
   }
   const hpFrac = p.maxHp > 0 ? p.hp / p.maxHp : 1;
-  if (hpFrac < CARD_WEIGHTS.healBelow) heal.push({ key: 'heal', weight: 1, cards: [healCard(HEAL_CARD)] });
+  const healAmount = HEAL_CARD * runMods(s).healing;
+  if (hpFrac < CARD_WEIGHTS.healBelow) heal.push({ key: 'heal', weight: 1, cards: [healCard(healAmount)] });
 
   const cats: Category[] = [
     { weight: CARD_WEIGHTS.weaponUpgrade, entries: weaponUp },
@@ -180,7 +189,7 @@ export function createOffers(c: SimContext, avoid?: ReadonlySet<string>): CardOf
     else offers.push(...entry.cards);
   }
   // Fallback when the pool is exhausted: repairs and doubloons.
-  if (offers.length < count && !offers.some((o) => o.kind === 'heal')) offers.push(healCard(HEAL_CARD));
+  if (offers.length < count && !offers.some((o) => o.kind === 'heal')) offers.push(healCard(healAmount));
   if (offers.length < count) offers.push(doubloonCard(Math.round(DOUBLOON_CARD.base + DOUBLOON_CARD.perMinute * (s.time / 60))));
   return offers;
 }
@@ -313,13 +322,16 @@ function openQueuedChest(c: SimContext): void {
 }
 
 function chestCount(c: SimContext, tier: number): number {
-  if (tier >= 2) return CHESTS.bossCount;
+  const mods = runMods(c.state);
+  if (tier >= 2) return mods.bossChestCap > 0 ? Math.min(CHESTS.bossCount, mods.bossChestCap) : CHESTS.bossCount;
   const luck = Math.max(0, c.state.player.stats.luck);
   const shift = luck * CHESTS.eliteLuckShift;
   const w = [Math.max(5, CHESTS.eliteCounts[0]! - shift), CHESTS.eliteCounts[1]! + shift * 0.6, CHESTS.eliteCounts[2]! + shift * 0.4];
   let r = c.random() * (w[0]! + w[1]! + w[2]!);
-  for (let i = 0; i < 3; i++) { r -= w[i]!; if (r <= 0) return i + 1; }
-  return 1;
+  let n = 1;
+  for (let i = 0; i < 3; i++) { r -= w[i]!; if (r <= 0) { n = i + 1; break; } }
+  // REPLAY heat: Elite Muster thins elite chests (the roll still happens, so the random stream is unchanged).
+  return mods.eliteChestCap > 0 ? Math.min(n, mods.eliteChestCap) : n;
 }
 
 function rollChest(c: SimContext, tier: number): CardOffer[] {
@@ -420,7 +432,7 @@ export function onEnemyKilled(c: SimContext, e: EnemyState): void {
   const xp = (def.xp * (e.elite ? DIRECTOR.eliteXp : 1) * (convoy ? 0.5 : 1)) / density;
   spillCoins(c, e.x, e.z, xp, e.radius);
   const luck = Math.max(0, p.stats.luck);
-  const perShip = DIRECTOR.dropScale(s.time / 60);
+  const perShip = DIRECTOR.dropScale(s.time / 60) * runMods(s).drops;
   if (c.random() < def.doubloonChance * (1 + luck * 0.05) * perShip) scatter(c, 'doubloon', e.x, e.z, tune.doubloons, e.radius);
   if (convoy) for (let k = 0; k < 3; k++) scatter(c, 'doubloon', e.x, e.z, Math.round(EVENT_TUNING.convoyDoubloons / 3), e.radius * 1.2);
   if (e.elite) {
@@ -453,18 +465,39 @@ export function onBossKilled(c: SimContext, b: BossState): void {
   const finalBoss = sea.bosses[sea.bosses.length - 1]?.boss;
   const isFinal = !s.endless && b.defId === finalBoss && d.nextBossIndex >= sea.bosses.length && !others;
   if (isFinal) {
-    // The run ends shortly: bank everything directly instead of dropping it on the water.
-    s.stats.doubloons += Math.round((def.doubloons + ECONOMY.victoryBonus) * doubloonMul(p.stats));
+    // The run ends shortly: bank everything directly instead of dropping it on the water (the hold is plunder).
+    s.stats.doubloons += Math.round((def.doubloons * ECONOMY.plunder + ECONOMY.victoryBonus) * doubloonMul(p.stats));
     s.stats.bounty += BOUNTY.victory;
     // No XP here: it would queue level-up cards over the victory lap and hold the results behind them.
     beginVictoryLap(c);
     return;
   }
+  if (s.endless) endlessMilestone(c, b);
   spillCoins(c, b.x, b.z, def.xp, b.radius * 1.3, 12);
   c.spawnPickup('chest', b.x, b.z, 2);
   const pieces = 6;
   for (let k = 0; k < pieces; k++) scatter(c, 'doubloon', b.x, b.z, Math.max(1, Math.round(def.doubloons / pieces)), b.radius * 1.4);
   if (c.random() < 0.5) scatter(c, 'repair', b.x, b.z, 1, b.radius);
+}
+
+/**
+ * Endless mode (REPLAY): every boss sunk after the victory is a milestone — a purse that grows each loop, a bounty
+ * tier, and a banner. The milestone count lives in the director scratch (`rp:milestones`) for the logbook.
+ */
+function endlessMilestone(c: SimContext, b: BossState): void {
+  const s = c.state, sc = s.director.scratch;
+  const n = (sc[MILESTONES] ?? 0) + 1;
+  sc[MILESTONES] = n;
+  const loop = Math.floor((n - 1) / Math.max(1, c.content.seas[s.seaId].bosses.length));
+  const purse = Math.round(ECONOMY.endlessMilestone * (loop + 1) * doubloonMul(s.player.stats));
+  const bounty = Math.round(ECONOMY.endlessMilestoneBounty * (loop + 1) * s.director.heat);
+  s.stats.doubloons += purse;
+  s.stats.bounty += bounty;
+  const minutes = Math.floor(s.time / 60);
+  c.emit({
+    type: 'director-event', name: `Endless milestone ${n}`,
+    text: `${c.content.bosses[b.defId].name} sunk at ${minutes}:${String(Math.floor(s.time % 60)).padStart(2, '0')}. +${purse} ◈ and +${bounty.toLocaleString('en-US')} bounty.`,
+  });
 }
 
 // ───────────────────────── Pickups ─────────────────────────
@@ -473,8 +506,8 @@ export function onPickupCollected(c: SimContext, k: PickupState): void {
   const s = c.state, p = s.player;
   switch (k.kind) {
     case 'xp-copper': case 'xp-silver': case 'xp-gold': grantXp(c, k.value); break;
-    case 'doubloon': s.stats.doubloons += Math.max(1, Math.round(k.value * doubloonMul(p.stats))); break;
-    case 'repair': p.hp = Math.min(p.maxHp, p.hp + p.maxHp * PICKUP_EFFECTS.repair); break;
+    case 'doubloon': s.stats.doubloons += Math.max(1, Math.round(k.value * ECONOMY.plunder * doubloonMul(p.stats))); break;
+    case 'repair': p.hp = Math.min(p.maxHp, p.hp + p.maxHp * PICKUP_EFFECTS.repair * runMods(s).healing); break;
     case 'compass': for (const other of s.pickups) if (other.alive) other.magnet = true; break;
     case 'powder-keg': powderKeg(c); break;
     case 'chest': openChest(c, k.value >= 2 ? 2 : 1); break;

@@ -7,8 +7,12 @@
  */
 import { META_SAVE_KEY, SETTINGS_KEY } from '../constants';
 import { CONTENT } from '../content';
+import { HEAT } from '../content/director';
 import { META_UPGRADE_IDS, SEA_IDS, SHIP_IDS, type MetaUpgradeId, type SeaId, type ShipId } from '../ids';
-import type { AchievementId, MetaProfile, QualitySetting, RunResult, Settings } from '../types';
+import type { AchievementId, MetaProfile, QualitySetting, RunResult, RunSummary, Settings } from '../types';
+import { DAILY_KEEP, DAILY_KEY, recordDaily } from './daily';
+import { HISTORY_MAX, extendHistory, pushHistory, summarize } from './history';
+import { QUEST_IDS, evaluateQuests, questDef, rewardText, type RunRecord } from './quests';
 
 export const ACHIEVEMENT_IDS: readonly AchievementId[] = ['defeat-iron-warden', 'defeat-tidewyrm', 'win-run', 'survive-10', 'kills-1000'];
 
@@ -23,6 +27,8 @@ export const ACHIEVEMENTS: Readonly<Record<AchievementId, { name: string; text: 
 const START_SHIPS: readonly ShipId[] = SHIP_IDS.filter((id) => CONTENT.ships[id].unlock.kind === 'start');
 const START_SEAS: readonly SeaId[] = SEA_IDS.filter((id) => CONTENT.seas[id].unlock.kind === 'start');
 const QUALITIES: readonly QualitySetting[] = ['auto', 'low', 'medium', 'high', 'ultra'];
+const COLOR_BLIND = ['off', 'deutan', 'protan', 'tritan'] as const;
+const OUTCOMES: readonly RunResult['outcome'][] = ['victory', 'defeat', 'retired'];
 
 export function defaultProfile(): MetaProfile {
   return {
@@ -33,7 +39,11 @@ export function defaultProfile(): MetaProfile {
 }
 
 export function defaultSettings(): Settings {
-  return { version: 2, masterVolume: 0.8, musicVolume: 0.7, sfxVolume: 0.85, muted: false, cameraShake: 1, damageNumbers: true, quality: 'auto', showFps: false };
+  return {
+    version: 2, masterVolume: 0.8, musicVolume: 0.7, sfxVolume: 0.85, muted: false, cameraShake: 1, damageNumbers: true, quality: 'auto', showFps: false,
+    // Round 2: the first-voyage coach (FLOW) and crew barks (AUDIO) default on.
+    coach: true, barks: true,
+  };
 }
 
 // ───────────────────────── Sanitising ─────────────────────────
@@ -55,6 +65,70 @@ function numberMap<K extends string>(v: unknown, valid: readonly K[]): Partial<R
   const out: Partial<Record<K, number>> = {};
   if (!isObj(v)) return out;
   for (const key of valid) { const n = v[key]; if (finite(n) && n > 0) out[key] = n; }
+  return out;
+}
+
+// ── Round 2 fields (all optional: saves from before round 2 load unchanged) ──
+
+/** Quest progress: known quest ids only, progress clamped to 0..goal, done a boolean (done implies the goal). */
+function sanitizeQuests(v: unknown): MetaProfile['quests'] {
+  const out: NonNullable<MetaProfile['quests']> = {};
+  if (!isObj(v)) return out;
+  for (const id of QUEST_IDS) {
+    const q = v[id];
+    if (!isObj(q)) continue;
+    const goal = questDef(id)?.goal ?? 1;
+    const done = q.done === true;
+    const progress = done ? goal : Math.min(goal, finite(q.progress) && q.progress > 0 ? q.progress : 0);
+    if (done || progress > 0) out[id] = { progress, done };
+  }
+  return out;
+}
+
+/** Highest heat cleared per sea: integers 1..HEAT.max (0 = none is simply absent). */
+function sanitizeHeat(v: unknown): MetaProfile['heat'] {
+  const out: NonNullable<MetaProfile['heat']> = {};
+  if (!isObj(v)) return out;
+  for (const id of SEA_IDS) { const n = v[id]; if (finite(n) && n >= 1) out[id] = Math.min(HEAT.max, Math.floor(n)); }
+  return out;
+}
+
+function sanitizeSummary(v: unknown): RunSummary | null {
+  if (!isObj(v)) return null;
+  if (typeof v.shipId !== 'string' || !(SHIP_IDS as readonly string[]).includes(v.shipId)) return null;
+  if (typeof v.seaId !== 'string' || !(SEA_IDS as readonly string[]).includes(v.seaId)) return null;
+  if (typeof v.outcome !== 'string' || !(OUTCOMES as readonly string[]).includes(v.outcome)) return null;
+  const s: RunSummary = {
+    at: count(v.at, 1e15), shipId: v.shipId as ShipId, seaId: v.seaId as SeaId, outcome: v.outcome as RunResult['outcome'],
+    time: finite(v.time) && v.time > 0 ? Math.min(1e7, v.time) : 0, level: Math.max(1, count(v.level, 999)), kills: count(v.kills),
+    bounty: count(v.bounty), doubloons: count(v.doubloons), heat: count(v.heat, HEAT.max),
+  };
+  if (typeof v.daily === 'string' && DAILY_KEY.test(v.daily)) s.daily = v.daily;
+  return s;
+}
+
+/** The logbook: valid entries only, newest first as stored, at most HISTORY_MAX. */
+function sanitizeHistory(v: unknown): RunSummary[] {
+  if (!Array.isArray(v)) return [];
+  const out: RunSummary[] = [];
+  for (const item of v) { const s = sanitizeSummary(item); if (s) out.push(s); if (out.length >= HISTORY_MAX) break; }
+  return out;
+}
+
+/** Daily bests: 'YYYY-MM-DD' keys with positive finite bounties, the newest DAILY_KEEP days. */
+function sanitizeDaily(v: unknown): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!isObj(v)) return out;
+  const keys = Object.keys(v).filter((k) => DAILY_KEY.test(k)).sort().slice(-DAILY_KEEP);
+  for (const k of keys) { const n = v[k]; if (finite(n) && n >= 0) out[k] = Math.floor(n); }
+  return out;
+}
+
+/** FLOW's one-time coach hints: short unique strings. */
+function sanitizeHints(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  const out: string[] = [];
+  for (const item of v) if (typeof item === 'string' && item.length > 0 && item.length <= 64 && !out.includes(item)) { out.push(item); if (out.length >= 128) break; }
   return out;
 }
 
@@ -84,6 +158,12 @@ export function sanitizeProfile(raw: unknown): MetaProfile {
     lastShip: typeof raw.lastShip === 'string' && (SHIP_IDS as readonly string[]).includes(raw.lastShip) ? (raw.lastShip as ShipId) : base.lastShip,
     lastSea: typeof raw.lastSea === 'string' && (SEA_IDS as readonly string[]).includes(raw.lastSea) ? (raw.lastSea as SeaId) : base.lastSea,
   };
+  // Round 2: copied only when present, so an old save round-trips byte-for-byte in shape.
+  if (raw.seenHints !== undefined) profile.seenHints = sanitizeHints(raw.seenHints);
+  if (raw.quests !== undefined) profile.quests = sanitizeQuests(raw.quests);
+  if (raw.heat !== undefined) profile.heat = sanitizeHeat(raw.heat);
+  if (raw.history !== undefined) profile.history = sanitizeHistory(raw.history);
+  if (raw.daily !== undefined) profile.daily = sanitizeDaily(raw.daily);
   if (profile.wins > profile.runs) profile.runs = profile.wins;
   for (const id of START_SHIPS) if (!profile.unlockedShips.includes(id)) profile.unlockedShips.unshift(id);
   for (const id of START_SEAS) if (!profile.unlockedSeas.includes(id)) profile.unlockedSeas.unshift(id);
@@ -108,6 +188,12 @@ export function sanitizeSettings(raw: unknown): Settings {
     quality: typeof raw.quality === 'string' && (QUALITIES as readonly string[]).includes(raw.quality) ? (raw.quality as QualitySetting) : base.quality,
     showFps: typeof raw.showFps === 'boolean' ? raw.showFps : base.showFps,
     ...(finite(raw.captains) ? { captains: Math.min(4, Math.max(0, Math.round(raw.captains))) } : {}),
+    // Round 2 (FLOW / IMPACT / AUDIO settings): kept when valid, so they survive a reload; coach and barks default on.
+    coach: typeof raw.coach === 'boolean' ? raw.coach : true,
+    barks: typeof raw.barks === 'boolean' ? raw.barks : true,
+    ...(typeof raw.colorBlind === 'string' && (COLOR_BLIND as readonly string[]).includes(raw.colorBlind) ? { colorBlind: raw.colorBlind as Settings['colorBlind'] } : {}),
+    ...(finite(raw.hudScale) ? { hudScale: Math.min(1.2, Math.max(0.8, raw.hudScale)) } : {}),
+    ...(typeof raw.cinematicCamera === 'boolean' ? { cinematicCamera: raw.cinematicCamera } : {}),
   };
 }
 
@@ -218,21 +304,42 @@ function syncUnlocks(profile: MetaProfile): string[] {
   return unlocks;
 }
 
+/** What REPLAY adds to a banked run: heat, the daily key and the run tracker's quest record. */
+export interface VoyageRecord {
+  heat: number;
+  daily?: string;
+  /** Whole-voyage counters (voyage quests); omitted = nothing tracked. */
+  run?: RunRecord;
+  /** Counters since the last banking (ledger quests); defaults to `run`. */
+  delta?: RunRecord;
+}
+
+/** A quest record with no tracked counters (tests, and callers without a RunTracker). */
+export function bareRecord(result: RunResult, heat = 0, daily?: string): RunRecord {
+  return {
+    result, heat, daily, bountyCaptains: 0, eventsWon: 0, rogueRides: 0, krakenSurvived: 0, noHitBosses: 0, bossesSunk: 0,
+    fastWardens: 0, overdrives: 0, parries: 0, milestones: 0,
+  };
+}
+
 /**
  * Banks a finished run into the profile and returns what it unlocked, in display order: achievements, then ships
- * and seas, then doubloon ships that just became affordable.
+ * and seas, heat, quests and the daily best, then doubloon ships that just became affordable.
+ * `continuation`: the endless stretch of a run already credited at its victory (not another run or win).
  */
-/** `continuation`: the endless stretch of a run already credited at its victory (not another run or win). */
-export function applyRunResult(profile: MetaProfile, result: RunResult, continuation = false): string[] {
+export function applyRunResult(profile: MetaProfile, result: RunResult, continuation = false, voyage: VoyageRecord = { heat: 0 }): string[] {
   const lines: string[] = [];
   const before = profile.doubloons;
+  const heat = Math.max(0, Math.min(HEAT.max, Math.floor(voyage.heat || 0)));
+  const daily = voyage.daily;
   if (!continuation) profile.runs++;
   profile.doubloons += Math.max(0, Math.floor(result.doubloonsEarned));
   profile.totalKills += Math.max(0, Math.floor(result.stats.kills));
   profile.bestTime[result.shipId] = Math.max(profile.bestTime[result.shipId] ?? 0, result.time);
   profile.bestBounty[result.shipId] = Math.max(profile.bestBounty[result.shipId] ?? 0, result.stats.bounty);
-  profile.lastShip = result.shipId;
-  profile.lastSea = result.seaId;
+  // A daily voyage may sail a lent ship or sea: never leave the harbor pointed at one the captain does not own.
+  if (profile.unlockedShips.includes(result.shipId)) profile.lastShip = result.shipId;
+  if (profile.unlockedSeas.includes(result.seaId)) profile.lastSea = result.seaId;
   const grant = (achievement: AchievementId) => {
     if (profile.achievements.includes(achievement)) return;
     profile.achievements.push(achievement);
@@ -244,6 +351,23 @@ export function applyRunResult(profile: MetaProfile, result: RunResult, continua
   if (result.outcome === 'victory' && !continuation) { grant('win-run'); profile.wins++; }
   if (profile.totalKills >= 1000) grant('kills-1000');
   lines.push(...syncUnlocks(profile));
+  // Heat: winning heat N on a sea opens N + 1 there (daily voyages sail at heat 0 and do not count).
+  if (result.outcome === 'victory' && !continuation && !daily && heat >= 1 && heat > (profile.heat?.[result.seaId] ?? 0)) {
+    (profile.heat ??= {})[result.seaId] = heat;
+    const sea = CONTENT.seas[result.seaId].name;
+    lines.push(heat < HEAT.max ? `Heat ${heat} cleared on ${sea}: heat ${heat + 1} is open` : `Heat ${heat} cleared on ${sea}: the top of the ladder`);
+  }
+  // Logbook.
+  if (continuation) extendHistory(profile, result);
+  else pushHistory(profile, summarize(result, heat, daily));
+  // Daily best.
+  if (daily && recordDaily(profile, daily, result.stats.bounty)) lines.push(`Daily voyage ${daily}: new best bounty ${Math.floor(result.stats.bounty).toLocaleString('en-US')}`);
+  // Quests (after the totals above, which ledger quests read).
+  const record = voyage.run ?? bareRecord(result, heat, daily);
+  for (const q of evaluateQuests(profile, record, voyage.delta ?? record)) {
+    const reward = rewardText(q.reward);
+    lines.push(`Quest complete: ${q.name}${reward ? ` (${reward})` : ''}`);
+  }
   for (const id of SHIP_IDS) {
     const ship = CONTENT.ships[id];
     if (ship.unlock.kind !== 'doubloons' || profile.unlockedShips.includes(id)) continue;

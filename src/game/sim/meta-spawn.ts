@@ -7,6 +7,7 @@ import type { EnemyId } from '../ids';
 import type { EnemyState } from '../types';
 import type { SimContext } from './context';
 import { rollAffixes } from './affixes';
+import { runMods } from './run-mods';
 
 export interface ScaledSpawnOpts {
   elite?: boolean;
@@ -20,7 +21,7 @@ export function spawnScaled(c: SimContext, id: EnemyId, x: number, z: number, op
   const e = c.spawnEnemy(id, x, z, { elite: !!opts.elite, heading: opts.heading });
   if (!e) return null;
   const def = c.content.enemies[id];
-  const hp = def.hp * enemyHpScale(c) * (opts.elite ? DIRECTOR.eliteHp : 1) * (opts.hpMul ?? 1);
+  const hp = def.hp * enemyHpScale(c) * (opts.elite ? DIRECTOR.eliteHp * runMods(c.state).eliteHp : 1) * (opts.hpMul ?? 1);
   e.hp = hp;
   e.maxHp = hp;
   if (e.elite) rollAffixes(c, e);
@@ -29,14 +30,14 @@ export function spawnScaled(c: SimContext, id: EnemyId, x: number, z: number, op
 
 const difficulty = (c: SimContext): number => c.content.seas[c.state.seaId].difficulty;
 
-/** Enemy HP multiplier for this moment of the run (time × sea difficulty). */
+/** Enemy HP multiplier for this moment of the run (time × sea difficulty × the run's sea balance and heat). */
 export function enemyHpScale(c: SimContext): number {
-  return DIRECTOR.hpScale(c.state.time / 60, difficulty(c));
+  return DIRECTOR.hpScale(c.state.time / 60, difficulty(c)) * runMods(c.state).enemyHp;
 }
 
-/** Enemy damage multiplier for this moment of the run. */
+/** Enemy damage multiplier for this moment of the run (× the run's sea balance and heat, REPLAY run-mods). */
 export function enemyDamageScale(c: SimContext): number {
-  return DIRECTOR.damageScale(c.state.time / 60, difficulty(c));
+  return DIRECTOR.damageScale(c.state.time / 60, difficulty(c)) * runMods(c.state).enemyDamage;
 }
 
 /** Damage multiplier inside a Commander elite's aura (e.ai.fbuf bit 2 = BUFF_AURA, set by ai-foes.ts). */

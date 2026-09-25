@@ -45,8 +45,84 @@ export const SPAWN_BANDS: readonly SpawnBand[] = [
     E('smoke-runner', 1.5, 2, 3), E('signal-cutter', 1.5, 1, 2), E('harpooner', 1.8, 1, 2), E('bomb-ketch', 1.8, 1, 2), E('ironclad', 1.8, 1, 2), E('lantern-wisp', 3, 6, 8), E('drowned-galleon', 1.8, 1, 2)] },
 ];
 
-/** Per-boss HP multipliers on top of content/bosses.ts (PACE round 1; see DIRECTOR.bossHpScale). */
-const BOSS_HP_MUL: Readonly<Record<BossId, number>> = { 'iron-warden': 2.1, tidewyrm: 2.4, sovereign: 1.8 };
+/**
+ * Per-boss HP multipliers on top of content/bosses.ts (see DIRECTOR.bossHpScale). PACE round 1 set 2.1 / 2.4 / 1.8;
+ * REPLAY round 2 eased the Tidewyrm and the Sovereign (2.25 / 1.6): the flagship had become a DPS wall that
+ * lower-level Dawn Rams sailed around for minutes, and the fights now land in 45–120 s on every sea.
+ */
+export const BOSS_HP_MUL: Readonly<Record<BossId, number>> = { 'iron-warden': 2.1, tidewyrm: 2.25, sovereign: 1.6 };
+
+/**
+ * What one heat rule or daily-voyage rule changes (REPLAY). Multipliers (enemyHp, enemyDamage, enemySpeed, bossHp,
+ * eliteChance, eventGap, drops, healing, reward, xp) stack by multiplication; counts and player bonuses
+ * (extraElites, bountyCaptains, playerDamage, playerHull, playerSpeed) add up. See src/game/sim/run-mods.ts.
+ */
+export interface HeatEffect {
+  enemyHp?: number;
+  enemyDamage?: number;
+  enemySpeed?: number;
+  bossHp?: number;
+  eliteChance?: number;
+  extraElites?: number;
+  eliteHp?: number;
+  /** Caps on chest rewards (the lowest cap in force wins). */
+  eliteChestCap?: number;
+  bossChestCap?: number;
+  eventGap?: number;
+  bountyCaptains?: number;
+  drops?: number;
+  healing?: number;
+  reward?: number;
+  playerDamage?: number;
+  playerHull?: number;
+  playerSpeed?: number;
+  xp?: number;
+}
+
+export interface HeatRule { level: number; name: string; text: string; effect: HeatEffect }
+
+/**
+ * Per-sea balance on top of the difficulty curves (REPLAY round 2). Difficulty scales everything together; these
+ * rows set what it cannot: with AI captains sailing (the default), Stormwrack's storms were easier to survive than
+ * the Gloam's night broadsides by far more than their difficulties say. Tuned with
+ * `npx tsx scripts/balance-sim.ts --seeds 8 --minutes 18 --proxy off --captains 3` (and checked with --captains 0).
+ */
+export const SEA_BALANCE: Readonly<Record<SeaId, { enemyHp: number; enemyDamage: number; bossHp: number }>> = {
+  // Round 1 with 3 captains: 1/16 deaths here, 2/16 on Stormwrack, 9/16 in the Gloam (8 seeds × 2 ships).
+  'sunward-shallows': { enemyHp: 1, enemyDamage: 1.26, bossHp: 1 },
+  'stormwrack-reach': { enemyHp: 1, enemyDamage: 1.3, bossHp: 0.85 },
+  // The Gloam's deaths came from long boss fights at night, not from its fleet: bosses lighter, fleet a little harder.
+  'the-gloam': { enemyHp: 1, enemyDamage: 1.12, bossHp: 0.65 },
+};
+
+/**
+ * Heat 1–8 (REPLAY): a per-sea difficulty ladder. Heat N+1 opens by winning at heat N on that sea (heat 1 opens on
+ * every sea with the first victory). Every level adds hpPerLevel enemy hull and damagePerLevel enemy damage, and each
+ * level brings one named rule; all rules up to the chosen level apply. Doubloons and bounty pay × (1 + reward × heat).
+ * Rules that add ships which carry chests (elites, bounty captains) also thin those chests, or the extra loot would
+ * make the higher level easier than the one below it (measured: heat 4 was safer than heat 2 before the caps).
+ */
+export const HEAT = {
+  max: 8,
+  reward: 0.25,
+  hpPerLevel: 0.05,
+  damagePerLevel: 0.03,
+  rules: [
+    { level: 1, name: 'Hardened Hulls', text: 'Enemy hulls +10%.', effect: { enemyHp: 1.1 } },
+    { level: 2, name: 'Keen Gunners', text: 'Enemy fire hits 10% harder.', effect: { enemyDamage: 1.1 } },
+    { level: 3, name: 'Elite Muster', text: 'Elites sail 50% more often, one more at a time, with 30% more hull; their chests hold one reward.', effect: { eliteChance: 1.5, extraElites: 1, eliteHp: 1.3, eliteChestCap: 1 } },
+    { level: 4, name: 'Following Wind', text: 'Enemy ships sail 7% faster.', effect: { enemySpeed: 1.07 } },
+    { level: 5, name: 'Restless Sea', text: 'Set pieces come 30% sooner.', effect: { eventGap: 0.7 } },
+    { level: 6, name: 'Wanted Men', text: "Two more bounty captains hunt you; captain's and boss chests hold two rewards.", effect: { bountyCaptains: 2, bossChestCap: 2 } },
+    { level: 7, name: 'Lean Holds', text: 'Ordinary kills drop 30% fewer repairs and doubloons; heals mend 25% less.', effect: { drops: 0.7, healing: 0.75 } },
+    { level: 8, name: "Admiralty's Wrath", text: 'Bosses +20% hull; enemy hulls +10% and fire +10% on top.', effect: { bossHp: 1.2, enemyHp: 1.1, enemyDamage: 1.1 } },
+  ] as readonly HeatRule[],
+};
+
+/** The heat rules in force at `level` (every rule up to it). */
+export function heatRules(level: number): readonly HeatRule[] {
+  return HEAT.rules.filter((r) => r.level <= level);
+}
 
 export const DIRECTOR = {
   /**
@@ -60,8 +136,10 @@ export const DIRECTOR = {
   /**
    * Experience per ship falls with sea difficulty^xpDifficultyExp (harder seas field more ships, not more levels).
    * PACE: the floor, which harder seas do not raise, now sets most of the horde, so this is gentler than the budget's.
+   * REPLAY round 2: 0.35 → 0.2, the Gloam's ships were no more numerous but paid 14% less, so it levelled a band
+   * behind (late gaps past PACE's 60 s) and its bosses turned into sieges.
    */
-  xpDifficultyExp: 0.35,
+  xpDifficultyExp: 0.2,
   /**
    * Live-enemy floor: below it the director spawns immediately without spending budget. PACE: a pack of skiffs is
    * on its way from the first second (7 at 0:00; first contact ~6–8 s), then 30 at 5:00, 60 at 10:00 and 76 from

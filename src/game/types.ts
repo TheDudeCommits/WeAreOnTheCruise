@@ -706,6 +706,8 @@ export interface Settings {
   hudScale?: number;
   /** Lower, cinematic camera while the sea is quiet (IMPACT). Default off. */
   cinematicCamera?: boolean;
+  /** Crew barks (AUDIO). Default on. */
+  barks?: boolean;
   /** AI captains sailing with you (0–4). Optional for older saves (default 3). */
   captains?: number;
 }
