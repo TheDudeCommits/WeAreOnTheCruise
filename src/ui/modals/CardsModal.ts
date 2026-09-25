@@ -234,7 +234,9 @@ export class CardsModal {
     this.offers = offers;
     this.banishMode = false;
     this.levelup.classList.remove('is-banish');
-    // Old cards leave through the ghost row.
+    // Old cards leave through the ghost row (keeping the picked card's highlight); the new hand starts undimmed.
+    this.ghost.classList.toggle('has-pick', this.row.classList.contains('has-pick'));
+    this.row.classList.remove('has-pick');
     this.ghost.replaceChildren(...Array.from(this.row.childNodes));
     if (!first) window.setTimeout(() => this.ghost.replaceChildren(), 420);
     else this.ghost.replaceChildren();
