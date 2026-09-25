@@ -24,6 +24,7 @@ import { FlashDriver, cloneMaterial, glowMaterial, partMaterial } from '../mater
 import { buildShip, shipSpec } from './procShips';
 import { SerpentBody, TIDEWYRM_LOOK, serpentHead, type SerpentPose } from './Serpents';
 import { idleSlice } from '../../loaders/idle';
+import { warmObjects } from '../../app/warmup';
 
 /** PERF: boss GLBs load in idle time this long after start-up (the first boss sails in at 5:00). */
 const DEFERRED_LOAD_MS = 20000;
@@ -96,7 +97,42 @@ export class Bosses {
    */
   preload(): void {
     if (!this.assets || this.loading || this.deferTimer) return;
-    this.deferTimer = setTimeout(() => { this.deferTimer = null; void idleSlice(4000).then(() => this.loadModels()); }, DEFERRED_LOAD_MS);
+    // Load, then prepare one visual per boss in idle time — a quiet stretch (the title, the harbor or the opening
+    // minute) long before the first boss sails in at 5:00.
+    this.deferTimer = setTimeout(() => {
+      this.deferTimer = null;
+      void idleSlice(4000).then(() => this.loadModels()).then(() => this.prepareSpares());
+    }, DEFERRED_LOAD_MS);
+  }
+
+  /** PERF QA: CPU cost of the last build per boss (ms) and whether a prepared visual is waiting. */
+  readonly buildStats: Record<string, { ms: number; source: string }> = {};
+
+  /**
+   * Builds (in idle time, one boss per idle period) a prepared visual for every boss that has none yet, then — unless
+   * the harbor warm-up does it (`warm: false`) — compiles and uploads them so their first frame on screen is cheap.
+   */
+  async prepareSpares(warm = true): Promise<void> {
+    const fresh: BossVisual[] = [];
+    for (const id of BOSS_IDS) {
+      await idleSlice(1000);
+      const v = this.spare.get(id);
+      if (v && v.source === 'manifest') continue;
+      if (v) this.destroy(v);
+      if ([...this.visuals.values()].some((x) => x.defId === id)) continue; // that boss is already afloat
+      const built = this.build(id, 0, 0);
+      this.spare.set(id, built);
+      fresh.push(built);
+    }
+    if (!warm || !fresh.length) return;
+    const holder = new THREE.Group();
+    for (const v of fresh) { holder.add(v.root); if (v.serpent) holder.add(v.serpent.mesh); if (v.head) holder.add(v.head); }
+    try {
+      await warmObjects(holder);
+    } finally {
+      // Only detach what is still parked here (a boss may have spawned and adopted its visual meanwhile).
+      for (const child of [...holder.children]) holder.remove(child);
+    }
   }
 
   /** Starts (once) every boss model load; resolves when all have settled. */
@@ -115,16 +151,10 @@ export class Bosses {
    */
   async warm(): Promise<THREE.Group> {
     await this.loadModels();
+    await this.prepareSpares(false);
     const holder = new THREE.Group();
     holder.name = 'bosses-warmup';
-    for (const id of BOSS_IDS) {
-      await idleSlice(1000);
-      let v = this.spare.get(id);
-      if (!v || v.source === 'procedural') {
-        if (v) this.destroy(v);
-        v = this.build(id, 0, 0);
-        this.spare.set(id, v);
-      }
+    for (const v of this.spare.values()) {
       holder.add(v.root);
       if (v.serpent) holder.add(v.serpent.mesh);
       if (v.head) holder.add(v.head);
@@ -178,6 +208,13 @@ export class Bosses {
 
   /** Builds a boss visual (not attached to the scene). */
   private build(defId: BossId, id: number, phase: number): BossVisual {
+    const t0 = performance.now();
+    const v = this.buildVisual(defId, id, phase);
+    this.buildStats[defId] = { ms: +(performance.now() - t0).toFixed(1), source: v.source };
+    return v;
+  }
+
+  private buildVisual(defId: BossId, id: number, phase: number): BossVisual {
     const def = BOSSES[defId];
     const root = new THREE.Group();
     root.name = `boss:${defId}`;

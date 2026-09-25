@@ -23,6 +23,7 @@ import { idleSlice, sleep } from '../loaders/idle';
 import { heroTemplateListeners } from '../loaders/SketchfabShipAssets';
 import { captainBakeCache, prebakeCaptainHull } from '../ships/fleet/Captains';
 import { postStackFor } from './PostStack';
+import { activeHost } from './RendererHost';
 
 interface Phase { name: string; ms: number; at: number; programs: number }
 
@@ -113,6 +114,21 @@ export async function warmup(app: GameApp): Promise<void> {
   warmupStatus.finished = performance.now();
 }
 
+/**
+ * Warms objects that are not in the scene yet (prepared boss visuals on a run started without the harbor): compiles
+ * their colour, ink and shadow-depth programs against the live scene and uploads their textures, in idle time.
+ */
+export async function warmObjects(root: THREE.Object3D): Promise<void> {
+  const host = activeHost();
+  const post = host ? postStackFor(host.renderer) : undefined;
+  if (!host || !post) return;
+  await idleSlice();
+  await post.precompile(host.scene, host.camera, root);
+  await Promise.race([post.warmShadowVariants(root), sleep(3000)]);
+  await idleSlice();
+  post.initTextures(root);
+}
+
 /** window.__PERF__: QA hooks for scripts/perf/* (pass split, warm-up phases, bake cache, GPU pass timing). */
 function installPerfBridge(app: GameApp): void {
   if (typeof window === 'undefined') return;
@@ -122,6 +138,7 @@ function installPerfBridge(app: GameApp): void {
     warmup: () => ({ ...warmupStatus, elapsed: warmupStatus.finished ? Math.round(warmupStatus.finished - warmupStatus.started) : null }),
     captainBakes: () => captainBakeCache(),
     bossSources: () => app.ships.sources(),
+    bossBuilds: () => ({ ...app.ships.bosses.buildStats }),
   });
   w.__PERF__ = bridge;
 }

@@ -51,6 +51,9 @@ export function hostFor(renderer: THREE.WebGLRenderer): RendererHost | undefined
 export const SHADOW_PROXY_LAYER = 1;
 
 let viewCameraRef: THREE.PerspectiveCamera | null = null;
+let activeHostRef: RendererHost | null = null;
+/** The game's renderer host (the first one created); PERF warm-up helpers compile against its scene. */
+export function activeHost(): RendererHost | null { return activeHostRef; }
 /**
  * The game's view camera (PERF: per-instance culling and distance LODs read it during system updates, where it still
  * holds last frame's pose — cull with a margin). Null until a RendererHost exists.
@@ -202,6 +205,7 @@ export class RendererHost {
     this.camera = new THREE.PerspectiveCamera(50, 1, 1, 6000);
     this.camera.position.set(0, 90, 120);
     viewCameraRef ??= this.camera;
+    activeHostRef ??= this;
     this.profile = qualityProfile(performanceMode ? 'low' : 'high');
     // QA pin: `?dpr=1.5` fixes the pixel ratio and turns adaptive resolution off (performance evidence).
     const pinned = Number(new URLSearchParams(window.location.search).get('dpr'));
@@ -372,6 +376,7 @@ export class RendererHost {
     this.renderer.domElement.remove();
     hosts.delete(this.renderer);
     if (viewCameraRef === this.camera) viewCameraRef = null;
+    if (activeHostRef === this) activeHostRef = null;
   }
 
   private maxDpr(): number {
