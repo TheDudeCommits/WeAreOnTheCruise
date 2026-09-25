@@ -6,7 +6,8 @@
  *    (sailing in irons, or late in the window).
  * A prompt closes early (with a tick) when the player does the thing; doing it before the prompt shows retires the
  * prompt for good. The first branch card and the first OVERDRIVE card get a one-time explainer on the card screen
- * (any captain). Shown hints are reported through `onSeen` (UiCallbacks.onHintSeen → MetaProfile.seenHints).
+ * (any captain), and so does the rival-captains explainer (once, a little after the first captain sails in).
+ * Shown hints are reported through `onSeen` (UiCallbacks.onHintSeen → MetaProfile.seenHints).
  * Settings.coach = false turns all of it off. Key labels follow the player's bindings.
  */
 import { controls, type BindAction } from '../../input/Input';
@@ -17,7 +18,7 @@ import { glyph, type GlyphId } from '../core/icons';
 import { keycap, padButton, type PadButton } from '../core/prompts';
 import { inIrons } from './wind';
 
-export type HintId = 'sail' | 'autofire' | 'broadside' | 'brace' | 'boost' | 'wind' | 'branch' | 'overdrive';
+export type HintId = 'sail' | 'autofire' | 'broadside' | 'brace' | 'boost' | 'wind' | 'branch' | 'overdrive' | 'rivals';
 
 export interface HintDef {
   id: HintId;
@@ -39,6 +40,7 @@ export const HINTS: Readonly<Record<HintId, HintDef>> = {
   boost: { id: 'boost', title: 'Boost', text: 'A burst of speed to slip out of a ring or run down a straggler. It recharges.', icon: 'speed', keys: ['boost'], pad: ['B'], ttl: 8 },
   wind: { id: 'wind', title: 'Mind the wind', text: 'Bow into the wind you crawl (in irons). Sail across it for top speed: the arrow on the minimap rim shows where it blows.', icon: 'wind', keys: [], pad: [], ttl: 9 },
   branch: { id: 'branch', title: 'A weapon forks', text: 'At level 3 a weapon branches. Pick one path; the other closes for this voyage.', icon: 'wind', keys: [], pad: [], ttl: 0 },
+  rivals: { id: 'rivals', title: 'Rival captains', text: 'Other captains hunt this sea too. Full Broadside one to pick a fight: it fights back, and sinking it pays its bounty.', icon: 'ship', keys: ['LMB', 'broadside'], pad: ['RT'], ttl: 10 },
   overdrive: { id: 'overdrive', title: 'Overdrive!', text: 'A maxed weapon can transform into its legendary form: the strongest card it has.', icon: 'star', keys: [], pad: [], ttl: 0 },
 };
 
@@ -141,6 +143,11 @@ export class Coach {
       const age = t - this.shownAt, ttl = HINTS[this.current].ttl;
       this.timer.set(`scaleX(${(Math.round(Math.max(0, 1 - age / ttl) * 100) / 100).toFixed(2)})`);
       if (this.doneAt >= 0 ? t - this.doneAt > DONE_HOLD : age > ttl) this.hide(t);
+      return;
+    }
+    // Rivals (every captain, once ever): after the first rival has sailed in and the presence line has gone.
+    if (this.enabled(f) && running && !run.endless && t >= 16 && t >= this.gapUntil && !this.isSeen(f, 'rivals') && run.captains.some((k) => k.alive)) {
+      this.show(f, 'rivals', run);
       return;
     }
     if (!this.enabled(f) || !running || run.endless || t > WINDOW || f.profile.runs >= NEW_CAPTAIN_RUNS || t < this.gapUntil) return;
