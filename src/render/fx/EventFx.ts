@@ -235,8 +235,9 @@ export class EventFx {
         this.trackSinking(e.id, e.x, e.z, length);
         // (no kill impact frames during the Lionburst dash: its landing owns the only impact, ≤ 3 frames in all)
         const dashing = run.player.airborne > 0.01 || this.launchAge < 1.4;
-        if (!dashing && this.critTargets.has(e.id)) k.juice.impactFrame(0.65);
-        else if (!dashing && e.elite) k.juice.impactFrame(0.45);
+        // Impact frames (full-screen two-tone) are kept for set-piece moments (bosses, specials, ultimates, the manual
+        // Full Broadside): routine crit and elite kills in a dense horde would strobe the screen. They get a kick.
+        if (!dashing && (this.critTargets.has(e.id) || e.elite)) k.juice.kick(0.35);
         break;
       }
       case 'enemy-sunk': {
@@ -701,7 +702,6 @@ export class EventFx {
         this.k.decals.emit(Decal.Shock, p.x, p.z, 200, 0.7, 0xffffff, 0.4, 0xffffff, 0.8, 0.8, 0, 0.1);
         this.k.juice.flash(0xfff2c0, 0.5, 0.2);
         this.k.juice.shake(0.7, 0.6);
-        this.k.juice.impactFrame(0.8);
         break;
       }
       case 'chest': {

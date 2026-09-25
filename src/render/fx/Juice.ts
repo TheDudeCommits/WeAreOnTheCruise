@@ -51,7 +51,7 @@ export class Juice {
     l.shake = l.kick = l.impact = l.flash = l.chromatic = l.speedLines = l.slowMo = 0;
     if (this.shakeS > 0.02) { services.camera.shake(Math.min(1.2, this.shakeS), this.shakeD); l.shake = this.shakeS; }
     if (this.kickS > 0) { services.camera.kick(this.kickS, this.kickD); l.kick = this.kickS; }
-    if (this.impactS > 0 && this.impactCooldown <= 0) { services.post.impactFrame(Math.min(1, this.impactS)); this.impactCooldown = 0.3; l.impact = this.impactS; }
+    if (this.impactS > 0 && this.impactCooldown <= 0) { services.post.impactFrame(Math.min(1, this.impactS)); this.impactCooldown = 1.2; l.impact = this.impactS; }
     if (this.flashS > 0 && this.flashCooldown <= 0) { services.post.flash(this.flashC, Math.min(1, this.flashS), this.flashD); this.flashCooldown = 0.07; l.flash = this.flashS; }
     if (this.chromS > 0) { services.post.chromatic(Math.min(1, this.chromS), this.chromD); l.chromatic = this.chromS; }
     if (this.linesS > 0) { services.post.speedLines(Math.min(1, this.linesS), this.linesD); l.speedLines = this.linesS; }
