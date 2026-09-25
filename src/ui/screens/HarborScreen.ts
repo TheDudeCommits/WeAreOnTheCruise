@@ -69,7 +69,7 @@ export class HarborScreen {
   private readonly balanceEl: HTMLElement;
   private readonly poster = new WantedPoster('is-harbor');
   /** REPLAY's nextGoals(profile), between the poster and the voyage block (hidden while there are none). */
-  private readonly goals = new GoalsCard(3, 'is-harbor');
+  private readonly goals = new GoalsCard(2, 'is-harbor');
   private side!: HTMLElement;
   private readonly setSail: HTMLButtonElement;
   private readonly setSailLabel: TextCell;

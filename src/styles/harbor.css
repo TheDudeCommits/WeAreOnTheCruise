@@ -393,7 +393,11 @@
 .cr-harbor__bar { position: absolute; left: calc(32 * var(--u)); bottom: calc(18 * var(--u)); display: flex; align-items: center; gap: calc(22 * var(--u)); padding: calc(8 * var(--u)) calc(18 * var(--u)); border-radius: 999px; background: rgba(9, 14, 34, .78); }
 
 /* ── Next-up goals (REPLAY's nextGoals): harbor side column (the poster shrinks to make room) and results log ── */
-.cr-harbor__side.has-goals .cr-wanted.is-harbor { width: calc(200 * var(--u)); }
+.cr-harbor__side.has-goals .cr-wanted.is-harbor { width: calc(180 * var(--u)); }
+/* The side column never pushes SET SAIL off screen: the goals card is the one item that gives way. */
+.cr-harbor__side > * { flex: none; }
+.cr-harbor__side > .cr-goals { flex: 0 1 auto; min-height: 0; overflow: hidden; }
+.cr-goals.is-harbor .cr-goal__detail { display: none; }
 .cr-harbor__side.has-goals .cr-wanted.is-harbor .cr-wanted__head { font-size: calc(40 * var(--u)); }
 .cr-goals { display: flex; flex-direction: column; gap: calc(6 * var(--u)); }
 .cr-goals.is-harbor { align-self: stretch; margin-left: calc(20 * var(--u)); padding: calc(10 * var(--u)) calc(12 * var(--u)); border-radius: calc(12 * var(--u)); background: rgba(9, 14, 34, .86); border: calc(2 * var(--u)) solid var(--ink); box-shadow: 0 0 0 calc(2 * var(--u)) rgba(255, 207, 51, .35); }
