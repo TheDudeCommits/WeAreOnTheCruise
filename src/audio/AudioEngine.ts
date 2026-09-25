@@ -339,6 +339,8 @@ export class AudioEngine implements AudioSystem {
 
   private applySettings(s: Settings): void {
     this.mixer?.setVolumes(s.masterVolume, s.musicVolume, s.sfxVolume, s.muted);
+    // Crew barks follow an optional `barks` setting (contract request: Settings.barks?: boolean, default on).
+    this.barks.setEnabled((s as Settings & { barks?: boolean }).barks !== false);
   }
 
   private pauseMode(frame: AudioFrame): PauseMode {
