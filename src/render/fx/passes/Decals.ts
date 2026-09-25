@@ -4,6 +4,10 @@
  * water, seaquake cracks, torpedo wakes, shadows. The grid is displaced by the same Gerstner waves as the
  * ocean (src/core/waves.ts) so decals hug the swell. Premultiplied alpha lets one pass mix translucent paint
  * with additive glow.
+ *
+ * Danger circles (round 2): TeleCircle / TeleRing are flat SDF discs held just above the local wave maximum (the
+ * caller passes the height), so rough water never warps them into blobs. A navy ink edge, a bright rim, a clockwise
+ * timer sweep that starts at the top of the screen, the final-beat blink, and (colour-blind modes) a bold hatch.
  */
 import * as THREE from 'three';
 import { GERSTNER_GLSL } from '../../../core/waves';
@@ -14,6 +18,8 @@ import { hexToLinear } from '../core/palette';
 export const Decal = {
   Circle: 0, Ring: 1, Line: 2, Cone: 3, Foam: 4, Shock: 5, Whirl: 6, Glow: 7, Reticle: 8, Wedge: 9, Cracks: 10,
   Torpedo: 11, Shadow: 12, Blot: 13,
+  /** Flat SDF telegraphs (use DecalPass.telegraph): a danger disc and a danger ring (p2 = inner radius fraction). */
+  TeleCircle: 14, TeleRing: 15,
 } as const;
 
 export const DECAL_STRIDE = 20;
@@ -23,11 +29,12 @@ const vertexShader = /* glsl */ `
 ${GERSTNER_GLSL}
 uniform float uWaveTime;
 uniform float uTime;
-attribute vec4 dA; // center.xz, angle, lift
+attribute vec4 dA; // center.xz, angle, lift (flat telegraphs: absolute height)
 attribute vec4 dB; // half.xz, shape, seed
 attribute vec4 dC; // t0, life, p1, p2
 attribute vec4 dD; // color.rgb, alpha
 attribute vec4 dE; // color2.rgb, add
+varying vec4 vAxes; // flat telegraphs: screen-right and screen-up directions on the water plane (xz, xz)
 varying vec2 vUv;
 varying vec2 vHalf;
 varying float vT;
@@ -45,9 +52,20 @@ void main() {
   float ca = cos(dA.z); float sa = sin(dA.z);
   vec2 off = local * dB.xy;
   vec2 world = dA.xy + vec2(off.x * ca + off.y * sa, -off.x * sa + off.y * ca);
-  vec3 disp; vec3 nrm; float crest;
-  sampleGerstnerWaves(world, uWaveTime, disp, nrm, crest);
-  vec3 wp = disp + nrm * dA.w;
+  vec3 wp;
+  vAxes = vec4(1.0, 0.0, 0.0, -1.0);
+  if (dB.z > 13.5) {
+    // flat SDF telegraph above the local wave maximum (height from the caller)
+    wp = vec3(world.x, dA.w, world.y);
+    vec2 rgt = vec2(viewMatrix[0][0], viewMatrix[2][0]);
+    vec2 fwd = -vec2(viewMatrix[0][2], viewMatrix[2][2]);
+    float lr = length(rgt), lf = length(fwd);
+    vAxes = vec4(lr > 1e-4 ? rgt / lr : vec2(1.0, 0.0), lf > 1e-4 ? fwd / lf : vec2(0.0, -1.0));
+  } else {
+    vec3 disp; vec3 nrm; float crest;
+    sampleGerstnerWaves(world, uWaveTime, disp, nrm, crest);
+    wp = disp + nrm * dA.w;
+  }
   vec4 mv = viewMatrix * vec4(wp, 1.0);
   gl_Position = projectionMatrix * mv;
   vUv = local;
@@ -64,8 +82,11 @@ void main() {
 
 const fragmentShader = /* glsl */ `
 uniform float uRealTime;
+uniform float uTeleHatch; // 0..1 hatch strength in danger fills (colour-blind modes)
+uniform vec3 uTeleInk;    // navy ink edge of the flat telegraphs
 ${FOG_UNIFORMS_GLSL}
 ${NOISE_GLSL}
+varying vec4 vAxes;
 varying vec2 vUv;
 varying vec2 vHalf;
 varying float vT;
@@ -92,7 +113,40 @@ void main() {
   vec3 add = vec3(0.0);
   float pulse = 0.5 + 0.5 * sin(uRealTime * 9.0);
 
-  if (shape == 0 || shape == 1) {
+  if (shape == 14 || shape == 15) {
+    // Flat SDF danger disc / ring: ink edge, bright rim, clockwise timer sweep from the top of the screen.
+    if (r > 1.0 + aa) discard;
+    float prog = clamp(vP.x, 0.0, 1.0);
+    float inner = shape == 15 ? clamp(vP.y, 0.0, 0.95) : 0.0;
+    if (r < inner - aa * 3.0) discard;
+    float px = aa;                                    // one pixel in disc units
+    float inkW = max(0.036, px * 2.8);
+    float rimW = max(0.045, px * 3.0);
+    float edge = 1.0 - smoothstep(1.0 - px, 1.0, r);   // outer silhouette
+    float innerEdge = shape == 15 ? smoothstep(inner - px, inner, r) : 1.0;
+    float inside = edge * innerEdge;
+    float ink = band(r - (1.0 - inkW * 0.5), inkW * 0.5, px) + (shape == 15 ? band(r - (inner + inkW * 0.4), inkW * 0.4, px) : 0.0);
+    float rim = band(r - (1.0 - inkW - rimW * 0.5), rimW * 0.5, px);
+    // clockwise sweep angle (0 at the top of the screen)
+    vec2 sc = vec2(dot(uv, vAxes.xy), dot(uv, vAxes.zw));
+    float ang = fract(atan(sc.x, sc.y) / 6.2831853 + 1.0);
+    float swept = step(ang, prog) * step(0.001, prog);
+    float angAA = max(fwidth(ang), 1e-4);
+    float hand = band(ang - prog, angAA * 1.5, angAA) * step(0.02, prog) * step(prog, 0.995) * step(inner + inkW, r) * (1.0 - step(1.0 - inkW, r));
+    float blink = prog > 0.82 ? step(0.5, fract(uRealTime * 7.0)) : 0.0;
+    // hatch: diagonal stripes in world metres (steady, never swimming), bold in colour-blind modes
+    float stripes = step(0.5, fract((uv.x - uv.y) * vHalf.x / 4.2));
+    float hatch = stripes * (0.06 + 0.22 * uTeleHatch);
+    float fillA = inside * (0.09 + swept * (0.2 + hatch) + (1.0 - swept) * hatch * 0.6);
+    float rimA = rim * (0.8 + 0.2 * pulse) * (0.75 + 0.25 * swept);
+    float a = (fillA + rimA) * vColor.a;
+    vec3 col = c1 * (1.0 + blink * 0.7);
+    // ink edge on top (navy), and ink stripes in colour-blind modes; composited over the paint (premultiplied)
+    float inkA = clamp(max(ink * 0.95, stripes * uTeleHatch * 0.28 * inside * (1.0 - rim)) * vColor.a, 0.0, 1.0);
+    paint = uTeleInk * inkA + col * a * (1.0 - inkA);
+    alpha = inkA + a * (1.0 - inkA);
+    add = c1 * (hand * 1.1 + rim * blink * 0.6 + rim * 0.15) * vColor.a;
+  } else if (shape == 0 || shape == 1) {
     if (r > 1.0 + aa) discard;
     float prog = clamp(vP.x, 0.0, 1.0);
     float inner = shape == 1 ? clamp(vP.y, 0.0, 0.95) : 0.0;
@@ -315,7 +369,7 @@ export class DecalPass {
       name: 'fx-decals',
       vertexShader,
       fragmentShader,
-      uniforms: { ...shared, ...gerstnerUniforms() },
+      uniforms: { ...shared, ...gerstnerUniforms(), uTeleHatch: { value: 0 }, uTeleInk: { value: new THREE.Color(0x1b2340) } },
       transparent: true,
       depthWrite: false,
       depthTest: true,
@@ -368,6 +422,24 @@ export class DecalPass {
     hex1: number, a1: number, hex2: number, add: number, seed = 0.5, t = 0): void {
     const o = this.pool.allocImm();
     if (o >= 0) this.write(o, x, z, angle, halfX, halfZ, shape, this.clock - t * 1000, 1000, p1, p2, hex1, a1, hex2, add, seed);
+  }
+
+  /**
+   * Flat SDF telegraph (Decal.TeleCircle / TeleRing) at world height `y` (just above the local wave maximum):
+   * `prog` 0..1 drives the clockwise timer sweep, `inner` is the ring's inner radius fraction.
+   */
+  telegraph(shape: number, x: number, y: number, z: number, radius: number, prog: number, inner: number, hex: number, alpha = 1): void {
+    const o = this.pool.allocImm();
+    if (o < 0) return;
+    this.write(o, x, z, 0, radius, radius, shape, this.clock - 1000, 2000, prog, inner, hex, alpha, 0x1b2340, 0, 0.5);
+    this.pool.data[o + 3] = y;
+  }
+
+  /** Colour-blind telegraph style: hatch strength (0..1) and the ink colour of the flat telegraphs. */
+  setTelegraphStyle(hatch: number, inkHex: number): void {
+    const u = this.material.uniforms;
+    u.uTeleHatch!.value = hatch;
+    (u.uTeleInk!.value as THREE.Color).setHex(inkHex);
   }
 
   endFrame(): void { this.geometry.instanceCount = this.pool.flush(); }

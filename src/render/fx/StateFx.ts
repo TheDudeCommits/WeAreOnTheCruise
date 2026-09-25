@@ -8,7 +8,7 @@ import type { ProjectileKind } from '../../game/ids';
 import { rangeMul } from '../../game/sim/stats';
 import type { BossState, CaptainState, EnemyState, HazardState, PickupState, RunState } from '../../game/types';
 import type { FrameContext } from '../frame';
-import { CelPal, DANGER_DEEP_HEX, DANGER_HEX, GlowPal, INK_HEX, Lin, PLAYER_MARK_HEX } from './core/palette';
+import { CelPal, GlowPal, INK_HEX, Lin } from './core/palette';
 import { hash01, rand, range, spread } from './core/rand';
 import { Mode } from './core/SpritePass';
 import type { EventFx } from './EventFx';
@@ -472,7 +472,7 @@ export class StateFx {
       }
       case 'lightning-strike': {
         const t = Math.min(1, h.age / Math.max(0.05, h.ttl));
-        k.decals.imm(Decal.Circle, h.x, h.z, h.radius, h.radius, 0, t, 0, 0x8fdcff, 1, 0x103a66, 0, 0.5);
+        k.decals.telegraph(Decal.TeleCircle, h.x, this.flatHeight(h.x, h.z, h.radius), h.z, h.radius, t, 0, 0x8fdcff);
         if (rand() < dt * 14) {
           const a = rand() * TAU;
           fx.sparks(h.x + Math.cos(a) * h.radius * 0.5, wy + 0.5, h.z + Math.sin(a) * h.radius * 0.5, 2, 10, GlowPal.Lightning, 0, 1, 0, 0.5, 0.25);
@@ -596,17 +596,19 @@ export class StateFx {
 
   private telegraphs(run: Readonly<RunState>): void {
     const d = this.k.decals;
+    const pal = this.k.tele;
     for (const t of run.telegraphs) {
       if (!t.alive) continue;
       const prog = Math.min(1, t.time / Math.max(0.01, t.duration));
       const enemy = t.team === 'enemy';
-      const c1 = enemy ? DANGER_HEX : PLAYER_MARK_HEX;
-      const c2 = enemy ? DANGER_DEEP_HEX : 0x5a4210;
+      const c1 = enemy ? pal.danger : pal.mark;
+      const c2 = enemy ? pal.deep : pal.markDeep;
       switch (t.shape) {
-        case 'circle': d.imm(Decal.Circle, t.x, t.z, t.radius, t.radius, 0, prog, 0, c1, 1, c2, 0, 0.5); break;
+        // circles and rings: flat SDF discs just above the local wave maximum (never warped by rough water)
+        case 'circle': d.telegraph(Decal.TeleCircle, t.x, this.flatHeight(t.x, t.z, t.radius), t.z, t.radius, prog, 0, c1); break;
         case 'ring': {
           const inner = t.length > 0 && t.length < t.radius ? t.length / t.radius : 0.62;
-          d.imm(Decal.Ring, t.x, t.z, t.radius, t.radius, 0, prog, inner, c1, 1, c2, 0, 0.5);
+          d.telegraph(Decal.TeleRing, t.x, this.flatHeight(t.x, t.z, t.radius), t.z, t.radius, prog, inner, c1);
           break;
         }
         case 'line': {
@@ -626,6 +628,18 @@ export class StateFx {
         }
       }
     }
+  }
+
+  /** Height just above the local wave maximum over a disc (centre + two rings of samples) for flat telegraphs. */
+  private flatHeight(x: number, z: number, r: number): number {
+    const w = this.k.water;
+    let h = w.height(x, z);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * TAU;
+      const ca = Math.cos(a), sa = Math.sin(a);
+      h = Math.max(h, w.height(x + ca * r * 0.55, z + sa * r * 0.55), w.height(x + (ca * 0.924 - sa * 0.383) * r, z + (sa * 0.924 + ca * 0.383) * r));
+    }
+    return h + 0.45 + 0.25 * w.strength;
   }
 
   // ───────────── ships: statuses and sinking ─────────────
@@ -939,32 +953,33 @@ export class StateFx {
     if (!p.alive || run.status !== 'running') return;
     const d = this.k.decals;
     const ready = p.skills.broadside.cooldown <= 0 ? 1 : 0.25;
-    d.imm(Decal.Reticle, ctx.aim.x, ctx.aim.z, 5, 5, this.k.clock * 0.4, ready, 0, PLAYER_MARK_HEX, 1, INK_HEX, 0, 0.5);
+    const MARK = this.k.tele.mark, MARK_DEEP = this.k.tele.markDeep;
+    d.imm(Decal.Reticle, ctx.aim.x, ctx.aim.z, 5, 5, this.k.clock * 0.4, ready, 0, MARK, 1, INK_HEX, 0, 0.5);
     const sx = Math.cos(p.heading), sz = -Math.sin(p.heading);
     const side = (ctx.aim.x - p.x) * sx + (ctx.aim.z - p.z) * sz >= 0 ? 1 : -1;
     const angle = p.heading + (side > 0 ? Math.PI / 2 : -Math.PI / 2);
     let level = 1;
     for (let i = 0; i < p.weapons.length; i++) if (p.weapons[i]!.id === 'broadside') level = p.weapons[i]!.level;
     const range = CONTENT.weapons.broadside.levels[Math.max(0, Math.min(5, level - 1))]!.range * rangeMul(p.stats);
-    d.imm(Decal.Wedge, p.x, p.z, range, range, angle, ready, (40 * Math.PI) / 180, PLAYER_MARK_HEX, 1, INK_HEX, 0, 0.5);
+    d.imm(Decal.Wedge, p.x, p.z, range, range, angle, ready, (40 * Math.PI) / 180, MARK, 1, INK_HEX, 0, 0.5);
     // aimed special/ultimate target previews while ready (quiet: outline only)
     const ship = CONTENT.ships[run.shipId];
     let ax = ctx.aim.x - p.x, az = ctx.aim.z - p.z;
     const al = Math.hypot(ax, az) || 1; ax /= al; az /= al;
     const aimAngle = Math.atan2(ax, az);
     if (p.skills.special.cooldown <= 0) {
-      if (ship.special === 'signal-flare') d.imm(Decal.Circle, ctx.aim.x, ctx.aim.z, 30, 30, 0, 0, 0, PLAYER_MARK_HEX, 0.45, 0x5a4210, 0, 0.5);
+      if (ship.special === 'signal-flare') d.imm(Decal.Circle, ctx.aim.x, ctx.aim.z, 30, 30, 0, 0, 0, MARK, 0.45, MARK_DEEP, 0, 0.5);
       else if (ship.special === 'lionburst') {
         const len = Math.max(70, Math.min(180, al)); // CORE: Lionburst dash 70–180 m toward the aim point
         const start = p.length * 0.6;
         if (len > start + 10) {
-          d.imm(Decal.Line, p.x + ax * (start + len) * 0.5, p.z + az * (start + len) * 0.5, 2, (len - start) * 0.5, aimAngle, 0, 0, PLAYER_MARK_HEX, 0.28, 0x5a4210, 0, 0.5);
-          d.imm(Decal.Reticle, p.x + ax * len, p.z + az * len, 8, 8, this.k.clock * -0.6, 0.35, 0, PLAYER_MARK_HEX, 0.6, INK_HEX, 0, 0.5);
+          d.imm(Decal.Line, p.x + ax * (start + len) * 0.5, p.z + az * (start + len) * 0.5, 2, (len - start) * 0.5, aimAngle, 0, 0, MARK, 0.28, MARK_DEEP, 0, 0.5);
+          d.imm(Decal.Reticle, p.x + ax * len, p.z + az * len, 8, 8, this.k.clock * -0.6, 0.35, 0, MARK, 0.6, INK_HEX, 0, 0.5);
         }
       }
     }
     if (p.skills.ultimate.charge >= 1 && ship.ultimate === 'admirals-judgment') {
-      d.imm(Decal.Line, p.x + ax * 160, p.z + az * 160, 14, 160, aimAngle, 0, 0, PLAYER_MARK_HEX, 0.3, 0x5a4210, 0, 0.5);
+      d.imm(Decal.Line, p.x + ax * 160, p.z + az * 160, 14, 160, aimAngle, 0, 0, MARK, 0.3, MARK_DEEP, 0, 0.5);
     }
   }
 }

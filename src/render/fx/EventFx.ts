@@ -289,11 +289,11 @@ export class EventFx {
       case 'hazard-triggered':
         if (e.kind === 'lightning-strike') fx.lightningStrike(e.x, e.z);
         else if (e.kind === 'mine' || e.kind === 'powder-keg' || e.kind === 'barrel') {
-          k.decals.emit(Decal.Shock, e.x, e.z, Math.max(6, e.radius * 0.5), 0.3, 0xff5a4a, 0.6, 0xff5a4a, 0.8, 1);
+          k.decals.emit(Decal.Shock, e.x, e.z, Math.max(6, e.radius * 0.5), 0.3, k.tele.danger, 0.6, k.tele.danger, 0.8, 1);
         }
         break;
       case 'telegraph':
-        k.decals.emit(Decal.Shock, e.x, e.z, e.radius * 1.15, 0.3, 0xff5a4a, 0.6, 0xff5a4a, 0.6, 1.2);
+        k.decals.emit(Decal.Shock, e.x, e.z, e.radius * 1.15, 0.3, k.tele.danger, 0.6, k.tele.danger, 0.6, 1.2);
         break;
       case 'boss-warning': {
         const p = run.player;

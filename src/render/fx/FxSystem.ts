@@ -36,6 +36,7 @@ import { StateFx } from './StateFx';
 import { WorldEventFx } from './WorldEventFx';
 import { FoeFx } from './FoeFx';
 import { SmokeGovernor } from './SmokeGovernor';
+import { INK_HEX, telegraphPalette } from './core/palette';
 
 const QUALITY_SCALE: Record<QualityTier, number> = { low: 0.5, medium: 0.75, high: 1, ultra: 1.2 };
 
@@ -105,6 +106,7 @@ export class FxSystem implements RenderSystem {
     this.kit = {
       cel, glow, heads, trails, beams, ropes, decals, debris, props, numbers, walls, juice: this.juice, flotsam: new Flotsam(),
       water: new WaterSampler(), ocean: null, ships: null, camX: 0, camY: 100, camZ: 0, focusX: 0, focusZ: 0, windX: 0, windZ: 0, clock: 0, q: 1, spawned: 0,
+      tele: telegraphPalette('off'),
     };
     this.sakuga = new Sakuga(this.kit);
     this.worldEvents = new WorldEventFx(this.kit, this.sakuga);
@@ -169,6 +171,9 @@ export class FxSystem implements RenderSystem {
     k.debris.beginFrame();
     k.decals.setWaves(ctx.time, ctx.sea.waveScale);
     k.numbers.enabled = ctx.settings.damageNumbers;
+    // Telegraph colours + hatch for the colour-vision setting (FLOW adds the option to the settings UI).
+    k.tele = telegraphPalette(ctx.settings.colorBlind);
+    k.decals.setTelegraphStyle(k.tele.hatch, INK_HEX);
 
     this.events.tick(dt);
     if (run) {
