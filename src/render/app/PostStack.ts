@@ -78,6 +78,22 @@ function isOpaqueDepthWriter(material: THREE.Material | THREE.Material[]): boole
 
 const TEMP_INSTANCE_COLOR = new THREE.InstancedBufferAttribute(new Float32Array(3), 3);
 
+/**
+ * The ink marker `object` inherits from its ancestors, as the ink pass resolves it: 'skip' under an inkSkip subtree,
+ * null under noInk or with no marked ancestor.
+ */
+function inheritedInk(object: THREE.Object3D): InkMarker | null | 'skip' {
+  const chain: THREE.Object3D[] = [];
+  for (let p = object.parent; p; p = p.parent) chain.push(p);
+  let marker: InkMarker | null = null;
+  for (let i = chain.length - 1; i >= 0; i--) {
+    const ud = chain[i]!.userData;
+    if (ud.inkSkip === true) return 'skip';
+    marker = ud.noInk === true ? null : readInkMarker(chain[i]!) ?? marker;
+  }
+  return marker;
+}
+
 export class PostStack implements PostServices {
   readonly ink = new InkPass();
   /** Live grade (read-only outside; recomputed every update). */
@@ -234,7 +250,7 @@ export class PostStack implements PostServices {
     else if (this.rewarm) {
       this.rewarm = false;
       const c0 = performance.now();
-      this.compileInto(scene, perspective, scene);
+      this.compileNew(scene, perspective);
       this.lastRewarmMs = performance.now() - c0;
     }
     const info = renderer.info.render;
@@ -349,18 +365,37 @@ export class PostStack implements PostServices {
   }
 
   /**
+   * Screen-change recompile: only objects whose materials have never been compiled (the harbor warm-up covers the
+   * rest; a whole-scene compile is 30–120 ms of main thread). Each is compiled with its inherited ink marker, so the
+   * prepass variant is the one the ink pass will use. Many new objects fall back to one whole-scene pass.
+   */
+  private compileNew(scene: THREE.Scene, camera: THREE.Camera): void {
+    const properties = (this.renderer as unknown as { properties: { get(m: THREE.Material): { programs?: unknown } } }).properties;
+    const fresh: THREE.Object3D[] = [];
+    scene.traverse((o) => {
+      const r = o as THREE.Mesh & { isPoints?: boolean; isLine?: boolean; isSprite?: boolean };
+      if (!(r.isMesh || r.isPoints || r.isLine || r.isSprite) || !r.material) return;
+      const materials = Array.isArray(r.material) ? r.material : [r.material];
+      if (materials.some((m) => m && properties.get(m).programs === undefined)) fresh.push(o);
+    });
+    if (!fresh.length) return;
+    if (fresh.length > 40) { this.compileInto(scene, camera, scene); return; }
+    for (const o of fresh) this.compileInto(scene, camera, o, inheritedInk(o));
+  }
+
+  /**
    * Compiles `root` for the colour pass and the ink prepass with the real targets bound. Instanced meshes that have no
    * `instanceColor` yet are compiled both without and with one (three's program key depends on it and most pools
    * create it lazily on their first setColorAt), so neither variant compiles mid-run.
    */
-  private compileInto(scene: THREE.Scene, camera: THREE.Camera, root: THREE.Object3D): Set<THREE.Material> {
-    const all = this.compilePass(scene, camera, root);
+  private compileInto(scene: THREE.Scene, camera: THREE.Camera, root: THREE.Object3D, inherited: InkMarker | null | 'skip' = null): Set<THREE.Material> {
+    const all = this.compilePass(scene, camera, root, inherited);
     const bare: THREE.InstancedMesh[] = [];
     root.traverse((o) => { const im = o as THREE.InstancedMesh; if (im.isInstancedMesh && !im.instanceColor) bare.push(im); });
     if (bare.length) {
       for (const im of bare) im.instanceColor = TEMP_INSTANCE_COLOR;
       try {
-        for (const m of this.compilePass(scene, camera, root)) all.add(m);
+        for (const m of this.compilePass(scene, camera, root, inherited)) all.add(m);
       } finally {
         for (const im of bare) if (im.instanceColor === TEMP_INSTANCE_COLOR) im.instanceColor = null;
       }
@@ -368,7 +403,7 @@ export class PostStack implements PostServices {
     return all;
   }
 
-  private compilePass(scene: THREE.Scene, camera: THREE.Camera, root: THREE.Object3D): Set<THREE.Material> {
+  private compilePass(scene: THREE.Scene, camera: THREE.Camera, root: THREE.Object3D, inherited: InkMarker | null | 'skip' = null): Set<THREE.Material> {
     const renderer = this.renderer;
     const previous = renderer.getRenderTarget();
     const all = new Set<THREE.Material>();
@@ -392,7 +427,7 @@ export class PostStack implements PostServices {
         const next = object.userData.noInk === true ? null : marker;
         for (const child of object.children) visit(child, next);
       };
-      visit(root, null);
+      if (inherited !== 'skip') visit(root, inherited);
       if (swapped.length) {
         renderer.setRenderTarget(this.ink.target);
         try {
@@ -447,6 +482,9 @@ export class PostStack implements PostServices {
     group.traverse((o) => { o.userData.warmDummy = true; });
     return host.warmShadows(group);
   }
+
+  /** PERF: uploads one texture now (idle time) instead of on its first draw. */
+  uploadTexture(texture: THREE.Texture): void { this.renderer.initTexture(texture); }
 
   /** PERF: uploads every texture used under `root` now (idle time) instead of on first draw. Returns the count. */
   initTextures(root: THREE.Object3D, seen: Set<THREE.Texture> = new Set()): number {

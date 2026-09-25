@@ -11,7 +11,10 @@
  *     and the ink prepass with the real targets bound, both instance-colour variants of instanced meshes, then one
  *     shadow-map update with a dummy caster per depth-program variant. Hero templates that load later (a ship switch
  *     in the harbor) are compiled the moment they arrive.
- *  5. Textures: every texture of the scene and the prepared bosses uploaded now (initTexture), not on first draw.
+ *  5. Textures: every texture of the scene and the prepared bosses uploaded now (initTexture), one per idle period
+ *     (spaced 250 ms apart once a run is on), not on first draw.
+ * Order: GPU work first (bosses, programs, textures) — a player may set sail within seconds — then hero models and the
+ * captain hull bakes (network and sliced CPU).
  *
  * `window.__PERF__.warmup` reports the phases; see scripts/perf/probe.mjs.
  */
@@ -52,8 +55,8 @@ export async function warmup(app: GameApp): Promise<void> {
   // Hero templates that arrive later (a ship switch in the harbor, a run's ship) compile the moment they load.
   heroTemplateListeners.add((template) => {
     const t0 = performance.now();
-    void post.precompile(scene, camera, template.scene).then(() => post.warmShadowVariants(template.scene)).then(() => {
-      post.initTextures(template.scene);
+    void post.precompile(scene, camera, template.scene).then(() => post.warmShadowVariants(template.scene)).then(async () => {
+      await uploadTextures(app, template.scene, new Set());
       warmupStatus.templates.push({ kind: template.kind, ms: Math.round(performance.now() - t0), programs: programCount(renderer) });
     }).catch((error: unknown) => warmupStatus.errors.push(`template ${template.kind}: ${String(error)}`));
   });
@@ -69,29 +72,10 @@ export async function warmup(app: GameApp): Promise<void> {
     warmupStatus.phases.push({ name, ms: Math.round(performance.now() - t0), at: Math.round(performance.now() - warmupStatus.started), programs: programCount(renderer) });
   };
 
-  // Let the harbor transition settle first.
+  // Let the harbor transition settle first. GPU work (programs, uploads) goes first — a player may set sail within
+  // seconds — then the network-and-CPU work (hero models, captain hull bakes), which runs in idle slices anyway.
   await sleep(500);
   await phase('fleet-models', () => app.ships.fleet.ready());
-  await phase('captain-hulls', async () => {
-    // Captains never sail the player's ship while others are free (5 free ships, at most 4 captains), and a
-    // captain-less setting needs no hulls. Each bake downloads that hero's GLBs, so only the candidates are baked.
-    if (captainSetting(app.settings) === 0) return;
-    const order = CAPTAIN_SHIPS.filter((id) => id !== app.selectedShip);
-    for (const id of order) {
-      const ship = SHIPS[id];
-      await idleSlice();
-      await prebakeCaptainHull(ship.modelKey, ship.length);
-    }
-  });
-  // Hero models of the ships the player can sail — the selected one and up to two more unlocked ones (a fresh
-  // profile's two starters) — so a run's ship is parsed, compiled and uploaded already. Capped for memory.
-  await phase('heroes', async () => {
-    const ships = [app.selectedShip, ...app.profile.unlockedShips.filter((id) => id !== app.selectedShip)].slice(0, 3);
-    for (const id of ships) {
-      await idleSlice();
-      await app.ships.preload(SHIPS[id].modelKey).catch(() => undefined);
-    }
-  });
   let bosses: THREE.Group | null = null;
   await phase('bosses', async () => { bosses = await app.ships.bosses.warm(); });
   await phase('programs', async () => {
@@ -107,14 +91,57 @@ export async function warmup(app: GameApp): Promise<void> {
   });
   await phase('textures', async () => {
     const seen = new Set<THREE.Texture>();
-    for (const child of [...scene.children, ...(bosses ? [bosses] : [])]) {
+    for (const child of [...scene.children, ...(bosses ? [bosses] : [])]) warmupStatus.textures += await uploadTextures(app, child, seen);
+  });
+  // Hero models of the ships the player can sail — the selected one and up to two more unlocked ones (a fresh
+  // profile's two starters) — so a run's ship is parsed, compiled and uploaded already. Capped for memory; skipped
+  // once a run is under way (its hero is loaded by then).
+  await phase('heroes', async () => {
+    const ships = [app.selectedShip, ...app.profile.unlockedShips.filter((id) => id !== app.selectedShip)].slice(0, 3);
+    for (const id of ships) {
+      if (app.screen === 'run') break;
       await idleSlice();
-      warmupStatus.textures += post.initTextures(child, seen);
+      await app.ships.preload(SHIPS[id].modelKey).catch(() => undefined);
+    }
+  });
+  await phase('captain-hulls', async () => {
+    // Captains never sail the player's ship while others are free (5 free ships, at most 4 captains), and a
+    // captain-less setting needs no hulls. Each bake downloads that hero's GLBs, so only the candidates are baked.
+    if (captainSetting(app.settings) === 0) return;
+    const order = CAPTAIN_SHIPS.filter((id) => id !== app.selectedShip);
+    for (const id of order) {
+      const ship = SHIPS[id];
+      await idleSlice();
+      await prebakeCaptainHull(ship.modelKey, ship.length);
     }
   });
   if (bosses) app.ships.bosses.releaseWarmupRoot(bosses);
   warmupStatus.programs.after = programCount(renderer);
   warmupStatus.finished = performance.now();
+}
+
+/**
+ * Uploads the textures under `root` one per idle period (a 2048² atlas plus mips is a few ms of GPU work; a batch of
+ * them in one task stalls the next frame's submit). During a run the uploads are also spaced 250 ms apart.
+ * Returns how many were uploaded.
+ */
+async function uploadTextures(app: GameApp, root: THREE.Object3D, seen: Set<THREE.Texture>): Promise<number> {
+  const post = postStackFor(app.host.renderer);
+  if (!post) return 0;
+  const list: THREE.Texture[] = [];
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+      for (const value of Object.values(material)) if (value instanceof THREE.Texture && value.image && !seen.has(value)) { seen.add(value); list.push(value); }
+    }
+  });
+  for (const texture of list) {
+    await idleSlice(1000);
+    if (app.screen === 'run') await sleep(250);
+    post.uploadTexture(texture);
+  }
+  return list.length;
 }
 
 /**
@@ -128,8 +155,16 @@ export async function warmObjects(root: THREE.Object3D): Promise<void> {
   await idleSlice();
   await post.precompile(host.scene, host.camera, root);
   await Promise.race([post.warmShadowVariants(root), sleep(3000)]);
-  await idleSlice();
-  post.initTextures(root);
+  const seen = new Set<THREE.Texture>();
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+      for (const value of Object.values(material)) if (value instanceof THREE.Texture && value.image) seen.add(value);
+    }
+  });
+  // One upload per idle period, spaced: this runs during a run (quiet opening minute).
+  for (const texture of seen) { await idleSlice(1000); await sleep(250); post.uploadTexture(texture); }
 }
 
 /** window.__PERF__: QA hooks for scripts/perf/* (pass split, warm-up phases, bake cache, GPU pass timing). */
