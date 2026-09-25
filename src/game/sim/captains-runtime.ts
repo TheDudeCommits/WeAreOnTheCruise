@@ -25,6 +25,8 @@ export interface CaptainRuntime {
   /** Rivals: captains the player sank, seconds some captain was hostile to the player. */
   sunkByPlayer: number;
   hostileTime: number;
+  /** Run time of the last rival chest (CAPTAIN.rival.chestGap). */
+  rivalChestAt: number;
 }
 
 const STORES = new WeakMap<RunState, CaptainRuntime>();
@@ -34,7 +36,7 @@ export function captainRuntime(state: RunState): CaptainRuntime {
   if (!rt) {
     rt = {
       count: 0, joined: 0, personas: [], focusPlayer: 0, focusCaptain: new Int32Array(CAPTAIN.max), aliveEnemies: 0,
-      ticksPlayer: 0, ticksCaptains: 0, sinkings: 0, sunkByPlayer: 0, hostileTime: 0,
+      ticksPlayer: 0, ticksCaptains: 0, sinkings: 0, sunkByPlayer: 0, hostileTime: 0, rivalChestAt: -1e9,
     };
     STORES.set(state, rt);
   }

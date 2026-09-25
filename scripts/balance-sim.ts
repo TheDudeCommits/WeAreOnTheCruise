@@ -437,7 +437,7 @@ interface RunReport {
   xpCollected: number;
   ms: number;
   /** AI captains: kills (all captains), sinkings, share of enemy attention on the player, captain levels at the end. */
-  captains: { kills: number; sinkings: number; playerShare: number; levels: number[]; dealt: number; taken: number };
+  captains: { kills: number; sinkings: number; playerShare: number; levels: number[]; dealt: number; taken: number; byPlayer: number; hostile: number };
   /** Doubloons banked by source: wages, kill, elite, boss, event, chest, victory, card, other. */
   income: Record<string, number>;
 }
@@ -633,6 +633,7 @@ export function runOne(ship: ShipId, sea: SeaId, seed: string, onTick?: (sim: Si
         playerShare: rt.ticksPlayer + rt.ticksCaptains > 0 ? rt.ticksPlayer / (rt.ticksPlayer + rt.ticksCaptains) : 1,
         levels: s.captains.map((k) => k.level), dealt: Math.round(s.captains.reduce((a, k) => a + (k.ai.dealt ?? 0), 0)),
         taken: Math.round(s.captains.reduce((a, k) => a + (k.ai.taken ?? 0), 0)),
+        byPlayer: rt.sunkByPlayer, hostile: Math.round(rt.hostileTime),
       };
     })(),
     income: ledger.income,
@@ -665,7 +666,7 @@ function printRun(r: RunReport): void {
   const boss = (id: BossId) => { const b = r.bosses.find((x) => x.boss === id); return b ? (b.killed !== null ? `${Math.round(b.killed - b.spawned)}` : 'alive') : '—'; };
   console.log(
     `${r.sea.padEnd(17)} ${r.ship.padEnd(16)} ${r.seed.padEnd(5)} ${L(1)} ${L(3)} ${L(5)} ${L(10)} ${L(15)} | ${String(`${K(5)}/${K(10)}/${K(15)}`).padEnd(15)} | ${String(`${A(5)}/${A(10)}/${r.maxAlive12}/${A(15)}`).padEnd(19)} | ${String(`${H(5)}/${H(10)}/${H(15)}`).padEnd(13)} | ${fmtTime(r.died).padEnd(6)} | ${pad(boss('iron-warden'), 6)} ${pad(boss('tidewyrm'), 8)} ${pad(boss('sovereign'), 9)}      | ${pad(r.doubloons, 4)} | ${r.outcome}${r.revives ? ` (+${r.revives} revive)` : ''}`
-    + (CAPTAINS ? ` | capK ${cp(r, 5)?.capKills ?? '—'}/${cp(r, 10)?.capKills ?? '—'}/${cp(r, 15)?.capKills ?? '—'} sunk ${r.captains.sinkings} focus ${Math.round(r.captains.playerShare * 100)}% capL ${r.captains.levels.join(',')} taken ${r.captains.taken}` : ''),
+    + (CAPTAINS ? ` | capK ${cp(r, 5)?.capKills ?? '—'}/${cp(r, 10)?.capKills ?? '—'}/${cp(r, 15)?.capKills ?? '—'} sunk ${r.captains.sinkings} focus ${Math.round(r.captains.playerShare * 100)}% capL ${r.captains.levels.join(',')} taken ${r.captains.taken} rival ${r.captains.hostile}s/${r.captains.byPlayer}` : ''),
   );
   console.log(
     `   pace: hit ${f1(r.firstHit ?? NaN)} s · near ${f1(r.firstNear ?? NaN)} s · L2 ${f0(r.levelTimes[0] ?? null)} s · gap early ${f0(levelGap(r.levelTimes, ...EARLY))} s / late ${f0(levelGap(r.levelTimes, ...LATE))} s · idle ${f0(r.idle)} s · xp ${r.xpCollected}/${r.xpDropped} (${Math.round((100 * r.xpCollected) / Math.max(1, r.xpDropped))}%)`,
@@ -695,7 +696,7 @@ function printSummary(reports: readonly RunReport[], seas: readonly SeaId[]): vo
     console.log(`${sea}: L@5 ${f1(lv(5))} · L@10 ${f1(lv(10))} · L@15 ${f1(lv(15))} · alive@12 max ${f1(mean(rs.map((r) => r.maxAlive12)))} · deaths ${deaths.length}/${rs.length}${deaths.length ? ` (avg ${fmtTime(mean(deaths.map((r) => r.died!)))})` : ''} · ◈ avg ${Math.round(mean(rs.map((r) => r.doubloons)))} · victories ${rs.filter((r) => r.outcome === 'victory').length}`);
     const kl = (m: number) => mean(rs.map((r) => cp(r, m)?.kills).filter((v): v is number => v !== undefined));
     const ck = (m: number) => mean(rs.map((r) => cp(r, m)?.capKills).filter((v): v is number => v !== undefined));
-    console.log(`   player kills @5/10/15 ${f1(kl(5))}/${f1(kl(10))}/${f1(kl(15))}` + (CAPTAINS ? ` · captain kills @5/10/15 ${f1(ck(5))}/${f1(ck(10))}/${f1(ck(15))} · player kill share @15 ${Math.round((100 * kl(15)) / Math.max(1, kl(15) + ck(15)))}% · captain sinkings avg ${f1(mean(rs.map((r) => r.captains.sinkings)))} · fleet attention on player ${Math.round(100 * mean(rs.map((r) => r.captains.playerShare)))}%` : ''));
+    console.log(`   player kills @5/10/15 ${f1(kl(5))}/${f1(kl(10))}/${f1(kl(15))}` + (CAPTAINS ? ` · captain kills @5/10/15 ${f1(ck(5))}/${f1(ck(10))}/${f1(ck(15))} · player kill share @15 ${Math.round((100 * kl(15)) / Math.max(1, kl(15) + ck(15)))}% · captain sinkings avg ${f1(mean(rs.map((r) => r.captains.sinkings)))} (by the player ${f1(mean(rs.map((r) => r.captains.byPlayer)))}) · hostile ${Math.round(mean(rs.map((r) => r.captains.hostile)))} s · fleet attention on player ${Math.round(100 * mean(rs.map((r) => r.captains.playerShare)))}%` : ''));
     console.log(`   Iron Warden ${bossStat('iron-warden')} · Tidewyrm ${bossStat('tidewyrm')} · Sovereign ${bossStat('sovereign')}`);
     const m = (f: (r: RunReport) => number) => f1(mean(rs.map(f).filter((v) => Number.isFinite(v))));
     console.log(`   pace: first hit ${m((r) => r.firstHit ?? NaN)} s · first near ${m((r) => r.firstNear ?? NaN)} s · first level ${m((r) => r.levelTimes[0] ?? NaN)} s · gap early ${m((r) => levelGap(r.levelTimes, ...EARLY))} s · late ${m((r) => levelGap(r.levelTimes, ...LATE))} s · idle ${m((r) => r.idle)} s · xp collected ${m((r) => (100 * r.xpCollected) / Math.max(1, r.xpDropped))}% · kills@15 ${m((r) => cp(r, 15)?.kills ?? NaN)}`);

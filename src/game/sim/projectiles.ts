@@ -12,7 +12,7 @@ import type { ProjectileKind, StatusKind, Team, WeaponId } from '../ids';
 import type { ProjectileState } from '../types';
 import type { Target } from './context';
 import {
-  GRAVITY, HF_BURN, hullEdge, isBoss, K_BALLISTIC, K_EXPIRE_BLAST, K_ISLAND, KIND_TRAITS, PF_BIG, PF_BURN,
+  GRAVITY, HF_BURN, hullEdge, isBoss, K_BALLISTIC, K_EXPIRE_BLAST, K_ISLAND, KIND_TRAITS, PF_AIMED, PF_BIG, PF_BURN,
   PF_CLUSTER, PF_FIREPOT, PF_HOOK, PF_SLOW, PF_SPARKS, PF_STUN, PF_WATER, targetable, wrapAngle, type CoreSim, type ExplosionKind,
 } from './core-runtime';
 import { applyBurn } from './core-forces';
@@ -92,13 +92,13 @@ function hitShips(c: CoreSim, pr: ProjectileState, i: number, px: number, pz: nu
     if (pr.area > 0) { detonate(c, pr, i, pr.x, pr.z); pr.alive = false; return true; }
     if (onHit(c, pr, i, t)) return true;
   }
-  // Rivals: the player's own shots (not the captains') hit AI captains too.
+  // Rivals: the player's own shots (not the captains') hit hostile captains, and hand-aimed ones hit any captain.
   if (core.pFrom[i]! >= 0 && c.state.captains.length > 0) {
-    const k = captainInPath(c, pr, px, pz);
+    const k = captainInPath(c, pr, px, pz, (core.pFlags[i]! & PF_AIMED) !== 0);
     if (k) {
-      if (pr.area > 0) { detonate(c, pr, i, pr.x, pr.z); pr.alive = false; return true; }
       const dealt = playerHitCaptain(c, k, pr.damage);
       c.emit({ type: 'projectile-hit', projectile: pr.kind, team: pr.team, x: pr.x, y: pr.y, z: pr.z, target: 'ship', targetId: k.id, damage: dealt, crit: pr.crit });
+      if (pr.area > 0) { detonate(c, pr, i, pr.x, pr.z); pr.alive = false; return true; }
       if (pr.pierce > 0 && !(core.pFlags[i]! & PF_HOOK)) { pr.pierce--; pr.hits.push(k.id); return false; }
       pr.alive = false;
       return true;

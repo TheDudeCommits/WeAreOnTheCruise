@@ -129,10 +129,11 @@ export const CAPTAIN = {
     provokeDecay: 0.04,
     /** Seconds a hostile captain keeps fighting the player after the player's last hit on it. */
     grudge: 20,
-    /** A captain the player sank sails back in hostile for this long ("round two"). */
-    revenge: 16,
+    /** A captain the player sank may sail back in hostile (this chance) for this long ("round two"). */
+    revenge: 12,
+    revengeChance: 0.5,
     /** Opportunists: chance per second that a captain within range turns on a player below this hull share (one at a time). */
-    opportunist: 0.025,
+    opportunist: 0.012,
     opportunistHull: 0.35,
     opportunistRange: 260,
     /** A hostile captain's guns against the player deal this share (the fleet is firing too). */
@@ -140,7 +141,8 @@ export const CAPTAIN = {
     /** Ramming a captain: damage per m/s of closing speed × √(mass/600), at most once per ramCooldown seconds. */
     ram: 2.4,
     ramCooldown: 0.6,
-    /** Sinking a rival: XP coins (base + per level), doubloons (base + per level), a chest and a share of its bounty. */
+    /** Sinking a rival: XP coins (base + per level), doubloons (base + per level), a share of its bounty, and a chest (at most every chestGap s). */
+    chestGap: 150,
     xp: 30,
     xpPerLevel: 4,
     doubloons: 20,

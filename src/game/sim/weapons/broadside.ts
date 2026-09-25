@@ -12,7 +12,7 @@ import type { ProjectileKind } from '../../ids';
 import type { WeaponSlot } from '../../types';
 import type { Target } from '../context';
 import { isHostile } from '../captains-rival';
-import { clamp, GUN_QUEUE, PF_BURN, PF_SLOW, acquirable, type CoreSim } from '../core-runtime';
+import { clamp, GUN_QUEUE, PF_AIMED, PF_BURN, PF_SLOW, acquirable, type CoreSim } from '../core-runtime';
 import { ULTIMATES } from '../core-skills';
 import { cooldownMul, damageMul, extraAmount, projectileSpeedMul, rangeMul } from '../stats';
 import { AIM, crit, CRIT, DEG, ex, lead, levelOf } from './common';
@@ -195,6 +195,7 @@ export function fireFullBroadside(c: CoreSim): void {
   const core = c.core;
   const slot = p.weapons.find(isBroadside);
   const s = buildSpec(c, slot, 2, core.sunfire > 0 ? ULTIMATES['sunfire-barrage'].burn : 0);
+  s.flags |= PF_AIMED; // hand-aimed: may pick a fight with a rival captain
   const sx = Math.cos(p.heading), sz = -Math.sin(p.heading);
   const fx = -Math.sin(p.heading), fz = -Math.cos(p.heading);
   const ux = p.aimX - p.x, uz = p.aimZ - p.z;

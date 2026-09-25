@@ -72,7 +72,7 @@ describe('rival captains', () => {
     expect(events.some((e) => e.type === 'captain-calm' && e.id === k.id)).toBe(true);
   });
 
-  it('sinking a rival pays out and it sails back in for revenge', () => {
+  it('sinking a rival pays out and (when it holds a grudge) it sails back in for revenge', () => {
     const { sim, k, events, step } = withCaptain('rival-sink');
     k.bounty = 1000;
     const bounty0 = sim.state.stats.bounty;
@@ -83,6 +83,7 @@ describe('rival captains', () => {
     expect(sim.state.pickups.filter((q) => q.alive && q.kind === 'chest').length).toBe(chests0 + 1);
     step(0.1);
     expect(events.some((e) => e.type === 'captain-sunk' && e.id === k.id && e.byPlayer === true)).toBe(true);
+    k.ai.revenge = 1; // CAPTAIN.rival.revengeChance
     step(CAPTAIN.respawn + 1);
     expect(k.alive).toBe(true);
     expect(isHostile(k)).toBe(true);
@@ -101,5 +102,29 @@ describe('rival captains', () => {
       k.ai.grudge = CAPTAIN.rival.grudge;
     });
     expect(k.hp).toBeLessThan(k.maxHp);
+  });
+
+  it('stray auto-fire passes through a captain that is not fighting the player', () => {
+    const { sim, k, step } = withCaptain('rival-stray');
+    sim.debug.giveWeapon('broadside', 3);
+    const p = sim.state.player;
+    // An enemy dummy right behind the captain on the player's beam: the auto broadside fires through the captain.
+    const e = sim.spawnEnemy('brig', 0, 0)!;
+    const hp0 = k.maxHp;
+    let fired = 0, playerHits = 0;
+    for (let i = 0; i < 4 * 60; i++) {
+      k.x = p.x - Math.cos(p.heading) * 70; k.z = p.z + Math.sin(p.heading) * 70; k.heading = p.heading; k.vx = 0; k.vz = 0; k.speed = 0; k.hp = hp0;
+      e.x = p.x - Math.cos(p.heading) * 110; e.z = p.z + Math.sin(p.heading) * 110; e.vx = 0; e.vz = 0; e.hp = 1e7; e.maxHp = 1e7; e.attackCooldown = 1e9; e.life = 'alive';
+      for (const o of sim.state.enemies) if (o !== e) o.life = 'dead';
+      sim.stepTicks(1);
+      while (sim.state.status === 'levelup') sim.chooseCard(0);
+      for (const ev of sim.drainEvents()) {
+        if (ev.type === 'weapon-fired' && ev.owner === 0) fired++;
+        if (ev.type === 'projectile-hit' && ev.team === 'player' && ev.targetId === k.id) playerHits++;
+      }
+    }
+    expect(playerHits).toBe(0);
+    expect(fired).toBeGreaterThan(0);
+    expect(isHostile(k)).toBe(false);
   });
 });

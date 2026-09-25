@@ -1,14 +1,17 @@
 /**
  * Rival captains (lead, 2026-09-25 — owner: "the AI captains play like rival players"). Tuning: CAPTAIN.rival.
  *
- *  - The player's shots, shells and rams hurt captains (projectiles.ts hitShips / explode, captains-collide.ts), at
- *    CAPTAIN.rival.playerDamageMul. Captains' own shots never hit each other.
+ *  - The player can pick a fight on purpose: a hand-aimed Full Broadside (PF_AIMED) or a ram hurts any captain. Once a
+ *    captain is hostile, all of the player's fire hits it (shots, shells, blasts — projectiles.ts hitShips / explode).
+ *    Stray auto-fire and splash pass through captains that are not fighting (no accidental feuds). Damage is scaled
+ *    by CAPTAIN.rival.playerDamageMul. Captains' own shots never hit each other.
  *  - Provocation: a captain the player knocks provokeShare of its hull off (the tally decays) turns hostile for
  *    `grudge` seconds, refreshed by every further hit: it hunts the player (captains-steer.ts), turns its broadside
  *    and bow chaser on the player (captains-guns.ts, team-'enemy' shots tagged with the captain's ref) and the
  *    player's auto-aim takes it as a target (broadside scanSides).
  *  - Opportunists: a captain near a badly holed player may turn on it (one hostile opportunist at a time).
- *  - Sinking a rival pays out XP coins, doubloons, a chest and a share of its bounty; it sails back in for revenge.
+ *  - Sinking a rival pays out XP coins, doubloons, a share of its bounty and (at most every chestGap s) a chest; it may
+ *    sail back in for revenge (revengeChance).
  *
  * Captain AI scratch used here: grudge (s left hostile) · provoke (player damage tally) · ramCd · revenge (1 = sails
  * back in hostile).
@@ -16,6 +19,7 @@
 import { CAPTAIN } from '../content/captains';
 import type { CaptainState, ProjectileState } from '../types';
 import { captainHullEdge, hurtCaptain } from './captains-damage';
+import { captainRuntime } from './captains-runtime';
 import type { SimContext } from './context';
 import { spillCoins } from './progression';
 
@@ -58,11 +62,12 @@ function rewardRival(c: SimContext, k: CaptainState): void {
     const a = c.random() * Math.PI * 2, r = k.length * (0.2 + c.random() * 0.3);
     c.spawnPickup('doubloon', k.x + Math.sin(a) * r, k.z + Math.cos(a) * r, Math.round(coins / 3));
   }
-  c.spawnPickup('chest', k.x, k.z, 1);
+  const rt = captainRuntime(s);
+  if (s.time - rt.rivalChestAt >= R.chestGap) { rt.rivalChestAt = s.time; c.spawnPickup('chest', k.x, k.z, 1); }
   const share = Math.round(k.bounty * R.bountyShare);
   k.bounty -= share;
   s.stats.bounty += share;
-  k.ai.revenge = 1;
+  k.ai.revenge = c.random() < R.revengeChance ? 1 : 0;
   k.ai.provoke = 0;
 }
 
@@ -90,15 +95,15 @@ export function onCaptainRespawn(c: SimContext, k: CaptainState): void {
 }
 
 /**
- * A player projectile's swept segment (x0,z0) → (pr.x,pr.z) against the captains. Returns the first captain it
- * touches (not yet in pr.hits), or null.
+ * A player projectile's swept segment (x0,z0) → (pr.x,pr.z) against the captains it may hit (hostile ones, or any
+ * when `aimed`). Returns the first captain it touches (not yet in pr.hits), or null.
  */
-export function captainInPath(c: SimContext, pr: ProjectileState, x0: number, z0: number): CaptainState | null {
+export function captainInPath(c: SimContext, pr: ProjectileState, x0: number, z0: number, aimed: boolean): CaptainState | null {
   const caps = c.state.captains;
   const sx = pr.x - x0, sz = pr.z - z0, seg2 = sx * sx + sz * sz;
   for (let i = 0; i < caps.length; i++) {
     const k = caps[i]!;
-    if (!k.alive || (k.ai.fade ?? 99) < 0.6) continue;
+    if (!k.alive || (k.ai.fade ?? 99) < 0.6 || (!aimed && !((k.ai.grudge ?? 0) > 0))) continue;
     if (pr.hits.length > 0 && pr.hits.includes(k.id)) continue;
     let u = seg2 > 1e-9 ? ((k.x - x0) * sx + (k.z - z0) * sz) / seg2 : 1;
     u = u < 0 ? 0 : u > 1 ? 1 : u;
@@ -110,13 +115,13 @@ export function captainInPath(c: SimContext, pr: ProjectileState, x0: number, z0
   return null;
 }
 
-/** A player blast at (x, z): falloff like CORE's explode (100% at the centre → 50% at the rim, to the hull edge). */
+/** A player blast at (x, z) against hostile captains: falloff like CORE's explode (100% → 50% at the rim). */
 export function playerBlastCaptains(c: SimContext, x: number, z: number, radius: number, damage: number): void {
   const caps = c.state.captains;
   if (caps.length === 0 || !(damage > 0)) return;
   for (let i = 0; i < caps.length; i++) {
     const k = caps[i]!;
-    if (!k.alive) continue;
+    if (!isHostile(k)) continue;
     const edge = captainHullEdge(k, x, z);
     if (edge > radius) continue;
     playerHitCaptain(c, k, damage * (1 - 0.5 * Math.min(1, Math.max(0, edge) / Math.max(1, radius))));

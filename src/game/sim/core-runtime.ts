@@ -58,7 +58,9 @@ export const DEFAULT_TURN: Partial<Record<ProjectileKind, number>> = { rocket: 3
 
 /** Per-projectile behaviour flags (CORE aux). */
 export const PF_SLOW = 1, PF_BURN = 2, PF_STUN = 4, PF_HOOK = 8, PF_CLUSTER = 16, PF_FIREPOT = 32, PF_SPARKS = 64,
-  PF_CHAIN = 128, PF_GIANT = 256, PF_TOW = 512, PF_BIG = 1024, PF_WATER = 2048, PF_REFLECTED = 4096;
+  PF_CHAIN = 128, PF_GIANT = 256, PF_TOW = 512, PF_BIG = 1024, PF_WATER = 2048, PF_REFLECTED = 4096,
+  /** Hand-aimed (Full Broadside): may hit a rival captain that is not fighting the player (captains-rival.ts). */
+  PF_AIMED = 8192;
 
 /** Per-hazard behaviour flags (CORE aux). */
 export const HF_BURN = 1, HF_SLOW = 2, HF_STUN = 4, HF_FOLLOW = 8, HF_MAGNET = 16, HF_DEPTH = 32, HF_RING = 64,
