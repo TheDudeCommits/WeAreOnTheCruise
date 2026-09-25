@@ -40,6 +40,9 @@ export class SmokeGovernor {
   private readonly gridRaw = new Uint8Array(GW * GH);
   private acc = 0;
   private frame = 0;
+  /** FX-clock time the last live smoke puff ends, and the ring allocation count at the last scan (skip idle scans). */
+  private latestEnd = 0;
+  private lastAlloc = -1;
 
   update(pool: InstancePool, clock: number, camera: THREE.PerspectiveCamera, realDt: number): void {
     this.acc += realDt;
@@ -47,14 +50,20 @@ export class SmokeGovernor {
     const dt = Math.min(0.25, this.acc);
     this.acc = 0;
     const t0 = performance.now();
-    this.estimate(pool, clock, camera);
+    if (pool.allocated === this.lastAlloc && clock > this.latestEnd) {
+      // nothing new was emitted and every smoke puff has ended: no scan
+      this.coverage = 0; this.coverageRaw = 0; this.live = 0;
+    } else {
+      this.lastAlloc = pool.allocated;
+      this.estimate(pool, clock, camera);
+    }
     const over = this.coverage - SMOKE_COVERAGE_TARGET;
     if (over > 0) this.thin = Math.min(1, this.thin + dt * (0.8 + over * 14));
     else if (this.coverage < SMOKE_COVERAGE_TARGET * 0.75) this.thin = Math.max(0, this.thin - dt * 0.5);
     this.ms = performance.now() - t0;
   }
 
-  reset(): void { this.thin = 0; this.coverage = 0; this.coverageRaw = 0; this.live = 0; }
+  reset(): void { this.thin = 0; this.coverage = 0; this.coverageRaw = 0; this.live = 0; this.latestEnd = 0; this.lastAlloc = -1; }
 
   private estimate(pool: InstancePool, clock: number, camera: THREE.PerspectiveCamera): void {
     const d = pool.data;
@@ -66,14 +75,18 @@ export class SmokeGovernor {
     const p00 = p[0]!, p11 = p[5]!, p20 = p[8]!, p21 = p[9]!;
     const thin = this.thin;
     let live = 0;
+    let latestEnd = 0;
     for (let i = 0, n = pool.ringCap; i < n; i++) {
       const o = i * S;
       const life = d[o + 7]!;
       if (!(life > 0) || life >= 6) continue;
       const age = clock - d[o + 3]!;
-      if (age < 0 || age >= life) continue;
+      if (age >= life) continue;
       const shape = d[o + 16]!;
       if (shape !== 7 && !(shape === 0 && (SMOKE_PALS >> d[o + 17]!) & 1)) continue;
+      const end = d[o + 3]! + life;
+      if (end > latestEnd) latestEnd = end;
+      if (age < 0) continue;
       const s1 = d[o + 13]!;
       if (s1 <= 0) continue;
       live++;
@@ -117,6 +130,7 @@ export class SmokeGovernor {
     this.coverage = a / (GW * GH);
     this.coverageRaw = b / (GW * GH);
     this.live = live;
+    this.latestEnd = latestEnd;
   }
 }
 

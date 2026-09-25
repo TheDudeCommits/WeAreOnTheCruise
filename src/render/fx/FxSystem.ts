@@ -209,7 +209,7 @@ export class FxSystem implements RenderSystem {
     this.stats.numbersSpawned = k.numbers.counts.shown;
     this.updatePressure(ctx.dt);
     // Smoke rules: coverage governor (thinning is applied by the cel shader next frame) and hull guards.
-    if (this.camera) this.smoke.update(k.cel.pool, this.clock, this.camera, ctx.dt);
+    if (this.camera && run) this.smoke.update(k.cel.pool, this.clock, this.camera, ctx.dt);
     this.shared.uSmokeThin.value = run ? this.smoke.thin : 0;
     this.updateGuards(ctx);
 

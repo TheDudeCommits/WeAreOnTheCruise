@@ -189,10 +189,6 @@ export class DamageNumbers {
     let oldest: NumberRecord | null = null;
     let near: NumberRecord | null = null;
     let nearD = AREA_MERGE * AREA_MERGE;
-    // the old rule: a new number unless this target has a young one (the merged area record counts as its own)
-    let legacyMerge = false;
-    for (const r of this.records) if (r.target === target && r.crit === crit && r.age < 0.32 && r.color === hex && target >= 0) legacyMerge = true;
-    if (!legacyMerge) this.counts.legacy++;
     for (const r of this.records) {
       if (r.target === target && r.crit === crit && r.age < 0.32 && r.color === hex && target >= 0) {
         r.value += amount; r.age = Math.min(r.age, 0.05); r.merged++; r.x = x; r.y = y; r.z = z;
@@ -206,6 +202,8 @@ export class DamageNumbers {
       if (r.age >= r.life) { if (!free) free = r; }
       else if (!oldest || r.age > oldest.age) oldest = r;
     }
+    // the old rule spawned a number whenever this target had no young one
+    this.counts.legacy++;
     if (near) {
       // area merge: the pack's number rolls up in place (its anchor stays put)
       near.value += amount; near.age = Math.min(near.age, 0.05); near.merged++;
