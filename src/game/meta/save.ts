@@ -39,7 +39,11 @@ export function defaultProfile(): MetaProfile {
 }
 
 export function defaultSettings(): Settings {
-  return { version: 2, masterVolume: 0.8, musicVolume: 0.7, sfxVolume: 0.85, muted: false, cameraShake: 1, damageNumbers: true, quality: 'auto', showFps: false };
+  return {
+    version: 2, masterVolume: 0.8, musicVolume: 0.7, sfxVolume: 0.85, muted: false, cameraShake: 1, damageNumbers: true, quality: 'auto', showFps: false,
+    // Round 2: the first-voyage coach (FLOW) and crew barks (AUDIO) default on.
+    coach: true, barks: true,
+  };
 }
 
 // ───────────────────────── Sanitising ─────────────────────────
@@ -184,8 +188,9 @@ export function sanitizeSettings(raw: unknown): Settings {
     quality: typeof raw.quality === 'string' && (QUALITIES as readonly string[]).includes(raw.quality) ? (raw.quality as QualitySetting) : base.quality,
     showFps: typeof raw.showFps === 'boolean' ? raw.showFps : base.showFps,
     ...(finite(raw.captains) ? { captains: Math.min(4, Math.max(0, Math.round(raw.captains))) } : {}),
-    // Round 2 (FLOW / IMPACT settings): kept when valid, so they survive a reload.
-    ...(typeof raw.coach === 'boolean' ? { coach: raw.coach } : {}),
+    // Round 2 (FLOW / IMPACT / AUDIO settings): kept when valid, so they survive a reload; coach and barks default on.
+    coach: typeof raw.coach === 'boolean' ? raw.coach : true,
+    barks: typeof raw.barks === 'boolean' ? raw.barks : true,
     ...(typeof raw.colorBlind === 'string' && (COLOR_BLIND as readonly string[]).includes(raw.colorBlind) ? { colorBlind: raw.colorBlind as Settings['colorBlind'] } : {}),
     ...(finite(raw.hudScale) ? { hudScale: Math.min(1.2, Math.max(0.8, raw.hudScale)) } : {}),
     ...(typeof raw.cinematicCamera === 'boolean' ? { cinematicCamera: raw.cinematicCamera } : {}),

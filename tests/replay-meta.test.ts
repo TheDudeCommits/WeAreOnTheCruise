@@ -99,16 +99,29 @@ describe('save: round-2 profile fields', () => {
     expect(p.daily).toEqual({ '2026-09-24': 5000 });
   });
 
-  it('keeps the round-2 settings (coach, colour-blind palette, HUD scale, cinematic camera)', () => {
-    saveSettings({ ...defaultSettings(), coach: false, colorBlind: 'tritan', hudScale: 1.1, cinematicCamera: true, captains: 2 });
-    expect(loadSettings()).toMatchObject({ coach: false, colorBlind: 'tritan', hudScale: 1.1, cinematicCamera: true, captains: 2 });
-    const bad = sanitizeSettings({ ...defaultSettings(), coach: 'yes', colorBlind: 'purple', hudScale: 9, cinematicCamera: 1 });
-    expect(bad.coach).toBeUndefined();
+  it('keeps the round-2 settings (coach, colour-blind palette, HUD scale, cinematic camera, barks, captains)', () => {
+    saveSettings({ ...defaultSettings(), coach: false, colorBlind: 'tritan', hudScale: 1.1, cinematicCamera: true, barks: false, captains: 2 });
+    expect(loadSettings()).toMatchObject({ coach: false, colorBlind: 'tritan', hudScale: 1.1, cinematicCamera: true, barks: false, captains: 2 });
+    for (const colorBlind of ['off', 'deutan', 'protan', 'tritan'] as const) {
+      saveSettings({ ...defaultSettings(), colorBlind });
+      expect(loadSettings().colorBlind).toBe(colorBlind);
+    }
+    const bad = sanitizeSettings({ ...defaultSettings(), coach: 'yes', barks: 0, colorBlind: 'purple', hudScale: 9, cinematicCamera: 1 });
+    expect(bad.coach).toBe(true); // invalid → the default (on)
+    expect(bad.barks).toBe(true);
     expect(bad.colorBlind).toBeUndefined();
     expect(bad.hudScale).toBe(1.2);
+    expect(sanitizeSettings({ hudScale: 0.1 }).hudScale).toBe(0.8);
     expect(bad.cinematicCamera).toBeUndefined();
     localStorage.setItem(SETTINGS_KEY, '{nope');
     expect(loadSettings()).toEqual(defaultSettings());
+  });
+
+  it('gives older settings saves the round-2 defaults (coach and barks on) and keeps the rest as saved', () => {
+    const old = { version: 2, masterVolume: 0.5, musicVolume: 0.4, sfxVolume: 0.3, muted: true, cameraShake: 0.5, damageNumbers: false, quality: 'low', showFps: true, captains: 1 };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(old));
+    expect(loadSettings()).toEqual({ ...old, coach: true, barks: true });
+    expect(defaultSettings()).toMatchObject({ coach: true, barks: true });
   });
 });
 
