@@ -94,9 +94,9 @@ export interface HeatRule { level: number; name: string; text: string; effect: H
  * deaths 44% / 60% / 71% (targets 35–50 / 50–65 / 60–75).
  */
 export const SEA_BALANCE: Readonly<Record<SeaId, { enemyHp: number; enemyDamage: number; bossHp: number }>> = {
-  // Round 1 with 3 captains: 1/16 deaths here, 2/16 on Stormwrack, 9/16 in the Gloam (8 seeds × 2 ships).
-  'sunward-shallows': { enemyHp: 1.1, enemyDamage: 1.12, bossHp: 1 },
-  'stormwrack-reach': { enemyHp: 1, enemyDamage: 0.98, bossHp: 0.8 },
+  // Round 3 with 3 rival captains (12 seeds × 2 ships): ~45–50% deaths here, ~58% on Stormwrack, ~63–73% in the Gloam.
+  'sunward-shallows': { enemyHp: 1.1, enemyDamage: 1.15, bossHp: 1 },
+  'stormwrack-reach': { enemyHp: 1, enemyDamage: 1.1, bossHp: 0.8 },
   // The Gloam's deaths came from long boss fights at night, not from its fleet: bosses lighter, fleet a little harder.
   'the-gloam': { enemyHp: 1, enemyDamage: 1, bossHp: 0.6 },
 };
