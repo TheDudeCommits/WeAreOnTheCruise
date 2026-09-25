@@ -117,10 +117,11 @@ export class SeaFx {
     if (env <= 0.01) return;
     const spin = h.armed ? 1 : -1;
     const eye = EVENT_TUNING.maelstromEye;
-    // Whirl decals: mirrored with the spin so the arms trail and turn the way the current carries ships.
+    // Whirl decals: mirrored with the spin so the arms trail and turn the way the current carries ships. Round 3: thin
+    // foam streaks (add = 1) at lower opacity (were broad arms at 0.78 / 0.95); the dark eye still marks the danger.
     const hz = -spin * R;
-    k.decals.imm(Decal.Whirl, h.x, h.z, R, hz, 0, -0.9, 5, 0xe4f5fc, 0.78 * env, 0x05283a, 0, hash01(h.id, 3));
-    k.decals.imm(Decal.Whirl, h.x, h.z, R * 0.42, -spin * R * 0.42, 0, -2.2, 3, 0xffffff, 0.95 * env, 0x031a28, 0, hash01(h.id, 4));
+    k.decals.imm(Decal.Whirl, h.x, h.z, R, hz, 0, -0.9, 5, 0xe4f5fc, 0.5 * env, 0x05283a, 1, hash01(h.id, 3));
+    k.decals.imm(Decal.Whirl, h.x, h.z, R * 0.42, -spin * R * 0.42, 0, -2.2, 3, 0xffffff, 0.7 * env, 0x031a28, 1, hash01(h.id, 4));
     k.decals.imm(Decal.Shadow, h.x, h.z, eye * 1.5, eye * 1.5, 0, 0, 0, 0x010a12, 0.8 * env, 0x010a12, 0, 0.5);
     const wy = fx.wy(h.x, h.z);
     // Spray flung off the inner rim, mist over the eye, planks circling.
@@ -157,7 +158,7 @@ export class SeaFx {
         for (let j = 0; j < 5; j++) {
           const r = eye * 1.2 + (R * 0.95 - eye * 1.2) * ((j + rand() * 0.5) / 5);
           const a = arm * (TAU / 3) - spin * t * 0.5 + spin * Math.log(r / eye) * 1.4;
-          o.stampFoam(h.x + Math.cos(a) * r, h.z + Math.sin(a) * r, 4 + r * 0.04, 0.35 * env);
+          o.stampFoam(h.x + Math.cos(a) * r, h.z + Math.sin(a) * r, 3 + r * 0.03, 0.2 * env);
         }
       }
     }

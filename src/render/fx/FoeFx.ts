@@ -51,7 +51,7 @@ export class FoeFx {
         case 'harpooner': this.harpooner(e, m, run); break;
         case 'lantern-wisp': this.wisp(e, m, run, dt); break;
         case 'drowned-galleon': this.galleon(e, m, dt); break;
-        case 'smoke-runner': if (e.hidden < 1 && e.speed > 6 && rand() < dt * 8 * this.k.q) this.fx.smoke(e.x - Math.sin(e.heading) * -5, this.fx.wy(e.x, e.z) + 2, e.z - Math.cos(e.heading) * -5, 1, 1.2, 3.2, CelPal.DarkSmoke, 1.2, 0, 1.5, 0, 0.6, 1.2, 0.5, 0, 0.4); break;
+        case 'smoke-runner': if (e.hidden < 1 && e.speed > 6 && rand() < dt * 5 * this.k.q) this.fx.smoke(e.x - Math.sin(e.heading) * -5, this.fx.wy(e.x, e.z) + 2, e.z - Math.cos(e.heading) * -5, 1, 1, 2.6, CelPal.DarkSmoke, 1.2, 0, 1.5, 0, 0.6, 1.2, 0.5, 0, 0.4); break;
         default: break;
       }
       if (e.elite) this.affixes(e, m, run, dt);
@@ -115,7 +115,13 @@ export class FoeFx {
 
   // ───────────── smoke screens ─────────────
 
-  private smoke(run: Readonly<RunState>, dt: number): void {
+  /**
+   * Round 3 (owner: smoke should never wall off the ships): a screen is a soft, light-grey translucent haze
+   * (Glow.Haze, no ink) — 7 overlapping puffs that read as a bank, densest while it is thick (when it hides ships
+   * from auto-targeting) and thinning away after — plus a faint shadow on the water. It used to be 14 opaque inked
+   * cel puffs of 13–22 m (a quarter of them dark) with more gunsmoke rising out of it.
+   */
+  private smoke(run: Readonly<RunState>, _dt: number): void {
     const k = this.k;
     const fx = this.fx;
     for (const h of run.hazards) {
@@ -125,21 +131,20 @@ export class FoeFx {
       const thick = life < FOES.smoke.thick ? 1 : 1 - (life - FOES.smoke.thick) / (1 - FOES.smoke.thick);
       const grow = Math.min(1, h.age / 0.8);
       const wy = fx.wy(h.x, h.z);
-      const n = 14;
+      const n = 7;
       for (let j = 0; j < n; j++) {
         const a = hash01(id, j) * TAU + k.clock * 0.05 * (j % 2 ? 1 : -1);
-        const rr = h.radius * 0.85 * Math.sqrt(hash01(id, j + 30)) * (0.6 + 0.4 * grow);
+        const rr = h.radius * 0.7 * Math.sqrt(hash01(id, j + 30)) * (0.6 + 0.4 * grow);
         const px = h.x + Math.cos(a) * rr + k.windX * h.age * 0.25, pz = h.z + Math.sin(a) * rr + k.windZ * h.age * 0.25;
-        const size = h.radius * (0.55 + 0.35 * hash01(id, j + 60)) * grow * (0.45 + 0.55 * thick);
+        const size = h.radius * (0.8 + 0.4 * hash01(id, j + 60)) * grow * (0.6 + 0.4 * thick);
         if (size < 0.5) continue;
-        const c = k.cel.spec.reset();
-        c.at(px, wy + 3 + hash01(id, j + 90) * 7 + h.age * 0.5, pz).look(j % 3 === 0 ? Cel.Puff : Cel.Cloud, j % 4 === 0 ? CelPal.DarkSmoke : CelPal.Gunsmoke)
-          .sized(size, 1).rotate(hash01(id, j + 120) * TAU, 0.05).lived(10, 0.45);
-        c.seed = hash01(id, j + 150);
-        k.cel.imm(10 * (0.2 + 0.7 * (1 - thick)));
+        const g = k.glow.spec.reset();
+        g.at(px, wy + 3 + hash01(id, j + 90) * 4 + h.age * 0.4, pz).look(Glow.Haze, GlowPal.Haze)
+          .sized(size, size).rotate(hash01(id, j + 120) * TAU).lived(10).bright(0.08 + 0.14 * thick);
+        g.seed = hash01(id, j + 150);
+        k.glow.imm(5);
       }
-      k.decals.imm(Decal.Shadow, h.x, h.z, h.radius * 1.1, h.radius * 1.1, 0, 0, 0, 0x1a1c24, 0.35 * thick * grow, 0x1a1c24, 0, 0.5);
-      if (rand() < dt * 3 * k.q * thick) fx.smoke(h.x + spread(h.radius * 0.6), wy + 6, h.z + spread(h.radius * 0.6), 1, 3, 8, CelPal.Gunsmoke, 2.4, 0, 1, 0, 1, 1.5, 2, 0, 0.4);
+      k.decals.imm(Decal.Shadow, h.x, h.z, h.radius * 1.1, h.radius * 1.1, 0, 0, 0, 0x1a1c24, 0.1 * thick * grow, 0x1a1c24, 0, 0.5);
     }
   }
 

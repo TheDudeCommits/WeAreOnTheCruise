@@ -13,17 +13,17 @@ export const CelPal = {
 
 const CEL_HEX: readonly (readonly [number, number, number, number])[] = [
   [0xfff8ec, 0xeadfc6, 0xa19fb2, 0x252a4a], // Gunsmoke (cream, beige, cool grey-violet shadow, navy ink)
-  [0x9c97a6, 0x645f6e, 0x35323f, 0x14131f], // DarkSmoke
+  [0xdcd9e2, 0xb6b2bf, 0x8d889a, 0x5d586c], // DarkSmoke (round 3: light-to-mid grey, soft grey ink — never a black blob)
   [0xfffbe0, 0xffd54a, 0xff7a1c, 0xc2301a], // Fire
   [0xffffff, 0xd4f3fc, 0x78c2e8, 0x2a6aa6], // Water
   [0xf5e3bc, 0xd9ba8a, 0x9d7e60, 0x4a392d], // Dust
   [0xffffff, 0xe9eef4, 0xb0bdd0, 0x56688a], // Steam
-  [0x6d728c, 0x464b63, 0x262a3c, 0x0d0f1f], // StormCloud
+  [0xc9cfdc, 0x9ea6ba, 0x747d95, 0x485069], // StormCloud (round 3: pale storm grey)
   [0xeafffb, 0x8ff6e0, 0x2ccfae, 0x0f6a63], // TealFire (wraith)
   [0xf0fff4, 0xa4f7c4, 0x47c68d, 0x1b5a43], // Heal
   [0xffffff, 0xe8f8fc, 0xa2d2e3, 0x3a7ea8], // Foam / bubbles
   [0xffe1d8, 0xff9f8c, 0xc85c5e, 0x5a1d2c], // FlareSmoke
-  [0x77727e, 0x48444f, 0x25222c, 0x0b0a12], // WreckSmoke
+  [0xcfcbd5, 0xa7a2b1, 0x7f7a8c, 0x544f63], // WreckSmoke (round 3: mid grey, soft ink)
   [0xfff0e0, 0xffa25a, 0xff3d2a, 0x8f1420], // EnemyFire (hotter red)
   [0xfffbe6, 0xffe27a, 0xffb52a, 0xb86a12], // GoldFire (sun / level-up)
   [0xd9d2c7, 0xa89d8f, 0x6f6660, 0x322c2c], // Rock chips / stone dust
@@ -33,6 +33,8 @@ const CEL_HEX: readonly (readonly [number, number, number, number])[] = [
 export const GlowPal = {
   Muzzle: 0, Explosion: 1, Spark: 2, Enemy: 3, Lightning: 4, WaterBolt: 5, Gold: 6, Heal: 7, Teal: 8, Glint: 9,
   Shield: 10, FlareRed: 11, Frenzy: 12, Magic: 13, Ember: 14,
+  /** Translucent haze (Glow.Haze, painted, never additive): smoke screens (light grey) and storm clouds (blue-grey). */
+  Haze: 15, StormHaze: 16,
 } as const;
 
 const GLOW_HEX: readonly (readonly [number, number, number])[] = [
@@ -51,6 +53,8 @@ const GLOW_HEX: readonly (readonly [number, number, number])[] = [
   [0xfff4e0, 0xffb05a, 0xff5a2a], // Frenzy
   [0xf8f0ff, 0xc9a0ff, 0x7a4cff], // Magic
   [0xffe6b0, 0xff9a3a, 0xd9401a], // Ember
+  [0xffffff, 0xf0f2f5, 0xd2d7df], // Haze (light, mid, underside)
+  [0xf6f8fc, 0xdde2eb, 0xb3bccb], // StormHaze
 ];
 
 const tmp = new THREE.Color();

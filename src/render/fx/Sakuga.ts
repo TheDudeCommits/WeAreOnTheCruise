@@ -481,17 +481,18 @@ export class Sakuga {
     this.fireballs(x, y, z, 7 + 4 * s, 9.5 * s, 2.4 * s, 12 * s, kind === 'fire' ? 1.2 : kind === 'large' || kind === 'powder' ? 1.15 : 0.95, 0, CelPal.Fire);
     this.sparks(x, y, z, 10 + 5 * s, 34 * Math.sqrt(s), GlowPal.Spark, 0, 1, 0, 0.3, 0.55);
     const smokePal = kind === 'powder' || kind === 'large' ? CelPal.WreckSmoke : CelPal.DarkSmoke;
-    const smokeN = kind === 'small' || kind === 'fire' ? 2 : kind === 'large' || kind === 'powder' ? 5 : 3;
-    this.smoke(x, y + 2 * s, z, smokeN, 3.5 * s, 8.5 * s, smokePal, 2.6, 0, 9 * s, 0, 4 * s, 4, 2.2 * s, 0.14, 0.4);
+    // round 3: fewer, smaller puffs (and the dark palettes are mid greys now; see palette.ts)
+    const smokeN = kind === 'small' || kind === 'fire' ? 1 : kind === 'large' || kind === 'powder' ? 3 : 2;
+    this.smoke(x, y + 2 * s, z, smokeN, 3 * s, 6.5 * s, smokePal, 2.6, 0, 9 * s, 0, 4 * s, 4, 2.2 * s, 0.14, 0.4);
     if (kind === 'large' || kind === 'powder') {
       // mushroom cap: a ring of puffs riding the column
       const c = this.k.cel;
-      const n = this.n(6);
+      const n = this.n(4);
       for (let i = 0; i < n; i++) {
         const a = (i / n) * TAU;
         const sp = c.spec.reset();
         sp.at(x + Math.cos(a) * 2 * s, y + 4 * s, z + Math.sin(a) * 2 * s).vel(Math.cos(a) * 9 * s, 14 * s, Math.sin(a) * 9 * s)
-          .dragTo(2.2, this.k.windX, 3.5, this.k.windZ).look(Cel.Puff, smokePal).sized(3.5 * s, 7.5 * s, 3).rotate(rand() * TAU)
+          .dragTo(2.2, this.k.windX, 3.5, this.k.windZ).look(Cel.Puff, smokePal).sized(3 * s, 6 * s, 3).rotate(rand() * TAU)
           .lived(smokeLife(range(2.4, 3.2)), SMOKE_ERODE + 0.06).after(0.12 + rand() * 0.08);
         c.emit();
       }
@@ -529,7 +530,8 @@ export class Sakuga {
       const along = spread(length * 0.38);
       this.fireballs(x + fx * along, y + rand() * 3 * s, z + fz * along, 1, 10 * s, 1.5 * s, 11 * s, 1.25, rand() * 0.14);
     }
-    this.smoke(x, y + 4 * s, z, 4, 4 * s, 9.5 * s, CelPal.WreckSmoke, 3.4, 0, 14 * s, 0, 3 * s, 4.5, 3 * s, 0.12, 0.45);
+    // round 3: two lighter puffs capped at 12 m (a galleon kill used to raise four ~17 m charcoal puffs)
+    this.smoke(x, y + 4 * s, z, 2, Math.min(3 * s, 5), Math.min(6.5 * s, 12), CelPal.WreckSmoke, 3.4, 0, 14 * s, 0, 3 * s, 4.5, 3 * s, 0.12, 0.45);
     this.planks(x, y, z, 12 + 6 * s, 11 * Math.sqrt(s), 20 * Math.sqrt(s), 1.0, 3.0 * Math.sqrt(s), 0.3);
     this.k.flotsam.spawn(x, y, z, Math.max(1, Math.round((2 + s * 1.5) * Math.min(1, this.k.q))), 5 + 2 * s);
     this.chunks(x, y, z, 8, 14, CelPal.WreckSmoke, 1.1 * s);

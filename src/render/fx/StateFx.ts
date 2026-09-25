@@ -345,7 +345,7 @@ export class StateFx {
     const x = this.hazX[slot * 2]!, z = this.hazX[slot * 2 + 1]!;
     // lightning-strike expiry: the sim emits 'hazard-triggered' + a 'lightning' explosion (EventFx draws both)
     if (kind === 'burning-wreck') this.fx.sunk(x, z, 16);
-    else if (kind === 'whirlpool') this.fx.foam(x, z, this.hazR0[slot]!, 1.6, 0, 1);
+    else if (kind === 'whirlpool') this.fx.foam(x, z, Math.min(this.hazR0[slot]!, 40), 1.6, 0, 0.6);
   }
 
   private hazard(h: Readonly<HazardState>, _slot: number, dt: number, ticked: boolean, _ctx: FrameContext): void {
@@ -361,7 +361,7 @@ export class StateFx {
         const count = Math.max(3, Math.min(12, Math.round(r / 2)));
         for (let j = 0; j < count; j++) this.loopFlame(h.x, wy, h.z, r * 0.75, r * 0.62 * fade, id, j, CelPal.Fire);
         k.decals.imm(Decal.Glow, h.x, h.z, r * 1.4, r * 1.4, 0, 14, 0, 0xff8a2a, 0, 0xff8a2a, 1.1 * fade, 0.5, 0.5);
-        if (rand() < dt * 1.1 * k.q) fx.smoke(h.x + spread(r * 0.5), wy + r * 0.4, h.z + spread(r * 0.5), 1, r * 0.2, Math.min(9, r * 0.5), CelPal.DarkSmoke, 1.8, 0, 3, 0, 1, 2.6, 0.5, 0, 0.4);
+        if (rand() < dt * 0.8 * k.q) fx.smoke(h.x + spread(r * 0.5), wy + r * 0.4, h.z + spread(r * 0.5), 1, r * 0.15, Math.min(6, r * 0.4), CelPal.DarkSmoke, 1.8, 0, 3, 0, 1, 2.6, 0.5, 0, 0.4);
         if (rand() < dt * 4 * k.q) fx.embers(h.x, wy + 1, h.z, 1, r * 0.6);
         break;
       }
@@ -390,35 +390,40 @@ export class StateFx {
         break;
       }
       case 'whirlpool': {
+        // Round 3 (owner: the vortex under the ship was "visually obstructing"): thin, low-opacity foam streaks
+        // (Decal.Whirl in thin mode, `add` = 1) instead of broad solid arms, and no per-frame persistent foam disc. The
+        // ★ Maelstrom follows the hull (endless ttl): fainter still, a clear eye under the ship, a shallow dip.
         const r = h.radius;
-        k.decals.imm(Decal.Whirl, h.x, h.z, r, r, 0, 2.4, 4, 0xffffff, 0.95 * fade, 0x0a3346, 0, hash01(id, 3));
-        k.ocean?.stampDisplace(h.x, h.z, r * 0.7, -2.2 * fade);
-        k.ocean?.stampFoam(h.x, h.z, r, 0.35 * fade);
-        if (rand() < dt * 10 * k.q) {
+        const follows = h.ttl > 1e6;
+        k.decals.imm(Decal.Whirl, h.x, h.z, r, r, 0, 2.4, 4, 0xffffff, (follows ? 0.42 : 0.6) * fade, 0x0a3346, 1, hash01(id, 3));
+        k.ocean?.stampDisplace(h.x, h.z, r * (follows ? 0.5 : 0.6), (follows ? -0.6 : -1.4) * fade);
+        if (!follows) k.ocean?.stampFoam(h.x, h.z, r * 0.3, 0.12 * fade);
+        if (rand() < dt * (follows ? 4 : 10) * k.q) {
           const a = rand() * TAU;
           fx.droplets(h.x + Math.cos(a) * r * 0.9, wy + 0.5, h.z + Math.sin(a) * r * 0.9, 1, 3, 5, 0.6);
         }
         break;
       }
       case 'storm-cloud': {
-        // `radius` is the strike range (Thunderhead: 110 m); the visible cloud is capped so it never swallows the view
+        // `radius` is the strike range (Thunderhead: 110 m); the visible cloud is capped so it never swallows the view.
+        // Round 3 (owner: "black clouds ... visually obstructing"): a small pale translucent haze (Glow.Haze, no ink)
+        // instead of 12 dark inked cel puffs of 15–25 m; puffs on the camera → ship sightline fade further.
         const r = h.radius;
-        const vr = Math.min(r, 34);
+        const vr = Math.min(r, 24);
         const cy = wy + 58;
-        const count = 12;
+        const count = 6;
         for (let j = 0; j < count; j++) {
           const a = hash01(id, j) * TAU + clock * 0.08;
-          const rr = vr * 0.8 * Math.sqrt(hash01(id, j + 40));
-          const px = h.x + Math.cos(a) * rr, py = cy + hash01(id, j + 80) * 7 - (j % 3) * 2, pz = h.z + Math.sin(a) * rr;
-          const size = Math.min(22, vr * 0.62) * (0.7 + 0.5 * hash01(id, j + 120)) * fade;
-          // erode puffs sitting on the camera → ship sightline
+          const rr = vr * 0.75 * Math.sqrt(hash01(id, j + 40));
+          const px = h.x + Math.cos(a) * rr, py = cy + hash01(id, j + 80) * 5 - (j % 3) * 1.5, pz = h.z + Math.sin(a) * rr;
+          const size = Math.min(15, vr * 0.62) * (0.75 + 0.4 * hash01(id, j + 120)) * fade;
           const occl = this.sightline(px, py, pz, size * 0.5);
-          const c = k.cel.spec.reset();
-          c.at(px, py, pz).look(Cel.Cloud, CelPal.StormCloud).sized(size, 1).rotate(hash01(id, j + 160) * TAU).lived(10, 0.5);
-          c.seed = hash01(id, j + 200);
-          k.cel.imm(10 * (0.3 + 0.66 * occl));
+          const g = k.glow.spec.reset();
+          g.at(px, py, pz).look(Glow.Haze, GlowPal.StormHaze).sized(size, size).rotate(hash01(id, j + 160) * TAU).lived(10).bright(0.4 * (1 - 0.45 * occl));
+          g.seed = hash01(id, j + 200);
+          k.glow.imm(5);
         }
-        k.decals.imm(Decal.Shadow, h.x, h.z, vr * 1.4, vr * 1.4, 0, 0, 0, 0x061426, 0.4 * fade, 0x061426, 0, 0.5);
+        k.decals.imm(Decal.Shadow, h.x, h.z, vr * 1.3, vr * 1.3, 0, 0, 0, 0x061426, 0.1 * fade, 0x061426, 0, 0.5);
         // ambient intra-cloud flicker only: damaging strikes arrive as 'lightning' events from the sim
         if (rand() < dt * 0.5) {
           const a = rand() * TAU;
@@ -491,7 +496,7 @@ export class StateFx {
         }
         for (let j = 0; j < 4; j++) this.loopFlame(h.x, wy + 0.4, h.z, h.radius * 0.5, 4.5 * fade, id, j, CelPal.Fire);
         k.decals.imm(Decal.Glow, h.x, h.z, h.radius * 1.3, h.radius * 1.3, 0, 12, 0, 0xff8a2a, 0, 0xff8a2a, fade, 0.5, 0.5);
-        if (rand() < dt * 5 * k.q) fx.smoke(h.x, wy + 4, h.z, 1, 3, 9, CelPal.WreckSmoke, 3, 0, 5, 0, 1, 4, 1.5, 0, 0.45);
+        if (rand() < dt * 2.5 * k.q) fx.smoke(h.x, wy + 4, h.z, 1, 2.5, 6, CelPal.WreckSmoke, 3, 0, 5, 0, 1, 4, 1.5, 0, 0.45);
         break;
       }
       case 'escort-skiff': {
@@ -653,8 +658,10 @@ export class StateFx {
     if (s.life === 'sinking') {
       const t = s.sink;
       this.events.trackSinking(s.id, s.x, s.z, L);
-      const a = Math.min(1, t * 5) * (1 - Math.max(0, (t - 0.8) / 0.2));
-      k.decals.imm(Decal.Whirl, s.x, s.z, L * 0.8, L * 0.8, 0, 1.3, 3, 0xffffff, a, 0x0d4760, 0, hash01(s.id, 1));
+      // round 3: softer and capped (a flagship's spiral and dark eye used to cover ~100 m of sea)
+      const a = 0.7 * Math.min(1, t * 5) * (1 - Math.max(0, (t - 0.8) / 0.2));
+      const wr = Math.min(L * 0.8, 40);
+      k.decals.imm(Decal.Whirl, s.x, s.z, wr, wr, 0, 1.3, 3, 0xffffff, a, 0x0d4760, 0, hash01(s.id, 1));
       if (rand() < dt * (boss ? 40 : 16) * k.q * (L / 25)) fx.bubbles(s.x, s.z, 1, L * 0.3, Math.min(3, 1 + L / 25));
       if (t < 0.6) {
         const deck = wy + Math.max(2.5, L * 0.1) - t * L * 0.4;
@@ -664,8 +671,9 @@ export class StateFx {
           this.loopFlame(s.x + fxv * along, deck, s.z + fzv * along, L * 0.06, L * 0.17 * (1 - t * 1.4), s.id, j, CelPal.Fire);
         }
       }
-      if (t < 0.85 && rand() < dt * (boss ? 6 : 3) * k.q) {
-        fx.smoke(s.x + spread(L * 0.2), wy + L * 0.12, s.z + spread(L * 0.2), 1, L * 0.1, L * 0.26, CelPal.WreckSmoke, 3.2, 0, 6, 0, 1, 5, 1, 0, 0.45);
+      // round 3: half the rate and smaller, lighter puffs (a sinking flagship used to stack a charcoal wall over itself)
+      if (t < 0.85 && rand() < dt * (boss ? 3 : 1.5) * k.q) {
+        fx.smoke(s.x + spread(L * 0.2), wy + L * 0.12, s.z + spread(L * 0.2), 1, Math.min(L * 0.07, 4), Math.min(L * 0.16, 9), CelPal.WreckSmoke, 3.2, 0, 6, 0, 1, 5, 1, 0, 0.45);
       }
       if (rand() < dt * 1.5 * k.q) fx.planks(s.x + spread(L * 0.3), wy + 0.5, s.z + spread(L * 0.3), 1, 2, 2, 1, 2.6, 0.3);
       k.ocean?.stampFoam(s.x, s.z, L * 0.5, 0.3);
@@ -686,7 +694,7 @@ export class StateFx {
             const along = (hash01(s.id, j + 600) - 0.5) * L * 0.5;
             this.loopFlame(s.x + fxv * along, deck, s.z + fzv * along, L * 0.05, L * 0.14, s.id, j + 10, CelPal.Fire);
           }
-          if (rand() < dt * 3 * k.q) fx.smoke(s.x, deck + 2, s.z, 1, 2, 6, CelPal.DarkSmoke, 2, 0, 3, 0, 1, 3, 1, 0, 0.4);
+          if (rand() < dt * 1.5 * k.q) fx.smoke(s.x, deck + 2, s.z, 1, 1.5, 4.5, CelPal.DarkSmoke, 2, 0, 3, 0, 1, 3, 1, 0, 0.4);
           break;
         }
         case 'slowed': {
@@ -730,7 +738,7 @@ export class StateFx {
     const severity = 1.3 - frac * 1.6;
     if (rand() < dt * (big ? 3.5 : 1.6) * severity * share * k.q) {
       const along = (hash01(id, 800 + ((k.clock * 3) | 0) % 5) - 0.5) * L * 0.5;
-      this.fx.smoke(x + fxv * along, deck + 1, z + fzv * along, 1, L * 0.05, L * (big ? 0.16 : 0.22), frac < 0.3 ? CelPal.DarkSmoke : CelPal.Gunsmoke,
+      this.fx.smoke(x + fxv * along, deck + 1, z + fzv * along, 1, Math.min(L * 0.04, 3), Math.min(L * (big ? 0.11 : 0.15), 9), frac < 0.3 ? CelPal.DarkSmoke : CelPal.Gunsmoke,
         3.4, 0, 4, 0, 1, 6, 1, 0, 0.45);
     }
     if (frac < 0.3) {
@@ -755,7 +763,7 @@ export class StateFx {
         const along = (hash01(c.id, j + 600) - 0.5) * c.length * 0.5;
         this.loopFlame(c.x + fxv * along, deck, c.z + fzv * along, c.length * 0.05, c.length * 0.14, c.id, j + 10, CelPal.Fire);
       }
-      if (rand() < dt * 3 * this.k.q) this.fx.smoke(c.x, deck + 2, c.z, 1, 2, 6, CelPal.DarkSmoke, 2, 0, 3, 0, 1, 3, 1, 0, 0.4);
+      if (rand() < dt * 1.5 * this.k.q) this.fx.smoke(c.x, deck + 2, c.z, 1, 1.5, 4.5, CelPal.DarkSmoke, 2, 0, 3, 0, 1, 3, 1, 0, 0.4);
     }
   }
 

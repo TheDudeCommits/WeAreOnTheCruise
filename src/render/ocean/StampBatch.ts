@@ -169,13 +169,14 @@ void main() {
     float w = 1.0 - smoothstep(vP.z, 1.0, e);
     prof = vec4(w);
   } else if (shape == 4) {
-    // WHIRL: p0 = spin angle, p1 = arm count, p2 = bowl depth (m), p3 = twist.
+    // WHIRL: p0 = spin angle, p1 = arm count, p2 = bowl depth (m), p3 = twist, p4 = thin (0 = broad foam arms,
+    // 1 = narrow streaks: whirlpool hazards, round 3).
     float r = length(vLocal);
     float rn = r / max(vHalf.x, 0.01);
     float theta = atan(vLocal.y, vLocal.x);
     float env = (1.0 - smoothstep(0.55, 1.0, rn)) * smoothstep(0.02, 0.14, rn);
     float spiral = 0.5 + 0.5 * cos(vP.y * theta + vP.w * log(1.0 + rn * 6.0) * 3.0 - vP.x);
-    float arms = smoothstep(0.4, 0.75, spiral + rag(0.3)) * env * 1.15;
+    float arms = smoothstep(mix(0.4, 0.8, vP4), mix(0.75, 0.95, vP4), spiral + rag(0.3)) * env * 1.15;
     float bowl = pow(max(1.0 - rn * rn, 0.0), 2.0);
     float rim = exp(-pow((rn - 0.82) / 0.12, 2.0));
     prof = vec4(rim * vP.z * 0.15, bowl * vP.z, arms, env * 0.9);

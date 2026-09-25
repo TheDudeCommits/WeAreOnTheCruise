@@ -1,6 +1,8 @@
 /**
  * Additive HDR sprites: starburst flashes (2–4 frames, hollowing out), directional muzzle blasts, sparks,
  * glints, sparkles, rings, embers, light shafts, speed streaks. Cores exceed 1.0 so they bloom under HDR post.
+ * Also Haze (round 3): a soft, uninked, translucent cloud (painted only) for smoke screens and storm clouds, where an
+ * opaque inked cel puff would wall off the ships behind it.
  */
 import * as THREE from 'three';
 import { GLOW_PALETTE_COUNT, GLOW_PALETTE_LINEAR } from '../core/palette';
@@ -9,6 +11,8 @@ import { SpritePass } from '../core/SpritePass';
 
 export const Glow = {
   Burst: 0, DirFlash: 1, Soft: 2, Spark: 3, Glint: 4, Ring: 5, Ember: 6, Sparkle: 7, Shaft: 8, Streak: 9, Bolt: 10,
+  /** Translucent haze puff: `bright(i)` is its opacity (0..1), fades in/out over its life; use GlowPal.Haze/StormHaze. */
+  Haze: 11,
 } as const;
 
 const vertexShader = /* glsl */ `
@@ -19,6 +23,7 @@ void main() { fxSprite(); }
 const fragmentShader = /* glsl */ `
 #define GLOW_COUNT ${GLOW_PALETTE_COUNT}
 uniform vec3 uGlowPal[GLOW_COUNT * 3];
+uniform vec3 uLitTint;
 ${FOG_UNIFORMS_GLSL}
 ${NOISE_GLSL}
 varying vec2 vUv;
@@ -120,6 +125,17 @@ void main() {
     alpha = v * 0.55;
     paint = mid * alpha;
     add = core * v * 0.25;
+  } else if (shape == 11) {
+    // Haze: a soft lumpy disc with a noisy, feathered edge; light on top, a slightly deeper underside, no ink and no
+    // additive core. Opacity comes from the intensity (so it never multiplies the colour); fades in and out.
+    float n1 = fxNoise(uv * 1.6 + seed);
+    float n2 = fxNoise(uv * 3.7 + seed * 1.37 + vAge * 0.12);
+    float m = 1.0 - r + (n1 - 0.5) * 0.5 + (n2 - 0.5) * 0.2;
+    float body = smoothstep(0.0, 0.6, m);
+    float env = smoothstep(0.0, 0.12, t) * (1.0 - smoothstep(0.65, 1.0, t));
+    alpha = body * env * clamp(vIntensity, 0.0, 1.0);
+    float top = smoothstep(-0.7, 0.6, uv.y + (n2 - 0.5) * 0.6);
+    paint = mix(outer, mix(mid, core, smoothstep(0.35, 0.9, n1)), top) * uLitTint * 1.12 * alpha;
   } else {
     float fl = step(0.35, fxHash11(floor(vAge * 24.0) + seed));
     float g = max(0.0, 1.0 - r);
@@ -127,7 +143,7 @@ void main() {
   }
 
   float fog = fxFog(vFogDepth);
-  vec3 tint = vTint * vIntensity;
+  vec3 tint = vTint * (shape == 11 ? 1.0 : vIntensity);
   paint = mix(paint * tint, uFogColor * alpha, fog);
   add *= tint * (1.0 - fog);
   if (alpha < 0.002 && add.r + add.g + add.b < 0.002) discard;
