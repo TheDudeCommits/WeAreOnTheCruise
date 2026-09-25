@@ -42,6 +42,8 @@ export interface OceanServices {
   stampFoam(x: number, z: number, radius: number, strength: number): void;
   /** Pushes the surface down (negative) or up (positive) around a point, e.g. bow wave, whirlpool. */
   stampDisplace(x: number, z: number, radius: number, height: number): void;
+  /** Share (0..1) of the persistent foam field covered within `radius` m of the focus (tools and adaptive FX). */
+  foamCoverage?(radius: number): number;
 }
 
 export interface CameraServices {
