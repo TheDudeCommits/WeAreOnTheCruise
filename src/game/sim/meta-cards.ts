@@ -95,7 +95,8 @@ export function chipCard(chip: ChipDef, rarity: Rarity): CardOffer {
   const amount = chip.amounts[tier]!;
   return {
     kind: 'chip', id: chipId(chip.stat), title: chip.name, text: `${sentence(statText(chip.stat, amount))} Lasts the whole voyage.`,
-    icon: `/assets/icons/${chipId(chip.stat)}.png`, rarity, stat: chip.stat, amount,
+    // No painted chip icons exist: the card draws the stat's glyph (an image path here would 404 in production).
+    icon: '', rarity, stat: chip.stat, amount,
   };
 }
 
