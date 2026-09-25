@@ -15,8 +15,25 @@ import { Decal } from './passes/Decals';
 import { Glow } from './passes/GlowSprites';
 import type { Sakuga } from './Sakuga';
 import { ShipFrame, findCaptain, findShip, shipFrame } from './ShipFrames';
+import { heelImpulse, kickHeroHeel } from './heroHeel';
 
 const TAU = Math.PI * 2;
+
+/**
+ * Full Broadside set piece (manual Q / LMB) vs auto-fire. Auto volleys stay light: muzzle, tracer, a ~1.25° heel.
+ * The manual volley: ~5.5° FOV kick + 0.25 shake + a bigger heel at the first gun, gold-hot muzzles, a drifting inked
+ * smoke wall along the firing side, gold hit rings and plank bursts on every ball that lands, and a 70 ms hit-stop
+ * (plus a one-frame impact frame) when the third ball hits.
+ */
+const VOLLEY = {
+  /** 6.5 requested ≈ 5.5° at the peak (the camera's kick envelope releases during its 50 ms attack). */
+  kick: 6.5, kickTime: 0.45, shake: 0.25, shakeTime: 0.35,
+  heelAuto: 1.25, heelManual: 4,
+  /** FX seconds after the skill fires during which new broadside balls belong to the manual volley (ripple ≈ 0.5 s). */
+  window: 0.85,
+  hitStopHits: 3, hitStopScale: 0.05, hitStopTime: 0.07,
+} as const;
+const VOLLEY_CAP = 48;
 
 /** Hit scale per projectile kind (1 = broadside ball). */
 const HIT_SCALE: Record<ProjectileKind, number> = {
@@ -35,6 +52,8 @@ export class EventFx {
   private readonly frame = new ShipFrame();
   private readonly frame2 = new ShipFrame();
   private readonly critTargets = new Set<number>();
+  /** Ships sunk this frame (their killing blow always shows its number). */
+  private readonly killTargets = new Set<number>();
   private readonly chainPts = new Float32Array(48 * 3);
   // Scheduler (allocation-free): delayed composite beats (boss finale).
   private readonly jobT = new Float32Array(MAX_JOBS);
@@ -53,6 +72,16 @@ export class EventFx {
   launchAge = 99;
   diveAge = 99;
   private lastLevelUp = -99;
+  // Full Broadside volley tracking: StateFx registers the manual balls (slot + id), hits are matched back to them.
+  private manualUntil = -1;
+  private readonly volleySlot = new Int32Array(VOLLEY_CAP).fill(-1);
+  private readonly volleyId = new Int32Array(VOLLEY_CAP);
+  private volleyHits = 0;
+  private volleyStopped = true;
+  /** FX clock of the last auto broadside gun per side (0 port, 1 starboard): one heel kick per volley. */
+  private readonly autoGunT = new Float32Array([-9, -9]);
+  /** Diagnostics for QA: manual volleys fired, balls tracked, balls landed, hit-stops. */
+  readonly volleyStats = { volleys: 0, tracked: 0, hits: 0, hitStops: 0 };
 
   private readonly waterY = (x: number, z: number): number => this.fx.wy(x, z);
 
@@ -63,6 +92,41 @@ export class EventFx {
     this.jobK.fill(0);
     this.sunkId.fill(-1);
     this.launchAge = this.diveAge = 99;
+    this.manualUntil = -1;
+    this.volleySlot.fill(-1);
+    this.volleyStopped = true;
+    this.autoGunT.fill(-9);
+  }
+
+  /** True while new player broadside balls belong to the manual Full Broadside (StateFx asks when a ball appears). */
+  manualVolleyOpen(): boolean { return this.k.clock <= this.manualUntil; }
+
+  /** StateFx: a manual volley ball appeared in projectile slot `slot`. */
+  trackVolleyBall(slot: number, id: number): void {
+    for (let i = 0; i < VOLLEY_CAP; i++) {
+      if (this.volleySlot[i] !== -1) continue;
+      this.volleySlot[i] = slot; this.volleyId[i] = id;
+      this.volleyStats.tracked++;
+      return;
+    }
+  }
+
+  /** Whether a player ship hit at (x, z) came from a tracked manual ball; spent balls leave the table. */
+  private claimVolleyBall(run: Readonly<RunState>, x: number, z: number): boolean {
+    let best = -1, bestD = 14 * 14;
+    const list = run.projectiles;
+    for (let i = 0; i < VOLLEY_CAP; i++) {
+      const slot = this.volleySlot[i]!;
+      if (slot < 0) continue;
+      const p = list[slot];
+      if (!p || p.id !== this.volleyId[i]) { this.volleySlot[i] = -1; continue; }
+      const d = (p.x - x) * (p.x - x) + (p.z - z) * (p.z - z);
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    if (best < 0) return false;
+    const p = list[this.volleySlot[best]!]!;
+    if (!p.alive) this.volleySlot[best] = -1;
+    return true;
   }
 
   trackSinking(id: number, x: number, z: number, length: number): void {
@@ -110,11 +174,13 @@ export class EventFx {
     const baseQ = this.k.q;
     // Pre-pass: crit targets (for impact frames on crit kills) and hit load.
     this.critTargets.clear();
+    this.killTargets.clear();
     let hits = 0;
     for (let i = 0; i < events.length; i++) {
       const e = events[i]!;
       if (e.type === 'damage' && e.crit) this.critTargets.add(e.target);
       else if (e.type === 'projectile-hit') hits++;
+      else if (e.type === 'enemy-killed' || e.type === 'captain-sunk' || e.type === 'boss-defeated') this.killTargets.add(e.id);
     }
     const hitQ = baseQ * Math.max(0.2, Math.min(1, 28 / Math.max(1, hits)));
     for (let i = 0; i < events.length; i++) {
@@ -145,8 +211,13 @@ export class EventFx {
         const wy = fx.wy(e.x, e.z);
         const ship = e.target === 0 ? null : e.target < 0 ? findCaptain(run, e.target) : findShip(run, e.target);
         const h = ship ? Math.min(16, 5 + ship.length * 0.16) : 7;
+        // Declutter: hits under 3% of the target's hull stay hidden (merged hits roll up and show once they pass it)
+        // unless crit or a killing blow; bosses cap the threshold at 150 so their fights keep readable numbers.
+        let minShow = ship ? ship.maxHp * 0.03 : 0;
+        if (ship && 'phase' in ship) minShow = Math.min(minShow, 150);
+        const force = e.crit || this.killTargets.has(e.target);
         // AI captains (negative ids) show the hull damage they take in a soft coral, not the player's white.
-        k.numbers.add(e.target, e.amount, e.crit, e.x, wy + h, e.z, e.target < 0 ? 0xff9a7a : e.crit ? 0xffd23a : 0xffffff);
+        k.numbers.add(e.target, e.amount, e.crit, e.x, wy + h, e.z, e.target < 0 ? 0xff9a7a : e.crit ? 0xffd23a : 0xffffff, minShow, force);
         break;
       }
       case 'player-hit': this.playerHit(e, run, water); break;
@@ -162,8 +233,10 @@ export class EventFx {
         const heading = ship ? ship.heading : rand() * TAU;
         fx.kill(e.x, e.z, length, heading, e.elite, false);
         this.trackSinking(e.id, e.x, e.z, length);
-        if (this.critTargets.has(e.id)) k.juice.impactFrame(0.65);
-        else if (e.elite) k.juice.impactFrame(0.45);
+        // (no kill impact frames during the Lionburst dash: its landing owns the only impact, ≤ 3 frames in all)
+        const dashing = run.player.airborne > 0.01 || this.launchAge < 1.4;
+        if (!dashing && this.critTargets.has(e.id)) k.juice.impactFrame(0.65);
+        else if (!dashing && e.elite) k.juice.impactFrame(0.45);
         break;
       }
       case 'enemy-sunk': {
@@ -227,11 +300,11 @@ export class EventFx {
       case 'hazard-triggered':
         if (e.kind === 'lightning-strike') fx.lightningStrike(e.x, e.z);
         else if (e.kind === 'mine' || e.kind === 'powder-keg' || e.kind === 'barrel') {
-          k.decals.emit(Decal.Shock, e.x, e.z, Math.max(6, e.radius * 0.5), 0.3, 0xff5a4a, 0.6, 0xff5a4a, 0.8, 1);
+          k.decals.emit(Decal.Shock, e.x, e.z, Math.max(6, e.radius * 0.5), 0.3, k.tele.danger, 0.6, k.tele.danger, 0.8, 1);
         }
         break;
       case 'telegraph':
-        k.decals.emit(Decal.Shock, e.x, e.z, e.radius * 1.15, 0.3, 0xff5a4a, 0.6, 0xff5a4a, 0.6, 1.2);
+        k.decals.emit(Decal.Shock, e.x, e.z, e.radius * 1.15, 0.3, k.tele.danger, 0.6, k.tele.danger, 0.6, 1.2);
         break;
       case 'boss-warning': {
         const p = run.player;
@@ -366,8 +439,14 @@ export class EventFx {
     if (!shipFrame(run, this.k.ships, e.owner, f, water)) return;
     if (w === 'broadside') {
       const sideSign = e.side === 'port' ? -1 : 1;
-      // manual Full Broadside guns fire while skills.broadside.active > 0 (CORE ripples them through a queue)
-      const manual = e.owner === 0 && p.skills.broadside.active > 0;
+      // manual Full Broadside guns: CORE ripples them through a queue for ~0.5 s after the skill fires
+      const manual = e.owner === 0 && (p.skills.broadside.active > 0 || this.manualVolleyOpen());
+      if (e.owner === 0 && !manual) {
+        // auto-fire stays light: one ~1.25° recoil heel per volley (first gun of the side), nothing on the camera
+        const s = sideSign > 0 ? 1 : 0;
+        if (this.k.clock - this.autoGunT[s]! > 0.3) kickHeroHeel(sideSign * heelImpulse(VOLLEY.heelAuto));
+        this.autoGunT[s] = this.k.clock;
+      }
       if (e.count > 1) {
         // one event per volley (legacy skeleton sim): ripple the whole side here
         this.broadside(f, sideSign, e.count, manual ? 1.3 : 1, manual ? 0.045 : 0.028, manual ? 4 : 2, true, GlowPal.Muzzle);
@@ -378,8 +457,14 @@ export class EventFx {
         const mx = f.x + f.fx * along + nx * f.gunSide, mz = f.z + f.fz * along + nz * f.gunSide;
         let dx = e.dirX, dz = e.dirZ;
         const dl = Math.hypot(dx, dz) || 1; dx /= dl; dz /= dl;
-        fx.muzzle(mx, f.gunY, mz, dx, dz, manual ? 1.3 : 1, 0, manual ? 4 : 2, true);
-        if (manual) this.k.juice.kick(2.5, 0.25);
+        if (manual) {
+          // gold-hot muzzle, a heavier smoke bank and a concussion ring on the water under each gun
+          fx.muzzle(mx, f.gunY, mz, dx, dz, 1.45, 0, 4, true, GlowPal.Gold);
+          fx.shock(mx + dx * 6, mz + dz * 6, 11, 0.32, 0xfff2c8, 0.9, 1.1);
+          this.k.juice.shake(0.12, 0.12);
+        } else {
+          fx.muzzle(mx, f.gunY, mz, dx, dz, 1, 0, 2, true);
+        }
       }
       return;
     }
@@ -533,6 +618,20 @@ export class EventFx {
     const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;
     const ship = cap ?? (e.targetId !== undefined && e.targetId !== 0 ? findShip(run, e.targetId) : null);
     const y = wy + (ship ? Math.max(2.5, Math.min(6, ship.length * 0.1)) : 3.5);
+    // Full Broadside set piece: balls of the manual volley land with a gold ring and a plank burst; the third one to
+    // land stops time for a beat (hit-stop + one impact frame).
+    if (e.team === 'player' && (e.projectile === 'cannonball' || e.projectile === 'chain-shot' || e.projectile === 'heavy-shot')
+      && this.claimVolleyBall(run, e.x, e.z)) {
+      fx.broadsideHit(e.x, y, e.z, dx, dz, s);
+      this.volleyStats.hits++;
+      if (!this.volleyStopped && ++this.volleyHits >= VOLLEY.hitStopHits) {
+        this.volleyStopped = true;
+        this.volleyStats.hitStops++;
+        this.k.juice.slowMo(VOLLEY.hitStopScale, VOLLEY.hitStopTime);
+        this.k.juice.impactFrame(0.45);
+        this.k.juice.shake(0.32, 0.25);
+      }
+    }
     switch (e.projectile) {
       case 'water-bolt':
         fx.explosion('water', e.x, e.z, 7, true, false, e.team);
@@ -706,21 +805,28 @@ export class EventFx {
         break;
       }
       case 'broadside': {
-        k.juice.kick(5, 0.35);
-        k.juice.shake(0.28, 0.3);
+        // Full Broadside set piece (see VOLLEY): the camera punches in, the hull heels hard away from the guns, the
+        // volley's balls are tracked for the gold hits and the hit-stop, and an inked smoke wall rolls off the side.
+        k.juice.kick(VOLLEY.kick, VOLLEY.kickTime);
+        k.juice.shake(VOLLEY.shake, VOLLEY.shakeTime);
+        this.manualUntil = k.clock + VOLLEY.window;
+        this.volleySlot.fill(-1);
+        this.volleyHits = 0;
+        this.volleyStopped = false;
+        this.volleyStats.volleys++;
         const side = (aimX - f.x) * f.sx + (aimZ - f.z) * f.sz >= 0 ? 1 : -1;
+        kickHeroHeel(side * heelImpulse(VOLLEY.heelManual));
         const dx = f.sx * side, dz = f.sz * side;
-        for (let i = 0; i < 5; i++) {
-          const along = (0.5 - i / 4) * f.length * 0.8;
-          fx.smoke(f.x + f.fx * along + dx * (f.gunSide + 9), f.gunY + 2, f.z + f.fz * along + dz * (f.gunSide + 9), 2, 5, 11, CelPal.Gunsmoke, 3.0,
-            dx * 6, 1, dz * 6, 2, 1.4, 3, 0.05 + i * 0.04, 0.4);
-        }
+        fx.smokeWall(f.x, f.gunY, f.z, f.fx, f.fz, dx, dz, f.length, f.gunSide);
+        // concussion: an elongated shock ring along the firing side and a pressure line on the water
+        k.decals.emit(Decal.Shock, f.x + dx * (f.gunSide + 10), f.z + dz * (f.gunSide + 10), 16, 0.5, 0xfff2c8, 0.7, 0xffe0a0, 1.1, 1.3, 0, 0.02,
+          Math.atan2(f.fx, f.fz), f.length * 0.6);
         k.ocean?.stampWake(f.x + dx * f.gunSide, f.z + dz * f.gunSide, dx, dz, f.length * 0.7, 0.8);
         break;
       }
       case 'lionburst': {
         this.launchAge = 0;
-        k.juice.speedLines(1, 1.2);
+        k.juice.speedLines(0.8, 0.8);
         k.juice.kick(9, 0.5);
         k.juice.shake(0.45, 0.35);
         fx.cloudRing(x - ax * L * 0.45, wy + 6, z - az * L * 0.45, ax, az, L * 1.1, 40);

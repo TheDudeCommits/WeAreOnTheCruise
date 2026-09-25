@@ -10,6 +10,7 @@ import { HERO_SOURCE_LENGTH, type SketchfabShipAssets, type HeroTemplate } from 
 import { markInk } from '../../materials/toon';
 import type { FleetAssets } from '../../loaders/FleetAssets';
 import { FlashDriver } from '../materials';
+import { heroHeel } from '../../fx/heroHeel';
 import { HeroCrew } from './Crew';
 import { HeroGrowth, type GrowthInput, type ShipGrowthEvent } from './HeroGrowth';
 import { measureHero, type HeroProfile } from './heroProfile';
@@ -65,6 +66,9 @@ export class HeroShip {
   private growthPrimed = false;
   private deathT = 0;
   private windYaw = 0.7;
+  /** Visual recoil heel (IMPACT): a stiff spring fed by FX volley impulses (fx/heroHeel), on top of the sim heel. */
+  private heel = 0;
+  private heelVel = 0;
   private readonly events: ShipGrowthEvent[] = [];
   ready = false;
 
@@ -161,9 +165,20 @@ export class HeroShip {
     const sink = THREE.MathUtils.clamp(this.deathT / 4.5, 0, 1);
     const sinkDepth = sink * sink * ((p ? p.bounds.max.y : L * 0.5) * 0.9 + 4);
 
+    // Recoil heel (IMPACT): auto volleys kick ~1.25°, the manual Full Broadside ~4°; heavier hulls answer less.
+    this.heelVel += heroHeel.impulse * THREE.MathUtils.clamp(Math.sqrt(46 / Math.max(20, L)), 0.7, 1.2);
+    heroHeel.impulse = 0;
+    const steps = dt > 1 / 50 ? 2 : 1;
+    for (let i = 0; i < steps; i++) {
+      const h = dt / steps;
+      this.heelVel += (-this.heel * 49 - 2 * 0.32 * 7 * this.heelVel) * h;
+      this.heel += this.heelVel * h;
+    }
+    if (!pose.alive || pose.airborne > 0.05) { this.heel = 0; this.heelVel = 0; }
+
     this.root.position.set(pose.x, this.heave * (1 - pose.submerged) + pose.airborne * 26 - pose.submerged * diveDepth + this.landing - sinkDepth, pose.z);
     this.root.rotation.set(this.pitch * (1 - pose.airborne) + this.airPitch + subPitch + sink * 0.28, pose.heading,
-      this.roll * (1 - pose.airborne) + pose.roll + Math.sin(time * 5) * 0.05 * pose.airborne + sink * 0.42);
+      this.roll * (1 - pose.airborne) + pose.roll + this.heel + Math.sin(time * 5) * 0.05 * pose.airborne + sink * 0.42);
 
     // Tier growth: slightly bigger per tier, with a bounce on tier-up.
     const tier = growth?.tier ?? 0;

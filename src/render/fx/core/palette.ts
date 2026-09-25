@@ -85,3 +85,30 @@ export const INK_HEX = 0x1b2340;
 export const DANGER_HEX = 0xff3b30;
 export const DANGER_DEEP_HEX = 0x7a0f14;
 export const PLAYER_MARK_HEX = 0xffd76a;
+
+export type ColorBlindMode = 'off' | 'deutan' | 'protan' | 'tritan';
+
+/** Telegraph colours per colour-vision setting (settings.colorBlind). */
+export interface TelegraphPalette {
+  /** Enemy danger fill/rim, its deep tone (lines, cones), the player's own marks and their deep tone. */
+  danger: number; deep: number; mark: number; markDeep: number;
+  /** 0..1 strength of the hatch pattern in danger fills (the non-colour cue). */
+  hatch: number;
+}
+
+/**
+ * Colour-blind-safe telegraphs. Danger always stays warm against the blue sea; in the deutan/protan modes (red-green)
+ * it moves to amber and the player's marks to ice blue (the blue-yellow axis they keep), in tritan mode (blue-yellow)
+ * danger is a red-pink and the marks stay gold. Every non-default mode also turns on a bold hatch in danger fills,
+ * so shape and pattern carry the meaning, not hue alone.
+ */
+export const TELEGRAPH_PALETTES: Readonly<Record<ColorBlindMode, TelegraphPalette>> = {
+  off: { danger: DANGER_HEX, deep: DANGER_DEEP_HEX, mark: PLAYER_MARK_HEX, markDeep: 0x5a4210, hatch: 0 },
+  deutan: { danger: 0xff9a1a, deep: 0x4a2600, mark: 0xa8ecff, markDeep: 0x10405a, hatch: 1 },
+  protan: { danger: 0xffa21f, deep: 0x4a3000, mark: 0xa8ecff, markDeep: 0x10405a, hatch: 1 },
+  tritan: { danger: 0xff2d6f, deep: 0x5a0a28, mark: PLAYER_MARK_HEX, markDeep: 0x5a4210, hatch: 1 },
+};
+
+export function telegraphPalette(mode: string | undefined): TelegraphPalette {
+  return TELEGRAPH_PALETTES[(mode ?? 'off') as ColorBlindMode] ?? TELEGRAPH_PALETTES.off;
+}

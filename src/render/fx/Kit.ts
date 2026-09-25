@@ -14,6 +14,7 @@ import type { RopePass } from './passes/Ropes';
 import type { TrailPass } from './passes/Trails';
 import type { WaveWallPass } from './passes/WaveWalls';
 import type { Juice } from './Juice';
+import type { TelegraphPalette } from './core/palette';
 
 export interface FxKit {
   cel: SpritePass;
@@ -50,4 +51,6 @@ export interface FxKit {
   q: number;
   /** Particles spawned this frame (for load shedding). */
   spawned: number;
+  /** Telegraph colours for this frame (settings.colorBlind). */
+  tele: TelegraphPalette;
 }

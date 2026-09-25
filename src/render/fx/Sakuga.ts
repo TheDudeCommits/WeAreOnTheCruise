@@ -23,6 +23,19 @@ const CHARRED = 0x3a2a24;
 const WHITE = 0xffffff;
 const FOAM_SHADOW = 0x8fc3d9;
 
+/**
+ * Smoke rules (round 2): combat smoke reads for a beat, then erodes away over about 1.2 s, so a long fight never
+ * piles into a black blanket. Longer requested lives are compressed toward SMOKE_LIFE and erosion starts early. The
+ * coverage governor, the per-puff screen cap and the hero/boss guards live in SmokeGovernor and the cel shader.
+ */
+export const SMOKE_LIFE = 1.2;
+const SMOKE_ERODE = 0.24;
+/** Palettes the rules apply to (signal-flare smoke is a marker and keeps its hang time). */
+const SMOKE_RULED = (1 << CelPal.Gunsmoke) | (1 << CelPal.DarkSmoke) | (1 << CelPal.WreckSmoke) | (1 << CelPal.Dust) | (1 << CelPal.Steam);
+
+/** Visible life of a smoke puff: short lives pass through, long ones compress toward SMOKE_LIFE. */
+export function smokeLife(life: number): number { return life <= SMOKE_LIFE ? life : SMOKE_LIFE + (life - SMOKE_LIFE) * 0.15; }
+
 /** Scratch polyline for lightning (max 65 points). */
 const boltPts = new Float32Array(65 * 3);
 
@@ -94,11 +107,15 @@ export class Sakuga {
     }
   }
 
-  /** Cel smoke puffs bursting along (vx,vy,vz), hanging, then drifting with the wind and rising. */
+  /**
+   * Cel smoke puffs bursting along (vx,vy,vz), hanging, then drifting with the wind and rising. Combat palettes follow
+   * the smoke rules (life compressed toward SMOKE_LIFE, early erosion); `ruled = false` keeps a set piece's hang time.
+   */
   smoke(x: number, y: number, z: number, count: number, size0: number, size1: number, pal: number, life: number,
-    vx: number, vy: number, vz: number, spreadV: number, rise: number, radius: number, delay = 0, erode = 0.35): void {
+    vx: number, vy: number, vz: number, spreadV: number, rise: number, radius: number, delay = 0, erode = 0.35, ruled = true): void {
     const c = this.k.cel;
     const n = this.n(count);
+    if (ruled && (SMOKE_RULED >> pal) & 1) { life = smokeLife(life); erode = Math.min(erode, SMOKE_ERODE); }
     for (let i = 0; i < n; i++) {
       const s = c.spec.reset();
       s.at(x + spread(radius), y + spread(radius * 0.5), z + spread(radius))
@@ -293,7 +310,7 @@ export class Sakuga {
         .vel(dx * v + spread(2.5), range(0.5, 2.5), dz * v + spread(2.5))
         .dragTo(3.2, this.k.windX, range(0.9, 1.9), this.k.windZ)
         .look(Cel.Puff, CelPal.Gunsmoke).sized(1.4 * s, range(3.8, 6.2) * s, 3).rotate(rand() * TAU, spread(0.3))
-        .lived(range(1.5, 2.5), 0.34).after(delay + i * 0.014);
+        .lived(smokeLife(range(1.5, 2.5)), SMOKE_ERODE).after(delay + i * 0.014);
       c.emit();
     }
     this.k.spawned += n + 6;
@@ -342,6 +359,45 @@ export class Sakuga {
     this.smoke(x, y + 1, z, 2, 2 * s, 5.5 * s, CelPal.DarkSmoke, 1.6, 0, 2, 0, 2, 2.4, 1, 0.08);
     if (crit) this.ring(x, y, z, 4, 16 * s, GlowPal.Gold, 0.3, 1.2);
     this.k.spawned += 12;
+  }
+
+  /** A Full Broadside ball on a hull (on top of hullHit): gold hit ring, gold burst, plank burst, a gold ring on the water. */
+  broadsideHit(x: number, y: number, z: number, dx: number, dz: number, scale: number): void {
+    const s = scale;
+    this.ring(x, y + 1, z, 3 * s, 20 * s, GlowPal.Gold, 0.3, 1.4);
+    this.burst(x, y, z, 9 * s, GlowPal.Gold, 0.07, 0, 1.3);
+    this.shock(x, z, 15 * s, 0.4, 0xffd84a, 1.3, 1.3);
+    this.sparks(x, y, z, 10, 38 * s, GlowPal.Gold, -dx, 0.55, -dz, 0.5, 0.45);
+    this.planks(x, y, z, 7, 11 * s, 16 * s, 1.0 * s, 2.6 * s, 0.25, -dx * 8, -dz * 8);
+    this.k.spawned += 20;
+  }
+
+  /**
+   * Full Broadside smoke wall: an inked gunsmoke bank rolling off the firing side bow → stern with the ripple, then
+   * drifting out and downwind for ~2.5 s. A set piece, so it keeps its hang time; the coverage governor and the hero
+   * guard still thin it (cel shader).
+   */
+  smokeWall(x: number, gunY: number, z: number, fx: number, fz: number, dx: number, dz: number, length: number, gunSide: number): void {
+    const c = this.k.cel;
+    const cols = this.n(8, 4);
+    const out = gunSide + 7;
+    for (let i = 0; i < cols; i++) {
+      const u = cols > 1 ? i / (cols - 1) : 0.5;
+      const along = (0.46 - u * 0.92) * length;
+      const delay = u * 0.42 + rand() * 0.03;
+      for (let j = 0; j < 2; j++) {
+        const reach = out + j * 5 + spread(1.5);
+        const v = range(9, 14) - j * 3;
+        const s = c.spec.reset();
+        s.at(x + fx * along + dx * reach, gunY + 0.5 + j * 3.5 + spread(0.6), z + fz * along + dz * reach)
+          .vel(dx * v + spread(1.5), range(0.4, 1.4), dz * v + spread(1.5))
+          .dragTo(2.2, this.k.windX * 0.8, range(0.8, 1.6), this.k.windZ * 0.8)
+          .look(Cel.Puff, CelPal.Gunsmoke).sized(range(3, 4.5), range(9, 12.5) - j * 1.5, 3).rotate(rand() * TAU, spread(0.2))
+          .lived(range(2.3, 2.9), 0.32).after(delay);
+        c.emit();
+      }
+    }
+    this.k.spawned += cols * 2;
   }
 
   /** Shot into rock/sand: dust burst, rock chips, sparks. */
@@ -425,18 +481,18 @@ export class Sakuga {
     this.fireballs(x, y, z, 7 + 4 * s, 9.5 * s, 2.4 * s, 12 * s, kind === 'fire' ? 1.2 : kind === 'large' || kind === 'powder' ? 1.15 : 0.95, 0, CelPal.Fire);
     this.sparks(x, y, z, 10 + 5 * s, 34 * Math.sqrt(s), GlowPal.Spark, 0, 1, 0, 0.3, 0.55);
     const smokePal = kind === 'powder' || kind === 'large' ? CelPal.WreckSmoke : CelPal.DarkSmoke;
-    const smokeN = kind === 'small' || kind === 'fire' ? 2 : kind === 'large' || kind === 'powder' ? 7 : 4;
-    this.smoke(x, y + 2 * s, z, smokeN, 4 * s, 11 * s, smokePal, 2.6, 0, 9 * s, 0, 4 * s, 4, 2.2 * s, 0.14, 0.4);
+    const smokeN = kind === 'small' || kind === 'fire' ? 2 : kind === 'large' || kind === 'powder' ? 5 : 3;
+    this.smoke(x, y + 2 * s, z, smokeN, 3.5 * s, 8.5 * s, smokePal, 2.6, 0, 9 * s, 0, 4 * s, 4, 2.2 * s, 0.14, 0.4);
     if (kind === 'large' || kind === 'powder') {
       // mushroom cap: a ring of puffs riding the column
       const c = this.k.cel;
-      const n = this.n(8);
+      const n = this.n(6);
       for (let i = 0; i < n; i++) {
         const a = (i / n) * TAU;
         const sp = c.spec.reset();
         sp.at(x + Math.cos(a) * 2 * s, y + 4 * s, z + Math.sin(a) * 2 * s).vel(Math.cos(a) * 9 * s, 14 * s, Math.sin(a) * 9 * s)
-          .dragTo(2.2, this.k.windX, 3.5, this.k.windZ).look(Cel.Puff, smokePal).sized(4 * s, 9 * s, 3).rotate(rand() * TAU)
-          .lived(range(2.4, 3.2), 0.42).after(0.12 + rand() * 0.08);
+          .dragTo(2.2, this.k.windX, 3.5, this.k.windZ).look(Cel.Puff, smokePal).sized(3.5 * s, 7.5 * s, 3).rotate(rand() * TAU)
+          .lived(smokeLife(range(2.4, 3.2)), SMOKE_ERODE + 0.06).after(0.12 + rand() * 0.08);
         c.emit();
       }
       this.embers(x, y + 2 * s, z, 10, 4 * s, 0.1);
@@ -473,7 +529,7 @@ export class Sakuga {
       const along = spread(length * 0.38);
       this.fireballs(x + fx * along, y + rand() * 3 * s, z + fz * along, 1, 10 * s, 1.5 * s, 11 * s, 1.25, rand() * 0.14);
     }
-    this.smoke(x, y + 4 * s, z, 6, 5 * s, 13 * s, CelPal.WreckSmoke, 3.4, 0, 14 * s, 0, 3 * s, 4.5, 3 * s, 0.12, 0.45);
+    this.smoke(x, y + 4 * s, z, 4, 4 * s, 9.5 * s, CelPal.WreckSmoke, 3.4, 0, 14 * s, 0, 3 * s, 4.5, 3 * s, 0.12, 0.45);
     this.planks(x, y, z, 12 + 6 * s, 11 * Math.sqrt(s), 20 * Math.sqrt(s), 1.0, 3.0 * Math.sqrt(s), 0.3);
     this.k.flotsam.spawn(x, y, z, Math.max(1, Math.round((2 + s * 1.5) * Math.min(1, this.k.q))), 5 + 2 * s);
     this.chunks(x, y, z, 8, 14, CelPal.WreckSmoke, 1.1 * s);

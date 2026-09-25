@@ -42,8 +42,9 @@ attribute vec4 iG; // tint.rgb, intensity
 uniform float uTime;
 uniform float uPixelWorld; // world metres per pixel at 1 m depth
 uniform float uMinPixels;
-uniform vec3 uFocus;       // hero position (+ a few metres): sprites on the camera → hero sightline dissolve
-uniform float uSightline;  // 1 = apply sightline dissolve (cel pass), 0 = off
+uniform float uSightline;  // 1 = apply the smoke rules below (cel pass), 0 = off
+uniform vec4 uGuards[4];   // protected hulls (xyz centre, w radius; w = 0 unused): [0] = hero, then live bosses
+uniform float uSmokeThin;  // 0..1 from the smoke coverage governor (SmokeGovernor)
 varying vec2 vUv;
 varying float vT;
 varying float vSeed;
@@ -84,11 +85,40 @@ void fxSprite() {
   float speed = length(vel);
   vOccl = 0.0;
   if (uSightline > 0.5) {
-    vec3 ab = uFocus - cameraPosition;
-    float st = clamp(dot(pos - cameraPosition, ab) / max(dot(ab, ab), 1e-3), 0.0, 1.0);
-    float sd = length(cameraPosition + ab * st - pos);
-    float sr = max(iD.x, iD.y) * 0.35;
-    vOccl = (1.0 - smoothstep(sr + 3.0, sr + 16.0, sd)) * (1.0 - smoothstep(0.82, 0.95, st));
+    // Smoke rules (round 2). vOccl is extra erosion (0..1) the cel fragment eats the shape with, never a fade.
+    int shp = int(iE.x + 0.5);
+    int pl = int(iE.y + 0.5);
+    // smoke = inked puffs with a smoke palette (gunsmoke, dark, dust, steam, wreck) + fireballs (they cool into smoke);
+    // long-lived immediate puffs (FOES smoke screens, storm clouds) are gameplay/weather and keep their own rules
+    bool isSmoke = life < 6.0 && (shp == 7 || (shp == 0 && (pl == 0 || pl == 1 || pl == 4 || pl == 5 || pl == 11)));
+    float smoke = isSmoke ? 1.0 : 0.0;
+    float occluder = (shp == 0 || shp == 6 || shp == 7) ? 1.0 : shp == 2 ? 0.45 : 0.0;
+    vec4 pc = projectionMatrix * mv;
+    float pw = max(pc.w, 1e-3);
+    vec2 pn = pc.xy / pw;
+    float aspect = projectionMatrix[1][1] / max(projectionMatrix[0][0], 1e-4);
+    float rp = 0.45 * size * projectionMatrix[1][1] / pw;  // solid radius in NDC-y units
+    float frac = 0.785 * rp * rp / aspect;                   // screen fraction of the puff disc
+    // 1) coverage governor: when smoke covers more than ~6% of the screen, older and bigger puffs erode first
+    float thin = uSmokeThin * smoke * (0.3 + 0.7 * t) * (0.6 + 0.4 * smoothstep(0.004, 0.03, frac));
+    // 2) no single puff covers more than ~3% of the screen
+    float cap = smoke * smoothstep(0.02, 0.06, frac) * 0.8;
+    vOccl = max(thin, cap);
+    // 3) protected hulls: puffs in front of the hero or a boss break into wisps (never an opaque cover)
+    if (occluder > 0.0) {
+      for (int g = 0; g < 4; g++) {
+        vec4 G = uGuards[g];
+        if (G.w <= 0.0) continue;
+        vec4 gc = projectionMatrix * viewMatrix * vec4(G.xyz, 1.0);
+        if (gc.w <= 0.0) continue;
+        vec2 d = (pn - gc.xy / gc.w) * vec2(aspect, 1.0);
+        float rg = G.w * projectionMatrix[1][1] / gc.w;
+        float over = 1.0 - smoothstep(rg * 0.5 + rp * 0.3, rg + rp * 0.9, length(d));
+        float front = 1.0 - smoothstep(gc.w - G.w * 0.25, gc.w + G.w * 0.6, pw);
+        float strength = (g == 0 ? 0.92 : 0.8) * (isSmoke ? 1.0 : 0.7);
+        vOccl = max(vOccl, over * front * strength * occluder);
+      }
+    }
   }
   float stretch = max(1.0, iF.x * (1.0 + speed * iF.y));
   // Keep tiny far sprites readable: never below uMinPixels.
@@ -152,6 +182,10 @@ export interface FxSharedUniforms {
   uFlash: THREE.IUniform<number>;
   uFocus: THREE.IUniform<THREE.Vector3>;
   uSightline: THREE.IUniform<number>;
+  /** Protected hulls for the smoke rules: xyz centre, w radius (0 = unused). [0] = hero, [1..3] = bosses. */
+  uGuards: THREE.IUniform<THREE.Vector4[]>;
+  /** 0..1 smoke thinning from the coverage governor. */
+  uSmokeThin: THREE.IUniform<number>;
 }
 
 export function createSharedUniforms(): FxSharedUniforms {
@@ -169,6 +203,8 @@ export function createSharedUniforms(): FxSharedUniforms {
     uFlash: { value: 0 },
     uFocus: { value: new THREE.Vector3() },
     uSightline: { value: 0 },
+    uGuards: { value: [new THREE.Vector4(), new THREE.Vector4(), new THREE.Vector4(), new THREE.Vector4()] },
+    uSmokeThin: { value: 0 },
   };
 }
 
