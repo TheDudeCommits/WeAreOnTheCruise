@@ -57,9 +57,11 @@ void main() {
   c = mix(c, n * 0.25, uDiffuse);
   c = max(c * uMul - uSub, vec4(0.0));
   // Crowded foam dissolves faster (neighbourhood coverage from last frame, ~25-50 m average): lace survives,
-  // a white slab does not.
-  float crowd = smoothstep(0.2, 0.55, textureLod(uCoverage, uv + uCovShift, 2.0).g);
-  c.r *= exp(-uCrowd.x * uCrowd.y * crowd);
+  // a white slab does not. Foam-free texels (most of the field) skip the fetch.
+  if (c.r > 0.002) {
+    float crowd = smoothstep(0.2, 0.55, textureLod(uCoverage, uv + uCovShift, 2.0).g);
+    c.r *= exp(-uCrowd.x * uCrowd.y * crowd);
+  }
   gl_FragColor = c;
 }
 `;

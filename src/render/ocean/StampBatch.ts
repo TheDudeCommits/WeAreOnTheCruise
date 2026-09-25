@@ -204,15 +204,17 @@ void main() {
     prof = vec4(0.0, 0.0, clamp(max(streak, churn), 0.0, 1.0), max(inside, streak));
   }
   prof = max(prof, vec4(0.0)) * vChan;
-  // Neighbourhood foam (~25-50 m): crowded water takes less new foam.
-  vec4 cov = textureLod(uCoverage, vCovUv, 2.0);
+  // Neighbourhood foam (~25-50 m): crowded water takes less new foam (fetched only where this stamp lays foam).
 #ifdef PERSISTENT
   // Persistent deposits: strength × (1 − c) on the persistent coverage, with a shaped cutoff.
-  prof.z *= (1.0 - cov.g) * (1.0 - smoothstep(uCovGain.x, uCovGain.y, cov.g));
+  if (prof.z > 0.0) {
+    float cov = textureLod(uCoverage, vCovUv, 2.0).g;
+    prof.z *= (1.0 - cov) * (1.0 - smoothstep(uCovGain.x, uCovGain.y, cov));
+  }
   gl_FragColor = vec4(prof.z, prof.w, prof.z, 0.0);
 #else
   // Transient stamps (rings, Kelvin arms, whirls, fronts; not the hull contact) on the smoothed total.
-  if (shape != 2) prof.z *= 1.0 - 0.65 * smoothstep(uCovGain.z, uCovGain.w, cov.b);
+  if (shape != 2 && prof.z > 0.0) prof.z *= 1.0 - 0.65 * smoothstep(uCovGain.z, uCovGain.w, textureLod(uCoverage, vCovUv, 2.0).b);
   gl_FragColor = prof;
 #endif
 }
