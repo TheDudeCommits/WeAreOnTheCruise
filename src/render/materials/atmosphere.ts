@@ -18,6 +18,7 @@
  * The directional light the sky system adds to the scene shares this direction and is used for shadow maps.
  */
 import * as THREE from 'three';
+import { ensureFactionResources, factionUniforms } from './faction';
 
 /** A tileable 2-channel fbm noise (R: cloud field, G: detail), generated once on the CPU. Repeat-wrapped, mipmapped. */
 function createNoiseTexture(size = 256): THREE.DataTexture {
@@ -121,6 +122,11 @@ export interface AtmosphereUniforms {
   uCruiseWind: THREE.IUniform<THREE.Vector3>;
   /** Shared tileable noise (R broad, G fine), repeat-wrapped. */
   uCruiseNoise: THREE.IUniform<THREE.Texture>;
+  /** Faction light (faction.ts): enemy centre → faction map, its window, rim strength/exposure, faction colours. */
+  uCruiseFactionMap: THREE.IUniform<THREE.DataTexture | null>;
+  uCruiseFactionRect: THREE.IUniform<THREE.Vector4>;
+  uCruiseFactionRim: THREE.IUniform<THREE.Vector4>;
+  uCruiseFactionColors: THREE.IUniform<THREE.Vector3[]>;
 }
 
 /** The single shared instance. Never replace the objects; write `.value` (the sky system does this each frame). */
@@ -145,11 +151,13 @@ export const atmosphereUniforms: AtmosphereUniforms = {
   uCruiseCloudCover: { value: 0.35 },
   uCruiseWind: { value: new THREE.Vector3(0.8, 0.6, 0.5) },
   uCruiseNoise: { value: null as unknown as THREE.Texture },
+  ...factionUniforms,
 };
 
 /** Lazily binds the noise texture (keeps module import free of GPU/CPU work until a material needs it). */
 export function ensureAtmosphereResources(): AtmosphereUniforms {
   if (!atmosphereUniforms.uCruiseNoise.value) atmosphereUniforms.uCruiseNoise.value = cruiseNoiseTexture();
+  ensureFactionResources();
   return atmosphereUniforms;
 }
 

@@ -31,7 +31,8 @@ const DUSK = palette(0x14306c, 0x2d5c9c, 0x4fe0c8, 0x3cb9b0, 0xfff4e6, 0x8f98c8)
 const STORM = palette(0x0d2a31, 0x2a5559, 0x5ab5a6, 0x3e8a82, 0xe4efec, 0x7d9c9f);
 const FOG = palette(0x2c6680, 0x5a8ea2, 0x93d1cc, 0x7cc4bc, 0xf4fbfa, 0xa2bec4);
 const NIGHT = palette(0x030a22, 0x09214b, 0x1a8cb8, 0x0c4f63, 0x9ebde4, 0x30507a);
-const BIOLUM = new THREE.Color(0x27f0ff);
+/** Night glow colour; its peak (glow 1.0) stays well under the enemy faction rim's brightness. */
+const BIOLUM = new THREE.Color(0x27f0ff).multiplyScalar(0.62);
 const PALETTE_KEYS = ['deep', 'mid', 'sss', 'shallow', 'foam', 'foamShadow'] as const;
 
 const smooth = (a: number, b: number, x: number): number => {
@@ -73,6 +74,12 @@ export class OceanLook {
   flash = 0;
   windStrength = 0.5;
   waveScale = 1;
+  /** 0..1 dusk warmth for steep-pitch reflections and the glowing glitter road. */
+  duskWarm = 0;
+  /** Glitter path spread (σ² of the half-vector tilt): wider when the sun is low. */
+  pathSpread = 0.04;
+  /** Glints fade out by this distance (m). */
+  glintReach = 280;
 
   update(atmosphere: AtmosphereState, sea: Readonly<SeaState>): void {
     const night = Math.min(1, Math.max(0, atmosphere.night));
@@ -105,13 +112,17 @@ export class OceanLook {
     this.glint = lerp(lerp(6.5, 5.0, dusk), 3.2, night) * lerp(1, 0.12, storm) * lerp(1, 0.2, fog);
     this.sheen = lerp(lerp(0.22, 0.4, dusk), 1.1, night) * lerp(1, 0.25, storm) * lerp(1, 0.3, fog);
     this.specPower = lerp(lerp(1100, 700, dusk), 650, night);
-    this.capLo = lerp(lerp(0.56, 0.44, breezy), 0.2, storm) + fog * 0.1;
+    // Night raises the crest threshold: only the tallest crests carry strokes (≤ ~10% of the water in the Gloam).
+    this.capLo = lerp(lerp(0.56, 0.44, breezy), 0.2, storm) + fog * 0.1 + night * 0.14 * (1 - storm * 0.5);
     this.capHi = this.capLo + lerp(0.22, 0.3, storm);
     this.streak = Math.max(0.12, breezy * 0.35, storm);
     this.detail = 0.55 * lerp(1, 1.25, breezy) * lerp(1, 1.5, storm) * lerp(1, 0.5, fog);
     this.reflectivity = lerp(1, 0.85, storm) * lerp(1, 0.65, fog);
     this.sssStrength = lerp(lerp(1, 1.25, dusk), 0.45, night) * lerp(1, 0.55, storm) * lerp(1, 0.35, fog) * (0.6 + 0.4 * clear);
     this.cloudPatch = lerp(0.16, 0.3, storm) * (1 - fog * 0.7);
+    this.duskWarm = dusk * clear;
+    this.pathSpread = lerp(lerp(0.04, 0.09, dusk), 0.05, night);
+    this.glintReach = lerp(280, 360, dusk);
   }
 
   private blendPalette(dusk: number, storm: number, fog: number, night: number): void {

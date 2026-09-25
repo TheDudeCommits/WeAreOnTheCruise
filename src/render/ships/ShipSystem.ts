@@ -21,6 +21,7 @@ import { Serpents, type SerpentPose } from './fleet/Serpents';
 import type { GrowthInput, ShipGrowthEvent } from './hero/HeroGrowth';
 import { HeroShip, type HeroPose } from './hero/HeroShip';
 import { CaptainFleet } from './fleet/Captains';
+import { lanternsFor } from './fleet/Lanterns';
 
 const NO_ENEMIES: readonly EnemyState[] = [];
 const NO_BOSSES: readonly BossState[] = [];
@@ -91,6 +92,7 @@ export class ShipSystem implements RenderSystem, ShipServices {
     // Fleet and sea serpents.
     const enemies = run?.enemies ?? NO_ENEMIES;
     this.fleet.update(ctx.dt, ctx.time, enemies, ocean);
+    lanternsFor(this).update(ctx);
     let w = 0;
     for (const e of enemies) {
       if (e.defId !== 'wyrmling' || e.life === 'dead') continue;
