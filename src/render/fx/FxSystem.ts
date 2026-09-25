@@ -51,6 +51,12 @@ export interface FxStats {
   smokeCoverage: number; smokeCoverageRaw: number; smokeThin: number; smokeLive: number; smokeMs: number;
   /** Full Broadside set piece: manual volleys, balls tracked, balls landed on hulls, hit-stops. */
   volley: { volleys: number; tracked: number; hits: number; hitStops: number };
+  /** Screen juice forwarded to the post stack: impact-frame requests so far and the last one's strength. */
+  impacts: number; lastImpact: number;
+  /** Damage numbers on screen now (after the declutter). */
+  numbersShown: number;
+  /** Totals since load: numbers the pre-round-2 rule would have spawned vs numbers shown (declutter ratio). */
+  numbersLegacy: number; numbersSpawned: number;
 }
 
 export class FxSystem implements RenderSystem {
@@ -87,6 +93,7 @@ export class FxSystem implements RenderSystem {
     updateMs: 0, updateAvgMs: 0, updateMaxMs: 0, pressure: 1,
     smokeCoverage: 0, smokeCoverageRaw: 0, smokeThin: 0, smokeLive: 0, smokeMs: 0,
     volley: { volleys: 0, tracked: 0, hits: 0, hitStops: 0 },
+    impacts: 0, lastImpact: 0, numbersShown: 0, numbersLegacy: 0, numbersSpawned: 0,
   };
 
   constructor() {
@@ -196,6 +203,10 @@ export class FxSystem implements RenderSystem {
     k.walls.endFrame();
     k.debris.endFrame();
     this.juice.flush(ctx.services, ctx.dt);
+    if (this.juice.last.impact > 0) { this.stats.impacts++; this.stats.lastImpact = this.juice.last.impact; }
+    this.stats.numbersShown = k.numbers.visibleCount();
+    this.stats.numbersLegacy = k.numbers.counts.legacy;
+    this.stats.numbersSpawned = k.numbers.counts.shown;
     this.updatePressure(ctx.dt);
     // Smoke rules: coverage governor (thinning is applied by the cel shader next frame) and hull guards.
     if (this.camera) this.smoke.update(k.cel.pool, this.clock, this.camera, ctx.dt);

@@ -52,6 +52,8 @@ export class EventFx {
   private readonly frame = new ShipFrame();
   private readonly frame2 = new ShipFrame();
   private readonly critTargets = new Set<number>();
+  /** Ships sunk this frame (their killing blow always shows its number). */
+  private readonly killTargets = new Set<number>();
   private readonly chainPts = new Float32Array(48 * 3);
   // Scheduler (allocation-free): delayed composite beats (boss finale).
   private readonly jobT = new Float32Array(MAX_JOBS);
@@ -172,11 +174,13 @@ export class EventFx {
     const baseQ = this.k.q;
     // Pre-pass: crit targets (for impact frames on crit kills) and hit load.
     this.critTargets.clear();
+    this.killTargets.clear();
     let hits = 0;
     for (let i = 0; i < events.length; i++) {
       const e = events[i]!;
       if (e.type === 'damage' && e.crit) this.critTargets.add(e.target);
       else if (e.type === 'projectile-hit') hits++;
+      else if (e.type === 'enemy-killed' || e.type === 'captain-sunk' || e.type === 'boss-defeated') this.killTargets.add(e.id);
     }
     const hitQ = baseQ * Math.max(0.2, Math.min(1, 28 / Math.max(1, hits)));
     for (let i = 0; i < events.length; i++) {
@@ -207,8 +211,13 @@ export class EventFx {
         const wy = fx.wy(e.x, e.z);
         const ship = e.target === 0 ? null : e.target < 0 ? findCaptain(run, e.target) : findShip(run, e.target);
         const h = ship ? Math.min(16, 5 + ship.length * 0.16) : 7;
+        // Declutter: hits under 3% of the target's hull stay hidden (merged hits roll up and show once they pass it)
+        // unless crit or a killing blow; bosses cap the threshold at 150 so their fights keep readable numbers.
+        let minShow = ship ? ship.maxHp * 0.03 : 0;
+        if (ship && 'phase' in ship) minShow = Math.min(minShow, 150);
+        const force = e.crit || this.killTargets.has(e.target);
         // AI captains (negative ids) show the hull damage they take in a soft coral, not the player's white.
-        k.numbers.add(e.target, e.amount, e.crit, e.x, wy + h, e.z, e.target < 0 ? 0xff9a7a : e.crit ? 0xffd23a : 0xffffff);
+        k.numbers.add(e.target, e.amount, e.crit, e.x, wy + h, e.z, e.target < 0 ? 0xff9a7a : e.crit ? 0xffd23a : 0xffffff, minShow, force);
         break;
       }
       case 'player-hit': this.playerHit(e, run, water); break;
@@ -224,8 +233,10 @@ export class EventFx {
         const heading = ship ? ship.heading : rand() * TAU;
         fx.kill(e.x, e.z, length, heading, e.elite, false);
         this.trackSinking(e.id, e.x, e.z, length);
-        if (this.critTargets.has(e.id)) k.juice.impactFrame(0.65);
-        else if (e.elite) k.juice.impactFrame(0.45);
+        // (no kill impact frames during the Lionburst dash: its landing owns the only impact, ≤ 3 frames in all)
+        const dashing = run.player.airborne > 0.01 || this.launchAge < 1.4;
+        if (!dashing && this.critTargets.has(e.id)) k.juice.impactFrame(0.65);
+        else if (!dashing && e.elite) k.juice.impactFrame(0.45);
         break;
       }
       case 'enemy-sunk': {
@@ -815,7 +826,7 @@ export class EventFx {
       }
       case 'lionburst': {
         this.launchAge = 0;
-        k.juice.speedLines(1, 1.2);
+        k.juice.speedLines(0.8, 0.8);
         k.juice.kick(9, 0.5);
         k.juice.shake(0.45, 0.35);
         fx.cloudRing(x - ax * L * 0.45, wy + 6, z - az * L * 0.45, ax, az, L * 1.1, 40);

@@ -12,7 +12,8 @@
  *   smoke      screen fraction covered by smoke (A≠B)          dark   the same for dark smoke only (D≠B)
  *   heroOcc    fraction of the hero's pixels covered by smoke   bossOcc  the same for boss pixels
  *   heroH      hero height as a fraction of the frame height    bossArea boss pixels as a fraction of the frame
- * Scenarios: mid, late, boss-iron-warden, boss-tidewyrm, boss-sovereign, early (one per --ships entry).
+ *   numbers    screen fraction covered by damage numbers (full render vs the numbers mesh hidden)
+ * Scenarios: mid, late, swarm (skiff packs), boss-iron-warden, boss-tidewyrm, boss-sovereign, early (one per --ships entry).
  * The browser closes in `finally`. Keep <outDir> under output/ (gitignored).
  */
 import { chromium } from '@playwright/test';
@@ -44,6 +45,7 @@ const SEED = flags.seed ?? 'gauntlet';
 const MID = { time: 370, level: 12, weapons: [['bow-chaser', 3], ['stern-mortar', 3]], spawns: [['frigate', 2], ['brig', 3], ['cutter', 3], ['skiff', 6], ['fireship', 2]] };
 const LATE = { time: 750, level: 24, weapons: [['rocket-rack', 5], ['storm-rod', 4], ['broadside', 6]], spawns: [['man-o-war', 1], ['frigate', 3], ['corsair-galleon', 1], ['mortar-barge', 2], ['skiff', 10], ['fireship', 3]] };
 const BOSS = { time: 200, level: 15, weapons: [['bow-chaser', 4], ['stern-mortar', 3], ['swivel-guns', 3]] };
+const SWARM = { time: 370, level: 12, weapons: [['swivel-guns', 3], ['bow-chaser', 3]], spawns: [['skiff', 16], ['cutter', 4], ['frigate', 2], ['man-o-war', 1]] };
 
 let page = null;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -124,8 +126,11 @@ function measureFrame() {
     renderer.autoClear = true;
     const shot = () => { renderer.render(scene, camera); const px = new Uint8Array(W * H * 4); gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, px); return px; };
     const keepOnly = (pred) => { for (let i = 0; i < count; i++) arr[i * stride + 13] = pred(i) ? saved[i] : 0; upload(); };
-    let A, D, B, Hn, Sn;
+    let A, D, B, Hn, Sn, F, Nn;
+    const nums = scene.getObjectByName('fx-damage-numbers');
     try {
+      F = shot();
+      if (nums) { nums.visible = false; Nn = shot(); nums.visible = true; }
       keepOnly(smoke); A = shot();
       keepOnly(dark); D = shot();
       keepOnly(() => true);
@@ -143,7 +148,7 @@ function measureFrame() {
     }
     const step = 2;
     const diff = (a, b, o) => Math.abs(a[o] - b[o]) + Math.abs(a[o + 1] - b[o + 1]) + Math.abs(a[o + 2] - b[o + 2]) > 30;
-    let n = 0, smokeN = 0, darkN = 0, hero = 0, heroCov = 0, boss = 0, bossCov = 0;
+    let n = 0, smokeN = 0, darkN = 0, hero = 0, heroCov = 0, boss = 0, bossCov = 0, numN = 0;
     let heroTop = -1, heroBottom = -1;
     const heroRows = new Uint16Array(H);
     for (let y = 0; y < H; y += step) {
@@ -152,12 +157,36 @@ function measureFrame() {
         n++;
         const sm = diff(A, B, o);
         if (sm) smokeN++;
+        if (Nn && diff(F, Nn, o)) numN++;
         if (diff(D, B, o)) darkN++;
         if (diff(B, Hn, o)) { hero++; heroRows[y]++; if (sm) heroCov++; }
         if (diff(B, Sn, o)) { boss++; if (sm) bossCov++; }
       }
     }
     for (let y = 0; y < H; y++) if (heroRows[y] >= 2) { if (heroTop < 0) heroTop = y; heroBottom = y; }
+    // separate damage numbers on screen: connected components of the numbers mask (4 px cells, 8-connected)
+    let numberCount = 0;
+    if (Nn) {
+      const cw = Math.ceil(W / 4), ch = Math.ceil(H / 4);
+      const m = new Uint8Array(cw * ch);
+      for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) { const o = (y * W + x) * 4; if (diff(F, Nn, o)) m[((y / 4) | 0) * cw + ((x / 4) | 0)] = 1; }
+      const stack = new Int32Array(cw * ch);
+      for (let i = 0; i < m.length; i++) {
+        if (m[i] !== 1) continue;
+        let sp = 0, size = 0; stack[sp++] = i; m[i] = 2;
+        while (sp > 0) {
+          const j = stack[--sp]; size++;
+          const jx = j % cw, jy = (j / cw) | 0;
+          for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+            const nx = jx + dx, ny = jy + dy;
+            if (nx < 0 || ny < 0 || nx >= cw || ny >= ch) continue;
+            const q = ny * cw + nx;
+            if (m[q] === 1) { m[q] = 2; stack[sp++] = q; }
+          }
+        }
+        if (size >= 6) numberCount++;
+      }
+    }
     const s = window.__CRUISE__.summary();
     const r4 = (v) => +v.toFixed(4);
     const fx = window.__CRUISE_FX_STATS__;
@@ -176,8 +205,9 @@ function measureFrame() {
     return {
       cam: window.__CRUISE_CAMERA__ ? Object.fromEntries(Object.entries(window.__CRUISE_CAMERA__).map(([k, v]) => [k, +(+v).toFixed(3)])) : null,
       gov: fx ? { est: r4(fx.smokeCoverage), raw: r4(fx.smokeCoverageRaw), thin: r4(fx.smokeThin), live: fx.smokeLive, ms: +fx.smokeMs.toFixed(3) } : null,
+      nums: fx && fx.numbersLegacy !== undefined ? { legacy: fx.numbersLegacy, spawned: fx.numbersSpawned, onScreen: fx.numbersShown } : null,
       t: s.time, enemies: s.enemies, bosses: s.bosses,
-      smoke: r4(smokeN / n), dark: r4(darkN / n),
+      smoke: r4(smokeN / n), dark: r4(darkN / n), numbers: r4(numN / n), numberCount,
       heroOcc: hero > 0 ? r4(heroCov / hero) : null, heroArea: r4(hero / n), heroH: heroTop >= 0 ? r4((heroBottom - heroTop + 1) / H) : null, hullH,
       bossOcc: boss > 20 ? r4(bossCov / boss) : null, bossArea: r4(boss / n),
       fov: +camera.fov.toFixed(2),
@@ -237,7 +267,7 @@ function summarize(list) {
     const sorted = [...v].sort((a, b) => a - b);
     return { mean: +(v.reduce((a, b) => a + b, 0) / v.length).toFixed(4), max: sorted[sorted.length - 1], min: sorted[0], n: v.length };
   };
-  return { smoke: stat('smoke'), dark: stat('dark'), heroOcc: stat('heroOcc'), heroH: stat('heroH'), hullH: stat('hullH'), bossOcc: stat('bossOcc'), bossArea: stat('bossArea'), camDist: stat('camDist') };
+  return { numberCount: stat('numberCount'), numbers: stat('numbers'), smoke: stat('smoke'), dark: stat('dark'), heroOcc: stat('heroOcc'), heroH: stat('heroH'), hullH: stat('hullH'), bossOcc: stat('bossOcc'), bossArea: stat('bossArea'), camDist: stat('camDist') };
 }
 
 const report = { base: BASE, samples: SAMPLES, gap: GAP, scenarios: {}, startedAt: new Date().toISOString() };
@@ -256,9 +286,9 @@ try {
   await sleep(1500);
   for (const sc of SCENARIOS) {
     try {
-      if (sc === 'mid' || sc === 'late') {
+      if (sc === 'mid' || sc === 'late' || sc === 'swarm') {
         await startRun('sunlion', 'sunward-shallows');
-        await loadout(sc === 'mid' ? MID : LATE);
+        await loadout(sc === 'mid' ? MID : sc === 'late' ? LATE : SWARM);
         await pilot({ seconds: 10, mode: 'engage' });
         const list = await sampleWhileFighting(sc);
         report.scenarios[sc] = { summary: summarize(list), samples: list };
@@ -290,7 +320,7 @@ try {
   report.finishedAt = new Date().toISOString();
   await writeFile(join(OUT, 'probe.json'), JSON.stringify(report, null, 1));
   const table = Object.fromEntries(Object.entries(report.scenarios).map(([k, v]) => [k, v.summary ? {
-    smoke: v.summary.smoke?.mean, smokeMax: v.summary.smoke?.max, dark: v.summary.dark?.mean, heroOcc: v.summary.heroOcc?.mean,
+    numbers: v.summary.numbers?.mean, numbersMax: v.summary.numbers?.max, smoke: v.summary.smoke?.mean, smokeMax: v.summary.smoke?.max, dark: v.summary.dark?.mean, heroOcc: v.summary.heroOcc?.mean,
     heroOccMax: v.summary.heroOcc?.max, bossOcc: v.summary.bossOcc?.mean, bossArea: v.summary.bossArea?.mean, bossAreaMin: v.summary.bossArea?.min,
     heroH: v.summary.heroH?.mean, heroHMax: v.summary.heroH?.max, hullH: v.summary.hullH?.mean, hullHMax: v.summary.hullH?.max,
   } : v]));

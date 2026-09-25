@@ -135,7 +135,7 @@ export class StateFx {
     let smokers = 0;
     const fx0 = this.k.focusX, fz0 = this.k.focusZ;
     for (const e of run.enemies) {
-      if (e.life === 'alive' && e.hidden < 1 && e.hp < e.maxHp * DAMAGE_SMOKE_HP && (e.x - fx0) ** 2 + (e.z - fz0) ** 2 < 480 * 480) smokers++;
+      if (e.life === 'alive' && e.hidden < 1 && e.defId !== 'kraken-arm' && e.hp < e.maxHp * DAMAGE_SMOKE_HP && (e.x - fx0) ** 2 + (e.z - fz0) ** 2 < 480 * 480) smokers++;
     }
     this.smokeShare = Math.min(1, DAMAGE_SMOKE_SHIPS / Math.max(1, smokers));
     for (const e of run.enemies) if (e.hidden < 1 && e.defId !== 'kraken-arm') this.ship(e, dt, false);
@@ -868,7 +868,7 @@ export class StateFx {
       if (this.prevAir <= 0.01 && this.events.launchAge > 0.4) {
         fx.cloudRing(p.x, wy + 4, p.z, f.fx, f.fz, L * 0.45, 22);
         fx.waterSplash(p.x, p.z, 2);
-        k.juice.speedLines(0.9, 1.0);
+        k.juice.speedLines(0.75, 0.8);
       }
     } else if (this.prevAir > 0.01) {
       // landing
@@ -880,7 +880,8 @@ export class StateFx {
       k.ocean?.stampRing(p.x, p.z, L * 0.8, 1);
       k.ocean?.stampDisplace(p.x, p.z, L * 0.6, -2);
       k.juice.shake(0.7, 0.45);
-      k.juice.impactFrame(0.5);
+      // Lionburst landing: one crisp impact (PostStack: 2 two-tone frames, silhouettes kept) — never a pale wash.
+      k.juice.impactFrame(0.8);
       k.juice.slowMo(0.45, 0.18);
     }
     this.prevAir = air;
